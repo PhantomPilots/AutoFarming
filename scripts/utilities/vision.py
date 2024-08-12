@@ -62,17 +62,3 @@ class Vision:
             cv2.rectangle(haystack_img, top_left, bottom_right, line_color, lineType=line_type)
 
         return haystack_img
-
-    def draw_crosshairs(self, haystack_img, points):
-        """Given a list of [x, y] positions and a canvas image to draw on, return an image with all
-        of those click points drawn on as crosshairs"""
-
-        # these colors are actually BGR
-        marker_color = (255, 0, 255)
-        marker_type = cv2.MARKER_CROSS
-
-        for center_x, center_y in points:
-            # draw the center point
-            cv2.drawMarker(haystack_img, (center_x, center_y), marker_color, marker_type)
-
-        return haystack_img
