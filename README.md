@@ -33,7 +33,7 @@ Right-click on it and select `Configure sizer...`.
 <img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
 **This needs to be done ever time you want to run a script**.
 
-### Git
+#### Git
 
 To keep up-to-date with any updates, you'll need to install [Git](https://gitforwindows.org/) for Windows. Simply download the executable and install it.
 
