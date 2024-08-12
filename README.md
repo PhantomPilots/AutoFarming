@@ -20,11 +20,9 @@ Follow these steps:
    2. While pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
    3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt` and press `ENTER`.
 
-### How to run the scripts
-
 #### Sizer
 
-First, download and install the [Sizer](https://www.brianapps.net/sizer/) application for custom re-sizing of windows. 
+Download and install the [Sizer](https://www.brianapps.net/sizer/) application for custom re-sizing of windows. 
 Once installed, open it as administrator and:
 1. Set the game in ***portrait*** mode instead of landscape mode (in-game settings).
 2. In Sizer, create a custom size of `540x960` and name it 7DS (first time only).
@@ -32,6 +30,8 @@ Once installed, open it as administrator and:
 <img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
 **This needs to be done ever time you want to run a script**.
 
+
+### How to run the scripts
 
 #### Python IDLE
 
