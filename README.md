@@ -23,10 +23,13 @@ Follow these steps:
 #### Sizer
 
 Download and install the [Sizer](https://www.brianapps.net/sizer/) application for custom re-sizing of windows. 
-Once installed, open it as administrator (don't worry if you don't see anything pop up) and:
+Once installed, open it as administrator and:
 1. Set the game in ***portrait*** mode instead of landscape mode (in-game settings).
-2. In Sizer, create a custom size of `540x960` and name it 7DS (first time only).
-3. Right-click on the border of the 7DS window and choose the custom size to resize the window:<br>
+2. Open Sizer. It's hidden at the bottom-right of your screen:<br>
+<img src="readme_images/sizer_icon.png" width="100"/><br>
+Right-click on it and select `Configure sizer...`.
+3. In Sizer, create a custom size of `540x960` and name it 7DS (first time only).
+4. Right-click on the border of the 7DS window and choose the custom size to resize the window:<br>
 <img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
 **This needs to be done ever time you want to run a script**.
 
