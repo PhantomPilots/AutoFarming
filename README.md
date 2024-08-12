@@ -84,7 +84,7 @@ Requirements:
 
 ## Troubleshooting
 
-If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized the the custom size created at the beginning.
+If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
 
 ## Future features
 
