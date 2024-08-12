@@ -16,14 +16,10 @@ class FarmingFactory:
     def main_loop(farmer: IFarmer, battle_strategy: IBattleStrategy | None, starting_state):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
 
-        farmer_instance = None
-
         while True:
             try:
-                if not farmer_instance:
-                    # Only reinitialize it if it doesn't exist
-                    farmer_instance: IFarmer = farmer(battle_strategy=battle_strategy, starting_state=starting_state)
-                    farmer_instance.run()
+                farmer_instance: IFarmer = farmer(battle_strategy=battle_strategy, starting_state=starting_state)
+                farmer_instance.run()
 
             except KeyboardInterrupt as e:
                 print("Exiting the program.")
