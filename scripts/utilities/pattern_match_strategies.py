@@ -13,14 +13,12 @@ import numpy as np
 class IMatchingStrategy(abc.ABC):
     @staticmethod
     @abc.abstractmethod
-    def find_all_rectangles(
-        haystack_img: np.ndarray, needle_img: np.ndarray, **kwargs
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def find_all_rectangles(image: np.ndarray, template: np.ndarray, **kwargs) -> tuple[np.ndarray, np.ndarray]:
         """Must be implemented by subclasses"""
 
     @staticmethod
     @abc.abstractmethod
-    def find(haystack_img: np.ndarray, needle_img: np.ndarray, **kwargs) -> np.ndarray:
+    def find(image: np.ndarray, template: np.ndarray, **kwargs) -> np.ndarray:
         """Must be implemented by subclasses.
         Ideally, it uses `find_all_rectangles`, and then picks the best match.
         """
@@ -30,42 +28,38 @@ class TemplateMatchingStrategy:
     """Naive pattern matching algorithm"""
 
     @staticmethod
-    def find_all_rectangles(haystack_img: np.ndarray, needle_img: np.ndarray, **kwargs):
+    def find_all_rectangles(image: np.ndarray, template: np.ndarray, **kwargs):
 
-        # Extract the keyword arguments required
-        threshold = kwargs.get("threshold", 0.5)
-        cv_method = kwargs.get("cv_method", cv2.TM_CCOEFF_NORMED)
+        # Extract the optional parameters with default values
+        match_threshold = kwargs.get("threshold", 0.5)
+        method = kwargs.get("cv_method", cv2.TM_CCOEFF_NORMED)
 
-        # run the OpenCV algorithm
-        result = cv2.matchTemplate(haystack_img, needle_img, cv_method)
+        # Perform template matching
+        match_result = cv2.matchTemplate(image, template, method)
 
-        # Get the all the positions from the match result that exceed our threshold
-        locations = np.where(result >= threshold)
-        locations = list(zip(*locations[::-1]))
+        # Identify positions where matches exceed the threshold
+        match_locations = np.where(match_result >= match_threshold)
+        match_points = list(zip(*match_locations[::-1]))
 
-        # if we found no results, return now. this reshape of the empty array allows us to
-        # concatenate together results without causing an error
-        if not locations:
+        if not match_points:
             return np.empty(0), np.empty(0)
 
-        # You'll notice a lot of overlapping rectangles get drawn. We can eliminate those redundant
-        # locations by using groupRectangles().
-        # First we need to create the list of [x, y, w, h] rectangles
-        rectangles = []
-        for loc in locations:
-            rect = [int(loc[0]), int(loc[1]), needle_img.shape[1], needle_img.shape[0]]
-            rectangles.extend((rect, rect))
+        # Create rectangles based on the match points
+        detected_rectangles = []
+        for point in match_points:
+            rectangle = [int(point[0]), int(point[1]), template.shape[1], template.shape[0]]
+            detected_rectangles.extend((rectangle, rectangle))
 
-        # Apply group rectangles
-        rectangles, weights = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
+        # Use groupRectangles to refine results
+        grouped_rectangles, confidence_weights = cv2.groupRectangles(detected_rectangles, groupThreshold=1, eps=0.5)
 
-        return rectangles, weights
+        return grouped_rectangles, confidence_weights
 
     @staticmethod
-    def find(haystack_img: np.ndarray, needle_img: np.ndarray, **kwargs):
+    def find(image: np.ndarray, template: np.ndarray, **kwargs):
         """Find the best rectangle match of the needle in the haystack"""
 
-        rectangles, weights = TemplateMatchingStrategy.find_all_rectangles(haystack_img, needle_img, **kwargs)
+        rectangles, weights = TemplateMatchingStrategy.find_all_rectangles(image, template, **kwargs)
 
         # Check if there are any rectangles after grouping
         if len(rectangles) == 0:

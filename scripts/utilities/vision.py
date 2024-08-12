@@ -10,7 +10,7 @@ from utilities.pattern_match_strategies import (
 
 
 class Vision:
-    """Needle class"""
+    """Class to host a single image template to match"""
 
     def __init__(self, needle_basename, matching_strategy: IMatchingStrategy = TemplateMatchingStrategy):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
