@@ -12,7 +12,7 @@ Also, use this code at your own risk.
 
 Follow these steps:
 
-1. Download the code either by downloading manually (at the top, click on "Download ZIP") or by using GIT in PowerShell: `git pull https://github.com/PhantomPilots/AutoFarming.git`.
+1. Download the code either by downloading manually (at the top, click on `Code->Download ZIP`) or by using GIT in PowerShell: `git pull https://github.com/PhantomPilots/AutoFarming.git`.
 2. Install Python 3.10 or higher from the Microsoft Store:<br>
 <img src="readme_images/python311.png" alt="IDLE app" width="200"/><br>
 3. After Python is installed, we need to install some additional modules for the scripts to work. To do so, follow these steps:
