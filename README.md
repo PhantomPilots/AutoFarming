@@ -15,7 +15,10 @@ Follow these steps:
 1. Download the code either by downloading manually (at the top, click on "Download ZIP") or by using GIT in PowerShell: `git pull https://github.com/PhantomPilots/AutoFarming.git`.
 2. Install Python 3.10 or higher from the Microsoft Store:<br>
 <img src="readme_images/python311.png" alt="IDLE app" width="200"/><br>
-1. On a PowerShell terminal, and from the root directory of the code, run `python -m pip install -r requirements.txt` to install all required modules.
+1. On a PowerShell terminal, and from the root directory of the code, run `python -m pip install -r requirements.txt` to install all required modules. To do this, follow these steps:
+   1. Open the AutoFarming folder.
+   2. While pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here...`.
+   3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt`
 
 ### How to run the scripts
 
