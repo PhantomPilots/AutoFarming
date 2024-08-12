@@ -23,7 +23,7 @@ Follow these steps:
 #### Sizer
 
 Download and install the [Sizer](https://www.brianapps.net/sizer/) application for custom re-sizing of windows. 
-Once installed, open it as administrator and:
+Once installed, open it as administrator (don't worry if you don't see anything pop up) and:
 1. Set the game in ***portrait*** mode instead of landscape mode (in-game settings).
 2. In Sizer, create a custom size of `540x960` and name it 7DS (first time only).
 3. Right-click on the border of the 7DS window and choose the custom size to resize the window:<br>
