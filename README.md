@@ -57,7 +57,7 @@ Happy farming!
 
 ## Equipment farming script
 
-A script that probably no one needs but me, `EquipmentFarmer.py` farms gear to extract blue stones while auto-salvaging whenever the equipment inventory becomes full. Then it goes back to farming. 
+A script that probably no one needs but me, `scripts/EquipmentFarmer.py` farms gear to extract blue stones while auto-salvaging whenever the equipment inventory becomes full. Then it goes back to farming. 
 
 Requirements for it to work properly:
 1. Have the "auto-farming" option of free stages set to 'infinite' with auto-renewal of stamina pots.
@@ -67,7 +67,7 @@ Requirements for it to work properly:
 
 ## Hraesvelgr farming script
 
-Now, this script is far more interesting for the majority of the community. It's named `BirdFarmer.py`, and it does what its name says: It farms the bird uninterruptedly, even when stamina is depleted or a fight is lost.
+Now, this script is far more interesting for the majority of the community. It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms the bird uninterruptedly, even when stamina is depleted or a fight is lost.
 
 Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
