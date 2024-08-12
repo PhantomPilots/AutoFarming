@@ -33,6 +33,9 @@ Right-click on it and select `Configure sizer...`.
 <img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
 **This needs to be done ever time you want to run a script**.
 
+### Git
+
+To keep up-to-date with any updates, you'll need to install [Git](https://gitforwindows.org/) for Windows. Simply download the executable and install it.
 
 ### How to run the scripts
 
@@ -44,7 +47,7 @@ All scripts require being run as administrator. One way to do so is the followin
 Right-click on it and run it as an administrator.
 2. Click on `File -> Open...` and load the script you want to run.
 3. To run the script, press the `F5` key while the 7DS window is **fully visible** on the screen.
-4. To stop the script, close the window that appeared after the previous point.
+4. To stop the script, close the new window that appeared after the previous point (where blue text is being written down).
 
 #### PowerShell
 
@@ -78,6 +81,10 @@ Now, this script is far more interesting for the majority of the community. It's
 Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
+
+## Troubleshooting
+
+If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized the the custom size created at the beginning.
 
 ## Future features
 
