@@ -37,6 +37,12 @@ Right-click on it and select `Configure sizer...`.
 
 To keep up-to-date with any updates, you'll need to install [Git](https://gitforwindows.org/) for Windows. Simply download the executable and install it.
 
+### Code updates
+
+Updating the code is done using Git. The process is simple:
+1. Similarly to Installation point 3., open a PowerShell window on the AutoFarming folder.
+2. Type in `git pull` and press `ENTER`.
+
 ### How to run the scripts
 
 #### Python IDLE
