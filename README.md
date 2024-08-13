@@ -88,6 +88,12 @@ Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
 
+## Final Boss farming script
+
+It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change the difficulty, simply change the desired difficulty name in the scrip:
+
+<img src="readme_images/final_boss_difficulty.png" width="400"/>
+
 ## Troubleshooting
 
 If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
