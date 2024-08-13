@@ -136,6 +136,9 @@ class FinalBossFarmer(IFarmer):
         find_and_click(vio.boss_destroyed, screenshot, window_location)
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_results, screenshot, window_location)
+        find_and_click(
+            vio.showdown, screenshot, window_location, point_coordinates=Coordinates.get_coordinates("showdown")
+        )
         if find_and_click(vio.boss_mission, screenshot, window_location):
             self.num_fights += 1
 

@@ -90,7 +90,7 @@ Requirements:
 
 ## Final Boss farming script
 
-It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change the difficulty, simply change the desired difficulty name in the scrip:
+It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change the difficulty, simply change the desired difficulty name in the script:
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 

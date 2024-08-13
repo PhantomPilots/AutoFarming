@@ -22,6 +22,7 @@ class Coordinates:
         # For final boss farming
         "start_drag": (280, 810),
         "end_drag": (280, 550),
+        "showdown": (280, 870),
     }
 
     @staticmethod
