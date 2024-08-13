@@ -6,7 +6,7 @@ from utilities.fighting_strategies import IBattleStrategy
 class IFarmer:
     """Generic farmer interface."""
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state: int):
+    def __init__(self, battle_strategy: IBattleStrategy, starting_state: int, **kargs):
 
         # For type helping
         self.current_state: int

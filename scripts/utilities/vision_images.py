@@ -41,6 +41,7 @@ world = Vision("world.png")
 bronze_card = Vision("bronze_card.png")
 silver_card = Vision("silver_card.png")
 gold_card = Vision("gold_card.png")
+auto_off = Vision("autooff.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
@@ -68,3 +69,15 @@ three_empty_slots = Vision("bird\\three_slots.png")
 two_empty_slots = Vision("bird\\two_slots.png")
 weekly_mission = Vision("bird\\lazy_weekly_mission.png")
 finished_fight_ok = Vision("bird\\finished_fight_ok.png")
+
+# For final boss
+final_boss_menu = Vision("final_boss\\final_boss_menu.png")
+hell_difficulty = Vision("final_boss\\hell_difficulty.png")
+challenge_difficulty = Vision("final_boss\\challenge_difficulty.png")
+extreme_difficulty = Vision("final_boss\\extreme_difficulty.png")
+hard_difficulty = Vision("final_boss\\hard_difficulty.png")
+fb_ok_button = Vision("final_boss\\fb_ok_button.png")
+boss_destroyed = Vision("final_boss\\boss_destroyed.png")
+boss_results = Vision("final_boss\\boss_results.png")
+boss_mission = Vision("final_boss\\boss_mission.png")
+episode_clear = Vision("final_boss\\episode_clear.png")

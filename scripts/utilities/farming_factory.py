@@ -13,12 +13,16 @@ class FarmingFactory:
     """
 
     @staticmethod
-    def main_loop(farmer: IFarmer, battle_strategy: IBattleStrategy | None, starting_state):
+    def main_loop(farmer: IFarmer, battle_strategy: IBattleStrategy | None, starting_state, **kwargs):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
 
         while True:
             try:
-                farmer_instance: IFarmer = farmer(battle_strategy=battle_strategy, starting_state=starting_state)
+                farmer_instance: IFarmer = farmer(
+                    battle_strategy=battle_strategy,
+                    starting_state=starting_state,
+                    **kwargs,  # To set farmer-specific options
+                )
                 farmer_instance.run()
 
             except KeyboardInterrupt as e:

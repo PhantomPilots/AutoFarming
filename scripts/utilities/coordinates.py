@@ -19,6 +19,9 @@ class Coordinates:
         "high_grade_equipment": (362, 555),
         "ok_after_salvaging": (281, 893),
         "salvage_equipment": (60, 525),
+        # For final boss farming
+        "start_drag": (280, 810),
+        "end_drag": (280, 550),
     }
 
     @staticmethod

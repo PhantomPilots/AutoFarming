@@ -1,6 +1,6 @@
 import os
+import time
 from enum import Enum
-from time import sleep
 from typing import Union
 
 import cv2
@@ -18,7 +18,7 @@ from utilities.models import CardMergePredictor, CardTypePredictor
 from utilities.vision import Vision
 
 
-def capture_window():
+def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     """Make a screenshot of the 7DS window.
     Returns:
         tuple[np.ndarray, list[float]]: The image as a numpy array, and a list of the top-left corner of the window as [x,y]
@@ -193,7 +193,7 @@ def find_and_click(
 
         print(f"Clicked on '{vision_image.image_name}'")
 
-        sleep(0.5)
+        time.sleep(0.5)
 
         return True
 
@@ -217,15 +217,57 @@ def find_floor_coordinates(screenshot: np.ndarray, window_location):
 def click(x, y, sleep_after_click=0.01):
     win32api.SetCursorPos((x, y))
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
-    sleep(sleep_after_click)
+    time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
 
 def rclick(x, y, sleep_after_click=0.01):
     win32api.SetCursorPos((x, y))
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
-    sleep(sleep_after_click)
+    time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
+
+
+def click_and_drag(start_x, start_y, end_x, end_y, steps=100, sleep_after_click=0.01, drag_duration=0.5):
+    """Move to the start position and press the left mouse button down"""
+    win32api.SetCursorPos((start_x, start_y))
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+
+    # Optionally, you can sleep for a while before starting the drag
+    time.sleep(sleep_after_click)
+
+    # Calculate the distance to move in each step
+    delta_x = (end_x - start_x) / steps
+    delta_y = (end_y - start_y) / steps
+
+    # Calculate the time to sleep between steps
+    step_duration = drag_duration / steps
+
+    # Move to the end position incrementally
+    for step in range(steps):
+        # Update cursor position by a small amount
+        new_x = int(start_x + delta_x * step)
+        new_y = int(start_y + delta_y * step)
+        win32api.SetCursorPos((new_x, new_y))
+        time.sleep(step_duration)
+
+    # Release the left mouse button
+    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
+
+def drag_im(start_point, end_point, window_location, steps=100, sleep_after_click=0.01, drag_duration=0.5):
+    """Click and drag on an image given a window location"""
+    global_start_point = (start_point[0] + window_location[0], start_point[1] + window_location[1])
+    global_end_point = (end_point[0] + window_location[0], end_point[1] + window_location[1])
+    click_and_drag(
+        global_start_point[0],
+        global_start_point[1],
+        global_end_point[0],
+        global_end_point[1],
+        steps=steps,
+        sleep_after_click=sleep_after_click,
+        drag_duration=drag_duration,
+    )
 
 
 def press_key(key: str):
