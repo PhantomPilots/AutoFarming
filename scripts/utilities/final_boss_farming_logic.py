@@ -47,6 +47,9 @@ class FinalBossFarmer(IFarmer):
         # Decide whether hell or challenge difficulty
         self.difficulty = kwargs["difficulty"]
 
+    def exit_message(self):
+        print(f"We beat the Final Boss {self.num_fights} times.")
+
     def going_to_fb_state(self):
         """This should be the original state. Let's go to the bird menu"""
         screenshot, window_location = capture_window()
@@ -133,7 +136,8 @@ class FinalBossFarmer(IFarmer):
         find_and_click(vio.boss_destroyed, screenshot, window_location)
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_results, screenshot, window_location)
-        find_and_click(vio.boss_mission, screenshot, window_location)
+        if find_and_click(vio.boss_mission, screenshot, window_location):
+            self.num_fights += 1
 
         # We may need to restore stamina
         find_and_click(vio.restore_stamina, screenshot, window_location)
