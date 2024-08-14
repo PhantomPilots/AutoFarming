@@ -103,7 +103,7 @@ class FinalBossFarmer(IFarmer):
                     drag_duration=0.2,
                 )
                 # And try to find 'challenge' now
-                time.sleep(1)
+                time.sleep(0.3)
             find_and_click(vio.challenge_difficulty, screenshot, window_location, threshold=0.7)
         else:
             print("You have chosen a wrong difficulty, defaulting to 'Hell'")
@@ -133,7 +133,7 @@ class FinalBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we've ended the fight...
-        find_and_click(vio.boss_destroyed, screenshot, window_location)
+        find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_results, screenshot, window_location)
         find_and_click(
@@ -141,7 +141,7 @@ class FinalBossFarmer(IFarmer):
         )
         if find_and_click(vio.boss_mission, screenshot, window_location):
             self.num_fights += 1
-            print(f"FB cleared! We've cleared it {self.num_fights} times so far.")
+            print(f"FB cleared! {self.num_fights} times so far.")
 
         # We may need to restore stamina
         find_and_click(vio.restore_stamina, screenshot, window_location)
@@ -160,6 +160,8 @@ class FinalBossFarmer(IFarmer):
             self.current_state = States.IN_FINAL_BOSS_MENU
 
     def run(self):
+
+        print(f"Farming {self.difficulty} Final Boss.")
 
         while True:
 
