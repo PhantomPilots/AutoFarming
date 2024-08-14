@@ -15,13 +15,12 @@ from utilities.feature_extractors import (
 )
 
 
-def load_card_type_features() -> list[np.ndarray]:
-    """Load all available data inside the 'data/' directory"""
-
+def load_dataset(glob_pattern: str) -> list[np.ndarray]:
+    """Return all the data and labels together, based on the specified file pattern"""
     dataset = []
     all_labels = []
 
-    for filepath in glob.iglob("data/*card_types*"):
+    for filepath in glob.iglob(glob_pattern):
         print(f"Loading {filepath}...")
         local_data = pickle.load(open(filepath, "rb"))
         data, labels = local_data["data"], local_data["labels"]
@@ -31,6 +30,14 @@ def load_card_type_features() -> list[np.ndarray]:
     dataset = np.concatenate(dataset, axis=0)
     all_labels = np.concatenate(all_labels, axis=0)
 
+    return dataset, all_labels
+
+
+def load_card_type_features() -> list[np.ndarray]:
+    """Load all available data inside the 'data/' directory"""
+
+    dataset, all_labels = load_dataset("data/*card_types*")
+
     # Load the features
     card_features = extract_color_features(images=dataset, type="median")
 
@@ -39,18 +46,8 @@ def load_card_type_features() -> list[np.ndarray]:
 
 def load_card_merges_features() -> list[np.ndarray]:
     """Load all available data corresponding to card merges, and extract their features"""
-    dataset = []
-    all_labels = []
 
-    for filepath in glob.iglob("data/*merges*"):
-        print(f"Loading {filepath}")
-        local_data = pickle.load(open(filepath, "rb"))
-        data, labels = local_data["data"], local_data["labels"]
-        dataset.append(data)
-        all_labels.append(labels)
-
-    dataset = np.concatenate(dataset, axis=0)
-    all_labels = np.concatenate(all_labels, axis=0)
+    dataset, all_labels = load_dataset("data/*merges*")
 
     # Extract all the features from `dataset`, now of shape (batch, 2, height, width, 3)
     features = extract_difference_of_histograms_features(dataset)
