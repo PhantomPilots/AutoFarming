@@ -14,17 +14,26 @@ from utilities.feature_extractors import (
 class IModel:
     """Interface class for any models needed. Is there anything they all share, to group here?"""
 
+    # Class variable for the model
+    model: KNeighborsClassifier = None
+
+    @classmethod
+    def _load_model(cls, model_filename: str):
+        """Load the model and assign it to the class variable."""
+        if cls.model is None:
+            with open(os.path.join("models", model_filename), "rb") as model_file:
+                cls.model = pickle.load(model_file)
+
 
 class CardTypePredictor(IModel):
     """Predictor for card types"""
 
-    # Load the trained model
-    with open(os.path.join("models", "card_type_predictor.knn"), "rb") as model_file:
-        model: KNeighborsClassifier = pickle.load(model_file)
-
     @staticmethod
     def predict_card_type(card_type_image: np.ndarray, feature_type: str = "median") -> CardTypes:
         """Extract the features from the card and predict its type"""
+
+        # Ensure the model is properly loaded
+        CardTypePredictor._load_model("card_type_predictor.knn")
 
         features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
         predicted_label = CardTypePredictor.model.predict(features).item()
@@ -33,13 +42,12 @@ class CardTypePredictor(IModel):
 
 class CardMergePredictor(IModel):
 
-    # Load the trained model
-    with open(os.path.join("models", "card_merges_predictor.lr"), "rb") as model_file:
-        model: LogisticRegression = pickle.load(model_file)
-
     @staticmethod
     def predict_card_merge(card_1: np.ndarray, card_2: np.ndarray) -> bool:
         """Extract the features and use the model to predict whether two cards are going to merge"""
+
+        # Ensure the model is properly loaded
+        CardMergePredictor._load_model("card_merges_predictor.lr")
 
         features = extract_difference_of_histograms_features((card_1, card_2))
         return int(CardMergePredictor.model.predict(features).item())
