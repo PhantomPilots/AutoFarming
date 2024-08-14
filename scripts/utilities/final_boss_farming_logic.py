@@ -1,4 +1,3 @@
-import threading
 import time
 from enum import Enum
 
@@ -6,21 +5,15 @@ import pyautogui as pyautogui
 
 # Import all images
 import utilities.vision_images as vio
-from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    determine_relative_coordinates,
-    display_image,
     drag_im,
     find,
     find_and_click,
-    find_floor_coordinates,
-    get_hand_cards,
-    screenshot_testing,
 )
 
 

@@ -107,6 +107,7 @@ The scripts don't account for random pop-ups (such as demon invitations), so mak
 
 ## Longer-term features
 
+- [ ] Implement a farmer for Floor 4 of Bird (WIP).
 - [ ] Allow starting the scripts from ANYWHERE.
 - [ ] Make the scripts independent of the window size (i.e., scale-invariant).
 - [ ] If the 'auto' button is available and OFF, click on it and disable the battle fighter (for fights other than demonic beasts).

@@ -1,6 +1,6 @@
 import threading
+import time
 from enum import Enum
-from time import sleep
 
 import pyautogui as pyautogui
 
@@ -13,13 +13,9 @@ from utilities.general_farmer_interface import IFarmer
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    determine_relative_coordinates,
-    display_image,
     find,
     find_and_click,
     find_floor_coordinates,
-    get_hand_cards,
-    screenshot_testing,
 )
 
 
@@ -212,4 +208,4 @@ class BirdFarmer(IFarmer):
             elif self.current_state == States.RESETTING_BIRD:
                 self.resetting_bird_state()
 
-            sleep(0.8)
+            time.sleep(0.8)

@@ -71,7 +71,8 @@ class IFighter(abc.ABC):
             self._play_card(selected_cards, card_index, window_location)
 
     def _play_card(self, selected_cards: list[Card], idx: int, window_location: np.ndarray):
-        """Picks the corresponding card from the list, and EATS IT!"""
+        """Picks the corresponding card from the list, and EATS IT!
+        TODO: Account for manual card merges, how to do that?"""
         rectangle = selected_cards[idx].rectangle
         click_im(rectangle, window_location, sleep_after_click=0.05)
 
