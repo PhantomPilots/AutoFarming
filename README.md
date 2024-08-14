@@ -90,7 +90,7 @@ Requirements:
 
 ## Final Boss farming script
 
-It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change the difficulty, simply change the desired difficulty name in the script:
+It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change the difficulty, simply change the desired difficulty name in the script. It may default to either "challenge" or "hell", pay attention in which one you want:
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 
@@ -100,9 +100,13 @@ If the script doesn't work as expected (e.g., not clicking anywhere), make sure 
 
 The scripts don't account for random pop-ups (such as demon invitations), so make sure you have those notifications disabled.
 
-## Future features
 
-- [ ] Consider attack-debuff and buff cards in the battle AI.
+## Shorter-term features
+- [X] Consider attack-debuff and buff cards in the battle AI.
+- [ ] Consider buff cards.
+
+## Longer-term features
+
 - [ ] Allow starting the scripts from ANYWHERE.
 - [ ] Make the scripts independent of the window size (i.e., scale-invariant).
 - [ ] If the 'auto' button is available and OFF, click on it and disable the battle fighter (for fights other than demonic beasts).
