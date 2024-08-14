@@ -27,7 +27,7 @@ class IBattleStrategy(abc.ABC):
 
     def _select_cards_from_indices(self, house_of_cards: list[Card], indices: np.ndarray) -> list[Card]:
         """Given the selected indices, select the cards accounting for card shifts
-        TODO: Poor quality code, and it could probably be done recursively to further improve the logic.
+        TODO: Poor quality code, and it should probably be done recursively to further improve the logic.
         """
 
         # Let's keep a copy of the original list of cards
@@ -81,7 +81,7 @@ class DummyBattleStrategy(IBattleStrategy):
     """Always pick the rightmost four cards, regardless of what they are"""
 
     def identify_card_indices(self, list_of_cards: list[Card]) -> np.ndarray:
-        """Get the rightmost 4 cards, in the right order"""
+        """Always get the rightmost 4 cards"""
         return np.array([7, 6, 5, 4])
 
 
@@ -96,6 +96,8 @@ class SmarterBattleStrategy(IBattleStrategy):
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
         card_types = np.array([card.card_type.value for card in list_of_cards][::-1])
         card_ranks = np.array([card.card_rank.value for card in list_of_cards][::-1])
+        # Keep track of all the indices
+        all_indices = np.arange(len(list_of_cards))
 
         # Initialization required
         stance_ids = []
@@ -119,12 +121,22 @@ class SmarterBattleStrategy(IBattleStrategy):
         attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
 
         # Append everything together
-        indices = np.hstack((ult_ids, stance_ids, recovery_ids, attack_ids)).astype(int)
+        selected_indices = np.hstack((ult_ids, recovery_ids, stance_ids, attack_ids)).astype(int)
 
-        # Go back to the original indexing
-        indices = len(list_of_cards) - 1 - indices
+        # Let's extract the disabled cards too, to append them at the very end
+        disabled_ids = np.where(card_types == CardTypes.DISABLED.value)[0]
 
-        return indices
+        # Find the remaining cards, and append them at the end
+        remaining_indices = np.setdiff1d(all_indices, np.hstack((selected_indices, disabled_ids)))
+
+        # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
+        # NOTE that the "ground" IDs will always be at the very end by default
+        final_indices = np.hstack((selected_indices, remaining_indices, disabled_ids))
+
+        # Go back to the original indexing (0 the leftmost, 'n' the rightmost)
+        final_indices = len(list_of_cards) - 1 - final_indices
+
+        return final_indices
 
 
 class RecursiveBattleStrategy(IBattleStrategy):
