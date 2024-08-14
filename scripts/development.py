@@ -15,7 +15,8 @@ from utilities.utilities import (
 def development():
     """Some development function calls"""
 
-    determine_relative_coordinates(capture_window()[0])
+    # determine_relative_coordinates(capture_window()[0])
+    screenshot_testing(vision_image=vio.floor_3_cleard_2, threshold=0.8)
 
     # cards = get_hand_cards()
     # for i, card in enumerate(cards, start=0):
@@ -36,7 +37,6 @@ def development():
     #         display_image(card.card_image)
 
     # determine_relative_coordinates(capture_hand_image)
-    # screenshot_testing(vision_image=vio.again, threshold=0.8)
 
     # _, window_location = capture_window()
     # start_drag = (window_location[0] + 280, window_location[1] + 810)

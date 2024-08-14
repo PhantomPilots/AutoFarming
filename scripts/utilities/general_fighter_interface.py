@@ -37,11 +37,7 @@ class IFighter(abc.ABC):
         IFighter.exit_thread = False
         self.current_state = FightingStates.FIGHTING
         self.available_card_slots = 0
-        self.current_hand: list[Card] | None = None
-
-    @staticmethod
-    def _signal_hander(*args):
-        IFighter.exit_thread = True
+        self.current_hand: list[Card] = None
 
     def play_cards(self, selected_cards: list[Card], screenshot: np.ndarray, window_location: np.ndarray):
         """Click on the cards from the picked cards to play."""

@@ -101,7 +101,9 @@ def screenshot_testing(vision_image: Vision, threshold=0.8):
 def count_empty_card_slots(screenshot, threshold=0.7):
     """Ideally used within a fight, count how many empty card slots we have available"""
     rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
-    return rectangles.shape[0]
+    # The second one is in case we cannot play ANY card. Then, the empty card slots look different
+    rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
+    return rectangles.shape[0] + rectangles_2.shape[0]
 
 
 def check_for_reconnect():

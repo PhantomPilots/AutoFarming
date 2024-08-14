@@ -140,18 +140,26 @@ class SmarterBattleStrategy(IBattleStrategy):
             )
         )
 
-        # Let's extract the disabled cards too, to append them at the very end
+        # Let's extract the DISABLED and GROUND cards too, to append them at the very end
         disabled_ids = np.where(card_types == CardTypes.DISABLED.value)[0]
+        ground_ids = np.where(card_types == CardTypes.GROUND.value)[0]
 
-        # Find the remaining cards (without considering the disabled cards), and append them at the end
-        remaining_indices = np.setdiff1d(all_indices, np.hstack((selected_indices, disabled_ids)))
+        # print("disabled IDs:", disabled_ids)
+        # print("selected IDs:", selected_indices)
+
+        # Find the remaining cards (without considering the disabled/ground cards), and append them at the end
+        remaining_indices = np.setdiff1d(all_indices, np.hstack((selected_indices, disabled_ids, ground_ids)))
+
+        # print("remaining indices:", remaining_indices)
 
         # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        # NOTE that the "ground" IDs will always be at the very very end by default, so no need to account for them
         final_indices = np.hstack((selected_indices, remaining_indices, disabled_ids))
 
         # Go back to the original indexing (0 the leftmost, 'n' the rightmost)
         final_indices = len(list_of_cards) - 1 - final_indices
+
+        # print("Final indices:", final_indices)
+        # raise ValueError("Debugging")
 
         return final_indices.astype(int)
 

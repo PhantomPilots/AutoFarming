@@ -52,8 +52,8 @@ class Floor4Farmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        # Restore stamina if we need to
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        # In case we need to unlock the floor
+        find_and_click(vio.fb_ok_button, screenshot, window_location)
 
         # Click on floor 4 if it's available
         find_and_click(vio.floor_3_cleard, screenshot, window_location)
