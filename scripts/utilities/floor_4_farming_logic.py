@@ -67,7 +67,8 @@ class Floor4Farmer(IFarmer):
 
         if victory:
             # Transition to another state or perform clean-up actions
-            print("Floor 4 complete! Going back to the original state")
+            print("Floor 4 complete!")
+            self.success_count += 1
         else:
             print("The bird fighter told me they lost... :/")
 
