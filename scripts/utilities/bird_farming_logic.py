@@ -35,7 +35,8 @@ class BirdFarmer(IFarmer):
         self.current_state = starting_state
 
         # Using composition to decouple the main farmer logic from the actual fight.
-        # Pass in the callback to call after the fight is complete
+        # Pass in the callback to call after the fight is complete.
+        # Using the previous BirdFighter!
         self.bird_fighter: IFighter = BirdFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
@@ -142,9 +143,7 @@ class BirdFarmer(IFarmer):
             self.current_state = States.FIGHTING_FLOOR
 
     def fighting_floor(self):
-        """This state will be the entire fight.
-        We should find a way to write its logic in another state machine, but without blocking this one...
-        With multithreading maybe?"""
+        """This state contains the entire fight."""
 
         screenshot, window_location = capture_window()
 
