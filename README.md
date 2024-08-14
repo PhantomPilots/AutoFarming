@@ -98,9 +98,11 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
 
+The scripts don't account for random pop-ups (such as demon invitations), so make sure you have those notifications disabled.
+
 ## Future features
 
-- [ ] Make smarter AIs.
+- [ ] Consider attack-debuff and buff cards in the battle AI.
 - [ ] Allow starting the scripts from ANYWHERE.
 - [ ] Make the scripts independent of the window size (i.e., scale-invariant).
 - [ ] If the 'auto' button is available and OFF, click on it and disable the battle fighter (for fights other than demonic beasts).
