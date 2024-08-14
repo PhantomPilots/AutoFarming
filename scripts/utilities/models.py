@@ -19,7 +19,8 @@ class CardTypePredictor(IModel):
     """Predictor for card types"""
 
     # Load the trained model
-    model: KNeighborsClassifier = pickle.load(open(os.path.join("models", "card_type_predictor.knn"), "rb"))
+    with open(os.path.join("models", "card_type_predictor.knn"), "rb") as model_file:
+        model: KNeighborsClassifier = pickle.load(model_file)
 
     @staticmethod
     def predict_card_type(card_type_image: np.ndarray, feature_type: str = "median") -> CardTypes:
@@ -32,8 +33,9 @@ class CardTypePredictor(IModel):
 
 class CardMergePredictor(IModel):
 
-    # Load the model
-    model: LogisticRegression = pickle.load(open(os.path.join("models", "card_merges_predictor.lr"), "rb"))
+    # Load the trained model
+    with open(os.path.join("models", "card_merges_predictor.lr"), "rb") as model_file:
+        model: LogisticRegression = pickle.load(model_file)
 
     @staticmethod
     def predict_card_merge(card_1: np.ndarray, card_2: np.ndarray) -> bool:
