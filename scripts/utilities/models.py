@@ -15,7 +15,7 @@ class IModel:
     """Interface class for any models needed. Is there anything they all share, to group here?"""
 
     # Class variable for the model
-    model: KNeighborsClassifier = None
+    model: KNeighborsClassifier | LogisticRegression = None
 
     @classmethod
     def _load_model(cls, model_filename: str):

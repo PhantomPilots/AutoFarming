@@ -99,44 +99,61 @@ class SmarterBattleStrategy(IBattleStrategy):
         # Keep track of all the indices
         all_indices = np.arange(len(list_of_cards))
 
-        # Initialization required
-        stance_ids = []
-
-        # Extract ultimate indices first
+        # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
 
-        # Extract the first recovery
+        # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if recovery_ids.size:
-            recovery_ids = recovery_ids[[0]]
-        if not recovery_ids.size:
+        first_recovery_id = recovery_ids[[0]] if recovery_ids.size else np.array([])
+
+        # STANCE CARDS
+        # Initialization required
+        first_stance_id = []
+        if not first_recovery_id.size:
             # Extract the first stance index ONLY if we're not using a recovery
             stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-            if stance_ids.size:
-                stance_ids = stance_ids[[0]]
+            first_stance_id = stance_ids[[0]] if stance_ids.size else []
 
-        # Extract all the attack cards
+        # ATATCK-DEBUFF CARDS
+        att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
+        # Sort them based on card ranks
+        att_debuff_ids = np.array(sorted(att_debuff_ids, key=lambda idx: card_ranks[idx], reverse=True))
+        first_att_debuff_id = att_debuff_ids[[0]] if att_debuff_ids.size else []
+        if len(first_att_debuff_id):
+            # Remove the first one from the list, since we'll use the att_debuff_ids list later
+            att_debuff_ids = np.delete(att_debuff_ids, 0)
+
+        # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
         # Lets sort the attack cards based on their rank
         attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
 
-        # Append everything together
-        selected_indices = np.hstack((ult_ids, recovery_ids, stance_ids, attack_ids)).astype(int)
+        # APPEND EVERYTHING together: Ultimates, 1 recovery, 1 stance, 1 attack-debuff, all attacks, all attack-debuffs, the rest
+        selected_indices = np.hstack(
+            (
+                ult_ids,
+                first_recovery_id,
+                first_stance_id,
+                first_att_debuff_id,
+                attack_ids,
+                att_debuff_ids,
+            )
+        )
 
         # Let's extract the disabled cards too, to append them at the very end
         disabled_ids = np.where(card_types == CardTypes.DISABLED.value)[0]
 
-        # Find the remaining cards, and append them at the end
+        # Find the remaining cards (without considering the disabled cards), and append them at the end
         remaining_indices = np.setdiff1d(all_indices, np.hstack((selected_indices, disabled_ids)))
 
         # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        # NOTE that the "ground" IDs will always be at the very end by default
+        # NOTE that the "ground" IDs will always be at the very very end by default, so no need to account for them
         final_indices = np.hstack((selected_indices, remaining_indices, disabled_ids))
 
         # Go back to the original indexing (0 the leftmost, 'n' the rightmost)
         final_indices = len(list_of_cards) - 1 - final_indices
 
-        return final_indices
+        return final_indices.astype(int)
 
 
 class RecursiveBattleStrategy(IBattleStrategy):

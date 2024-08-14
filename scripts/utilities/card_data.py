@@ -8,9 +8,9 @@ class CardTypes(Enum):
     ATTACK = 0
     STANCE = 1
     RECOVERY = 2
-    DEBUFF = 3
-    BUFF = 4
-    ATTACK_DEBUFF = 5
+    ATTACK_DEBUFF = 3
+    DEBUFF = 4
+    BUFF = 5
     ULTIMATE = -1  # How to properly identify ultimate cards? The "default" class?
     DISABLED = 9  # Group all cards that are disabled together -- since they are grayed out, the median color should be very close
     GROUND = 10  # If some units die, their card spaces are empty ground!

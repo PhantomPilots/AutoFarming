@@ -38,7 +38,7 @@ class FinalBossFarmer(IFarmer):
         # Initialize the current state
         self.current_state = starting_state
 
-        # Unused, bad code
+        # TODO: Unused, bad coding
         self.bird_fighter = battle_strategy
 
         # Keep track of how many fights have been done

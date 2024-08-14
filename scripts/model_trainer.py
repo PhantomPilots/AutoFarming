@@ -68,9 +68,8 @@ def train_knn(X: np.ndarray, labels: np.ndarray[CardTypes]) -> KNeighborsClassif
     """Train a K-NN classifier on the card types"""
 
     # Split the data
-    X_train, X_test, y_train_enum, y_test_enum = train_test_split(X, labels, test_size=0.2, stratify=labels)
-    y_train = [label.value for label in y_train_enum]
-    y_test = [label.value for label in y_test_enum]
+    labels_values = [label.value for label in labels]
+    X_train, X_test, y_train, y_test = train_test_split(X, labels_values, test_size=0.2, stratify=labels_values)
 
     # Create the K-NN model
     k = 3  # Choose the number of neighbors
@@ -158,7 +157,7 @@ def train_card_types_model():
     # explore_features(features=features, labels=labels, label_type=CardTypes.STANCE)
 
     # Save the trained model
-    save_model(knn_model=knn_model, filename="card_type_predictor.knn")
+    save_model(knn_model, filename="card_type_predictor.knn")
 
 
 def train_card_merges_model():
@@ -172,12 +171,10 @@ def train_card_merges_model():
 def main():
 
     # For card types
-    # train_card_types_model()
+    train_card_types_model()
 
     # For card merges
-    train_card_merges_model()
-
-    # For card ranks
+    # train_card_merges_model()
 
     return
 
