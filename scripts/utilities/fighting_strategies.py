@@ -5,7 +5,6 @@ import abc
 from copy import deepcopy
 
 import numpy as np
-from utilities.battle_utilities import handle_card_merge
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import determine_card_merge, display_image, get_hand_cards
 
@@ -24,21 +23,15 @@ class IBattleStrategy(abc.ABC):
         # Extract the indices
         card_indices = self.identify_card_indices(list_of_cards)
 
-        return self._update_indices_from_card_hand(list_of_cards, card_indices)
+        return self._select_cards_from_indices(list_of_cards, card_indices), card_indices
 
-    def _update_indices_from_card_hand(self, original_house_of_cards: list[Card], indices: np.ndarray) -> list[Card]:
+    def _select_cards_from_indices(self, house_of_cards: list[Card], indices: np.ndarray) -> list[Card]:
         """Given the selected indices, select the cards accounting for card shifts
         TODO: Poor quality code, and it should probably be done recursively to further improve the logic.
-
-        Args:
-            original_house_of_cards (list[Card]): List of the cards in hand before any is played.
-            indices (np.ndarray): Original cards we want to play.
-                                  The indices will have to be modified accounting for shifts and merges RECURSIVELY.
-
         """
 
         # Let's keep a copy of the original list of cards
-        house_of_cards = deepcopy(original_house_of_cards)
+        original_house_of_cards = deepcopy(house_of_cards)
 
         for i, idx in enumerate(indices):
             idx: int
@@ -46,23 +39,36 @@ class IBattleStrategy(abc.ABC):
             # Let's shift the indices vector first
             mask = indices[i + 1 :] < idx
             indices[i + 1 :][mask] += 1
+            # print("Index shifts:", mask, indices)
 
-            # If we're not at the beginning or end of the list, let's handle the card merges
+            # Now, let's handle the merge...
             if idx > 0 and idx < len(house_of_cards) - 1:
-                handle_card_merge(
-                    house_of_cards,
-                    left_card_idx=idx - 1,
-                    right_card_idx=idx + 1,
-                    indices_to_update=indices[i + 1 :][mask],
-                )
+                left_card, right_card = (house_of_cards[idx - 1], house_of_cards[idx + 1])
+                center_card = house_of_cards[idx]
 
-            # Since we assume we play a card now, let's remove it from the house of cards
+                if left_card and right_card and determine_card_merge(left_card, right_card):
+                    print(f"Card {center_card.card_type.name} with idx {idx} generates a merge!")
+                    # Increase the indices again -- We should not recompute the mask!
+                    indices[i + 1 :][mask] += 1
+                    # print("Index shifts after the merge:", indices)
+
+                    # Increase the rank of the right card
+                    if house_of_cards[idx + 1].card_rank.value != 2:
+                        house_of_cards[idx + 1].card_rank = CardRanks(house_of_cards[idx + 1].card_rank.value + 1)
+
+                    # Remove the left card
+                    house_of_cards.pop(idx - 1)
+                    # Let's insert a dummy card to keep proper indexing
+                    house_of_cards.insert(0, None)
+
             house_of_cards.pop(idx)
             # Let's insert the dummy card again
             house_of_cards.insert(0, None)
 
+        # print("Final indices:", indices)
+
         # Finally, return the selected cards from the original house of cards!
-        return original_house_of_cards, indices
+        return np.array(original_house_of_cards)[indices].tolist()
 
     @abc.abstractmethod
     def identify_card_indices(self, list_of_cards: list[Card]) -> tuple[list[Card], np.ndarray]:
@@ -156,3 +162,21 @@ class SmarterBattleStrategy(IBattleStrategy):
         # raise ValueError("Debugging")
 
         return final_indices.astype(int)
+
+
+class RecursiveBattleStrategy(IBattleStrategy):
+    """Implement the logic recursively"""
+
+    def pick_cards(self) -> tuple[list[Card], np.ndarray]:
+        """"""
+
+    def _select_cards_from_indices(
+        self, house_of_cards: list[Card], n: int, indices_list: list[int] = None
+    ) -> np.ndarray:
+        """Return the indices of cards to click on, computed recursively
+
+        Args:
+            house_of_cards (list[Card]): Remaining list of cards for the next index to pic.
+            n (int): How many cards left to pick.
+            indices_list (list[int]): List of indices of cards
+        """

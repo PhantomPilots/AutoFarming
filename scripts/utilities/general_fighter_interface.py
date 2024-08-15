@@ -37,41 +37,29 @@ class IFighter(abc.ABC):
         IFighter.exit_thread = False
         self.current_state = FightingStates.FIGHTING
         self.available_card_slots = 0
-        # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
-        self.current_hand: tuple[list[Card], list[int]] = None
+        self.current_hand: list[Card] = None
 
-    def play_cards(
-        self, selected_cards: tuple[list[Card], list[int]], screenshot: np.ndarray, window_location: np.ndarray
-    ):
-        """Click on the cards from the picked cards to play.
-
-        Args:
-            selected_cards (tuple[list[Card], list[int]]): A tuple of two elements: The first is the original list of cards,
-                                                           the second one is the list of indices to click on. NOTE that they already
-                                                           account for card merges and card shifts.
-        """
+    def play_cards(self, selected_cards: list[Card], screenshot: np.ndarray, window_location: np.ndarray):
+        """Click on the cards from the picked cards to play."""
 
         empty_card_slots = count_empty_card_slots(screenshot)
+        # if empty_card_slots == 1:
+        #     raise ValueError("debugging")
 
         if empty_card_slots > self.available_card_slots:
             # A patch in case we read the available card slots wrongly earlier
             self.available_card_slots = empty_card_slots
 
-        if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
-            # Read the card index based on how many empty slots we had at the beginning, and how many we have now
-            slot_index = self.available_card_slots - empty_card_slots
-            # What is the index in the hand we have to play?
-            index_to_play = selected_cards[1][slot_index]
-            # What card does that index correspond to? Used only to extract the rectangle
-            card_to_play = selected_cards[0][index_to_play]
-            # TODO: Consider the action: Either play the card or merge it with another one!
-            self._play_card(card_to_play, window_location)
+        if empty_card_slots > 0 and len(selected_cards) >= empty_card_slots:
+            # Compute the card index based on how many empty slots we had at the beginning, and how many we have now
+            card_index = self.available_card_slots - empty_card_slots
+            print("Playing card...")
+            self._play_card(selected_cards, card_index, window_location)
 
-    def _play_card(self, card_to_play: Card, window_location: np.ndarray):
+    def _play_card(self, selected_cards: list[Card], idx: int, window_location: np.ndarray):
         """Picks the corresponding card from the list, and EATS IT!
         TODO: Account for manual card merges, how to do that?"""
-        print("Playing card...")
-        rectangle = card_to_play.rectangle
+        rectangle = selected_cards[idx].rectangle
         click_im(rectangle, window_location, sleep_after_click=0.05)
 
     @staticmethod
