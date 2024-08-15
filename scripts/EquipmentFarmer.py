@@ -1,11 +1,5 @@
-import utilities.vision_images as vio
 from utilities.equipment_farming_logic import EquipmentFarmer, States
 from utilities.farming_factory import FarmingFactory
-from utilities.utilities import (
-    determine_relative_coordinates,
-    press_key,
-    screenshot_testing,
-)
 
 
 def main():
@@ -18,9 +12,5 @@ def main():
 
 
 if __name__ == "__main__":
-
-    ## The two lines below are for development purposes, don't uncomment
-    # determine_relative_coordinates()
-    # screenshot_testing(vision_image=vio.auto_repeat_ended, threshold=0.8)
 
     main()
