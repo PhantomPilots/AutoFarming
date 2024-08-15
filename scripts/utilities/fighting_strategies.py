@@ -5,7 +5,7 @@ import abc
 from copy import deepcopy
 
 import numpy as np
-from utilities.battle_utilities import handle_card_merge
+from utilities.battle_utilities import handle_card_merges
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import determine_card_merge, display_image, get_hand_cards
 
@@ -49,7 +49,7 @@ class IBattleStrategy(abc.ABC):
 
             # If we're not at the beginning or end of the list, let's handle the card merges
             if idx > 0 and idx < len(house_of_cards) - 1:
-                handle_card_merge(
+                handle_card_merges(
                     house_of_cards,
                     left_card_idx=idx - 1,
                     right_card_idx=idx + 1,
@@ -156,3 +156,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         # raise ValueError("Debugging")
 
         return final_indices.astype(int)
+
+
+class Floor4BattleStrategy(IBattleStrategy):
+    """The logic behind the battle for the 4 floors"""
