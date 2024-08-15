@@ -59,7 +59,7 @@ class BirdFighter(IFighter):
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand, _ = self.battle_strategy.pick_cards()
+            self.current_hand = self.battle_strategy.pick_cards()
 
         # We have the cards now, click on them
         self.play_cards(self.current_hand, screenshot, window_location)
