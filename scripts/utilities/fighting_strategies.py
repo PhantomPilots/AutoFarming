@@ -157,3 +157,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         # raise ValueError("Debugging")
 
         return final_indices.astype(int)
+
+
+class Floor4BattleStrategy(IBattleStrategy):
+    """The logic behind the battle for the 4 floors"""
