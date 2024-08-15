@@ -1,5 +1,7 @@
 """This file should be improved in the future to account for a variable game window."""
 
+from utilities.capture_window import capture_window
+
 
 class Coordinates:
     """Namespace-like class to group all the hardcoded coordinates"""
@@ -23,8 +25,22 @@ class Coordinates:
         "start_drag": (280, 810),
         "end_drag": (280, 550),
         "showdown": (280, 870),
+        # Dogs farming
+        "light_dog": (346, 386),
+        "dark_dog": (160, 412),
+        # Card slots
+        "first_slot": (161, 746),
+        "second_slot": (227, 746),
+        "third_slot": (276, 746),
+        "fourth_slot": (331, 746),
+        "fifth_slot": (397, 746),
     }
 
     @staticmethod
     def get_coordinates(event):
-        return Coordinates.coordinates[event]
+        x, y = Coordinates.coordinates[event]
+
+        # Adjust their size based on the window!
+        screenshot, _ = capture_window()
+        y_ref, x_ref = screenshot.shape[:2]
+        return int(x / 552 * x_ref), int(y / 948 * y_ref)

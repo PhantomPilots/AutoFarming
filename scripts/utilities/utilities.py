@@ -16,67 +16,18 @@ import win32gui
 import win32ui
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from utilities.capture_window import capture_window
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.models import (
     AmplifyCardPredictor,
     CardMergePredictor,
     CardTypePredictor,
+    GroundCardPredictor,
     HAMCardPredictor,
     ThorCardPredictor,
 )
 from utilities.vision import Vision
-
-
-def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
-    """Make a screenshot of the 7DS window.
-    Returns:
-        tuple[np.ndarray, list[float]]: The image as a numpy array, and a list of the top-left corner of the window as [x,y]
-    """
-    hwnd_target = win32gui.FindWindow(None, r"7DS")
-    window_rect = win32gui.GetWindowRect(hwnd_target)
-    w = window_rect[2] - window_rect[0]
-    h = window_rect[3] - window_rect[1]
-    window_location = [window_rect[0], window_rect[1]]
-
-    # Remove border pixels -- TODO: Necessary?
-    border_pixels = 2
-    w = w - (border_pixels * 2)
-    h = h - 20
-
-    # Whatever this is?
-    hdesktop = win32gui.GetDesktopWindow()
-    hwndDC = win32gui.GetWindowDC(hdesktop)
-    mfcDC = win32ui.CreateDCFromHandle(hwndDC)
-    saveDC = mfcDC.CreateCompatibleDC()
-
-    saveBitMap = win32ui.CreateBitmap()
-    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
-
-    saveDC.SelectObject(saveBitMap)
-    saveDC.BitBlt((0, 0), (w, h), mfcDC, (window_rect[0], window_rect[1]), win32con.SRCCOPY)
-
-    # bmpinfo = saveBitMap.GetInfo()
-    bmpstr = saveBitMap.GetBitmapBits(True)
-
-    # convert the raw data into a format opencv can read
-    img = np.frombuffer(bmpstr, dtype="uint8")
-    # Reshape the array
-    img = img.reshape(h, w, 4)
-
-    # free resources
-    win32gui.DeleteObject(saveBitMap.GetHandle())
-    saveDC.DeleteDC()
-    mfcDC.DeleteDC()
-    win32gui.ReleaseDC(hdesktop, hwndDC)
-    img = img[..., :3]
-
-    img = np.ascontiguousarray(img)
-    # get updated window location
-    window_rect = win32gui.GetWindowRect(hwnd_target)
-    window_location = [window_rect[0], window_rect[1]]
-
-    return img, window_location
 
 
 def get_window_size():
@@ -89,6 +40,27 @@ def get_window_size():
     return w, h
 
 
+def draw_rectangles(haystack_img, rectangles: np.ndarray) -> np.ndarray:
+    """Given a list of [x, y, w, h] rectangles and a canvas image to draw on, return an image with
+    all of those rectangles drawn"""
+
+    # these colors are actually BGR
+    line_color = (0, 255, 0)
+    line_type = cv2.LINE_4
+
+    # Expand to 2D if 1-dimensional
+    rectangles = rectangles[None, ...] if rectangles.ndim == 1 else rectangles
+
+    for x, y, w, h in rectangles:
+        # determine the box positions
+        top_left = (x, y)
+        bottom_right = (x + w, y + h)
+        # draw the box
+        cv2.rectangle(haystack_img, top_left, bottom_right, line_color, lineType=line_type)
+
+    return haystack_img
+
+
 def screenshot_testing(vision_image: Vision, threshold=0.8):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
     # screenshot, _ = get_unfocused_screenshot()
@@ -99,7 +71,7 @@ def screenshot_testing(vision_image: Vision, threshold=0.8):
     # rectangle = vision_image.find(screenshot, threshold=threshold)
     rectangles, _ = vision_image.find_all_rectangles(screenshot, threshold=threshold)
     if rectangles.size:
-        new_image = vision_image.draw_rectangles(screenshot, rectangles)
+        new_image = draw_rectangles(screenshot, rectangles)
         cv2.imshow("Rectangles", new_image)
         cv2.waitKey(0)
 
@@ -108,14 +80,6 @@ def screenshot_testing(vision_image: Vision, threshold=0.8):
 
     # Simply to stop the execution of the rest of the code
     raise ValueError("This function should only be used for testing, killing program execution.")
-
-
-def count_empty_card_slots(screenshot, threshold=0.7):
-    """Ideally used within a fight, count how many empty card slots we have available"""
-    rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
-    # The second one is in case we cannot play ANY card. Then, the empty card slots look different
-    rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
-    return rectangles.shape[0] + rectangles_2.shape[0]
 
 
 def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7):
@@ -188,6 +152,13 @@ def click_im(rectangle_or_point: Union[np.ndarray, tuple], window_location: list
 
     (x, y) = (x + window_location[0], y + window_location[1])
     click(x, y, sleep_after_click)
+
+
+def move_to_location(point: np.ndarray | tuple, window_location: list[float]):
+    """Move the cursor to a location without clicking on it"""
+    (x, y) = (point[0] + window_location[0], point[1] + window_location[1])
+    pyautogui.moveTo(x, y)
+    time.sleep(0.1)
 
 
 def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.8) -> bool:
@@ -412,8 +383,14 @@ def get_hand_cards() -> list[Card]:
     return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
 
 
-def determine_card_type(card: np.ndarray) -> CardTypes:
+def determine_card_type(card: np.ndarray | None) -> CardTypes:
     """Predict the card type"""
+
+    # First, use the ground predictor. If it returns GROUND, no need to explore further
+    if card is None or GroundCardPredictor.is_ground_card(get_card_interior_image(card)):
+        return CardTypes.GROUND
+
+    # If the above didn't return GROUND, explore it further. This logic allows for backwards compatibility (with Bird, for instance)
     card_type_image = get_card_type_image(card)
     return CardTypePredictor.predict_card_type(card_type_image)
 

@@ -1,11 +1,13 @@
 import numpy as np
+import pyautogui
 import utilities.vision_images as vio
 from utilities.card_data import CardTypes
+from utilities.coordinates import Coordinates
+from utilities.dogs_fighter import DogsFighter
 from utilities.utilities import (
     capture_hand_image,
     capture_window,
     click_and_drag,
-    count_empty_card_slots,
     crop_image,
     determine_card_merge,
     determine_relative_coordinates,
@@ -14,6 +16,7 @@ from utilities.utilities import (
     get_hand_cards,
     is_amplify_card,
     is_Meli_card,
+    move_to_location,
     screenshot_testing,
 )
 
@@ -24,17 +27,27 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # hand_image = capture_hand_image()
+    # screenshot_testing(vision_image=vio.empty_slot_2, threshold=0.7)
+
+    DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
+
+    # # Test the 'move to location'
+    # move_to_location(Coordinates.get_coordinates("fifth_slot"), window_location)
+    # screenshot, window_location = capture_window()
+    # # display_image(screenshot)
+    # screenshot_testing(vision_image=vio.card_slot, threshold=0.9)
+
+    # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
     # determine_relative_coordinates(screenshot)
-    screenshot_testing(vision_image=vio.preparation_incomplete, threshold=0.8)
 
+    # hand_image = capture_hand_image()
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    cards = get_hand_cards()
-    for i, card in enumerate(cards, start=0):
-        print(f"Is {card.card_type.name} Meli's?", is_Meli_card(card))
+    # cards = get_hand_cards()
+    # for i, card in enumerate(cards, start=0):
+    #     print(f"Is {card.card_type.name} Meli's?", is_Meli_card(card))
     #     print(card.card_type.name, card.card_rank.name)
 
     #     # print(card.card_image.shape)
@@ -51,7 +64,7 @@ def development():
     #         print("Card generates a merge!")
     #         display_image(card.card_image)
 
-    # determine_relative_coordinates(capture_hand_image)
+    # determine_relative_coordinates(screenshot)
 
     # _, window_location = capture_window()
     # start_drag = (window_location[0] + 280, window_location[1] + 810)

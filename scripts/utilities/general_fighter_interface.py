@@ -14,7 +14,6 @@ from utilities.utilities import (
     capture_hand_image,
     capture_window,
     click_im,
-    count_empty_card_slots,
     display_image,
     drag_im,
     get_click_point_from_rectangle,
@@ -72,7 +71,7 @@ class IFighter(abc.ABC):
         """
 
         screenshot, window_location = capture_window()
-        empty_card_slots = count_empty_card_slots(screenshot)
+        empty_card_slots = self.count_empty_card_slots(screenshot)
 
         # if empty_card_slots == 1:
         #     raise RuntimeError("Debugging")
@@ -152,6 +151,10 @@ class IFighter(abc.ABC):
         """State in which the 4 cards will be picked and clicked.
         Needs to be implemented by subclasses.
         """
+
+    @staticmethod
+    def count_empty_card_slots(screenshot, threshold=0.7):
+        """Count how many card slots are there. Needs to be overriden, because it's very fight-specific!"""
 
     @abc.abstractmethod
     def run(self):

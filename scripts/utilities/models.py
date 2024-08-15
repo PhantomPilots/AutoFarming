@@ -135,3 +135,23 @@ class ThorCardPredictor(IModel):
 
         # Finally, predict HAM card
         return int(ThorCardPredictor.model.predict(features_reduced).item())
+
+
+class GroundCardPredictor(IModel):
+    """Class that identifies if a card is ground or not"""
+
+    @staticmethod
+    def is_ground_card(card: np.ndarray) -> bool:
+        """Predict ground card"""
+
+        # Ensure models are properly loaded
+        GroundCardPredictor._load_feature_transform_model("pca_ground_cards_model.pca")
+        GroundCardPredictor._load_model("ground_cards_predictor.svm")
+
+        # Extract the features
+        features = extract_color_histograms_features(card, bins=(8, 8, 8))
+        # Transform the features
+        features_reduced = GroundCardPredictor.feature_transform_model.transform(features)
+
+        # Predict if the card is ground
+        return int(GroundCardPredictor.model.predict(features_reduced).item())

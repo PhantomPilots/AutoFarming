@@ -103,6 +103,21 @@ def load_thor_cards_features() -> list[np.ndarray]:
     return features_reduced, all_labels, pca_model
 
 
+def load_ground_cards_features() -> list[np.ndarray]:
+    """Load features that correspond to GROUND/NO GROUND card slots"""
+    dataset, all_labels = load_dataset("data/ground_data*")
+
+    # Extract the features
+    features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
+
+    # Apply PCA for dimensionality reduction
+    pca_model = PCA(n_components=25)
+    # Fit the PCA
+    features_reduced = pca_model.fit_transform(features)
+
+    return features_reduced, all_labels, pca_model
+
+
 def explore_features(features, labels: list[CardTypes], label_type: CardTypes):
     """Explore the features for specific labels, for debugging..."""
 
@@ -150,6 +165,22 @@ def train_logistic_regressor(X: np.ndarray, labels: np.ndarray) -> LogisticRegre
     test_model(logistic_regressor, X_test, y_test)
 
     return logistic_regressor
+
+
+def train_svm_classifier(X: np.ndarray, labels: np.ndarray) -> SVC:
+    """Train a Support Vector Machine classifier"""
+
+    # Split the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
+
+    # Create and train the SVM model with RBF kernel
+    svm_model = SVC(kernel="rbf")
+    svm_model.fit(X_train, y_train)
+
+    # Test the model
+    test_model(svm_model, X_test, y_test)
+
+    return svm_model
 
 
 def test_model(model: KNeighborsClassifier | LogisticRegression, X_test: np.ndarray, y_test: np.ndarray):
@@ -249,6 +280,15 @@ def train_thor_cards_classifier():
     save_model(pca_model, filename="pca_Thor_cards_model.pca")
 
 
+def train_ground_cards_classifier():
+    """Train a model that distinguished between ground vs. no ground cards"""
+
+    features, labels, pca_model = load_ground_cards_features()
+    model = train_svm_classifier(X=features, labels=labels)
+    save_model(model, filename="ground_cards_predictor.svm")
+    save_model(pca_model, filename="pca_ground_cards_model.pca")
+
+
 def main():
 
     ### For card types
@@ -261,13 +301,16 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    train_amplify_cards_classifier()
+    # train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
     # train_HAM_cards_classifier()
 
     ### Train model to identify Thor cards
     # train_thor_cards_classifier()
+
+    ### Train a model that identifies GROUND cards
+    train_ground_cards_classifier()
 
     return
 

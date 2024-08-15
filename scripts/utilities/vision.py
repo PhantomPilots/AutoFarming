@@ -42,23 +42,3 @@ class Vision:
     def find_all_rectangles(self, haystack_img, threshold=0.5) -> tuple[np.ndarray, np.ndarray]:
         """Find all the rectangles corresponding to the needle image."""
         return self.matching_strategy.find_all_rectangles(haystack_img, self.needle_img, threshold=threshold)
-
-    def draw_rectangles(self, haystack_img, rectangles: np.ndarray) -> np.ndarray:
-        """Given a list of [x, y, w, h] rectangles and a canvas image to draw on, return an image with
-        all of those rectangles drawn"""
-
-        # these colors are actually BGR
-        line_color = (0, 255, 0)
-        line_type = cv2.LINE_4
-
-        # Expand to 2D if 1-dimensional
-        rectangles = rectangles[None, ...] if rectangles.ndim == 1 else rectangles
-
-        for x, y, w, h in rectangles:
-            # determine the box positions
-            top_left = (x, y)
-            bottom_right = (x + w, y + h)
-            # draw the box
-            cv2.rectangle(haystack_img, top_left, bottom_right, line_color, lineType=line_type)
-
-        return haystack_img

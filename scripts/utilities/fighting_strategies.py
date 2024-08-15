@@ -13,12 +13,10 @@ from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    count_empty_card_slots,
     count_immortality_buffs,
     determine_card_merge,
     display_image,
     find,
-    get_card_interior_image,
     get_hand_cards,
     is_amplify_card,
     is_hard_hitting_card,
@@ -35,7 +33,7 @@ class IBattleStrategy(abc.ABC):
     card_turn = 0
     cards_to_play = 0
 
-    def pick_cards(self, **kwargs) -> tuple[list[Card], list[int]]:
+    def pick_cards(self, cards_to_play=4, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
@@ -50,7 +48,7 @@ class IBattleStrategy(abc.ABC):
 
         # Extract how many cards we have to play
         screenshot, _ = capture_window()
-        IBattleStrategy.cards_to_play = count_empty_card_slots(screenshot)
+        IBattleStrategy.cards_to_play = cards_to_play
 
         # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
         for _ in range(4):

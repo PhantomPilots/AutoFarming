@@ -5,13 +5,7 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
-from utilities.utilities import (
-    capture_window,
-    count_empty_card_slots,
-    find,
-    find_and_click,
-    get_hand_cards,
-)
+from utilities.utilities import capture_window, find, find_and_click, get_hand_cards
 
 
 class BirdFighter(IFighter):
@@ -36,7 +30,7 @@ class BirdFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := count_empty_card_slots(screenshot)) > 0:
+        elif (available_card_slots := self.count_empty_card_slots(screenshot)) > 0:
             # First, identify if we are fully disabled... If so, restart the fight
             if available_card_slots >= 3 and self._check_disabled_hand():
                 # We're fully disabled, we need to exit and restart the fight...
@@ -98,10 +92,19 @@ class BirdFighter(IFighter):
         house_of_cards = get_hand_cards()
         return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards])
 
+    @staticmethod
+    def count_empty_card_slots(screenshot, threshold=0.7):
+        """Ideally used within a fight, count how many empty card slots we have available"""
+        rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
+        # The second one is in case we cannot play ANY card. Then, the empty card slots look different
+        rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
+        return rectangles.shape[0] + rectangles_2.shape[0]
+
     def _update_current_hand(self, screenshot):
         """Update the current hand of cards based on the phase."""
         current_phase = self._identify_phase(screenshot)
-        self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+        cards_to_play = self.count_empty_card_slots(screenshot)
+        self.current_hand = self.battle_strategy.pick_cards(cards_to_play=cards_to_play, phase=current_phase)
 
     def _attempt_to_play_cards(self) -> bool:
         """Attempt to play the cards, returning True if successful, False otherwise."""

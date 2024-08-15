@@ -163,8 +163,6 @@ class AmplifyCardsCollector(DataCollector):
 
             # Extract the inside of the card, effectively removing its border/rank information
             card_interior = get_card_interior_image(card.card_image)
-            # These should be the features we train the classifier on:
-            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -198,8 +196,6 @@ class HAMCardsCollector(DataCollector):
 
             # Extract the inside of the card, effectively removing its border/rank information
             card_interior = get_card_interior_image(card.card_image)
-            # These should be the features we train the classifier on:
-            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -233,8 +229,34 @@ class ThorCardCollector(DataCollector):
 
             # Extract the inside of the card, effectively removing its border/rank information
             card_interior = get_card_interior_image(card.card_image)
-            # These should be the features we train the classifier on:
-            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
+
+            # Let's plot the image for debugging
+            # display_image(card_interior)
+
+            data.append(card_interior)
+            labels.append(card_label)
+
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+
+        return data, labels
+
+
+class GroundDataCollector(DataCollector):
+    """Identify if a card is ground or not. Use the whole interior of the card as data"""
+
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+        cards = get_hand_cards()
+
+        data = []
+        labels = []
+
+        for card in cards:
+            card_label = input("Is this a GROUND card? 1/y, 0/n: ")
+            card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
+
+            # Extract the inside of the card, effectively removing its border/rank information
+            card_interior = get_card_interior_image(card.card_image)
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -322,16 +344,39 @@ def collect_Thor_data():
     save_data(dataset, all_labels, filename="thor_cards_data")
 
 
+def collect_ground_data():
+    """Collect data for identifying ground cards, to be used on a RBF SVM classifier"""
+    print("Collecting data for GROUND cards...")
+
+    data_collector = GroundDataCollector()
+    dataset, all_labels = data_collector.collect_data()
+    print("All labels:\n", all_labels)
+    save_data(dataset, all_labels, filename="ground_data")
+
+
+def collect_data(CollectorClass: DataCollector, filename: str):
+    print(f"Collecting data for {CollectorClass.__class__.__name__}")
+
+    data_collector: DataCollector = CollectorClass()
+    dataset, all_labels = data_collector.collect_data()
+    print("All labels:\n", all_labels)
+    save_data(dataset, all_labels, filename=filename)
+
+
 def main():
+    ### TODO: Replace all these standalone functions by 'collect_data' with the right arguments
+
     # collect_merge_data()
 
     # collect_card_type_data()
 
-    collect_amplify_data()
+    # collect_amplify_data()
 
     # collect_HAM_data()
 
     # collect_Thor_data()
+
+    collect_data(GroundDataCollector, filename="ground_data")
 
 
 if __name__ == "__main__":

@@ -46,6 +46,7 @@ auto_off = Vision("autooff.png")
 pause = Vision("pause.png")
 forfeit = Vision("forfeit.png")
 tavern_loading_screen = Vision("tavern_loading_screen.png")
+card_slot = Vision("card_slot.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
@@ -88,6 +89,17 @@ block_skill_debuf = Vision("demonic_beasts\\block_skill_debuff.png")
 evasion = Vision("demonic_beasts\\evasion.png")
 stance_active = Vision("demonic_beasts\\stance_active.png")
 immortality_buff = Vision("demonic_beasts\\immortality.png")
+
+# For Dogs
+empty_slot_1 = Vision("dogs\\empty_slot_1.png")
+empty_slot_2 = Vision("dogs\\empty_slot_2.png")
+empty_slot_3 = Vision("dogs\\empty_slot_3.png")
+empty_slot_4 = Vision("dogs\\empty_slot_4.png")
+empty_slot_5 = Vision("dogs\\empty_slot_5.png")
+empty_slot_6 = Vision("dogs\\empty_slot_6.png")
+empty_slot_7 = Vision("dogs\\empty_slot_7.png")
+empty_slot_8 = Vision("dogs\\empty_slot_8.png")
+empty_slot_9 = Vision("dogs\\empty_slot_9.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
