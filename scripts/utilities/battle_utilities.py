@@ -38,7 +38,7 @@ def handle_card_merges(
         indices_to_update[mask] += 1
 
         # We may need to call this function recursively, in case multiple merges happen!
-        handle_card_merge(
+        handle_card_merges(
             house_of_cards,
             left_card_idx=left_card_idx + 2,
             right_card_idx=right_card_idx + 1,
