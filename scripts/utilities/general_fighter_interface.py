@@ -70,21 +70,21 @@ class IFighter(abc.ABC):
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play?
             index_to_play = selected_cards[1][slot_index]
+            print("Playing index", index_to_play)
             self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
 
     def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):
         """Decide whether we're clicking or moving a card"""
-        if isinstance(index, int):
+        if not isinstance(index, (tuple, list)):
             # Just click on the card
             self._click_card(list_of_cards[index], window_location)
 
-        elif isinstance(index, [tuple, list]):
+        else:
             # We have to MOVE the card!
             self._move_card(list_of_cards[index[0]], list_of_cards[index[1]], window_location)
 
     def _click_card(self, card_to_play: Card, window_location: np.ndarray):
         """Picks the corresponding card from the list, and EATS IT!"""
-        print("Playing card...")
         rectangle = card_to_play.rectangle
         click_im(rectangle, window_location, sleep_after_click=0.05)
 
