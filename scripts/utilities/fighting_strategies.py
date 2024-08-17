@@ -6,8 +6,8 @@ from copy import deepcopy
 
 import numpy as np
 from utilities.battle_utilities import handle_card_merges
-from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.utilities import determine_card_merge, display_image, get_hand_cards
+from utilities.card_data import Card, CardTypes
+from utilities.utilities import get_hand_cards
 
 
 class IBattleStrategy(abc.ABC):
