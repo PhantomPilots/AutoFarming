@@ -46,16 +46,23 @@ def plot_orb_keypoints(image: np.ndarray):
 
 
 # Function to extract color histogram features
-def extract_color_histograms(images: list[np.ndarray], bins=(8, 8, 8)) -> np.ndarray:
+def extract_color_histograms_features(
+    images: list[np.ndarray] | np.ndarray, bins: tuple[int] = (8, 8, 8)
+) -> np.ndarray:
     """Compute color histograms for a batch of images. Works even with small images, and should work with SVM models.
 
     Args:
-        images (np.ndarray): A set of 2 images with shape (width, height, channels).
+        images (np.ndarray): A list of images with shape (width, height, channels).
         bins (tuple): Number of bins for each channel in the histogram.
 
     Returns:
         np.ndarray: A 2D array where each row is the flattened histogram of an image.
     """
+
+    if isinstance(images, np.ndarray) and images.ndim == 3:
+        # It's a single image, let's make a batch off of it
+        images = images[np.newaxis, ...]
+
     histograms = []
 
     for image in images:
@@ -96,7 +103,7 @@ def extract_difference_of_histograms_features(images: np.ndarray) -> np.ndarray:
     for batch_image in images:
         # For each image in the batch, compute the color histogram difference between the two images,
         # and append it to the list of features
-        histograms = extract_color_histograms(batch_image)
+        histograms = extract_color_histograms_features(batch_image)
         features.append(np.linalg.norm(histograms[0] - histograms[1]))
 
     # Add the final feature dimension, to make it shape (batch, 1)
@@ -107,6 +114,7 @@ def extract_color_features(images: np.ndarray, type="median") -> np.ndarray:
     """Computes the feature color of each channel. This should work well with K-NN classification models.
 
     Args:
+        images (np.ndarray): A set of colored images, of shape (batch, width, height, channel).
         type (str): Can be "mean" or "median" for now.
 
     Returns:
