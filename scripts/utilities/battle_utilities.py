@@ -5,7 +5,7 @@ from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import determine_card_merge
 
 
-def handle_card_merge(
+def handle_card_merges(
     house_of_cards: list[Card], left_card_idx: int, right_card_idx: int, indices_to_update: np.ndarray, mask: np.ndarray
 ) -> bool:
     """Modifies the current list of cards in-place if there is a merge caused by the given index.
