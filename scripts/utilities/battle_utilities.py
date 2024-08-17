@@ -40,8 +40,11 @@ def handle_card_merges(
         # We may need to call this function recursively, in case multiple merges happen!
         handle_card_merges(
             house_of_cards,
-            left_card_idx=left_card_idx + 2,
+            left_card_idx=left_card_idx + 1,
             right_card_idx=right_card_idx + 1,
             indices_to_update=indices_to_update,
             mask=mask,
         )
+    else:
+        # If we don't find a merge, there's not gonna be a subsequent merge either
+        return
