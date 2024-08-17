@@ -5,7 +5,12 @@ from typing import Callable
 import numpy as np
 from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.utilities import click_im, count_empty_card_slots
+from utilities.utilities import (
+    click_im,
+    count_empty_card_slots,
+    drag_im,
+    get_click_point_from_rectangle,
+)
 
 
 class FightingStates(Enum):
@@ -41,7 +46,10 @@ class IFighter(abc.ABC):
         self.current_hand: tuple[list[Card], list[int]] = None
 
     def play_cards(
-        self, selected_cards: tuple[list[Card], list[int]], screenshot: np.ndarray, window_location: np.ndarray
+        self,
+        selected_cards: tuple[list[Card], list[int | tuple[int, int]]],
+        screenshot: np.ndarray,
+        window_location: np.ndarray,
     ):
         """Click on the cards from the picked cards to play.
 
@@ -62,17 +70,30 @@ class IFighter(abc.ABC):
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play?
             index_to_play = selected_cards[1][slot_index]
-            # What card does that index correspond to? Used only to extract the rectangle
-            card_to_play = selected_cards[0][index_to_play]
-            # TODO: Consider the action: Either play the card or merge it with another one!
-            self._play_card(card_to_play, window_location)
+            self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
 
-    def _play_card(self, card_to_play: Card, window_location: np.ndarray):
-        """Picks the corresponding card from the list, and EATS IT!
-        TODO: Account for manual card merges, how to do that?"""
+    def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):
+        """Decide whether we're clicking or moving a card"""
+        if isinstance(index, int):
+            # Just click on the card
+            self._click_card(list_of_cards[index], window_location)
+
+        elif isinstance(index, [tuple, list]):
+            # We have to MOVE the card!
+            self._move_card(list_of_cards[index[0]], list_of_cards[index[1]], window_location)
+
+    def _click_card(self, card_to_play: Card, window_location: np.ndarray):
+        """Picks the corresponding card from the list, and EATS IT!"""
         print("Playing card...")
         rectangle = card_to_play.rectangle
         click_im(rectangle, window_location, sleep_after_click=0.05)
+
+    def _move_card(self, origin_card: Card, target_card: Card, window_location: np.ndarray):
+        """Move one card to the other"""
+        print("Moving card...")
+        origin_point = get_click_point_from_rectangle(origin_card.rectangle)
+        target_point = get_click_point_from_rectangle(target_card.rectangle)
+        drag_im(origin_point, target_point, window_location=window_location, drag_duration=0.3)
 
     @staticmethod
     def run_wrapper(func: Callable):
