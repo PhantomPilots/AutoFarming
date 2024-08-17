@@ -6,7 +6,7 @@ from copy import deepcopy
 
 import numpy as np
 from termcolor import cprint
-from utilities.battle_utilities import handle_card_merges
+from utilities.battle_utilities import determine_card_merge, handle_card_merges
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import get_hand_cards
 
@@ -62,9 +62,9 @@ class IBattleStrategy(abc.ABC):
         # Mask of indices to increase due to deletion of original card
         original_mask = indices[i + 1 :] < origin_idx
 
-        # First, increase the rank of the target card
-        target_rank = house_of_cards[target_idx].card_rank
-        if target_rank.value < 2:
+        if determine_card_merge(house_of_cards[origin_idx], house_of_cards[target_idx]):
+            # First, increase the rank of the target card
+            target_rank = house_of_cards[target_idx].card_rank
             house_of_cards[target_idx].card_rank = CardRanks(target_rank.value + 1)
             # And let's remove the origin card. Otherwise, we don't remove it
             house_of_cards.pop(origin_idx)
@@ -73,8 +73,13 @@ class IBattleStrategy(abc.ABC):
             # And increase the indices
             indices[i + 1 :][original_mask] += 1
         else:
-            # TODO: Implement the case in which we move without having a card merge
+            # The case in which we move without having a card merge
             cprint(f"We're moving a card from {origin_idx} to {target_idx}, but it's not generating a merge!", "yellow")
+            mask = indices[i + 1 :] < origin_idx and indices[i + 1 :] <= target_idx
+            indices[i + 1 :][mask] -= 1
+            # Now rearrange the house of cards
+            card = house_of_cards.pop(origin_idx)
+            house_of_cards.insert(target_idx, card)
 
         # Handle card merges due to the deletion of `idx`
         handle_card_merges(house_of_cards, origin_idx, origin_idx + 1, indices[i + 1 :], original_mask)
