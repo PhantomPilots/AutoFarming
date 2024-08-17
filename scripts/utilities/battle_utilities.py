@@ -6,7 +6,7 @@ from utilities.utilities import determine_card_merge
 
 
 def handle_card_merge(
-    house_of_cards: list[Card], left_card_idx: int, right_card_idx: int, indices_to_update: np.ndarray
+    house_of_cards: list[Card], left_card_idx: int, right_card_idx: int, indices_to_update: np.ndarray, mask: np.ndarray
 ) -> bool:
     """Modifies the current list of cards in-place if there is a merge caused by the given index.
     Handles card merges by playing a card recursively.
@@ -35,7 +35,7 @@ def handle_card_merge(
         house_of_cards.insert(0, None)
 
         # Shift the indices by one
-        indices_to_update += 1
+        indices_to_update[mask] += 1
 
         # We may need to call this function recursively, in case multiple merges happen!
         handle_card_merge(
@@ -43,4 +43,5 @@ def handle_card_merge(
             left_card_idx=left_card_idx + 2,
             right_card_idx=right_card_idx + 1,
             indices_to_update=indices_to_update,
+            mask=mask,
         )

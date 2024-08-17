@@ -53,7 +53,8 @@ class IBattleStrategy(abc.ABC):
                     house_of_cards,
                     left_card_idx=idx - 1,
                     right_card_idx=idx + 1,
-                    indices_to_update=indices[i + 1 :][mask],
+                    indices_to_update=indices[i + 1 :],
+                    mask=mask,
                 )
 
             # Since we assume we play a card now, let's remove it from the house of cards
