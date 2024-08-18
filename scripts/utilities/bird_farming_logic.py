@@ -81,8 +81,8 @@ class BirdFarmer(IFarmer):
             return
 
         # Double-check that floor 3 is not cleared
-        elif find(vio.floor_3_cleard, screenshot, threshold=0.8) or find(
-            vio.floor_3_cleard_2, screenshot, threshold=0.9
+        elif find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
+            vio.floor_3_cleard_2_bird, screenshot, threshold=0.9
         ):
             print("Floor 3 is cleared, we need to reset the bird!")
             self.current_state = States.RESETTING_BIRD
@@ -117,7 +117,9 @@ class BirdFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First double-check that floor 3 is not cleared
-        if find(vio.floor_3_cleard, screenshot, threshold=0.8) or find(vio.floor_3_cleard_2, screenshot, threshold=0.9):
+        if find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
+            vio.floor_3_cleard_2_bird, screenshot, threshold=0.9
+        ):
             print("Floor 3 is cleared, we need to reset the bird!")
             self.current_state = States.RESETTING_BIRD
             return

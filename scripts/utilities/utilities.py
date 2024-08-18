@@ -1,7 +1,8 @@
 import os
 import time
 from enum import Enum
-from typing import Union
+from numbers import Integral
+from typing import Callable, Union
 
 import cv2
 import dill as pickle
@@ -289,6 +290,35 @@ def crop_image(image: np.ndarray, top_left: tuple, bottom_right: tuple) -> np.nd
     x2, y2 = bottom_right
 
     return image[y1:y2, x1:x2]
+
+
+def increment_if_condition(value: Integral | list[Integral], thresh: Integral, condition: Callable, operator=1):
+    """Increments a value if it meets the given condition.
+
+    Args:
+        value (int | list[int]): The value we're trying to increment.
+        thresh (int): The value that will serve as thershold to determine if we increase `value` or not.
+        condition (Callable): Collable function (probably `lambda`) that specifies how to compare `value` and `thresh`.
+    """
+    if isinstance(value, Integral):
+        return value + operator if condition(value, thresh) else value
+    elif isinstance(value, list):
+        return [increment_if_condition(item, thresh, condition, operator=operator) for item in value]
+
+
+def increment_in_place(lst: list[Integral], thresh: Integral, condition: Callable, operator=1):
+    """Increments the list in place based on the given callable condition.
+
+    Args:
+        value (int | list[int]): The value we're trying to increment.
+        thresh (int): The value that will serve as thershold to determine if we increase `value` or not.
+        condition (Callable): Collable function (probably `lambda`) that specifies how to compare `value` and `thresh`.
+    """
+    for i in range(len(lst)):
+        if isinstance(lst[i], Integral) and condition(lst[i], thresh):
+            lst[i] += operator
+        elif isinstance(lst[i], list):
+            lst[i] = increment_if_condition(lst[i], thresh, condition, operator=operator)
 
 
 def capture_hand_image() -> np.ndarray:

@@ -8,16 +8,14 @@ import numpy as np
 from termcolor import cprint
 from utilities.battle_utilities import determine_card_merge, handle_card_merges
 from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.utilities import get_hand_cards
+from utilities.utilities import get_hand_cards, increment_in_place
 
 
 class IBattleStrategy(abc.ABC):
     """Interface that groups all battle fighting strategies"""
 
-    def pick_cards(self) -> tuple[list[Card], np.ndarray]:
-        """How do we quantify the 'state'?
-        Should it be the highest-level possible information, i.e. a screenshot?
-        """
+    def pick_cards(self, *args, **kwargs) -> tuple[list[Card], np.ndarray]:
+        """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
         list_of_cards: list[Card] = get_hand_cards()
@@ -51,6 +49,8 @@ class IBattleStrategy(abc.ABC):
                 # We're moving a card
                 self.process_card_move(house_of_cards, idx[0], idx[1], indices, i)
 
+        # raise ValueError("Debugging")
+
         # Finally, return the selected cards from the original house of cards!
         return original_house_of_cards, indices
 
@@ -58,9 +58,6 @@ class IBattleStrategy(abc.ABC):
         self, house_of_cards: list[Card], origin_idx: int, target_idx: int, indices: list[int], i: int
     ):
         """If we're moving a card, how does the whole hand change?"""
-
-        # Mask of indices to increase due to deletion of original card
-        original_mask = indices[i + 1 :] < origin_idx
 
         if determine_card_merge(house_of_cards[origin_idx], house_of_cards[target_idx]):
             # First, increase the rank of the target card
@@ -71,37 +68,36 @@ class IBattleStrategy(abc.ABC):
             # Let's insert a dummy card
             house_of_cards.insert(0, None)
             # And increase the indices
-            indices[i + 1 :][original_mask] += 1
+            increment_in_place(indices[i + 1 :], thresh=origin_idx, condition=lambda a, b: a < b)
         else:
             # The case in which we move without having a card merge
             cprint(f"We're moving a card from {origin_idx} to {target_idx}, but it's not generating a merge!", "yellow")
-            mask = indices[i + 1 :] < origin_idx and indices[i + 1 :] <= target_idx
-            indices[i + 1 :][mask] -= 1
+            # The two lines below should only decrement `indices` of all those cards between the origin position (excluded) and the target position (included)
+            increment_in_place(indices[i + 1 :], thresh=target_idx, condition=lambda a, b: a <= b, operator=-1)
+            increment_in_place(indices[i + 1 :], thresh=origin_idx, condition=lambda a, b: a <= b, operator=+1)
             # Now rearrange the house of cards
             card = house_of_cards.pop(origin_idx)
             house_of_cards.insert(target_idx, card)
 
         # Handle card merges due to the deletion of `idx`
-        handle_card_merges(house_of_cards, origin_idx, origin_idx + 1, indices[i + 1 :], original_mask)
+        handle_card_merges(house_of_cards, origin_idx, origin_idx + 1, indices[i + 1 :], threshold=origin_idx)
 
         # Handle  card merges on the target side. NOTE: The masks here change, they depend on the target index instead!
-        target_mask = indices[i + 1 :] < target_idx
-        handle_card_merges(house_of_cards, target_idx - 1, target_idx, indices[i + 1 :], target_mask)
-        target_mask = indices[i + 1 :] < target_idx + 1
-        handle_card_merges(house_of_cards, target_idx, target_idx + 1, indices[i + 1 :], target_mask)
+        handle_card_merges(house_of_cards, target_idx - 1, target_idx, indices[i + 1 :], threshold=target_idx)
+        handle_card_merges(house_of_cards, target_idx, target_idx + 1, indices[i + 1 :], threshold=target_idx + 1)
 
     def process_card_play(self, house_of_cards: list[Card], idx: int, indices: list[int], i: int):
         """If we're playing a card, how does the whole hand change?"""
 
-        # Mask of card indices lower than the chosen one
-        mask = indices[i + 1 :] < idx
         # Let's shift the indices vector first
-        indices[i + 1 :][mask] += 1
+        increment_in_place(indices[i + 1 :], thresh=idx, condition=lambda a, b: a < b, operator=1)
 
         # Since we assume we play a card now, let's remove it from the house of cards
         house_of_cards.pop(idx)
         # Let's insert a dummy card
         house_of_cards.insert(0, None)
+
+        # print(f"New indices after playing {idx}:", indices)
 
         # If we're not at the beginning or end of the list, let's handle the card merges
         if idx > 0 and idx < len(house_of_cards) - 1:
@@ -110,7 +106,7 @@ class IBattleStrategy(abc.ABC):
                 left_card_idx=idx,
                 right_card_idx=idx + 1,
                 indices_to_update=indices[i + 1 :],
-                mask=mask,
+                threshold=idx,
             )
 
     @abc.abstractmethod
@@ -217,7 +213,12 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Extract the cards
         list_of_cards: list[Card] = get_hand_cards()
 
-        # Extract the indices
+        card_indices = self.identify_card_indices(list_of_cards, phase)
+
+        return self._update_indices_from_card_hand(list_of_cards, card_indices)
+
+    def identify_card_indices(self, list_of_cards: list[Card], phase: int) -> tuple[list[Card], np.ndarray]:
+        """Extract the indices based on the list of cards and the current bird phase"""
         if phase == 1:
             card_indices = self.identify_card_indices_phase_1(list_of_cards)
         elif phase == 2:
@@ -227,20 +228,23 @@ class Floor4BattleStrategy(IBattleStrategy):
         elif phase == 4:
             card_indices = self.identify_card_indices_phase_4(list_of_cards)
 
-        return self._update_indices_from_card_hand(list_of_cards, card_indices)
+        return card_indices
 
-    def identify_card_indices_phase_1(self, list_of_cards):
+    def identify_card_indices_phase_1(self, list_of_cards: list[Card]) -> list[int | tuple[int]]:
+        """The logic for phase 1... use the existing smarter strategy"""
+        # SmarterBattleStrategy.identify_card_indices(list_of_cards)
+
+        # To start testing, let's just move cards
+        return [(0, 7), (1, 6), (2, 5), (3, 4)]
+
+    def identify_card_indices_phase_2(self, list_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
         SmarterBattleStrategy.identify_card_indices(list_of_cards)
 
-    def identify_card_indices_phase_2(self, list_of_cards):
+    def identify_card_indices_phase_3(self, list_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
         SmarterBattleStrategy.identify_card_indices(list_of_cards)
 
-    def identify_card_indices_phase_3(self, list_of_cards):
-        """The logic for phase 1... use the existing smarter strategy"""
-        SmarterBattleStrategy.identify_card_indices(list_of_cards)
-
-    def identify_card_indices_phase_4(self, list_of_cards):
+    def identify_card_indices_phase_4(self, list_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
         SmarterBattleStrategy.identify_card_indices(list_of_cards)
