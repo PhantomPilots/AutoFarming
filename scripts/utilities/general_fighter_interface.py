@@ -55,8 +55,8 @@ class IFighter(abc.ABC):
 
         Args:
             selected_cards (tuple[list[Card], list[int]]): A tuple of two elements: The first is the original list of cards,
-                                                           the second one is the list of indices to click on. NOTE that they already
-                                                           account for card merges and card shifts.
+                                                           the second one is the list of indices to click on.
+                                                           NOTE that they already account for card merges and card shifts.
         """
 
         empty_card_slots = count_empty_card_slots(screenshot)
@@ -90,7 +90,6 @@ class IFighter(abc.ABC):
 
     def _move_card(self, origin_card: Card, target_card: Card, window_location: np.ndarray):
         """Move one card to the other"""
-        print("Moving card...")
         origin_point = get_click_point_from_rectangle(origin_card.rectangle)
         target_point = get_click_point_from_rectangle(target_card.rectangle)
         drag_im(origin_point, target_point, window_location=window_location, drag_duration=0.3)

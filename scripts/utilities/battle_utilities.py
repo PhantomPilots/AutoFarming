@@ -1,12 +1,16 @@
-from copy import deepcopy
+from numbers import Integral
 
 import numpy as np
-from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.utilities import determine_card_merge
+from utilities.card_data import Card, CardRanks
+from utilities.utilities import determine_card_merge, increment_in_place
 
 
 def handle_card_merges(
-    house_of_cards: list[Card], left_card_idx: int, right_card_idx: int, indices_to_update: np.ndarray, mask: np.ndarray
+    house_of_cards: list[Card],
+    left_card_idx: int,
+    right_card_idx: int,
+    indices_to_update: np.ndarray,
+    threshold: Integral,
 ) -> bool:
     """Modifies the current list of cards in-place if there is a merge caused by the given index.
     Handles card merges by playing a card recursively.
@@ -35,7 +39,7 @@ def handle_card_merges(
         house_of_cards.insert(0, None)
 
         # Shift the indices by one
-        indices_to_update[mask] += 1
+        increment_in_place(indices_to_update, thresh=threshold, condition=lambda a, b: a < b)
 
         # We may need to call this function recursively, in case multiple merges happen!
         handle_card_merges(
@@ -43,8 +47,9 @@ def handle_card_merges(
             left_card_idx=left_card_idx + 1,
             right_card_idx=right_card_idx + 1,
             indices_to_update=indices_to_update,
-            mask=mask,
+            threshold=threshold,
         )
+
     else:
         # If we don't find a merge, there's not gonna be a subsequent merge either
         return

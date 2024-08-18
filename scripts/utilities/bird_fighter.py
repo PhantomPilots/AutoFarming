@@ -1,5 +1,6 @@
 import time
 
+import numpy as np
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
@@ -53,13 +54,23 @@ class BirdFighter(IFighter):
             self.complete_callback(victory=False)
             IFighter.exit_thread = True
 
+    def _identify_phase(self, screenshot: np.ndarray):
+        """Read the screenshot and identify the phase we're currently in"""
+        if find(vio.phase_1, screenshot):
+            return 1
+        if find(vio.phase_2, screenshot):
+            return 2
+        if find(vio.phase_3, screenshot):
+            return 3
+
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
         screenshot, window_location = capture_window()
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards()
+            current_phase = self._identify_phase(screenshot)
+            self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
 
         # We have the cards now, click on them
         self.play_cards(self.current_hand, screenshot, window_location)
