@@ -3,6 +3,7 @@ VERY IMPORTANT: They should be independent from the activity they are used on"""
 
 import abc
 from copy import deepcopy
+from numbers import Integral
 
 import numpy as np
 from termcolor import cprint
@@ -14,16 +15,24 @@ from utilities.utilities import get_hand_cards
 class IBattleStrategy(abc.ABC):
     """Interface that groups all battle fighting strategies"""
 
-    def pick_cards(self, *args, **kwargs) -> tuple[list[Card], np.ndarray]:
+    def pick_cards(self, *args, **kwargs) -> tuple[list[Card], list[int]]:
         """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
-        list_of_cards: list[Card] = get_hand_cards()
+        hand_of_cards: list[Card] = get_hand_cards()
 
-        # Extract the indices
-        card_indices = self.identify_card_indices(list_of_cards)
+        card_indices = []
+        picked_cards = []
+        for _ in range(7):
+            # Extract the next index to click on
+            next_index = self.identify_card_indices(hand_of_cards, picked_cards)
+            card_indices.append(next_index)
+            picked_cards.append(hand_of_cards[next_index])
 
-        return self._update_indices_from_card_hand(list_of_cards, card_indices)
+            # Update the cards list
+            hand_of_cards, _ = self._update_indices_from_card_hand(hand_of_cards, [next_index])
+
+        return picked_cards, card_indices
 
     def _update_indices_from_card_hand(self, original_house_of_cards: list[Card], indices: np.ndarray) -> list[Card]:
         """Given the selected indices, select the cards accounting for card shifts
@@ -41,21 +50,24 @@ class IBattleStrategy(abc.ABC):
 
         for i, idx in enumerate(indices):
 
-            if not isinstance(idx, (tuple, list)):
+            if isinstance(idx, Integral):
                 # We're playing a card
                 process_card_play(house_of_cards, idx, indices, i)
 
-            else:
+            elif isinstance(idx, (tuple, list)):
                 # We're moving a card
                 process_card_move(house_of_cards, idx[0], idx[1], indices, i)
 
+            else:
+                raise ValueError(f"Index {idx} is neither an integer nor a list/tuple!")
+
         # raise ValueError("Debugging")
 
-        # Finally, return the selected cards from the original house of cards!
-        return original_house_of_cards, indices
+        # Finally, return the new card array and indices modified
+        return house_of_cards, indices
 
     @abc.abstractmethod
-    def identify_card_indices(self, list_of_cards: list[Card]) -> tuple[list[Card], np.ndarray]:
+    def identify_card_indices(self, hand_of_cards: list[Card]) -> tuple[list[Card], np.ndarray]:
         """Return the indices for the cards to use in order, based on the current 'state'.
         NOTE: This method needs to be implemented by a subclass.
         """
@@ -64,7 +76,7 @@ class IBattleStrategy(abc.ABC):
 class DummyBattleStrategy(IBattleStrategy):
     """Always pick the rightmost four cards, regardless of what they are"""
 
-    def identify_card_indices(self, list_of_cards: list[Card]) -> np.ndarray:
+    def identify_card_indices(self, hand_of_cards: list[Card]) -> np.ndarray:
         """Always get the rightmost 4 cards"""
         return np.array([7, 6, 5, 4])
 
@@ -74,15 +86,15 @@ class SmarterBattleStrategy(IBattleStrategy):
     It prioritizes one recovery and one stance card, and then it picks attack cards for the remaining slots."""
 
     @classmethod
-    def identify_card_indices(cls, list_of_cards: list[Card]) -> np.ndarray:
+    def identify_card_indices(cls, hand_of_cards: list[Card]) -> np.ndarray:
         """Apply the logic to extract the right indices.
         NOTE: Add attack-debuff cards too."""
 
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
-        card_types = np.array([card.card_type.value for card in list_of_cards][::-1])
-        card_ranks = np.array([card.card_rank.value for card in list_of_cards][::-1])
+        card_types = np.array([card.card_type.value for card in hand_of_cards][::-1])
+        card_ranks = np.array([card.card_rank.value for card in hand_of_cards][::-1])
         # Keep track of all the indices
-        all_indices = np.arange(len(list_of_cards))
+        all_indices = np.arange(len(hand_of_cards))
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
@@ -141,7 +153,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         final_indices = np.hstack((selected_indices, remaining_indices, disabled_ids))
 
         # Go back to the original indexing (0 the leftmost, 'n' the rightmost)
-        final_indices = len(list_of_cards) - 1 - final_indices
+        final_indices = len(hand_of_cards) - 1 - final_indices
 
         # print("Final indices:", final_indices)
         # raise ValueError("Debugging")
@@ -152,44 +164,55 @@ class SmarterBattleStrategy(IBattleStrategy):
 class Floor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for FLoor 4"""
 
-    def pick_cards(self, phase: int) -> tuple[list[Card], np.ndarray]:
-        """We need a custom version that accepts the phase it is in as a parameter"""
+    def pick_cards(self, phase) -> tuple[list[Card], list[int]]:
+        """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
-        list_of_cards: list[Card] = get_hand_cards()
+        hand_of_cards: list[Card] = get_hand_cards()
 
-        card_indices = self.identify_card_indices(list_of_cards, phase)
+        card_indices = []
+        picked_cards = []
+        for _ in range(7):
+            # Extract the next index to click on
+            next_index = self.identify_card_indices(hand_of_cards, picked_cards, phase=phase)
+            card_indices.append(next_index)
+            picked_cards.append(hand_of_cards[next_index])
 
-        return self._update_indices_from_card_hand(list_of_cards, card_indices)
+            # Update the cards list
+            hand_of_cards, _ = self._update_indices_from_card_hand(hand_of_cards, [next_index])
 
-    def identify_card_indices(self, list_of_cards: list[Card], phase: int) -> tuple[list[Card], np.ndarray]:
+        return picked_cards, card_indices
+
+    def identify_card_indices(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int
+    ) -> tuple[list[Card], np.ndarray]:
         """Extract the indices based on the list of cards and the current bird phase"""
         if phase == 1:
-            card_indices = self.identify_card_indices_phase_1(list_of_cards)
+            card_indices = self.identify_card_indices_phase_1(hand_of_cards)
         elif phase == 2:
-            card_indices = self.identify_card_indices_phase_2(list_of_cards)
+            card_indices = self.identify_card_indices_phase_2(hand_of_cards)
         elif phase == 3:
-            card_indices = self.identify_card_indices_phase_3(list_of_cards)
+            card_indices = self.identify_card_indices_phase_3(hand_of_cards)
         elif phase == 4:
-            card_indices = self.identify_card_indices_phase_4(list_of_cards)
+            card_indices = self.identify_card_indices_phase_4(hand_of_cards)
 
         return card_indices
 
-    def identify_card_indices_phase_1(self, list_of_cards: list[Card]) -> list[int | tuple[int]]:
+    def identify_card_indices_phase_1(self, hand_of_cards: list[Card]) -> list[int | tuple[int]]:
         """The logic for phase 1... use the existing smarter strategy"""
-        # SmarterBattleStrategy.identify_card_indices(list_of_cards)
+        # SmarterBattleStrategy.identify_card_indices(hand_of_cards)
 
         # To start testing, let's just move cards
         return [[0, 7], [1, 6], [2, 5], [3, 4]]
 
-    def identify_card_indices_phase_2(self, list_of_cards: list[Card]):
+    def identify_card_indices_phase_2(self, hand_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
-        SmarterBattleStrategy.identify_card_indices(list_of_cards)
+        SmarterBattleStrategy.identify_card_indices(hand_of_cards)
 
-    def identify_card_indices_phase_3(self, list_of_cards: list[Card]):
+    def identify_card_indices_phase_3(self, hand_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
-        SmarterBattleStrategy.identify_card_indices(list_of_cards)
+        SmarterBattleStrategy.identify_card_indices(hand_of_cards)
 
-    def identify_card_indices_phase_4(self, list_of_cards: list[Card]):
+    def identify_card_indices_phase_4(self, hand_of_cards: list[Card]):
         """The logic for phase 1... use the existing smarter strategy"""
-        SmarterBattleStrategy.identify_card_indices(list_of_cards)
+        SmarterBattleStrategy.identify_card_indices(hand_of_cards)
