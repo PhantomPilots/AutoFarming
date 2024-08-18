@@ -103,7 +103,8 @@ The scripts don't account for random pop-ups (such as demon invitations), so mak
 
 ## Shorter-term features
 - [X] Consider attack-debuff and buff cards in the battle AI.
-- [ ] Consider buff cards.
+- [X] Consider buff cards.
+- [ ] Consider card moves in the AI.
 
 ## Longer-term features
 
