@@ -14,13 +14,14 @@ class CardTypes(Enum):
     ULTIMATE = -1  # How to properly identify ultimate cards? The "default" class?
     DISABLED = 9  # Group all cards that are disabled together -- since they are grayed out, the median color should be very close
     GROUND = 10  # If some units die, their card spaces are empty ground!
+    NONE = None
 
 
 class CardRanks(Enum):
     BRONZE = 0
     SILVER = 1
     GOLD = 2
-    NONE = -1
+    NONE = None
 
 
 @dataclass
@@ -28,4 +29,4 @@ class Card:
     card_type: CardTypes  # From above
     rectangle: tuple[float, float, float, float]  # window values: [x,y,w,h]
     card_image: np.ndarray  # The card image itself
-    card_rank: CardRanks = None  # From above
+    card_rank: CardRanks = CardRanks(None)  # From above

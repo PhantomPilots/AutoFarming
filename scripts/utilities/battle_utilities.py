@@ -2,7 +2,7 @@ from numbers import Integral
 
 import numpy as np
 from termcolor import cprint
-from utilities.card_data import Card, CardRanks
+from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import determine_card_merge, increment_in_place
 
 
@@ -16,7 +16,7 @@ def process_card_move(house_of_cards: list[Card], origin_idx: int, target_idx: i
         # And let's remove the origin card. Otherwise, we don't remove it
         house_of_cards.pop(origin_idx)
         # Let's insert a dummy card
-        house_of_cards.insert(0, None)
+        house_of_cards.insert(0, Card(CardTypes(None), None, None))
     else:
         # The case in which we move without having a card merge
         cprint(f"We're moving a card from {origin_idx} to {target_idx}, but it's not generating a merge!", "yellow")
@@ -38,7 +38,7 @@ def process_card_play(house_of_cards: list[Card], idx: int):
     # Since we assume we play a card now, let's remove it from the house of cards
     house_of_cards.pop(idx)
     # Let's insert a dummy card
-    house_of_cards.insert(0, None)
+    house_of_cards.insert(0, Card(CardTypes(None), None, None))
 
     # If we're not at the beginning or end of the list, let's handle the card merges
     if idx > 0 and idx < len(house_of_cards) - 1:
@@ -65,7 +65,11 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
 
     left_card, right_card = house_of_cards[left_card_idx], house_of_cards[right_card_idx]
 
-    if left_card and right_card and determine_card_merge(left_card, right_card):
+    if (
+        left_card.card_type.value is not None
+        and right_card.card_type.value is not None
+        and determine_card_merge(left_card, right_card)
+    ):
         print(f"Card at idx {left_card_idx} will merge with idx {right_card_idx}!")
         # Increase the rank of the right card
         if right_card.card_rank.value != 2:
@@ -74,7 +78,7 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
         # Remove the left card
         house_of_cards.pop(left_card_idx)
         # Let's insert a dummy None card to keep proper indexing
-        house_of_cards.insert(0, None)
+        house_of_cards.insert(0, Card(CardTypes(None), None, None))
 
         # We may need to call this function recursively, in case multiple merges happen!
         handle_card_merges(
@@ -86,3 +90,12 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
     else:
         # If we don't find a merge, there's not gonna be a subsequent merge either
         return
+
+
+def pick_card_type(card_types: list[Card], picked_card_types: list[Card], chosen_type: CardTypes) -> int:
+    """Given a card type, return the chosen index"""
+
+    ids = np.where(card_types == chosen_type.value)[0]
+    if ids.size and not np.where(picked_card_types == chosen_type)[0].size:
+        return ids[-1]
+    return None
