@@ -1,4 +1,3 @@
-import glob
 import os
 
 import dill as pickle
@@ -16,30 +15,7 @@ from utilities.feature_extractors import (
     extract_color_histograms_features,
     extract_difference_of_histograms_features,
 )
-from utilities.utilities import display_image
-
-
-def load_dataset(glob_pattern: str) -> list[np.ndarray]:
-    """Return all the data and labels together, based on the specified file pattern"""
-    dataset = []
-    all_labels = []
-
-    for filepath in glob.iglob(glob_pattern):
-        print(f"Loading {filepath}...")
-        local_data = pickle.load(open(filepath, "rb"))
-        data, labels = local_data["data"], local_data["labels"]
-
-        # if "14" in filepath:
-        #     for image in data:
-        #         display_image(image)
-
-        dataset.append(data)
-        all_labels.append(labels)
-
-    dataset = np.concatenate(dataset, axis=0)
-    all_labels = np.concatenate(all_labels, axis=0)
-
-    return dataset, all_labels
+from utilities.utilities import display_image, load_dataset, save_model
 
 
 def load_card_type_features() -> list[np.ndarray]:
@@ -84,7 +60,7 @@ def load_entire_slot_space_features() -> list[np.ndarray]:
 
 def load_amplify_cards_features() -> list[np.ndarray]:
     """Load the amplify card dataset and extract its features"""
-    dataset, all_labels = load_dataset("data/amplify*")
+    dataset, all_labels = load_dataset("data/new_amplify*")
 
     # Extract the features
     # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
@@ -184,15 +160,6 @@ def test_card_types_model(knn_model: KNeighborsClassifier | LogisticRegression, 
     for i, (actual, predicted) in enumerate(predictions):
         if actual.name != predicted.name:
             print(f"Actual: {actual.name}, Predicted: {predicted.name}, Features: {X_test[i]}")
-
-
-def save_model(model: KNeighborsClassifier | LogisticRegression, filename: str):
-    """Save the model in file"""
-    model_path = os.path.join("models", f"{filename}")
-    with open(model_path, "wb") as pfile:
-        pickle.dump(model, pfile)
-
-    print(f"Model saved in '{model_path}'")
 
 
 def train_card_types_model():
