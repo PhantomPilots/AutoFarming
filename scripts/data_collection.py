@@ -7,6 +7,7 @@ import numpy as np
 from utilities.card_data import CardTypes
 from utilities.feature_extractors import (
     extract_color_features,
+    extract_color_histograms_features,
     extract_difference_of_histograms_features,
     extract_orb_features,
     extract_single_channel_features,
@@ -43,6 +44,7 @@ class DataCollector:
             dataset_list.append(hand)
             labels_list.append(labels)
 
+        # We use `concatenate` here instead of `stack` because the batch dimension already exists in each `hand`
         dataset = np.concatenate(dataset_list, axis=0)
         all_labels = np.concatenate(labels_list, axis=0)
 
@@ -139,6 +141,43 @@ class MergeCardsCollector(DataCollector):
         return data, labels
 
 
+class AmplifyCardsCollector(DataCollector):
+    """Collects data to train a model that identifies the cards required for phase 3"""
+
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+
+        cards = get_hand_cards()
+
+        data = []
+        labels = []
+
+        for i, card in enumerate(cards):
+
+            if i > 3 and previous_labels is not None:
+                # Use the first 4 instances of the previous labels as the last 4 of this iteration
+                card_label = previous_labels[i - 4]
+                print(f"Auto-appending label: {'amplify' if card_label else 'NO amplify'}")
+            else:
+                card_label = input("Is this card 'amplify' or Thor? 1/y, 0/n: ")
+                card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
+
+            # Extract the inside of the card, effectively removing its border/rank information
+            card_interior = get_card_interior_image(card.card_image)
+            # These should be the features we train the classifier on:
+            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
+
+            # Let's plot the image for debugging
+            # display_image(card_interior)
+
+            data.append(card_interior)
+            labels.append(card_label)
+
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+
+        return data, labels
+
+
 def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
     """Creates a dictionary with the data and saves it under 'data/'"""
 
@@ -183,10 +222,22 @@ def collect_merge_data():
     save_data(dataset, all_labels, filename="card_merges_data")
 
 
+def collect_amplify_data():
+    """Collect data for identifying amplify cards from Megellda/Traitor Meli, and Thor cards"""
+    print("Collecting amplify data...")
+
+    data_collector = AmplifyCardsCollector()
+    dataset, all_labels = data_collector.collect_data()
+    print("All labels:\n", all_labels)
+    save_data(dataset, all_labels, filename="amplify_cards_data")
+
+
 def main():
     # collect_merge_data()
 
-    collect_card_type_data()
+    # collect_card_type_data()
+
+    collect_amplify_data()
 
 
 if __name__ == "__main__":

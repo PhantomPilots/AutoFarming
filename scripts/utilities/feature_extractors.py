@@ -52,7 +52,7 @@ def extract_color_histograms_features(
     """Compute color histograms for a batch of images. Works even with small images, and should work with SVM models.
 
     Args:
-        images (np.ndarray): A list of images with shape (width, height, channels).
+        images (np.ndarray): A list of images with shape (width, height, channels), or an array with 'batch' as the first dimension.
         bins (tuple): Number of bins for each channel in the histogram.
 
     Returns:
