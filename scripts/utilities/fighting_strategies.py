@@ -147,7 +147,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids))
 
         # Let's extract the DISABLED and GROUND cards too, to append them at the very end
-        disabled_ids = np.where(card_types == CardTypes.DISABLED.value)[0]
+        disabled_ids = sorted(np.where(card_types == CardTypes.DISABLED.value)[0])
         ground_ids = np.where(card_types == CardTypes.GROUND.value)[0]
 
         # Find the remaining cards (without considering the disabled/ground cards), and append them at the end
@@ -169,6 +169,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Extract the cards
         hand_of_cards: list[Card] = get_hand_cards()
         original_hand_of_cards = deepcopy(hand_of_cards)
+
+        print("Card types:", [card.card_type.name for card in hand_of_cards])
 
         card_indices = []
         picked_cards = []
@@ -212,16 +214,14 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # First of all, determine if we can generate a level 2 card by moving two cards
-        if IBattleStrategy.card_turn == 0:
-            # Do it only if it's our first card move
-            for i, card in enumerate(hand_of_cards):
-                for j in range(i + 1, len(hand_of_cards)):
-                    if card.card_rank == CardRanks.BRONZE and determine_card_merge(card, hand_of_cards[j]):
-                        return [i, j]
-
-        # Avoid using level 2 cards. Make all level 2 cards useless
-        card_types[card_ranks == CardRanks.SILVER.value] = 100
+        # First of all, click on a card if it generates a SILVER merge
+        for i in range(1, len(hand_of_cards) - 1):
+            if (
+                determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1])
+                and hand_of_cards[i].card_rank == CardRanks.BRONZE
+                and hand_of_cards[i - 1].card_rank == CardRanks.BRONZE
+            ):
+                return i
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
@@ -238,16 +238,25 @@ class Floor4BattleStrategy(IBattleStrategy):
         if recovery_ids.size and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
 
-        # Now just click on all the bronze cards
+        # List of cards of high rank
+        higher_rank_ids = np.where(card_ranks > 1)[0]
+        # Now just click on a bronze card if we have one, and we don't have enough silver cards
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
-        return bronze_ids[-1]
+        if len(bronze_ids) and len(higher_rank_ids) < 3:
+            return bronze_ids[-1]
+
+        # If not...
+        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy EXCEPT for not using any level 2 card"""
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
 
-        # First of all, determine if we can generate a level 2 card by moving two cards
-        if IBattleStrategy.card_turn == 0:
+        # List of cards of high rank
+        higher_rank_ids = np.where(card_ranks > 1)[0]
+
+        # First, determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
+        if IBattleStrategy.card_turn == 0 and len(higher_rank_ids) <= 2:
             # Do it only if it's our first card move
             for i, card in enumerate(hand_of_cards):
                 for j in range(i + 1, len(hand_of_cards)):
@@ -255,9 +264,9 @@ class Floor4BattleStrategy(IBattleStrategy):
                         return [i, j]
 
         # Play level 2 cards or higher if we can
-        rank_ids = np.where(card_ranks > 1)[0]
-        if len(rank_ids):
-            return rank_ids[-1]
+        print("These many higher rank ids:", higher_rank_ids, "in turn:", 4 - IBattleStrategy.card_turn)
+        if len(higher_rank_ids) >= 4 - IBattleStrategy.card_turn - 1 and len(higher_rank_ids) > 0:
+            return higher_rank_ids[-1]
 
         # If we don't have more level 2 cards to play, use the existing smarter strategy
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -275,12 +284,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Keep track of all the indices
         all_indices = np.arange(len(hand_of_cards))
 
-        # ULTIMATE CARDS
-        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if ult_ids.size:
-            return ult_ids[-1]
-
-        # STANCE CARDS -- Use it if there's no recovery card
+        # STANCE CARDS
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
         if stance_ids.size and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
             return stance_ids[-1]
@@ -299,7 +303,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Lets sort the attack cards based on their rank
         attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=False)
         if len(attack_ids):
+            # TODO: Here, pick cards that are AMPLIFY or THOR
             return attack_ids[-1]
+
+        # ULTIMATE CARDS
+        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        if ult_ids.size:
+            return ult_ids[-1]
 
         # ATTACK-DEBUFF CARDs
         att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
@@ -311,7 +321,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids))
 
         # Let's extract the DISABLED and GROUND cards too, to append them at the very end
-        disabled_ids = np.where(card_types == CardTypes.DISABLED.value)[0]
+        disabled_ids = sorted(np.where(card_types == CardTypes.DISABLED.value)[0])
         ground_ids = np.where(card_types == CardTypes.GROUND.value)[0]
 
         # Find the remaining cards (without considering the disabled/ground cards), and append them at the end
