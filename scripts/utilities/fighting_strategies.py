@@ -13,6 +13,7 @@ from utilities.battle_utilities import (
     process_card_play,
 )
 from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.models import AmplifyCardPredictor
 from utilities.utilities import (
     capture_window,
     count_empty_card_slots,
@@ -297,6 +298,12 @@ class Floor4BattleStrategy(IBattleStrategy):
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
         ):
             return recovery_ids[-1]
+
+        # AMPLIFY CARDS
+        amplify_ids = np.where([AmplifyCardPredictor.is_amplify_card(card.card_image) for card in hand_of_cards])[0]
+        if len(amplify_ids):
+            # Pick the rightmost amplify card
+            return amplify_ids[-1]
 
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
