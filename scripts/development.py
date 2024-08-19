@@ -16,7 +16,7 @@ def development():
     """Some development function calls"""
 
     # determine_relative_coordinates(capture_window()[0])
-    screenshot_testing(vision_image=vio.floor_3_cleard_2, threshold=0.8)
+    screenshot_testing(vision_image=vio.phase_4, threshold=0.8)
 
     # cards = get_hand_cards()
     # for i, card in enumerate(cards, start=0):

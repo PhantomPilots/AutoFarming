@@ -379,8 +379,11 @@ def determine_card_type(card: np.ndarray) -> CardTypes:
     return CardTypePredictor.predict_card_type(card_type_image)
 
 
-def determine_card_merge(card_1: Card, card_2: Card) -> bool:
+def determine_card_merge(card_1: Card | None, card_2: Card | None) -> bool:
     """Predict whether two cards are going to merge"""
+
+    if card_1.card_type == CardTypes.NONE or card_2.card_type == CardTypes.NONE:
+        return 0
 
     card_1_interior = get_card_interior_image(card_1.card_image)
     card_2_interior = get_card_interior_image(card_2.card_image)
