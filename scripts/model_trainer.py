@@ -3,10 +3,12 @@ import os
 
 import dill as pickle
 import numpy as np
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from utilities.card_data import CardTypes
 from utilities.feature_extractors import (
@@ -80,6 +82,22 @@ def load_entire_slot_space_features() -> list[np.ndarray]:
     return features, all_labels
 
 
+def load_amplify_cards_features() -> list[np.ndarray]:
+    """Load the amplify card dataset and extract its features"""
+    dataset, all_labels = load_dataset("data/amplify*")
+
+    # Extract the features
+    # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
+    features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
+
+    # Apply PCA for dimensionality reduction
+    pca = PCA(n_components=25)
+    # Fit the PCA
+    features_reduced = pca.fit_transform(features)
+
+    return features_reduced, all_labels
+
+
 def explore_features(features, labels: list[CardTypes], label_type: CardTypes):
     """Explore the features for specific labels, for debugging..."""
 
@@ -94,8 +112,9 @@ def train_knn(X: np.ndarray, labels: np.ndarray[CardTypes], k: int = 3) -> KNeig
 
     # Train the model till we get a good enough one
     acc = 0
+    num_trials = 0
     print("Training K-NN model...")
-    while acc < 0.99:
+    while acc < 0.99 and num_trials < 20:
         # Split the data
         X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
         # Create the K-NN model
@@ -105,6 +124,10 @@ def train_knn(X: np.ndarray, labels: np.ndarray[CardTypes], k: int = 3) -> KNeig
         # Test the model
         _, acc = test_model(knn, X_test, y_test)
 
+        # Increment the number of trials...
+        num_trials += 1
+
+    print(f"Found a model after {num_trials} trial(s).")
     return knn
 
 
@@ -203,16 +226,27 @@ def train_empty_card_slots_model():
     save_model(model, filename="card_slots_predictor.knn")
 
 
+def train_amplify_cards_classifier():
+    """Train a model that identifies what cards need to be used in phase 3 of Bird FLoor 4!"""
+
+    features, labels = load_amplify_cards_features()
+    model = train_knn(X=features, labels=labels)
+    save_model(model, filename="amplify_cards_predictor.knn")
+
+
 def main():
 
     ### For card types
-    train_card_types_model()
+    # train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
 
     ### For empty card slots
     # train_empty_card_slots_model()
+
+    ### Train model for amplify cards
+    train_amplify_cards_classifier()
 
     return
 
