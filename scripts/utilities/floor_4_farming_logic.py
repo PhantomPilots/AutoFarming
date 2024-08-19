@@ -56,8 +56,8 @@ class Floor4Farmer(IFarmer):
         find_and_click(vio.fb_ok_button, screenshot, window_location)
 
         # Click on floor 4 if it's available
-        find_and_click(vio.floor_3_cleard, screenshot, window_location)
-        find_and_click(vio.floor_3_cleard_2, screenshot, window_location)
+        find_and_click(vio.floor_3_cleard_bird, screenshot, window_location)
+        find_and_click(vio.floor_3_cleard_2_bird, screenshot, window_location)
 
         if find(vio.startbutton, screenshot):
             # We can move to the next state

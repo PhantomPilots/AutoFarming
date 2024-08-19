@@ -56,12 +56,16 @@ class BirdFighter(IFighter):
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
-        if find(vio.phase_1, screenshot):
-            return 1
-        if find(vio.phase_2, screenshot):
+        if find(vio.phase_4, screenshot):
+            # Phase 4 first, because it can be misread as a 1
+            return 4
+        elif find(vio.phase_2, screenshot):
             return 2
-        if find(vio.phase_3, screenshot):
+        elif find(vio.phase_3, screenshot):
             return 3
+
+        # Default to phase 1 in case we don't see anything
+        return 1
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
