@@ -71,10 +71,9 @@ class BirdFighter(IFighter):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
         screenshot, window_location = capture_window()
 
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
-        if self.current_hand is None:
-            current_phase = self._identify_phase(screenshot)
-            self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+        # Using MPC strategy! Capture the hand EVERY TIME, predict all the indices we'll play, but only apply one index
+        current_phase = self._identify_phase(screenshot)
+        self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
 
         # We have the cards now, click on them
         self.play_cards(self.current_hand, screenshot, window_location)
@@ -82,8 +81,8 @@ class BirdFighter(IFighter):
         if not find(vio.empty_card_slot, screenshot):
             print("Finished my turn, going back to FIGHTING")
             self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+            # Reset the turn counter in battle strategy
+            self.battle_strategy.card_turn = 0
 
     def fight_complete_state(self):
 

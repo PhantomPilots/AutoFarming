@@ -154,7 +154,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         remaining_indices = np.setdiff1d(all_indices, np.hstack((ground_ids, disabled_ids, selected_ids)))
 
         # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        final_indices = np.hstack((disabled_ids, remaining_indices, selected_ids)).astype(int)
+        final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
 
         # Return the next index!
         return final_indices[-1]
@@ -170,17 +170,18 @@ class Floor4BattleStrategy(IBattleStrategy):
         hand_of_cards: list[Card] = get_hand_cards()
         original_hand_of_cards = deepcopy(hand_of_cards)
 
-        print("Card types:", [card.card_type.name for card in hand_of_cards])
+        # print("Card types:", [card.card_type.name for card in hand_of_cards])
 
         card_indices = []
         picked_cards = []
-        for _ in range(5):
+        for _ in range(4):
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
 
             # Update the indices and cards lists
             card_indices.append(next_index)
             if isinstance(next_index, Integral):
+                # If not, we're moving cards and not picking any
                 picked_cards.append(hand_of_cards[next_index])
 
             # Update the cards list
@@ -221,6 +222,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 and hand_of_cards[i].card_rank == CardRanks.BRONZE
                 and hand_of_cards[i - 1].card_rank == CardRanks.BRONZE
             ):
+                print("Generating a merge manually!")
                 return i
 
         # ULTIMATE CARDS
