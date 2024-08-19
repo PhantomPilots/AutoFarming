@@ -64,11 +64,15 @@ class AmplifyCardPredictor(IModel):
     def _load_pca_model(model_filename: str):
         if AmplifyCardPredictor.pca_model is None:
             with open(os.path.join("models", model_filename), "rb") as model_file:
-                AmplifyCardPredictor.model = pickle.load(model_file)
+                print("Loading model!")
+                AmplifyCardPredictor.pca_model = pickle.load(model_file)
 
     @staticmethod
-    def is_amplify_card(card_1: np.ndarray) -> bool:
+    def is_amplify_card(card_1: np.ndarray | None) -> bool:
         """Predict if a card ia amplify or Thor's"""
+
+        if card_1 is None:
+            return 0
 
         # Ensure the model is properly loaded
         AmplifyCardPredictor._load_model("amplify_cards_predictor.knn")

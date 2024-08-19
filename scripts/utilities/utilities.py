@@ -1,3 +1,4 @@
+import glob
 import os
 import time
 from enum import Enum
@@ -13,6 +14,8 @@ import win32api
 import win32con
 import win32gui
 import win32ui
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.models import CardMergePredictor, CardTypePredictor
@@ -406,7 +409,39 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
     return CardRanks.GOLD if find(vio.gold_card, card, threshold=0.7) else CardRanks.NONE
 
 
-def display_image(image: np.ndarray):
-    cv2.imshow("Image", image)
+def display_image(image: np.ndarray, title: str = "Image"):
+    cv2.imshow(title, image)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+
+def load_dataset(glob_pattern: str) -> list[np.ndarray]:
+    """Return all the data and labels together, based on the specified file pattern"""
+    dataset = []
+    all_labels = []
+
+    for filepath in glob.iglob(glob_pattern):
+        print(f"Loading {filepath}...")
+        local_data = pickle.load(open(filepath, "rb"))
+        data, labels = local_data["data"], local_data["labels"]
+
+        # if "14" in filepath:
+        #     for image in data:
+        #         display_image(image)
+
+        dataset.append(data)
+        all_labels.append(labels)
+
+    dataset = np.concatenate(dataset, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+
+    return dataset, all_labels
+
+
+def save_model(model: KNeighborsClassifier | LogisticRegression, filename: str):
+    """Save the model in file"""
+    model_path = os.path.join("models", f"{filename}")
+    with open(model_path, "wb") as pfile:
+        pickle.dump(model, pfile)
+
+    print(f"Model saved in '{model_path}'")
