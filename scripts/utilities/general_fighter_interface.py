@@ -61,16 +61,16 @@ class IFighter(abc.ABC):
         """
 
         empty_card_slots = count_empty_card_slots(screenshot)
+        # Based on empty card slots, update the 'card turn' on the battle strategy
+        self.battle_strategy.card_turn = 4 - empty_card_slots
 
         if empty_card_slots > self.available_card_slots:
             # A patch in case we read the available card slots wrongly earlier
             self.available_card_slots = empty_card_slots
 
         if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
-            # Read the card index based on how many empty slots we had at the beginning, and how many we have now
-            slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play?
-            index_to_play = selected_cards[1][slot_index]
+            index_to_play = selected_cards[1][0]
             print("Playing index", index_to_play)
             self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
 
