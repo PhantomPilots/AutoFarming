@@ -38,7 +38,7 @@ def process_card_play(house_of_cards: list[Card], idx: int):
     # Since we assume we play a card now, let's remove it from the house of cards
     house_of_cards.pop(idx)
     # Let's insert a dummy card
-    house_of_cards.insert(0, Card(CardTypes.NONE, None, None))
+    house_of_cards.insert(0, Card(CardTypes.GROUND, None, None))
 
     # If we're not at the beginning or end of the list, let's handle the card merges
     if idx > 0 and idx < len(house_of_cards) - 1:
@@ -74,7 +74,7 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
         # Remove the left card
         house_of_cards.pop(left_card_idx)
         # Let's insert a dummy None card to keep proper indexing
-        house_of_cards.insert(0, Card(CardTypes.NONE, None, None))
+        house_of_cards.insert(0, Card(CardTypes.GROUND, None, None))
 
         # We may need to call this function recursively, in case multiple merges happen!
         handle_card_merges(
