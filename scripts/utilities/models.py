@@ -2,11 +2,13 @@ import os
 
 import dill as pickle
 import numpy as np
+from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from utilities.card_data import CardTypes
 from utilities.feature_extractors import (
     extract_color_features,
+    extract_color_histograms_features,
     extract_difference_of_histograms_features,
 )
 
@@ -51,3 +53,32 @@ class CardMergePredictor(IModel):
 
         features = extract_difference_of_histograms_features((card_1, card_2))
         return int(CardMergePredictor.model.predict(features).item())
+
+
+class AmplifyCardPredictor(IModel):
+    """Model that identifies if a card should be played in phase 3"""
+
+    pca_model: PCA | None = None
+
+    @staticmethod
+    def _load_pca_model(model_filename: str):
+        if AmplifyCardPredictor.pca_model is None:
+            with open(os.path.join("models", model_filename), "rb") as model_file:
+                AmplifyCardPredictor.model = pickle.load(model_file)
+
+    @staticmethod
+    def is_amplify_card(card_1: np.ndarray) -> bool:
+        """Predict if a card ia amplify or Thor's"""
+
+        # Ensure the model is properly loaded
+        AmplifyCardPredictor._load_model("amplify_cards_predictor.knn")
+        # Load the PCA model
+        AmplifyCardPredictor._load_pca_model("pca_amplify_model.pca")
+
+        # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
+        features = extract_color_histograms_features(card_1, bins=(4, 4, 4))
+
+        # Fit the PCA -- NOTE: THIS IS WRONG, scaling/dim. reduction models should be saved during training and loaded here
+        features_reduced = AmplifyCardPredictor.pca_model.transform(features)
+
+        return int(AmplifyCardPredictor.model.predict(features_reduced).item())

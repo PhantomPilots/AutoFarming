@@ -91,11 +91,11 @@ def load_amplify_cards_features() -> list[np.ndarray]:
     features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
 
     # Apply PCA for dimensionality reduction
-    pca = PCA(n_components=25)
+    pca_model = PCA(n_components=25)
     # Fit the PCA
-    features_reduced = pca.fit_transform(features)
+    features_reduced = pca_model.fit_transform(features)
 
-    return features_reduced, all_labels
+    return features_reduced, all_labels, pca_model
 
 
 def explore_features(features, labels: list[CardTypes], label_type: CardTypes):
@@ -229,9 +229,10 @@ def train_empty_card_slots_model():
 def train_amplify_cards_classifier():
     """Train a model that identifies what cards need to be used in phase 3 of Bird FLoor 4!"""
 
-    features, labels = load_amplify_cards_features()
+    features, labels, pca_model = load_amplify_cards_features()
     model = train_knn(X=features, labels=labels)
     save_model(model, filename="amplify_cards_predictor.knn")
+    save_model(pca_model, filename="pca_amplify_model.pca")
 
 
 def main():
