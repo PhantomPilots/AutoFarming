@@ -66,7 +66,7 @@ def load_amplify_cards_features() -> list[np.ndarray]:
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
     # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=25)
+    pca_model = PCA(n_components=30)
     # Fit the PCA
     features_reduced = pca_model.fit_transform(features)
 
