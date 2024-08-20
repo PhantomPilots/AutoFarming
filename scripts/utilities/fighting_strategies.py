@@ -104,13 +104,26 @@ class SmarterBattleStrategy(IBattleStrategy):
 
     @classmethod
     def get_next_card_index(cls, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
-        """Apply the logic to extract the right indices.
-        NOTE: Add attack-debuff cards too."""
+        """Apply the logic to extract the right indices."""
+
+        # We need it to identify if we have some things active or not (like stances)
+        screenshot, _ = capture_window()
 
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
+
+        # STANCE CARDS -- Use it if we don't have a stance up and we haven't picked a stance card already.
+        # Use it before anything since a stance will prob. increase my damage (e.g., Diane's).
+        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+        if (
+            len(stance_ids)
+            and not find(vio.stance_active, screenshot)
+            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+        ):
+            print("We don't have a stance up, we need it!")
+            return stance_ids[-1]
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
@@ -121,15 +134,6 @@ class SmarterBattleStrategy(IBattleStrategy):
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
-
-        # STANCE CARDS -- Use it if there's no recovery card
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-            and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
-        ):
-            return stance_ids[-1]
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
@@ -151,7 +155,7 @@ class SmarterBattleStrategy(IBattleStrategy):
             return attack_ids[-1]
 
         # CONSIDER THE REMAINING CARDS, appending all the remaining IDs together
-        selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids))
+        selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids)).astype(int)
 
         # Default to -1
         return selected_ids[-1] if len(selected_ids) else -1
@@ -255,17 +259,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(ult_ids):
             return ult_ids[-1]
 
-        # List of cards of high rank
-        # silver_ids = np.where(card_ranks == 1)[0]
-        # Now just click on a bronze card if we have one, and we don't have enough silver cards
-        bronze_ids = np.where((card_ranks == CardRanks.BRONZE.value) | (card_ranks == CardRanks.GOLD.value))[0]
-        # if len(bronze_ids) and len(silver_ids) <= 3:
-        bronze_ids = bronze_ids[::-1]  # To start searching from the right
-        # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge into a silver
+        ### DEFAULT
+        # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge of silver cards
         next_idx = next(
             (
                 bronze_item
-                for bronze_item in bronze_ids
+                # Reverse the bronze_ids list o start searching from the right:
+                for bronze_item in np.where(card_ranks != CardRanks.SILVER.value)[0][::-1]
                 if hand_of_cards[bronze_item].card_type != CardTypes.RECOVERY
                 and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
                 and (
