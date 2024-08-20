@@ -256,26 +256,39 @@ class Floor4BattleStrategy(IBattleStrategy):
             return ult_ids[-1]
 
         # List of cards of high rank
-        silver_ids = np.where(card_ranks == 1)[0]
+        # silver_ids = np.where(card_ranks == 1)[0]
         # Now just click on a bronze card if we have one, and we don't have enough silver cards
         bronze_ids = np.where((card_ranks == CardRanks.BRONZE.value) | (card_ranks == CardRanks.GOLD.value))[0]
-        if len(bronze_ids) and len(silver_ids) <= 3:
-            bronze_ids = bronze_ids[::-1]  # To start searching from the right
-            # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE
-            return next(
-                (
-                    bronze_item
-                    for bronze_item in bronze_ids
-                    if hand_of_cards[bronze_item].card_type != CardTypes.RECOVERY
-                    and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
-                ),
-                -1,  # Default
-            )
+        # if len(bronze_ids) and len(silver_ids) <= 3:
+        bronze_ids = bronze_ids[::-1]  # To start searching from the right
+        # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge into a silver
+        next_idx = next(
+            (
+                bronze_item
+                for bronze_item in bronze_ids
+                if hand_of_cards[bronze_item].card_type != CardTypes.RECOVERY
+                and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
+                and (
+                    (
+                        bronze_item > 0
+                        and bronze_item < len(hand_of_cards) - 1
+                        and (
+                            not determine_card_merge(
+                                hand_of_cards[bronze_item - 1],
+                                hand_of_cards[bronze_item + 1],
+                            )
+                            or hand_of_cards[bronze_item - 1].card_rank != CardRanks.SILVER
+                        )
+                    )
+                    or bronze_item in [0, len(hand_of_cards) - 1]
+                )
+            ),
+            -1,
+        )
 
         # By default, return the rightmost card
-        print("Defaulting to the rightmost card...")
-        return -1
-        # return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        print(f"Dafulting to: {next_idx}")
+        return next_idx
 
     def _with_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]):
         """What to do if we have a shield? GO HAM"""
