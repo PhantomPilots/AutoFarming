@@ -277,6 +277,13 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         print("We have a shield, playing super HAM cards!")
 
+        # TODO: Run the HAM classifier here
+
+        # Pick ultimates if we don't have other high-hitting cards
+        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        if len(ult_ids):
+            return ult_ids[-1]
+
         if Floor4BattleStrategy.card_turn == 4:
             # Account for shield removal
             Floor4BattleStrategy.with_shield = False
