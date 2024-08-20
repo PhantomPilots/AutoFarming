@@ -94,6 +94,17 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 
+## Floor 4 of Bird
+
+The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
+* Traitor Meli
+* Thor
+* Green Diane (preferably) or Freyr
+* Blue Megellda
+
+Requirements:
+1. Always start from within the bird screen already (where all floors are displayed).
+
 ## Troubleshooting
 
 If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
