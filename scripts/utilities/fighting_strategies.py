@@ -182,7 +182,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
 
-            if isinstance(next_index,Integral):
+            if isinstance(next_index, Integral):
                 print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
 
             # Update the indices and cards lists
@@ -300,15 +300,14 @@ class Floor4BattleStrategy(IBattleStrategy):
         """What to do if we have a shield? GO HAM"""
 
         print("We have a shield, GOING HAM ON THE BIRD!")
+        # First pick ultimates, to save amplify cards for phase 3 if we can
+        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        if len(ult_ids):
+            return ult_ids[-1]
 
         # First try to pick a hard-hitting card
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
-        if len(ham_card_ids):
-            return ham_card_ids[-1]
-
-        # Pick ultimates if we don't have other high-hitting cards
-        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
-        return ult_ids[-1] if len(ult_ids) else None
+        return ham_card_ids[-1] if len(ham_card_ids) else None
 
     def _without_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card], silver_ids: np.ndarray):
         """If we don't have a shield, let's get ready for it"""
