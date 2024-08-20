@@ -71,7 +71,6 @@ class IFighter(abc.ABC):
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play?
             index_to_play = selected_cards[1][slot_index]
-            print("Playing index", index_to_play)
             self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
 
     def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):

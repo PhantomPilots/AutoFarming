@@ -6,6 +6,7 @@ from copy import deepcopy
 from numbers import Integral
 
 import numpy as np
+import utilities.vision_images as vio
 from termcolor import cprint
 from utilities.battle_utilities import (
     pick_card_type,
@@ -18,6 +19,7 @@ from utilities.utilities import (
     capture_window,
     count_empty_card_slots,
     determine_card_merge,
+    find,
     get_hand_cards,
 )
 
@@ -155,7 +157,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         remaining_indices = np.setdiff1d(all_indices, np.hstack((ground_ids, disabled_ids, selected_ids)))
 
         # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        final_indices = np.hstack((disabled_ids, remaining_indices, selected_ids)).astype(int)
+        final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
 
         # Return the next index!
         return final_indices[-1]
@@ -193,6 +195,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Reset the card turn
         IBattleStrategy.card_turn = 0
 
+        # raise ValueError("Debugging")
+
         return original_hand_of_cards, card_indices
 
     def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
@@ -215,7 +219,24 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # First of all, click on a card if it generates a SILVER merge
+        # First of all, we may need to cure all the debuffs!
+        screenshot, _ = capture_window()
+        if find(vio.block_skill_debuf, screenshot):
+            # We need to use Meli's AOE and Megelda's recovery!
+
+            # RECOVERY CARDS
+            recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
+            if recovery_ids.size and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+                print("Playing a recovery card")
+                return recovery_ids[-1]
+
+            # Play Meli's AOE card if we have it
+            for i, card in enumerate(hand_of_cards):
+                if card.card_image is not None and find(vio.meli_aoe, card.card_image):
+                    print("We found Meli's AOE on index", i)
+                    return i
+
+        # Click on a card if it generates a SILVER merge
         for i in range(1, len(hand_of_cards) - 1):
             if (
                 determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1])
@@ -224,37 +245,40 @@ class Floor4BattleStrategy(IBattleStrategy):
             ):
                 return i
 
+        # STANCE CARDS -- Use it if there's no recovery card
+        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+        if stance_ids.size and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
+            return stance_ids[-1]
+
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
         if ult_ids.size:
             return ult_ids[-1]
 
-        ## Use STANCE and RECOVERY even together, if necessary
-        # STANCE CARDS -- Use it if there's no recovery card
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if stance_ids.size and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
-            return stance_ids[-1]
-        # RECOVERY CARDS
-        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if recovery_ids.size and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
-            return recovery_ids[-1]
-
         # List of cards of high rank
-        higher_rank_ids = np.where(card_ranks > 1)[0]
+        higher_rank_ids = np.where(card_ranks >= 1)[0]
         # Now just click on a bronze card if we have one, and we don't have enough silver cards
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
         if len(bronze_ids) and len(higher_rank_ids) < 3:
-            return bronze_ids[-1]
+            bronze_ids = bronze_ids[::-1]
+            # Get the next bronze ID that doesn't correspond to a RECOVERY
+            return next(
+                (
+                    bronze_item
+                    for bronze_item in bronze_ids
+                    if hand_of_cards[bronze_item].card_type != CardTypes.RECOVERY
+                ),
+                -1,  # Default
+            )
 
-        # If not...
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
-        """The logic for phase 1... use the existing smarter strategy EXCEPT for not using any level 2 card"""
+        """The logic for phase 2."""
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
 
         # List of cards of high rank
-        higher_rank_ids = np.where(card_ranks > 1)[0]
+        higher_rank_ids = np.where(card_ranks >= 1)[0]
 
         # First, determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
         if IBattleStrategy.card_turn == 0 and len(higher_rank_ids) <= 2:
@@ -265,9 +289,12 @@ class Floor4BattleStrategy(IBattleStrategy):
                         return [i, j]
 
         # Play level 2 cards or higher if we can
-        print("These many higher rank ids:", higher_rank_ids, "in turn:", 4 - IBattleStrategy.card_turn)
         if len(higher_rank_ids) >= 4 - IBattleStrategy.card_turn - 1 and len(higher_rank_ids) > 0:
             return higher_rank_ids[-1]
+
+        # If we're not playing level 2 cards, disable them!
+        for card in hand_of_cards[higher_rank_ids]:
+            card.card_rank = CardRanks.NONE
 
         # If we don't have more level 2 cards to play, use the existing smarter strategy
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -335,7 +362,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         remaining_indices = np.setdiff1d(all_indices, np.hstack((ground_ids, disabled_ids, selected_ids)))
 
         # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        final_indices = np.hstack((disabled_ids, remaining_indices, selected_ids)).astype(int)
+        final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
 
         # Return the next index!
         return final_indices[-1]

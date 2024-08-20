@@ -12,7 +12,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=Floor4Farmer,
         battle_strategy=Floor4BattleStrategy,  # The AI. Floor 4 requires a very specific logic
-        starting_state=States.GOING_TO_FLOOR,  # Should be 'GOING_TO_FLOOR'
+        starting_state=States.FIGHTING,  # Should be 'GOING_TO_FLOOR'
     )
 
 
