@@ -21,7 +21,7 @@ from utilities.utilities import display_image, load_dataset, save_model
 def load_card_type_features() -> list[np.ndarray]:
     """Load all available data inside the 'data/' directory"""
 
-    dataset, all_labels = load_dataset("data/*card_types*")
+    dataset, all_labels = load_dataset("data/card_types*")
 
     # Load the features
     card_features = extract_color_features(images=dataset, type="median")
@@ -205,7 +205,7 @@ def train_amplify_cards_classifier():
 def main():
 
     ### For card types
-    # train_card_types_model()
+    train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -214,7 +214,7 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    train_amplify_cards_classifier()
+    # train_amplify_cards_classifier()
 
     return
 
