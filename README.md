@@ -102,15 +102,12 @@ The scripts don't account for random pop-ups (such as demon invitations), so mak
 
 
 ## Shorter-term features
-- [X] Consider attack-debuff and buff cards in the battle AI.
-- [ ] Consider buff cards.
+- [ ] Implement a farmer for Floor 4 of Bird (WIP).
 
 ## Longer-term features
 
-- [ ] Implement a farmer for Floor 4 of Bird (WIP).
 - [ ] Allow starting the scripts from ANYWHERE.
 - [ ] Make the scripts independent of the window size (i.e., scale-invariant).
-- [ ] If the 'auto' button is available and OFF, click on it and disable the battle fighter (for fights other than demonic beasts).
 - [ ] Make them work in 4k monitors.
 
 ## License
