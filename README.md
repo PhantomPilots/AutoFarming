@@ -113,7 +113,7 @@ The scripts don't account for random pop-ups (such as demon invitations), so mak
 
 
 ## Shorter-term features
-- [ ] Implement a farmer for Floor 4 of Bird (WIP).
+- [X] Implement a farmer for Floor 4 of Bird.
 
 ## Longer-term features
 
