@@ -191,6 +191,8 @@ class EquipmentFarmer(IFarmer):
     def run(self):
         """Main state machine. Assumes it starts in the `TAVER_TO_FARM` state"""
 
+        print(f"Farming... starting from {self.current_state}")
+
         while True:
             # Try to reconnect first
             check_for_reconnect()

@@ -153,7 +153,7 @@ class AmplifyCardsCollector(DataCollector):
 
         for i, card in enumerate(cards):
 
-            if i > 3 and previous_labels is not None:
+            if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
                 card_label = previous_labels[i - 4]
                 print(f"Auto-appending label: {'amplify' if card_label else 'NO amplify'}")
@@ -188,7 +188,7 @@ class HAMCardsCollector(DataCollector):
         labels = []
 
         for i, card in enumerate(cards):
-            if i > 3 and previous_labels is not None:
+            if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
                 card_label = previous_labels[i - 4]
                 print(f"Auto-appending label: {'HAM' if card_label else 'Weak'}")
