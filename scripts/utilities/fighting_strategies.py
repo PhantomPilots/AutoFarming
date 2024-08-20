@@ -288,7 +288,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # If we're not playing level 2 cards, disable them!
         for card in hand_of_cards[higher_rank_ids]:
-            card.card_rank = CardRanks.NONE
+            card.card_type = CardTypes.DISABLED
 
         # If we don't have more level 2 cards to play, use the existing smarter strategy
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
