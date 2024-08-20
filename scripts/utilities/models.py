@@ -18,6 +18,15 @@ class IModel:
 
     # Class variable for the model
     model: KNeighborsClassifier | LogisticRegression = None
+    # Model for transforming features before the the classifier
+    feature_transform_model: PCA | None = None
+
+    @classmethod
+    def _load_feature_transform_model(cls, model_filename: str):
+        if cls.feature_transform_model is None:
+            with open(os.path.join("models", model_filename), "rb") as model_file:
+                print("Loading model!")
+                cls.feature_transform_model = pickle.load(model_file)
 
     @classmethod
     def _load_model(cls, model_filename: str):
@@ -58,15 +67,6 @@ class CardMergePredictor(IModel):
 class AmplifyCardPredictor(IModel):
     """Model that identifies if a card should be played in phase 3"""
 
-    pca_model: PCA | None = None
-
-    @staticmethod
-    def _load_pca_model(model_filename: str):
-        if AmplifyCardPredictor.pca_model is None:
-            with open(os.path.join("models", model_filename), "rb") as model_file:
-                print("Loading model!")
-                AmplifyCardPredictor.pca_model = pickle.load(model_file)
-
     @staticmethod
     def is_amplify_card(card_1: np.ndarray | None) -> bool:
         """Predict if a card ia amplify or Thor's"""
@@ -74,15 +74,38 @@ class AmplifyCardPredictor(IModel):
         if card_1 is None:
             return 0
 
-        # Ensure the model is properly loaded
+        # Ensure the models are properly loaded
+        AmplifyCardPredictor._load_feature_transform_model("pca_amplify_model.pca")
         AmplifyCardPredictor._load_model("amplify_cards_predictor.knn")
-        # Load the PCA model
-        AmplifyCardPredictor._load_pca_model("pca_amplify_model.pca")
 
         # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
         features = extract_color_histograms_features(card_1, bins=(8, 8, 8))
 
-        # Fit the PCA -- NOTE: THIS IS WRONG, scaling/dim. reduction models should be saved during training and loaded here
-        features_reduced = AmplifyCardPredictor.pca_model.transform(features)
+        # Transform features with the PCA
+        features_reduced = AmplifyCardPredictor.feature_transform_model.transform(features)
 
         return int(AmplifyCardPredictor.model.predict(features_reduced).item())
+
+
+class HAMCardPredictor(IModel):
+    """Class that predicts whether a card is hard-hitting"""
+
+    @staticmethod
+    def is_HAM_card(card: np.ndarray | None) -> bool:
+        """Predict if a card is hard-hitting"""
+
+        if card is None:
+            return 0
+
+        # Ensure all models are properly loaded
+        HAMCardPredictor._load_feature_transform_model("pca_HAM_cards_model.pca")
+        HAMCardPredictor._load_model("HAM_cards_predictor.knn")
+
+        # Extract the features
+        features = extract_color_histograms_features(card, bins=(8, 8, 8))
+
+        # Transform features with the PCA
+        features_reduced = HAMCardPredictor.feature_transform_model.transform(features)
+
+        # Finally, predict HAM card
+        return int(HAMCardPredictor.model.predict(features_reduced).item())

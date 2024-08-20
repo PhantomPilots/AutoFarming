@@ -14,13 +14,16 @@ from utilities.battle_utilities import (
     process_card_play,
 )
 from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.models import AmplifyCardPredictor
 from utilities.utilities import (
     capture_window,
     count_empty_card_slots,
     determine_card_merge,
+    display_image,
     find,
+    get_card_interior_image,
     get_hand_cards,
+    is_amplify_card,
+    is_hard_hitting_card,
 )
 
 
@@ -218,17 +221,19 @@ class Floor4BattleStrategy(IBattleStrategy):
         # First of all, we may need to cure all the debuffs!
         screenshot, _ = capture_window()
         if find(vio.block_skill_debuf, screenshot):
-            print("We have a block-skill debuff, we need to cleanse!")
             # We need to use Meli's AOE and Megelda's recovery!
+            print("We have a block-skill debuff, we need to cleanse!")
 
             # Play Meli's AOE card if we have it
             for i, card in enumerate(hand_of_cards):
                 if find(vio.meli_aoe, card.card_image):
+                    print("Playing Meli's AOE at index", i)
                     return i
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            if len(recovery_ids):
+                print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
 
         # Click on a card if it generates a SILVER merge
@@ -275,22 +280,22 @@ class Floor4BattleStrategy(IBattleStrategy):
     def _with_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]):
         """What to do if we have a shield? GO HAM"""
 
-        print("We have a shield, playing super HAM cards!")
+        print("We have a shield, GOING HAM ON THE BIRD!")
 
-        # TODO: Run the HAM classifier here
+        # First try to pick a hard-hitting card
+        ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
+        if len(ham_card_ids):
+            return ham_card_ids[-1]
 
         # Pick ultimates if we don't have other high-hitting cards
         ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
-        if len(ult_ids):
-            return ult_ids[-1]
-
-        if Floor4BattleStrategy.card_turn == 4:
-            # Account for shield removal
-            Floor4BattleStrategy.with_shield = False
+        return ult_ids[-1] if len(ult_ids) else None
 
     def _without_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card], silver_ids: np.ndarray):
         """If we don't have a shield, let's get ready for it"""
-        total_num_silver_cards = len(silver_ids) + len([card for card in picked_cards if card.card_rank.value == 1])
+
+        picked_silver_cards = [card for card in picked_cards if card.card_rank.value == 1]
+        total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
 
         # Determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
         if total_num_silver_cards == 2:
@@ -301,11 +306,11 @@ class Floor4BattleStrategy(IBattleStrategy):
                         return [i, j]
 
         # Play level 2 cards or higher if we can
-        if total_num_silver_cards >= 3 and len(silver_ids) > 0:
-            print("Picking a silver card!")
-            # And we have a shield!
-            Floor4BattleStrategy.with_shield = True
+        if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
+            print("Picking a silver card...")
             return silver_ids[-1]
+
+        return None
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 2. Here we need to distinguish between the two types of turns!"""
@@ -315,13 +320,27 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # List of cards of high rank
         silver_ids = np.where(card_ranks == 1)[0].astype(int)
+        picked_silver_cards = [card for card in picked_cards if card.card_rank.value == 1]
 
         if not Floor4BattleStrategy.with_shield:
             # If we don't have a shield, try to get it
             next_idx = self._without_shield_phase2(hand_of_cards, picked_cards, silver_ids)
+
+            # Evaluate here if we need to set the shield
+            if isinstance(next_idx, Integral):
+                picked_silver_cards.append(next_idx)
+            if len(picked_silver_cards) == 3 and Floor4BattleStrategy.card_turn == 4:
+                print("SETTING SHIELD!")
+                Floor4BattleStrategy.with_shield = True
         else:
             # If we have a shield, go HAM
             next_idx = self._with_shield_phase2(hand_of_cards, picked_cards)
+
+            # Evaluate if we have to remove the shield
+            if Floor4BattleStrategy.card_turn == 4:
+                print("REMOVING SHIELD!")
+                Floor4BattleStrategy.with_shield = False
+
         if next_idx is not None:
             # We may not have found any card to play
             return next_idx
@@ -340,11 +359,6 @@ class Floor4BattleStrategy(IBattleStrategy):
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
         if len(stance_ids) and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
             return stance_ids[-1]
-
-        # ULTIMATES
-        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if len(ult_ids):
-            return ult_ids[-1]
 
         # Now just click on a bronze card if we have one, and we don't have enough silver cards
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
@@ -374,11 +388,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # Keep track of all the indices
-        all_indices = np.arange(len(hand_of_cards))
-
         # AMPLIFY CARDS -- first and foremost
-        amplify_ids = np.where([AmplifyCardPredictor.is_amplify_card(card.card_image) for card in hand_of_cards])[0]
+        amplify_ids = np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         if len(amplify_ids):
             # Pick the rightmost amplify card
             print("Picking amplify card at index", amplify_ids[-1])
@@ -398,6 +409,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         ):
             return recovery_ids[-1]
 
+        # CARD MERGE -- If there's a card that generates a merge, pick it!
+        for i in range(1, len(hand_of_cards) - 1):
+            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
+                return i
+
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
         # Lets sort the attack cards based on their rank
@@ -407,44 +423,27 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if len(ult_ids):
-            return ult_ids[-1]
-
-        # ATTACK-DEBUFF CARDs
-        att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
-        # Sort them based on card ranks
-        att_debuff_ids: np.ndarray = np.array(sorted(att_debuff_ids, key=lambda idx: card_ranks[idx], reverse=False))
-
-        # CONSIDER THE REMAINING CARDS
-        # Append the rest together: Ultimates, 1 recovery, 1 stance, 1 attack-debuff, all attacks, all attack-debuffs, the rest
-        selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids))
-
-        # Let's extract the DISABLED and GROUND cards too, to append them at the very end
-        disabled_ids = sorted(np.where(card_types == CardTypes.DISABLED.value)[0])
-        ground_ids = np.where(card_types == CardTypes.GROUND.value)[0]
-
-        # Find the remaining cards (without considering the disabled/ground cards), and append them at the end
-        remaining_indices = np.setdiff1d(all_indices, np.hstack((ground_ids, disabled_ids, selected_ids)))
-
-        # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
-
-        # Return the next index!
-        return final_indices[-1]
+        # Default to the rightmost index
+        return ult_ids[-1] if len(ult_ids) else -1
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy"""
 
-        # We may need to ult with Meli here
+        # We may need to ult with Meli here, first thing to do
         screenshot, _ = capture_window()
         if find(vio.evasion, screenshot):
             for i in range(len(hand_of_cards)):
                 if find(vio.meli_ult, hand_of_cards[i].card_image):
                     return i
 
-        # Go ham on it
+        # Go HAM on the fricking bird
+        ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
+        if len(ham_card_ids):
+            return ham_card_ids[-1]
+
+        # If we don't have hard-hitting cards, run the default strategy
         next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
-        while find(vio.meli_ult, hand_of_cards[next_idx].card_image):
+        if find(vio.meli_ult, hand_of_cards[next_idx].card_image):
             # Disable the meli ult for this round
             hand_of_cards[next_idx].card_type = CardTypes.DISABLED
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
