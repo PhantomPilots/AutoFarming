@@ -172,8 +172,11 @@ def click_im(rectangle_or_point: Union[np.ndarray, tuple], window_location: list
     click(x, y, sleep_after_click)
 
 
-def find(vision_image: Vision, screenshot: np.ndarray, threshold=0.8) -> bool:
+def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.8) -> bool:
     """Simply return if a match is found"""
+    if screenshot is None:
+        return False
+
     rectangle = vision_image.find(screenshot, threshold=threshold)
     return bool(rectangle.size)
 
