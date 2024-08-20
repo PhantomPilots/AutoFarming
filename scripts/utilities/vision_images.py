@@ -77,6 +77,8 @@ phase_3 = Vision("demonic_beasts\\phase_3.png")
 phase_4 = Vision("demonic_beasts\\phase_4.png")
 guaranteed_reward = Vision("demonic_beasts\\guaranteed_reward.png")
 empty_card_slot_dogs = Vision("demonic_beasts\\empty_card_slot_dogs.png")
+meli_aoe = Vision("demonic_beasts\\meli_aoe.png")
+block_skill_debuf = Vision("demonic_beasts\\block_skill_debuff.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
