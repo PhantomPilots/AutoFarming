@@ -28,5 +28,5 @@ class CardRanks(Enum):
 class Card:
     card_type: CardTypes  # From above
     rectangle: tuple[float, float, float, float]  # window values: [x,y,w,h]
-    card_image: np.ndarray  # The card image itself
+    card_image: np.ndarray | None  # The card image itself
     card_rank: CardRanks = CardRanks.NONE  # From above

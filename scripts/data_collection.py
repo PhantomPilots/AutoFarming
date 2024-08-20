@@ -34,7 +34,7 @@ class DataCollector:
 
         while True:
 
-            condition = input("Waiting to capture hand... Press ENTER ('c' to quit data collection) ")
+            condition = input("Press ENTER to capture hand screenshot ('c' to quit data collection) ")
             if condition == "c":
                 print("Quitting data collection")
                 break
@@ -267,12 +267,24 @@ def collect_amplify_data():
     save_data(dataset, all_labels, filename="amplify_cards_data")
 
 
+def collect_HAM_data():
+    """Collect data for identifying amplify cards from Megellda/Traitor Meli, and Thor cards"""
+    print("Collecting HAM cards data...")
+
+    data_collector = HAMCardsCollector()
+    dataset, all_labels = data_collector.collect_data()
+    print("All labels:\n", all_labels)
+    save_data(dataset, all_labels, filename="ham_cards_data")
+
+
 def main():
     # collect_merge_data()
 
     # collect_card_type_data()
 
-    collect_amplify_data()
+    # collect_amplify_data()
+
+    collect_HAM_data()
 
 
 if __name__ == "__main__":

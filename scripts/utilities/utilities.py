@@ -18,7 +18,12 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
-from utilities.models import CardMergePredictor, CardTypePredictor
+from utilities.models import (
+    AmplifyCardPredictor,
+    CardMergePredictor,
+    CardTypePredictor,
+    HAMCardPredictor,
+)
 from utilities.vision import Vision
 
 
@@ -410,6 +415,24 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
         return CardRanks.SILVER
 
     return CardRanks.GOLD if find(vio.gold_card, card, threshold=0.7) else CardRanks.NONE
+
+
+def is_amplify_card(card: Card) -> bool:
+    """Identify if a card is amplify or Thor"""
+    if card.card_image is None:
+        return 0
+
+    card_interior = get_card_interior_image(card.card_image)
+    return AmplifyCardPredictor.is_amplify_card(card_interior)
+
+
+def is_hard_hitting_card(card: Card) -> bool:
+    """Identify if a card is a card-hitting card"""
+    if card.card_image is None:
+        return 0
+
+    card_interior = get_card_interior_image(card.card_image)
+    return HAMCardPredictor.is_HAM_card(card_interior)
 
 
 def display_image(image: np.ndarray, title: str = "Image"):
