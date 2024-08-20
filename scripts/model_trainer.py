@@ -60,7 +60,7 @@ def load_entire_slot_space_features() -> list[np.ndarray]:
 
 def load_amplify_cards_features() -> list[np.ndarray]:
     """Load the amplify card dataset and extract its features"""
-    dataset, all_labels = load_dataset("data/new_amplify*")
+    dataset, all_labels = load_dataset("data/amplify*")
 
     # Extract the features
     # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
