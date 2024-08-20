@@ -7,6 +7,7 @@ import numpy as np
 from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.utilities import (
+    capture_window,
     click_im,
     count_empty_card_slots,
     drag_im,
@@ -46,20 +47,15 @@ class IFighter(abc.ABC):
         # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
         self.current_hand: tuple[list[Card], list[int]] = None
 
-    def play_cards(
-        self,
-        selected_cards: tuple[list[Card], list[int | tuple[int, int]]],
-        screenshot: np.ndarray,
-        window_location: np.ndarray,
-    ):
+    def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):
         """Click on the cards from the picked cards to play.
 
         Args:
             selected_cards (tuple[list[Card], list[int]]): A tuple of two elements: The first is the original list of cards,
                                                            the second one is the list of indices to click on.
-                                                           NOTE that they already account for card merges and card shifts.
         """
 
+        screenshot, window_location = capture_window()
         empty_card_slots = count_empty_card_slots(screenshot)
 
         # if empty_card_slots == 1:

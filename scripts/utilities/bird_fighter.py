@@ -69,7 +69,7 @@ class BirdFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, window_location = capture_window()
+        screenshot, _ = capture_window()
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
@@ -77,7 +77,7 @@ class BirdFighter(IFighter):
             self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
 
         # We have the cards now, click on them
-        self.play_cards(self.current_hand, screenshot, window_location)
+        self.play_cards(self.current_hand)
 
         if not find(vio.empty_card_slot, screenshot):
             print("Finished my turn, going back to FIGHTING")
