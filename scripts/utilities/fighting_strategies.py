@@ -157,6 +157,8 @@ class SmarterBattleStrategy(IBattleStrategy):
 class Floor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for FLoor 4"""
 
+    with_shield = False
+
     def pick_cards(self, phase) -> tuple[list[Card], list[int]]:
         """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
@@ -270,17 +272,20 @@ class Floor4BattleStrategy(IBattleStrategy):
         return -1
         # return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
-        """The logic for phase 2."""
-        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
-        card_types = np.array([card.card_type.value for card in hand_of_cards])
-        picked_card_types = np.array([card.card_type.value for card in picked_cards])
+    def _with_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]):
+        """What to do if we have a shield? GO HAM"""
 
-        # List of cards of high rank
-        silver_ids = np.where(card_ranks == 1)[0].astype(int)
+        print("We have a shield, playing super HAM cards!")
+
+        if Floor4BattleStrategy.card_turn == 4:
+            # Account for shield removal
+            Floor4BattleStrategy.with_shield = False
+
+    def _without_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card], silver_ids: np.ndarray):
+        """If we don't have a shield, let's get ready for it"""
         total_num_silver_cards = len(silver_ids) + len([card for card in picked_cards if card.card_rank.value == 1])
 
-        # First, determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
+        # Determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
         if total_num_silver_cards == 2:
             # Do it only if it's our first card move
             for i, card in enumerate(hand_of_cards):
@@ -291,11 +296,31 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Play level 2 cards or higher if we can
         if total_num_silver_cards >= 3 and len(silver_ids) > 0:
             print("Picking a silver card!")
+            # And we have a shield!
+            Floor4BattleStrategy.with_shield = True
             return silver_ids[-1]
-        elif total_num_silver_cards < 3:
-            print(f"We only have {total_num_silver_cards} silver cards in total, we won't play them.")
 
-        # If we're not playing level 2 cards, disable them!
+    def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+        """The logic for phase 2. Here we need to distinguish between the two types of turns!"""
+        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
+        picked_card_types = np.array([card.card_type.value for card in picked_cards])
+
+        # List of cards of high rank
+        silver_ids = np.where(card_ranks == 1)[0].astype(int)
+
+        if not Floor4BattleStrategy.with_shield:
+            # If we don't have a shield, try to get it
+            next_idx = self._without_shield_phase2(hand_of_cards, picked_cards, silver_ids)
+        else:
+            # If we have a shield, go HAM
+            next_idx = self._with_shield_phase2(hand_of_cards, picked_cards)
+        if next_idx is not None:
+            # We may not have found any card to play
+            return next_idx
+
+        ### If we cannot play HAM cards because we don't have any, just play normally BUT without clicking SILVER cards
+
         for i in silver_ids:
             card_types[i] = CardTypes.DISABLED.value
 
@@ -303,6 +328,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
+
+        # STANCE CARDS
+        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+        if len(stance_ids) and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
+            return stance_ids[-1]
 
         # ULTIMATES
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]

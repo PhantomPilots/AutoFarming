@@ -178,6 +178,41 @@ class AmplifyCardsCollector(DataCollector):
         return data, labels
 
 
+class HAMCardsCollector(DataCollector):
+    """Collect that corresponding to high-hitting cards (excluding ultimates)"""
+
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+        cards = get_hand_cards()
+
+        data = []
+        labels = []
+
+        for i, card in enumerate(cards):
+            if i > 3 and previous_labels is not None:
+                # Use the first 4 instances of the previous labels as the last 4 of this iteration
+                card_label = previous_labels[i - 4]
+                print(f"Auto-appending label: {'HAM' if card_label else 'Weak'}")
+            else:
+                card_label = input("Is this a high-hitting card (no ultimate)? 1/y, 0/n: ")
+                card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
+
+            # Extract the inside of the card, effectively removing its border/rank information
+            card_interior = get_card_interior_image(card.card_image)
+            # These should be the features we train the classifier on:
+            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
+
+            # Let's plot the image for debugging
+            # display_image(card_interior)
+
+            data.append(card_interior)
+            labels.append(card_label)
+
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+
+        return data, labels
+
+
 def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
     """Creates a dictionary with the data and saves it under 'data/'"""
 
