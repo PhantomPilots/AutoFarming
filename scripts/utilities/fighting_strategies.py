@@ -109,23 +109,20 @@ class SmarterBattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # Keep track of all the indices
-        all_indices = np.arange(len(hand_of_cards))
-
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if ult_ids.size:
+        if len(ult_ids):
             return ult_ids[-1]
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if recovery_ids.size and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
 
         # STANCE CARDS -- Use it if there's no recovery card
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
         if (
-            stance_ids.size
+            len(stance_ids)
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
             and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
         ):
@@ -150,22 +147,11 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # CONSIDER THE REMAINING CARDS
-        # Append the rest together: Ultimates, 1 recovery, 1 stance, 1 attack-debuff, all attacks, all attack-debuffs, the rest
+        # CONSIDER THE REMAINING CARDS, appending all the remaining IDs together
         selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids))
 
-        # Let's extract the DISABLED and GROUND cards too, to append them at the very end
-        disabled_ids = sorted(np.where(card_types == CardTypes.DISABLED.value)[0])
-        ground_ids = np.where(card_types == CardTypes.GROUND.value)[0]
-
-        # Find the remaining cards (without considering the disabled/ground cards), and append them at the end
-        remaining_indices = np.setdiff1d(all_indices, np.hstack((ground_ids, disabled_ids, selected_ids)))
-
-        # Concatenate the selected IDs, with the remaining IDs, and at the very end, the disabled IDs.
-        final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
-
-        # Return the next index!
-        return final_indices[-1] if len(final_indices) else -1
+        # Default to -1
+        return selected_ids[-1] if len(selected_ids) else -1
 
 
 class Floor4BattleStrategy(IBattleStrategy):
@@ -231,13 +217,13 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if recovery_ids.size and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
                 print("Playing a recovery card")
                 return recovery_ids[-1]
 
             # Play Meli's AOE card if we have it
             for i, card in enumerate(hand_of_cards):
-                if card.card_image is not None and find(vio.meli_aoe, card.card_image):
+                if find(vio.meli_aoe, card.card_image):
                     print("We found Meli's AOE on index", i)
                     return i
 
@@ -250,14 +236,14 @@ class Floor4BattleStrategy(IBattleStrategy):
             ):
                 return i
 
-        # STANCE CARDS -- Use it if there's no recovery card
+        # STANCE CARDS
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if stance_ids.size and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
+        if len(stance_ids) and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
             return stance_ids[-1]
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if ult_ids.size:
+        if len(ult_ids):
             return ult_ids[-1]
 
         # List of cards of high rank
@@ -265,13 +251,14 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Now just click on a bronze card if we have one, and we don't have enough silver cards
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
         if len(bronze_ids) and len(higher_rank_ids) < 3:
-            bronze_ids = bronze_ids[::-1]
-            # Get the next bronze ID that doesn't correspond to a RECOVERY
+            bronze_ids = bronze_ids[::-1]  # To start searching from the right
+            # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE
             return next(
                 (
                     bronze_item
                     for bronze_item in bronze_ids
                     if hand_of_cards[bronze_item].card_type != CardTypes.RECOVERY
+                    and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
                 ),
                 -1,  # Default
             )
@@ -321,13 +308,13 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # STANCE CARDS
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if stance_ids.size and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
+        if len(stance_ids) and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
             return stance_ids[-1]
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if (
-            recovery_ids.size
+            len(recovery_ids)
             and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
         ):
@@ -348,7 +335,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-        if ult_ids.size:
+        if len(ult_ids):
             return ult_ids[-1]
 
         # ATTACK-DEBUFF CARDs
