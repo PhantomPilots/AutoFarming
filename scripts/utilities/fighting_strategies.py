@@ -131,6 +131,11 @@ class SmarterBattleStrategy(IBattleStrategy):
         ):
             return stance_ids[-1]
 
+        # CARD MERGE -- If there's a card that generates a merge, pick it!
+        for i in range(1, len(hand_of_cards) - 1):
+            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
+                return i
+
         # FIRST ATATCK-DEBUFF CARD
         att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
         # Sort them based on card ranks
@@ -160,7 +165,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         final_indices = np.hstack((ground_ids, disabled_ids, remaining_indices, selected_ids)).astype(int)
 
         # Return the next index!
-        return final_indices[-1]
+        return final_indices[-1] if len(final_indices) else -1
 
 
 class Floor4BattleStrategy(IBattleStrategy):
@@ -271,7 +276,9 @@ class Floor4BattleStrategy(IBattleStrategy):
                 -1,  # Default
             )
 
-        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        # By default, return the rightmost card
+        return -1
+        # return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 2."""
@@ -337,7 +344,6 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Lets sort the attack cards based on their rank
         attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=False)
         if len(attack_ids):
-            # TODO: Here, pick cards that are AMPLIFY or THOR
             return attack_ids[-1]
 
         # ULTIMATE CARDS
@@ -370,9 +376,5 @@ class Floor4BattleStrategy(IBattleStrategy):
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy"""
 
-        # First, pick a card if the right and left generate a merge
-        for i in range(1, len(hand_of_cards) - 1):
-            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
-                return i
-
+        # Any specific logic here, or just go ham on it?
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
