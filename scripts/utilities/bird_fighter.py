@@ -94,7 +94,7 @@ class BirdFighter(IFighter):
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback()
+            self.complete_callback(victory=True)
             IFighter.exit_thread = True
 
     @IFighter.run_wrapper

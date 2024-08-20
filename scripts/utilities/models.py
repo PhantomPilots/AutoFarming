@@ -80,7 +80,7 @@ class AmplifyCardPredictor(IModel):
         AmplifyCardPredictor._load_pca_model("pca_amplify_model.pca")
 
         # TODO: Apply PCA to reduce dimensionality! And use SVM with RBF kernel, or even K-NN?
-        features = extract_color_histograms_features(card_1, bins=(4, 4, 4))
+        features = extract_color_histograms_features(card_1, bins=(8, 8, 8))
 
         # Fit the PCA -- NOTE: THIS IS WRONG, scaling/dim. reduction models should be saved during training and loaded here
         features_reduced = AmplifyCardPredictor.pca_model.transform(features)

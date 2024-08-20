@@ -165,12 +165,15 @@ class Floor4BattleStrategy(IBattleStrategy):
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])
+        print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
 
         card_indices = []
         picked_cards = []
         for _ in range(5):
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
+
+            # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
 
             # Update the indices and cards lists
             card_indices.append(next_index)
@@ -213,19 +216,18 @@ class Floor4BattleStrategy(IBattleStrategy):
         # First of all, we may need to cure all the debuffs!
         screenshot, _ = capture_window()
         if find(vio.block_skill_debuf, screenshot):
+            print("We have a block-skill debuff, we need to cleanse!")
             # We need to use Meli's AOE and Megelda's recovery!
-
-            # RECOVERY CARDS
-            recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
-                print("Playing a recovery card")
-                return recovery_ids[-1]
 
             # Play Meli's AOE card if we have it
             for i, card in enumerate(hand_of_cards):
                 if find(vio.meli_aoe, card.card_image):
-                    print("We found Meli's AOE on index", i)
                     return i
+
+            # RECOVERY CARDS
+            recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
+            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+                return recovery_ids[-1]
 
         # Click on a card if it generates a SILVER merge
         for i in range(1, len(hand_of_cards) - 1):
@@ -247,10 +249,10 @@ class Floor4BattleStrategy(IBattleStrategy):
             return ult_ids[-1]
 
         # List of cards of high rank
-        higher_rank_ids = np.where(card_ranks >= 1)[0]
+        silver_ids = np.where(card_ranks == 1)[0]
         # Now just click on a bronze card if we have one, and we don't have enough silver cards
-        bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
-        if len(bronze_ids) and len(higher_rank_ids) < 3:
+        bronze_ids = np.where((card_ranks == CardRanks.BRONZE.value) | (card_ranks == CardRanks.GOLD.value))[0]
+        if len(bronze_ids) and len(silver_ids) <= 3:
             bronze_ids = bronze_ids[::-1]  # To start searching from the right
             # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE
             return next(
@@ -264,18 +266,22 @@ class Floor4BattleStrategy(IBattleStrategy):
             )
 
         # By default, return the rightmost card
+        print("Defaulting to the rightmost card...")
         return -1
         # return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 2."""
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
+        picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # List of cards of high rank
-        higher_rank_ids = np.where(card_ranks >= 1)[0]
+        silver_ids = np.where(card_ranks == 1)[0].astype(int)
+        total_num_silver_cards = len(silver_ids) + len([card for card in picked_cards if card.card_rank.value == 1])
 
         # First, determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
-        if IBattleStrategy.card_turn == 0 and len(higher_rank_ids) <= 2:
+        if total_num_silver_cards == 2:
             # Do it only if it's our first card move
             for i, card in enumerate(hand_of_cards):
                 for j in range(i + 1, len(hand_of_cards)):
@@ -283,15 +289,43 @@ class Floor4BattleStrategy(IBattleStrategy):
                         return [i, j]
 
         # Play level 2 cards or higher if we can
-        if len(higher_rank_ids) >= 4 - IBattleStrategy.card_turn - 1 and len(higher_rank_ids) > 0:
-            return higher_rank_ids[-1]
+        if total_num_silver_cards >= 3 and len(silver_ids) > 0:
+            print("Picking a silver card!")
+            return silver_ids[-1]
+        elif total_num_silver_cards < 3:
+            print(f"We only have {total_num_silver_cards} silver cards in total, we won't play them.")
 
         # If we're not playing level 2 cards, disable them!
-        for card in hand_of_cards[higher_rank_ids]:
-            card.card_type = CardTypes.DISABLED
+        for i in silver_ids:
+            card_types[i] = CardTypes.DISABLED.value
 
-        # If we don't have more level 2 cards to play, use the existing smarter strategy
-        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        # RECOVERY CARDS
+        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
+        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            return recovery_ids[-1]
+
+        # ULTIMATES
+        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        if len(ult_ids):
+            return ult_ids[-1]
+
+        # Now just click on a bronze card if we have one, and we don't have enough silver cards
+        bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
+        if 7 in bronze_ids:
+            return 7
+        bronze_ids = bronze_ids[::-1]  # To start searching from the right
+        # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE
+        next_idx = next(
+            (
+                bronze_item
+                for bronze_item in bronze_ids
+                if not determine_card_merge(hand_of_cards[bronze_item - 1], hand_of_cards[bronze_item + 1])
+            ),
+            -1,  # Default
+        )
+
+        print("Defaulting to:", next_idx)
+        return next_idx
 
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase3. We need to use as many attack cards as possible.
@@ -306,6 +340,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Keep track of all the indices
         all_indices = np.arange(len(hand_of_cards))
 
+        # AMPLIFY CARDS -- first and foremost
+        amplify_ids = np.where([AmplifyCardPredictor.is_amplify_card(card.card_image) for card in hand_of_cards])[0]
+        if len(amplify_ids):
+            # Pick the rightmost amplify card
+            print("Picking amplify card at index", amplify_ids[-1])
+            return amplify_ids[-1]
+
         # STANCE CARDS
         stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
         if len(stance_ids) and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size:
@@ -319,12 +360,6 @@ class Floor4BattleStrategy(IBattleStrategy):
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
         ):
             return recovery_ids[-1]
-
-        # AMPLIFY CARDS
-        amplify_ids = np.where([AmplifyCardPredictor.is_amplify_card(card.card_image) for card in hand_of_cards])[0]
-        if len(amplify_ids):
-            # Pick the rightmost amplify card
-            return amplify_ids[-1]
 
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
@@ -363,5 +398,18 @@ class Floor4BattleStrategy(IBattleStrategy):
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy"""
 
-        # Any specific logic here, or just go ham on it?
-        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        # We may need to ult with Meli here
+        screenshot, _ = capture_window()
+        if find(vio.evasion, screenshot):
+            for i in range(len(hand_of_cards)):
+                if find(vio.meli_ult, hand_of_cards[i].card_image):
+                    return i
+
+        # Go ham on it
+        next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        while find(vio.meli_ult, hand_of_cards[next_idx].card_image):
+            # Disable the meli ult for this round
+            hand_of_cards[next_idx].card_type = CardTypes.DISABLED
+            next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+
+        return next_idx
