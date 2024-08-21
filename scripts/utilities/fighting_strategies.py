@@ -176,12 +176,10 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
 
-            if isinstance(next_index, Integral):
-                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-
             # Update the indices and cards lists
             card_indices.append(next_index)
             if isinstance(next_index, Integral):
+                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 picked_cards.append(hand_of_cards[next_index])
 
             # Update the cards list
