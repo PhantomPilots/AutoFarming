@@ -5,6 +5,7 @@ from utilities.utilities import (
     capture_hand_image,
     capture_window,
     click_and_drag,
+    count_empty_card_slots,
     crop_image,
     determine_card_merge,
     determine_relative_coordinates,
@@ -20,6 +21,9 @@ def development():
 
     # determine_relative_coordinates(capture_window()[0])
     screenshot_testing(vision_image=vio.stance_active, threshold=0.5)
+
+    # empty_slots = count_empty_card_slots(capture_window()[0])
+    # print("We have these many empty slots:", empty_slots)
 
     # cards = get_hand_cards()
 

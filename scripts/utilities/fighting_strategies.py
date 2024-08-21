@@ -8,11 +8,7 @@ from numbers import Integral
 import numpy as np
 import utilities.vision_images as vio
 from termcolor import cprint
-from utilities.battle_utilities import (
-    pick_card_type,
-    process_card_move,
-    process_card_play,
-)
+from utilities.battle_utilities import process_card_move, process_card_play
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import (
     capture_window,
@@ -172,7 +168,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         card_indices = []
         picked_cards = []
-        for _ in range(5):
+        for _ in range(4):
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
 
@@ -304,14 +300,22 @@ class Floor4BattleStrategy(IBattleStrategy):
     ):
         """If we don't have a shield, let's get ready for it"""
 
-        total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
-
         # Determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
+        total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
         if total_num_silver_cards <= 2:
             # If we don't have a shield, move cards to try to make 3 silver cards
             for i, card in enumerate(hand_of_cards):
-                for j in range(i + 1, len(hand_of_cards)):
-                    if card.card_rank == CardRanks.BRONZE and determine_card_merge(card, hand_of_cards[j]):
+                for j in range(i + 2, len(hand_of_cards)):
+                    if (
+                        card.card_rank == CardRanks.BRONZE
+                        and determine_card_merge(card, hand_of_cards[j])
+                        and (
+                            # If `card` at `i` would merge with `i+2`, only move the card if `i+1` is SILVER,
+                            # because we wouldn't automatically play it
+                            j != i + 2
+                            or hand_of_cards[i + 1].card_rank == CardRanks.SILVER
+                        )
+                    ):
                         return [i, j]
 
         # Play level 2 cards or higher only if we can get the shield
@@ -341,7 +345,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Evaluate here if we need to set the shield
             if isinstance(next_idx, Integral):
                 picked_silver_cards.append(next_idx)
-            if len(picked_silver_cards) == 3 and Floor4BattleStrategy.card_turn == 4:
+            if len(picked_silver_cards) == 3 and Floor4BattleStrategy.card_turn == 3:
                 print("SETTING SHIELD!")
                 Floor4BattleStrategy.with_shield = True
         else:
@@ -349,7 +353,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = self._with_shield_phase2(hand_of_cards)
 
             # Evaluate if we have to remove the shield
-            if Floor4BattleStrategy.card_turn == 4:
+            if Floor4BattleStrategy.card_turn == 3:
                 print("REMOVING SHIELD!")
                 Floor4BattleStrategy.with_shield = False
 
@@ -359,13 +363,23 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         ### If we cannot play HAM cards because we don't have any, just play normally BUT without clicking SILVER cards
 
-        # Try to get an ultimate we can
+        # CARD MERGE -- If there's a card that generates a merge (and either isn't a SILVER card, or merges two SILVER cards), pick it!
+        for i in range(1, len(hand_of_cards) - 1):
+            if (
+                determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1])
+                and card_ranks[i - 1] != CardRanks.SILVER.value
+                and card_ranks[i] != CardRanks.SILVER.value
+            ):
+                return i
+
+        # Disable all silver cards
+        for i in silver_ids:
+            card_types[i] = CardTypes.DISABLED.value
+
+        # ULTIMATES
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
         if len(ult_ids):
             return ult_ids[-1]
-
-        for i in silver_ids:
-            card_types[i] = CardTypes.DISABLED.value
 
         # STANCE CARDS
         stance_idx = play_stance_card(card_types, picked_card_types)
@@ -377,7 +391,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
 
-        # Now just click on a bronze card if we have one, and we don't have enough silver cards
+        # Now just click on a bronze card if we have one
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
         if 7 in bronze_ids:
             return 7
@@ -387,7 +401,10 @@ class Floor4BattleStrategy(IBattleStrategy):
                 bronze_item
                 # Reverse to start searching from the right
                 for bronze_item in bronze_ids[::-1]
-                if not determine_card_merge(hand_of_cards[bronze_item - 1], hand_of_cards[bronze_item + 1])
+                if not (
+                    determine_card_merge(hand_of_cards[bronze_item - 1], hand_of_cards[bronze_item + 1])
+                    and card_ranks[bronze_item - 1] == CardRanks.SILVER.value
+                )
             ),
             -1,  # Default
         )

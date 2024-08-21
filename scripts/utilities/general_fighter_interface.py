@@ -91,7 +91,7 @@ class IFighter(abc.ABC):
         """Move one card to the other"""
         origin_point = get_click_point_from_rectangle(origin_card.rectangle)
         target_point = get_click_point_from_rectangle(target_card.rectangle)
-        drag_im(origin_point, target_point, window_location=window_location, drag_duration=0.3)
+        drag_im(origin_point, target_point, window_location=window_location, drag_duration=0.2)
         time.sleep(0.2)
 
     @staticmethod

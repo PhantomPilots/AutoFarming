@@ -60,7 +60,9 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
 
     # convert the raw data into a format opencv can read
     img = np.frombuffer(bmpstr, dtype="uint8")
-    img.shape = (h, w, 4)
+    # Reshape the array
+    img = img.reshape(h, w, 4)
+
     # free resources
     win32gui.DeleteObject(saveBitMap.GetHandle())
     saveDC.DeleteDC()
@@ -120,6 +122,10 @@ def check_for_reconnect():
     screenshot, window_location = capture_window()
     if find_and_click(vio.reconnect, screenshot, window_location):
         print("Reconnecting...")
+
+
+def check_for_window_size():
+    screenshot, window_location = capture_window()
 
 
 def click_event(event, x, y, flags, params):
