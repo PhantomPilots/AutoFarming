@@ -365,6 +365,11 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         ### If we cannot play HAM cards because we don't have any, just play normally BUT without clicking SILVER cards
 
+        # Try to get an ultimate we can
+        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        if len(ult_ids):
+            return ult_ids[-1]
+
         for i in silver_ids:
             card_types[i] = CardTypes.DISABLED.value
 
@@ -398,12 +403,6 @@ class Floor4BattleStrategy(IBattleStrategy):
             ),
             -1,  # Default
         )
-
-        if next_idx == -1:
-            # Try to get an ultimate
-            ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
-            if len(ult_ids):
-                return ult_ids[-1]
 
         print("Defaulting to:", next_idx)
         return next_idx
