@@ -154,7 +154,7 @@ class FinalBossFarmer(IFarmer):
 
     def run(self):
 
-        print(f"Farming {self.difficulty} Final Boss.")
+        print(f"Farming {self.difficulty} Final Boss, starting from state {self.current_state}.")
 
         while True:
 

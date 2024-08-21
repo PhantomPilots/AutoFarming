@@ -190,6 +190,8 @@ class BirdFarmer(IFarmer):
 
     def run(self):
 
+        print(f"Farming floors 1-3 of Bird, starting in state {self.current_state}.")
+
         while True:
 
             check_for_reconnect()
