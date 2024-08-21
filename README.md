@@ -82,7 +82,7 @@ Requirements for it to work properly:
 
 ## Hraesvelgr farming script
 
-Now, this script is far more interesting for the majority of the community. It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms the bird uninterruptedly, even when stamina is depleted or a fight is lost.
+Now, this script is far more interesting for the majority of the community. It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
 
 Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
