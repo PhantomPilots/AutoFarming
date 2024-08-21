@@ -41,7 +41,7 @@ class IBattleStrategy(abc.ABC):
 
         card_indices = []
         picked_cards = []
-        for _ in range(8):
+        for _ in range(4):  # Pick at most 4 cards
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards)
@@ -106,24 +106,17 @@ class SmarterBattleStrategy(IBattleStrategy):
     def get_next_card_index(cls, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Apply the logic to extract the right indices."""
 
-        # We need it to identify if we have some things active or not (like stances)
-        screenshot, _ = capture_window()
-
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # STANCE CARDS -- Use it if we don't have a stance up and we haven't picked a stance card already.
-        # Use it before anything since a stance will prob. increase my damage (e.g., Diane's).
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not find(vio.stance_active, screenshot, threshold=0.5)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-        ):
-            print("We don't have a stance up, we need it!")
-            return stance_ids[-1]
+        all_indices = np.arange(len(hand_of_cards))
+
+        # STANCE CARDS
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
@@ -132,7 +125,11 @@ class SmarterBattleStrategy(IBattleStrategy):
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+        if (
+            len(recovery_ids)
+            and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
+            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+        ):
             return recovery_ids[-1]
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
@@ -154,11 +151,8 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # CONSIDER THE REMAINING CARDS, appending all the remaining IDs together
-        selected_ids = np.hstack((stance_ids, recovery_ids, att_debuff_ids)).astype(int)
-
-        # Default to -1
-        return selected_ids[-1] if len(selected_ids) else -1
+        print("We don't meet any of the previous criteria, defaulting to -1")
+        return -1
 
 
 class Floor4BattleStrategy(IBattleStrategy):
