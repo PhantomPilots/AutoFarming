@@ -107,8 +107,6 @@ class SmarterBattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        all_indices = np.arange(len(hand_of_cards))
-
         # STANCE CARDS
         stance_idx = play_stance_card(card_types, picked_card_types)
         if stance_idx is not None:
@@ -128,9 +126,11 @@ class SmarterBattleStrategy(IBattleStrategy):
         ):
             return recovery_ids[-1]
 
-        # CARD MERGE -- If there's a card that generates a merge, pick it!
+        # CARD MERGE -- If there's a card that generates a merge (and not disabled), pick it!
         for i in range(1, len(hand_of_cards) - 1):
-            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
+            if hand_of_cards[i].card_type != CardTypes.DISABLED and determine_card_merge(
+                hand_of_cards[i - 1], hand_of_cards[i + 1]
+            ):
                 return i
 
         # FIRST ATATCK-DEBUFF CARD
@@ -147,7 +147,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        print("We don't meet any of the previous criteria, defaulting to -1")
+        print("We don't meet any of the previous criteria, defaulting to the rightmost index")
         return -1
 
 
