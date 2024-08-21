@@ -28,23 +28,27 @@ class IBattleStrategy(abc.ABC):
 
     card_turn = 0
 
-    def pick_cards(self, *args, **kwargs) -> tuple[list[Card], list[int]]:
-        """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
+    def pick_cards(self, **kwargs) -> tuple[list[Card], list[int]]:
+        """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
         hand_of_cards: list[Card] = get_hand_cards()
         original_hand_of_cards = deepcopy(hand_of_cards)
+
+        print("Card types:", [card.card_type.name for card in hand_of_cards])
+        print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
 
         card_indices = []
         picked_cards = []
         for _ in range(4):  # Pick at most 4 cards
 
             # Extract the next index to click on
-            next_index = self.get_next_card_index(hand_of_cards, picked_cards)
+            next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
 
             # Update the indices and cards lists
             card_indices.append(next_index)
             if isinstance(next_index, Integral):
+                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 picked_cards.append(hand_of_cards[next_index])
 
             # Update the cards list
@@ -80,7 +84,7 @@ class IBattleStrategy(abc.ABC):
         return house_of_cards
 
     @abc.abstractmethod
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
         """Return the indices for the cards to use in order, based on the current 'state'.
         NOTE: This method needs to be implemented by a subclass.
         """
@@ -89,7 +93,7 @@ class IBattleStrategy(abc.ABC):
 class DummyBattleStrategy(IBattleStrategy):
     """Always pick the rightmost four cards, regardless of what they are"""
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def get_next_card_index(self, *args, **kwargs) -> int:
         """Always get the rightmost 4 cards"""
         return 7
 
@@ -154,42 +158,8 @@ class SmarterBattleStrategy(IBattleStrategy):
 class Floor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for FLoor 4"""
 
+    # Static attribute that keeps track of whether we've enabled a shield on phase 2
     with_shield = False
-
-    def pick_cards(self, phase) -> tuple[list[Card], list[int]]:
-        """*args and **kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
-
-        # Extract the cards
-        hand_of_cards: list[Card] = get_hand_cards()
-        original_hand_of_cards = deepcopy(hand_of_cards)
-
-        print("Card types:", [card.card_type.name for card in hand_of_cards])
-        print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
-
-        card_indices = []
-        picked_cards = []
-        for _ in range(4):
-            # Extract the next index to click on
-            next_index = self.get_next_card_index(hand_of_cards, picked_cards, phase=phase)
-
-            # Update the indices and cards lists
-            card_indices.append(next_index)
-            if isinstance(next_index, Integral):
-                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-                picked_cards.append(hand_of_cards[next_index])
-
-            # Update the cards list
-            hand_of_cards = self._update_hand_of_cards(hand_of_cards, [next_index])
-
-            # Increment card turn
-            IBattleStrategy.card_turn += 1
-
-        # Reset the card turn
-        IBattleStrategy.card_turn = 0
-
-        # raise ValueError("Debugging")
-
-        return original_hand_of_cards, card_indices
 
     def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
         """Extract the indices based on the list of cards and the current bird phase"""
@@ -485,9 +455,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # STANCE CARDS -- Play it first since it may increase the output damage
+        # If instead we have a recovery card, use it
         stance_idx = play_stance_card(card_types, picked_card_types)
+        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if stance_idx is not None:
             return stance_idx
+        elif len(recovery_ids):
+            return recovery_ids[-1]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()
@@ -522,3 +496,6 @@ def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray):
     ):
         print("We don't have a stance up, we need to enable it!")
         return stance_ids[-1]
+
+    # If we don't find any stance
+    return None
