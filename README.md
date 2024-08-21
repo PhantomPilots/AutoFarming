@@ -104,6 +104,8 @@ The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Fl
 
 Requirements:
 1. Always start from within the bird screen already (where all floors are displayed).
+2. 13M+ box CC (preferably).
+3. Constellation 6 (preferably).
 
 **Disclaimer**: The script fails most of the times due to RNG, even if the AI logic is sound (e.g., not getting enough silver cards on phase 2, or not enough amplify/Thor cards on phase 3). Additionally, you need to have a very strong account, probably **13M+ box CC**, and be on **Constellation 6**.
 
