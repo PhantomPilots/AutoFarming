@@ -8,7 +8,7 @@ Also, use this code at your own risk.
 
 **Disclaimer 2**: These scripts don't work on 4k monitors for reasons yet unknown.
 
-### Installation
+## Installation
 
 Follow these steps:
 
