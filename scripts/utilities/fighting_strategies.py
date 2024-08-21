@@ -393,12 +393,12 @@ class Floor4BattleStrategy(IBattleStrategy):
         bronze_ids = np.where(card_ranks == CardRanks.BRONZE.value)[0]
         if 7 in bronze_ids:
             return 7
-        bronze_ids = bronze_ids[::-1]  # To start searching from the right
         # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE
         next_idx = next(
             (
                 bronze_item
-                for bronze_item in bronze_ids
+                # Reverse to start searching from the right
+                for bronze_item in bronze_ids[::-1]
                 if not determine_card_merge(hand_of_cards[bronze_item - 1], hand_of_cards[bronze_item + 1])
             ),
             -1,  # Default
@@ -456,8 +456,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # ULTIMATE CARDS
-        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        # ULTIMATE CARDS -- DON'T use Meli's ultimate!
+        ult_ids = np.where(
+            (card_types == CardTypes.ULTIMATE.value)
+            & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
+        )[0]
         # Default to the rightmost index
         return ult_ids[-1] if len(ult_ids) else -1
 
