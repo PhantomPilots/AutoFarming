@@ -242,14 +242,9 @@ class Floor4BattleStrategy(IBattleStrategy):
                 return recovery_ids[-1]
 
         # STANCE CARDS
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-            and not find(vio.stance_active, screenshot, threshold=0.5)
-        ):
-            print("We don't have a stance up, we need to enable it!")
-            return stance_ids[-1]
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
 
         # Click on a card if it generates a SILVER merge
         for i in range(1, len(hand_of_cards) - 1):
@@ -374,15 +369,9 @@ class Floor4BattleStrategy(IBattleStrategy):
             card_types[i] = CardTypes.DISABLED.value
 
         # STANCE CARDS
-        screenshot, _ = capture_window()
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-            and not find(vio.stance_active, screenshot, threshold=0.5)
-        ):
-            print("We don't have a stance up, we need to enable it!")
-            return stance_ids[-1]
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
@@ -417,32 +406,33 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # AMPLIFY CARDS -- first and foremost
+        # First of all, we may need to cure the block skill effect!
+        screenshot, _ = capture_window()
+        if find(vio.block_skill_debuf, screenshot):
+            # We need to use Meli's AOE and Megelda's recovery!
+            print("We have a block-skill debuff, we need to cleanse!")
+            # Play Meli's AOE card if we have it
+            for i, card in enumerate(hand_of_cards):
+                if find(vio.meli_aoe, card.card_image):
+                    print("Playing Meli's AOE at index", i)
+                    return i
+
+        # AMPLIFY CARDS -- Go ham on them
         amplify_ids = np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         if len(amplify_ids):
             # Pick the rightmost amplify card
             print("Picking amplify card at index", amplify_ids[-1])
             return amplify_ids[-1]
 
-        # STANCE CARDS
-        screenshot, _ = capture_window()
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-            and not find(vio.stance_active, screenshot, threshold=0.5)
-        ):
-            print("We don't have a stance up, we need to enable it!")
-            return stance_ids[-1]
-
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if (
-            len(recovery_ids)
-            and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-        ):
+        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
+
+        # STANCE CARDS
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
@@ -456,12 +446,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # ULTIMATE CARDS -- DON'T use Meli's ultimate!
+        # ULTIMATE CARDS, but DON'T use Meli's ultimate! -- TODO debug this, not working properly
         ult_ids = np.where(
             (card_types == CardTypes.ULTIMATE.value)
             & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
         )[0]
-        # Default to the rightmost index
+
+        # Default to the rightmost index if we don't find an ult to use
         return ult_ids[-1] if len(ult_ids) else -1
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
@@ -472,17 +463,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # STANCE CARDS
-        screenshot, _ = capture_window()
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
-        if (
-            len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
-            and not find(vio.stance_active, screenshot, threshold=0.5)
-        ):
-            print("We don't have a stance up, we need to enable it!")
-            return stance_ids[-1]
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
 
-        # We may need to ult with Meli here, first thing to do
+        # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()
         if find(vio.evasion, screenshot):
             for i in range(len(hand_of_cards)):
@@ -502,3 +487,16 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
         return next_idx
+
+
+def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray):
+    """Play a stance card if we have it and haven't played it yet"""
+    screenshot, _ = capture_window()
+    stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+    if (
+        len(stance_ids)
+        and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+        and not find(vio.stance_active, screenshot, threshold=0.5)
+    ):
+        print("We don't have a stance up, we need to enable it!")
+        return stance_ids[-1]
