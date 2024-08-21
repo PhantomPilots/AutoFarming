@@ -304,21 +304,28 @@ class Floor4BattleStrategy(IBattleStrategy):
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
         return ham_card_ids[-1] if len(ham_card_ids) else None
 
-    def _without_shield_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card], silver_ids: np.ndarray):
+    def _without_shield_phase2(
+        self,
+        hand_of_cards: list[Card],
+        silver_ids: np.ndarray,
+        picked_silver_cards: np.ndarray,
+    ):
         """If we don't have a shield, let's get ready for it"""
 
-        picked_silver_cards = [card for card in picked_cards if card.card_rank.value == 1]
         total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
 
         # Determine if we can generate a level 2 card by moving two cards, only if we don't have 3 high-rank cards already
-        if total_num_silver_cards == 2:
-            # Do it only if it's our first card move
+        if total_num_silver_cards <= 2:
+            # If we don't have a shield, move cards to try to make 3 silver cards
             for i, card in enumerate(hand_of_cards):
                 for j in range(i + 1, len(hand_of_cards)):
                     if card.card_rank == CardRanks.BRONZE and determine_card_merge(card, hand_of_cards[j]):
                         return [i, j]
 
-        # Play level 2 cards or higher if we can
+        # Play level 2 cards or higher only if we can get the shield
+        empty_slots = count_empty_card_slots(capture_window()[0])
+        # We need to recompute the "total number of silver cards", since we may have moved cards and those take up slot space
+        total_num_silver_cards = min(len(silver_ids), empty_slots) + len(picked_silver_cards)
         if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
             print("Picking a silver card...")
             return silver_ids[-1]
@@ -337,7 +344,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         if not Floor4BattleStrategy.with_shield:
             # If we don't have a shield, try to get it
-            next_idx = self._without_shield_phase2(hand_of_cards, picked_cards, silver_ids)
+            next_idx = self._without_shield_phase2(hand_of_cards, silver_ids, picked_silver_cards)
 
             # Evaluate here if we need to set the shield
             if isinstance(next_idx, Integral):
@@ -446,14 +453,20 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # ULTIMATE CARDS, but DON'T use Meli's ultimate! -- TODO debug this, not working properly
+        # ULTIMATE CARDS, but DON'T use Meli's ultimate!
         ult_ids = np.where(
             (card_types == CardTypes.ULTIMATE.value)
             & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
         )[0]
+        if len(ult_ids):
+            return ult_ids[-1]
 
-        # Default to the rightmost index if we don't find an ult to use
-        return ult_ids[-1] if len(ult_ids) else -1
+        # Default to the rightmost index, as long as it's not a Meli ult!
+        default_idx = -1
+        while find(vio.meli_ult, screenshot):
+            print("We have to skip Meli's ultimate here!")
+            default_idx -= 1
+        return default_idx
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy"""
@@ -462,7 +475,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # STANCE CARDS
+        # STANCE CARDS -- Play it first since it may increase the output damage
         stance_idx = play_stance_card(card_types, picked_card_types)
         if stance_idx is not None:
             return stance_idx
