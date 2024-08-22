@@ -242,12 +242,17 @@ class Floor4BattleStrategy(IBattleStrategy):
                     or bronze_item in [0, len(hand_of_cards) - 1]
                 )
             ),
-            -1,
+            None,
         )
 
-        # By default, return the rightmost card
-        print(f"Dafulting to: {next_idx}")
-        return next_idx
+        if next_idx is None:
+            # There's no bronze card to play! Simply move the rightmost two cards
+            print("We can't play any bronze card! Defaulting to arbitrary moving cards")
+            return [-2, -1]
+
+        # # By default, return the rightmost card
+        # print(f"Dafulting to: {next_idx}")
+        # return next_idx
 
     def _with_shield_phase2(self, hand_of_cards: list[Card]):
         """What to do if we have a shield? GO HAM"""
@@ -397,11 +402,19 @@ class Floor4BattleStrategy(IBattleStrategy):
         if find(vio.block_skill_debuf, screenshot):
             # We need to use Meli's AOE and Megelda's recovery!
             print("We have a block-skill debuff, we need to cleanse!")
-            # Play Meli's AOE card if we have it
-            for i, card in enumerate(hand_of_cards):
-                if find(vio.meli_aoe, card.card_image):
-                    print("Playing Meli's AOE at index", i)
-                    return i
+
+            # RECOVERY CARDS
+            recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
+            if len(recovery_ids):
+                print("Playing recovery at index", recovery_ids[-1])
+                return recovery_ids[-1]
+
+            # Play Meli's AOE card if we don't have a cleanse
+            if not len(recovery_ids):
+                for i, card in enumerate(hand_of_cards):
+                    if find(vio.meli_aoe, card.card_image):
+                        print("Playing Meli's AOE at index", i)
+                        return i
 
         # AMPLIFY CARDS -- Go ham on them
         amplify_ids = np.where([is_amplify_card(card) for card in hand_of_cards])[0]
@@ -442,7 +455,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # Default to the rightmost index, as long as it's not a Meli ult!
         default_idx = -1
-        while find(vio.meli_ult, screenshot):
+        while find(vio.meli_ult, hand_of_cards[default_idx].card_image):
             print("We have to skip Meli's ultimate here!")
             default_idx -= 1
         return default_idx
