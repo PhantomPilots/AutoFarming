@@ -199,10 +199,19 @@ class Floor4BattleStrategy(IBattleStrategy):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
 
-        # STANCE CARDS
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        if stance_idx is not None:
-            return stance_idx
+        # STANCE CARDS -- non-silver if possible
+        screenshot, _ = capture_window()
+        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+        if (
+            len(stance_ids)
+            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+            and not find(vio.stance_active, screenshot, threshold=0.5)
+        ):
+            print("We don't have a stance up, we need to enable it!")
+            non_silver_stance_ids = np.where(
+                (card_ranks != CardRanks.SILVER.value) & (card_types == CardTypes.STANCE.value)
+            )[0]
+            return non_silver_stance_ids[-1] if len(non_silver_stance_ids) else stance_ids[-1]
 
         # Click on a card if it generates a SILVER merge
         for i in range(1, len(hand_of_cards) - 1):
@@ -219,7 +228,8 @@ class Floor4BattleStrategy(IBattleStrategy):
             return ult_ids[-1]
 
         ### DEFAULT
-        # Get the next bronze card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge of silver cards
+        # Get the next non-silver card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge of silver cards
+
         next_idx = next(
             (
                 bronze_item
@@ -248,11 +258,19 @@ class Floor4BattleStrategy(IBattleStrategy):
         if next_idx is None:
             # There's no bronze card to play! Simply move the rightmost two cards
             print("We can't play any bronze card! Defaulting to arbitrary moving cards")
-            return [-2, -1]
+            # Move cards until a merge of silver cards is NOT generated
+            origin_idx = -1
+            target_idx = -3
+            while (
+                determine_card_merge(hand_of_cards[target_idx], hand_of_cards[origin_idx])
+                and card_ranks[origin_idx] == CardRanks.SILVER.value
+            ):
+                print(f"Index {origin_idx} will generate an unwanted merge with idx {target_idx}, skipping this move.")
+                target_idx -= 1
+            return [origin_idx, target_idx]
 
-        # # By default, return the rightmost card
-        # print(f"Dafulting to: {next_idx}")
-        # return next_idx
+        # If we've found a non-silver card to play
+        return next_idx
 
     def _with_shield_phase2(self, hand_of_cards: list[Card]):
         """What to do if we have a shield? GO HAM"""
@@ -405,12 +423,12 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids):
+            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
 
             # Play Meli's AOE card if we don't have a cleanse
-            if not len(recovery_ids):
+            elif not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
                 for i, card in enumerate(hand_of_cards):
                     if find(vio.meli_aoe, card.card_image):
                         print("Playing Meli's AOE at index", i)
