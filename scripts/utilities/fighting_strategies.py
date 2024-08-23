@@ -434,9 +434,10 @@ class Floor4BattleStrategy(IBattleStrategy):
                         print("Playing Meli's AOE at index", i)
                         return i
 
-        # AMPLIFY CARDS -- Go ham on them
-        amplify_ids = np.where([is_amplify_card(card) for card in hand_of_cards])[0]
-        if len(amplify_ids):
+        # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
+        if find(vio.immortality_buff, screenshot) and len(
+            amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
+        ):
             # Pick the rightmost amplify card
             print("Picking amplify card at index", amplify_ids[-1])
             return amplify_ids[-1]

@@ -18,11 +18,12 @@ from utilities.utilities import (
 
 def development():
     """Some development function calls"""
+    screenshot, window_location = capture_window()
 
-    # determine_relative_coordinates(capture_window()[0])
-    screenshot_testing(vision_image=vio.stance_active, threshold=0.5)
+    # determine_relative_coordinates(screenshot)
+    screenshot_testing(vision_image=vio.immortality_buff, threshold=0.8)
 
-    # empty_slots = count_empty_card_slots(capture_window()[0])
+    # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
     # cards = get_hand_cards()
