@@ -82,6 +82,7 @@ block_skill_debuf = Vision("demonic_beasts\\block_skill_debuff.png")
 evasion = Vision("demonic_beasts\\evasion.png")
 meli_ult = Vision("demonic_beasts\\meli_ult.png")
 stance_active = Vision("demonic_beasts\\stance_active.png")
+immortality_buff = Vision("demonic_beasts\\immortality.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
