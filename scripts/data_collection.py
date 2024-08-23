@@ -282,9 +282,9 @@ def main():
 
     # collect_card_type_data()
 
-    # collect_amplify_data()
+    collect_amplify_data()
 
-    collect_HAM_data()
+    # collect_HAM_data()
 
 
 if __name__ == "__main__":
