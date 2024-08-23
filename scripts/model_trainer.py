@@ -237,10 +237,10 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    # train_amplify_cards_classifier()
+    train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
-    train_HAM_cards_classifier()
+    # train_HAM_cards_classifier()
 
     return
 
