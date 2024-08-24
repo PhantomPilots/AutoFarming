@@ -88,6 +88,21 @@ def load_HAM_cards_features() -> list[np.ndarray]:
     return features_reduced, all_labels, pca_model
 
 
+def load_thor_cards_features() -> list[np.ndarray]:
+    """Load all the high-hitting dataset"""
+    dataset, all_labels = load_dataset("data/thor_cards*")
+
+    # Extract the features
+    features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
+
+    # Apply PCA for dimensionality reduction
+    pca_model = PCA(n_components=25)
+    # Fit the PCA
+    features_reduced = pca_model.fit_transform(features)
+
+    return features_reduced, all_labels, pca_model
+
+
 def explore_features(features, labels: list[CardTypes], label_type: CardTypes):
     """Explore the features for specific labels, for debugging..."""
 
@@ -225,6 +240,15 @@ def train_HAM_cards_classifier():
     save_model(pca_model, filename="pca_HAM_cards_model.pca")
 
 
+def train_thor_cards_classifier():
+    """Train a model that identifies hard-hitting cards (excluding ultimates)"""
+
+    features, labels, pca_model = load_thor_cards_features()
+    model = train_knn(X=features, labels=labels)
+    save_model(model, filename="Thor_cards_predictor.knn")
+    save_model(pca_model, filename="pca_Thor_cards_model.pca")
+
+
 def main():
 
     ### For card types
@@ -237,10 +261,13 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    train_amplify_cards_classifier()
+    # train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
     # train_HAM_cards_classifier()
+
+    ### Train model to identify Thor cards
+    train_thor_cards_classifier()
 
     return
 

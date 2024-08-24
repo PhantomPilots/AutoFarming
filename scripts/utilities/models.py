@@ -109,3 +109,27 @@ class HAMCardPredictor(IModel):
 
         # Finally, predict HAM card
         return int(HAMCardPredictor.model.predict(features_reduced).item())
+
+
+class ThorCardPredictor(IModel):
+    """Class that identifies Thor cards"""
+
+    @staticmethod
+    def is_Thor_card(card: np.ndarray | None) -> bool:
+        """Predict if a card is hard-hitting"""
+
+        if card is None:
+            return 0
+
+        # Ensure all models are properly loaded
+        ThorCardPredictor._load_feature_transform_model("pca_Thor_cards_model.pca")
+        ThorCardPredictor._load_model("Thor_cards_predictor.knn")
+
+        # Extract the features
+        features = extract_color_histograms_features(card, bins=(8, 8, 8))
+
+        # Transform features with the PCA
+        features_reduced = ThorCardPredictor.feature_transform_model.transform(features)
+
+        # Finally, predict HAM card
+        return int(ThorCardPredictor.model.predict(features_reduced).item())
