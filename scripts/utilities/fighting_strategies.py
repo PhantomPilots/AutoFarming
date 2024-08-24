@@ -438,6 +438,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         if find(vio.immortality_buff, screenshot) and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
+            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
             # Pick the rightmost amplify card
             print("Picking amplify card at index", amplify_ids[-1])
             return amplify_ids[-1]

@@ -12,6 +12,7 @@ from utilities.utilities import (
     display_image,
     find,
     get_hand_cards,
+    is_amplify_card,
     screenshot_testing,
 )
 
@@ -21,14 +22,15 @@ def development():
     screenshot, window_location = capture_window()
 
     # determine_relative_coordinates(screenshot)
-    screenshot_testing(vision_image=vio.immortality_buff, threshold=0.8)
+    # screenshot_testing(vision_image=vio.immortality_buff, threshold=0.8)
 
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    # cards = get_hand_cards()
+    cards = get_hand_cards()
 
-    # for i, card in enumerate(cards, start=0):
+    for i, card in enumerate(cards, start=0):
+        print(f"Is {card.card_type.name} amplify?", is_amplify_card(card))
     #     print(card.card_type.name, card.card_rank.name)
 
     #     # print(card.card_image.shape)

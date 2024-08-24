@@ -209,6 +209,8 @@ class BirdFarmer(IFarmer):
                 self.fighting_floor()
 
             elif self.current_state == States.RESETTING_BIRD:
-                self.resetting_bird_state()
+                # self.resetting_bird_state()
+                print("We've finished all 3 floors, exiting...")
+                return
 
             time.sleep(0.8)

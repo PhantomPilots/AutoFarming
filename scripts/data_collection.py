@@ -213,6 +213,41 @@ class HAMCardsCollector(DataCollector):
         return data, labels
 
 
+class ThorCardCollector(DataCollector):
+    """Identify Thor cards only"""
+
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+        cards = get_hand_cards()
+
+        data = []
+        labels = []
+
+        for i, card in enumerate(cards):
+            if i > 3 and previous_labels is not None:
+                # Use the first 4 instances of the previous labels as the last 4 of this iteration
+                card_label = previous_labels[i - 4]
+                print(f"Auto-appending label: {'THOR' if card_label else 'not thor'}")
+            else:
+                card_label = input("Is this a Thor card? 1/y, 0/n: ")
+                card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
+
+            # Extract the inside of the card, effectively removing its border/rank information
+            card_interior = get_card_interior_image(card.card_image)
+            # These should be the features we train the classifier on:
+            features = extract_color_histograms_features(card_interior, bins=(4, 4, 4))
+
+            # Let's plot the image for debugging
+            # display_image(card_interior)
+
+            data.append(card_interior)
+            labels.append(card_label)
+
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+
+        return data, labels
+
+
 def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
     """Creates a dictionary with the data and saves it under 'data/'"""
 
@@ -277,14 +312,26 @@ def collect_HAM_data():
     save_data(dataset, all_labels, filename="ham_cards_data")
 
 
+def collect_Thor_data():
+    """Collect data for identifying Thor cards only"""
+    print("Collecting Thor cards data...")
+
+    data_collector = ThorCardCollector()
+    dataset, all_labels = data_collector.collect_data()
+    print("All labels:\n", all_labels)
+    save_data(dataset, all_labels, filename="thor_cards_data")
+
+
 def main():
     # collect_merge_data()
 
     # collect_card_type_data()
 
-    collect_amplify_data()
+    # collect_amplify_data()
 
     # collect_HAM_data()
+
+    collect_Thor_data()
 
 
 if __name__ == "__main__":
