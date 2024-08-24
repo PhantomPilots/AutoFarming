@@ -103,7 +103,7 @@ class SmarterBattleStrategy(IBattleStrategy):
     It prioritizes one recovery and one stance card, and then it picks attack cards for the remaining slots."""
 
     @classmethod
-    def get_next_card_index(cls, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def get_next_card_index(cls, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
         """Apply the logic to extract the right indices."""
 
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
