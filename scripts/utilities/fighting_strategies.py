@@ -13,6 +13,7 @@ from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import (
     capture_window,
     count_empty_card_slots,
+    count_immortality_buffs,
     determine_card_merge,
     display_image,
     find,
@@ -331,6 +332,19 @@ class Floor4BattleStrategy(IBattleStrategy):
         silver_ids = np.where(card_ranks == 1)[0].astype(int)
         picked_silver_cards = [card for card in picked_cards if card.card_rank.value == 1]
 
+        ### DISABLED
+        # If we have any disabled card here but also recoveries available...
+        if (
+            np.any(card_types == CardTypes.DISABLED.value)
+            and len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) > 0
+        ):
+            # Change all DISABLED to ATTACK
+            for i in range(len(hand_of_cards)):
+                if card_types[i] == CardTypes.DISABLED:
+                    hand_of_cards[i].card_type = CardTypes.ATTACK
+            # Return the recovery
+            return recovery_ids[-1]
+
         if not Floor4BattleStrategy.with_shield:
             # If we don't have a shield, try to get it
             next_idx = self._without_shield_phase2(hand_of_cards, silver_ids, picked_silver_cards)
@@ -417,7 +431,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # First of all, we may need to cure the block skill effect!
         screenshot, _ = capture_window()
-        if find(vio.block_skill_debuf, screenshot):
+        if find(vio.block_skill_debuf, screenshot, threshold=0.6):
             # We need to use Meli's AOE and Megelda's recovery!
             print("We have a block-skill debuff, we need to cleanse!")
 
@@ -434,26 +448,29 @@ class Floor4BattleStrategy(IBattleStrategy):
                         print("Playing Meli's AOE at index", i)
                         return i
 
+        # STANCE CARDS -- First, since they get disabled immediately!
+        stance_idx = play_stance_card(card_types, picked_card_types)
+        if stance_idx is not None:
+            return stance_idx
+
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
-        if find(vio.immortality_buff, screenshot) and len(
+        num_immortalities = count_immortality_buffs(screenshot)
+        if num_immortalities - len(picked_cards) > 0 and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
-            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
+            # print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
             thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
             non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
             amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
             return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
+        elif num_immortalities - len(picked_card_types) <= 0:
+            print("No need to select more amplify cards!")
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
             return recovery_ids[-1]
-
-        # STANCE CARDS
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        if stance_idx is not None:
-            return stance_idx
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
