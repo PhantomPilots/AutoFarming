@@ -23,6 +23,7 @@ from utilities.models import (
     CardMergePredictor,
     CardTypePredictor,
     HAMCardPredictor,
+    ThorCardPredictor,
 )
 from utilities.vision import Vision
 
@@ -439,6 +440,15 @@ def is_hard_hitting_card(card: Card) -> bool:
 
     card_interior = get_card_interior_image(card.card_image)
     return HAMCardPredictor.is_HAM_card(card_interior)
+
+
+def is_Thor_card(card: Card) -> bool:
+    """Identify Thor cards"""
+    if card.card_image is None:
+        return 0
+
+    card_interior = get_card_interior_image(card.card_image)
+    return ThorCardPredictor.is_Thor_card(card_interior)
 
 
 def display_image(image: np.ndarray, title: str = "Image"):

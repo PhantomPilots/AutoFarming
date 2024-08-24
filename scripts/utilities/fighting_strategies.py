@@ -20,6 +20,7 @@ from utilities.utilities import (
     get_hand_cards,
     is_amplify_card,
     is_hard_hitting_card,
+    is_Thor_card,
 )
 
 
@@ -201,17 +202,16 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # STANCE CARDS -- non-silver if possible
         screenshot, _ = capture_window()
-        stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+        stance_ids = sorted(
+            np.where(card_types == CardTypes.STANCE.value)[0], key=lambda idx: card_ranks[idx], reverse=True
+        )
         if (
             len(stance_ids)
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
             and not find(vio.stance_active, screenshot, threshold=0.5)
         ):
             print("We don't have a stance up, we need to enable it!")
-            non_silver_stance_ids = np.where(
-                (card_ranks != CardRanks.SILVER.value) & (card_types == CardTypes.STANCE.value)
-            )[0]
-            return non_silver_stance_ids[-1] if len(non_silver_stance_ids) else stance_ids[-1]
+            return stance_ids[-1]
 
         # Click on a card if it generates a SILVER merge
         for i in range(1, len(hand_of_cards) - 1):
@@ -266,7 +266,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 and card_ranks[origin_idx] == CardRanks.SILVER.value
             ):
                 print(f"Index {origin_idx} will generate an unwanted merge with idx {target_idx}, skipping this move.")
-                target_idx -= 1
+                target_idx -= 2
             return [origin_idx, target_idx]
 
         # If we've found a non-silver card to play
@@ -439,9 +439,11 @@ class Floor4BattleStrategy(IBattleStrategy):
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
             print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
-            # Pick the rightmost amplify card
-            print("Picking amplify card at index", amplify_ids[-1])
-            return amplify_ids[-1]
+            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
+            non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
+            # Re-order the array of HAM IDs, with the thor_ids in the last position
+            amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
+            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
@@ -506,7 +508,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Go HAM on the fricking bird
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
         if len(ham_card_ids):
-            return ham_card_ids[-1]
+            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
+            non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
+            # Re-order the array of HAM IDs, with the thor_ids in the last position
+            ham_card_ids = np.concatenate([thor_ids, non_thor_ham_ids])
+            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else ham_card_ids[-1]
 
         # If we don't have hard-hitting cards, run the default strategy
         next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
