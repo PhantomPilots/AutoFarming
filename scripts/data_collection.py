@@ -325,13 +325,13 @@ def collect_Thor_data():
 def main():
     # collect_merge_data()
 
-    # collect_card_type_data()
+    collect_card_type_data()
 
     # collect_amplify_data()
 
     # collect_HAM_data()
 
-    collect_Thor_data()
+    # collect_Thor_data()
 
 
 if __name__ == "__main__":

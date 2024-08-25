@@ -118,7 +118,7 @@ def count_empty_card_slots(screenshot, threshold=0.7):
     return rectangles.shape[0] + rectangles_2.shape[0]
 
 
-def count_immortality_buffs(screenshot: np.ndarray, threshold=0.8):
+def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7):
     """Count how many immortaility buffs the bird has"""
     rectangles, _ = vio.immortality_buff.find_all_rectangles(screenshot, threshold=threshold)
     return rectangles.shape[0]

@@ -455,6 +455,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
         num_immortalities = count_immortality_buffs(screenshot)
+        print("These many immortalities:", num_immortalities)
         if num_immortalities - len(picked_cards) > 0 and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):

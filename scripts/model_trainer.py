@@ -252,7 +252,7 @@ def train_thor_cards_classifier():
 def main():
 
     ### For card types
-    # train_card_types_model()
+    train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -267,7 +267,7 @@ def main():
     # train_HAM_cards_classifier()
 
     ### Train model to identify Thor cards
-    train_thor_cards_classifier()
+    # train_thor_cards_classifier()
 
     return
 
