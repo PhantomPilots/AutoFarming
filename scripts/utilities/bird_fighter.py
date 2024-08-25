@@ -71,17 +71,14 @@ class BirdFighter(IFighter):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
         screenshot, _ = capture_window()
 
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
+        # Ensure we have the current hand
         if self.current_hand is None:
-            current_phase = self._identify_phase(screenshot)
-            self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+            self._update_current_hand(screenshot)
 
-        # We have the cards now, click on them
-        try:
-            self.play_cards(self.current_hand)
-        except ValueError:
+        # Attempt to play the cards
+        if not self._attempt_to_play_cards():
             print("We're trying to play a GROUND card, we need to re-capture the hand...")
-            self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+            self._update_current_hand(screenshot)
             return
 
         if not find(vio.empty_card_slot, screenshot):
@@ -89,6 +86,19 @@ class BirdFighter(IFighter):
             self.current_state = FightingStates.FIGHTING
             # Reset the hand
             self.current_hand = None
+
+    def _update_current_hand(self, screenshot):
+        """Update the current hand of cards based on the phase."""
+        current_phase = self._identify_phase(screenshot)
+        self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+
+    def _attempt_to_play_cards(self) -> bool:
+        """Attempt to play the cards, returning True if successful, False otherwise."""
+        try:
+            self.play_cards(self.current_hand)
+            return True
+        except ValueError:
+            return False
 
     def fight_complete_state(self):
 

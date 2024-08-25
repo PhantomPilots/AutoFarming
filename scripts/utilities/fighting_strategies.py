@@ -468,15 +468,15 @@ class Floor4BattleStrategy(IBattleStrategy):
         elif num_immortalities - len(picked_card_types) <= 0:
             print("No need to select more amplify cards!")
 
-        # RECOVERY CARDS
-        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
-            return recovery_ids[-1]
-
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
             if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
                 return i
+
+        # RECOVERY CARDS
+        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
+        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            return recovery_ids[-1]
 
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
