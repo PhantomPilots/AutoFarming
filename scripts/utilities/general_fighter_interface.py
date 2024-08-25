@@ -1,6 +1,7 @@
 import abc
 import time
 from enum import Enum
+from numbers import Integral
 from typing import Callable
 
 import numpy as np
@@ -12,6 +13,8 @@ from utilities.utilities import (
     count_empty_card_slots,
     drag_im,
     get_click_point_from_rectangle,
+    get_hand_cards,
+    is_ground_card,
 )
 
 
@@ -70,11 +73,17 @@ class IFighter(abc.ABC):
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play?
             index_to_play = selected_cards[1][slot_index]
-            self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
+
+            # Ensure the card we want to play is NOT ground (to avoid being stuck)
+            hand_cards = get_hand_cards()
+            if is_ground_card(hand_cards, index_to_play):
+                raise ValueError("We cannot play a ground card!")
+
+            self._play_card(hand_cards, index=index_to_play, window_location=window_location)
 
     def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):
         """Decide whether we're clicking or moving a card"""
-        if not isinstance(index, (tuple, list)):
+        if isinstance(index, Integral):
             # Just click on the card
             self._click_card(list_of_cards[index], window_location)
 

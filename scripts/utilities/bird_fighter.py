@@ -77,7 +77,12 @@ class BirdFighter(IFighter):
             self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
 
         # We have the cards now, click on them
-        self.play_cards(self.current_hand)
+        try:
+            self.play_cards(self.current_hand)
+        except ValueError:
+            print("We're trying to play a GROUND card, we need to re-capture the hand...")
+            self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
+            return
 
         if not find(vio.empty_card_slot, screenshot):
             print("Finished my turn, going back to FIGHTING")
