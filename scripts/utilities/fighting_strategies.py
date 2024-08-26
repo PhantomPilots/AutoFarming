@@ -275,6 +275,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
     def _with_shield_phase2(self, hand_of_cards: list[Card]):
         """What to do if we have a shield? GO HAM"""
+        card_ranks = [card.card_rank.value for card in hand_of_cards]
 
         print("We have a shield, GOING HAM ON THE BIRD!")
         # First pick ultimates, to save amplify cards for phase 3 if we can
@@ -284,6 +285,8 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # First try to pick a hard-hitting card
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
+        # Use bronze cards first
+        ham_card_ids = sorted(ham_card_ids, key=lambda idx: card_ranks[idx], reverse=True)
         return ham_card_ids[-1] if len(ham_card_ids) else None
 
     def _without_shield_phase2(

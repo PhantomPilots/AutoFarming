@@ -62,7 +62,7 @@ class IFighter(abc.ABC):
         empty_card_slots = count_empty_card_slots(screenshot)
 
         # if empty_card_slots == 1:
-        #     raise ValueError("Debugging")
+        #     raise RuntimeError("Debugging")
 
         if empty_card_slots > self.available_card_slots:
             # A patch in case we read the available card slots wrongly earlier
