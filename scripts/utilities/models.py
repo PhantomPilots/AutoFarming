@@ -12,6 +12,8 @@ from utilities.feature_extractors import (
     extract_difference_of_histograms_features,
 )
 
+os.environ["LOKY_MAX_CPU_COUNT"] = "1"  # Replace '4' with the number of cores you want to use
+
 
 class IModel:
     """Interface class for any models needed. Is there anything they all share, to group here?"""

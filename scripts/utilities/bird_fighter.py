@@ -35,6 +35,13 @@ class BirdFighter(IFighter):
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
         elif (available_card_slots := count_empty_card_slots(screenshot)) > 0:
+            # First, identify if we are fully disabled... If so, restart the fight
+            if self._check_disabled_hand():
+                # We're fully disabled, we need to exit and restart the fight...
+                print("Our hand is fully disabled, let's restart the fight!")
+                self.current_state = FightingStates.EXIT_FIGHT
+                return
+
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -78,13 +85,6 @@ class BirdFighter(IFighter):
         if self.current_hand is None:
             self._update_current_hand(screenshot)
 
-        # # If we have the whole hand disabled, restart the fight -- TODO: This is not the best logic
-        # if self.current_hand is not None and self._check_disabled_hand(self.current_hand[0]):
-        #     # We're fully disabled, we need to exit and restart the fight...
-        #     print("Our hand is fully disabled, let's restart the fight!")
-        #     self.current_state = FightingStates.EXIT_FIGHT
-        #     return
-
         # Attempt to play the cards
         if not self._attempt_to_play_cards():
             print("We're trying to play a GROUND card, we need to re-capture the hand...")
@@ -97,8 +97,9 @@ class BirdFighter(IFighter):
             # Reset the hand
             self.current_hand = None
 
-    def _check_disabled_hand(self, house_of_cards: list[Card]):
+    def _check_disabled_hand(self):
         """If we have a disabled hand"""
+        house_of_cards = get_hand_cards()
         return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards])
 
     def _update_current_hand(self, screenshot):
