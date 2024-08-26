@@ -366,6 +366,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         if next_idx is not None:
             # We may not have found any card to play
             return next_idx
+        else:
+            print("Index is 'None', default to default strategy.")
 
         ### If we cannot play HAM cards because we don't have any, just play normally BUT without clicking SILVER cards
 
@@ -455,11 +457,11 @@ class Floor4BattleStrategy(IBattleStrategy):
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
         num_immortalities = count_immortality_buffs(screenshot)
         print("These many immortalities:", num_immortalities)
-        picked_amplify_cards = sum(is_Thor_card(card) for card in picked_cards)
+        picked_amplify_cards = sum(is_amplify_card(card) for card in picked_cards)
         if num_immortalities - picked_amplify_cards > 0 and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
-            # print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
+            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
             thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
             non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
@@ -470,7 +472,10 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
-            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
+            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]) and not find(
+                vio.meli_ult, hand_of_cards[i].card_image
+            ):
+                print(f"Index {i} generates a merge, picking it")
                 return i
 
         # RECOVERY CARDS

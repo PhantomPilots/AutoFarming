@@ -44,9 +44,10 @@ class Floor4Farmer(IFarmer):
 
         # Keep track of how many times we've beat the fight
         self.success_count = 0
+        self.total_count = 0
 
     def exit_message(self):
-        print(f"We've beat FLoor 4 of Bird {self.success_count} times.")
+        print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
 
     def going_to_floor_state(self):
 
@@ -100,6 +101,8 @@ class Floor4Farmer(IFarmer):
             print(f"FLOOR 4 COMPLETE, WOOO! We beat it a total of {self.success_count} times.")
         else:
             print("The bird fighter told me they lost... :/")
+
+        self.total_count += 1
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR

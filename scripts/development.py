@@ -22,7 +22,7 @@ def development():
     screenshot, window_location = capture_window()
 
     # determine_relative_coordinates(screenshot)
-    # screenshot_testing(vision_image=vio.immortality_buff, threshold=0.8)
+    screenshot_testing(vision_image=vio.meli_ult, threshold=0.8)
 
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)

@@ -4,8 +4,12 @@ to be used in pattern matching algorithms.
 NOTE: ORB doesn't work with small images (e.g., single cards)!
 """
 
+import os
+
 import cv2
 import numpy as np
+
+os.environ["LOKY_MAX_CPU_COUNT"] = "1"  # Replace '4' with the number of cores you want to use
 
 
 def extract_orb_features(image: np.ndarray, max_features=10):

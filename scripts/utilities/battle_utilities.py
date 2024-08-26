@@ -19,7 +19,7 @@ def process_card_move(house_of_cards: list[Card], origin_idx: int, target_idx: i
         house_of_cards.insert(0, Card(CardTypes.NONE, None, None))
     else:
         # The case in which we move without having a card merge
-        cprint(f"We're moving a card from {origin_idx} to {target_idx}, but it's not generating a merge!", "yellow")
+        print(f"We're moving a card from {origin_idx} to {target_idx}, but it's not generating a merge!")
         # Rearrange the house of cards
         card = house_of_cards.pop(origin_idx)
         house_of_cards.insert(target_idx, card)

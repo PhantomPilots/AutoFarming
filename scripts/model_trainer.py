@@ -66,7 +66,7 @@ def load_amplify_cards_features() -> list[np.ndarray]:
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
     # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=30)
+    pca_model = PCA(n_components=20)
     # Fit the PCA
     features_reduced = pca_model.fit_transform(features)
 
@@ -252,7 +252,7 @@ def train_thor_cards_classifier():
 def main():
 
     ### For card types
-    train_card_types_model()
+    # train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -261,7 +261,7 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    # train_amplify_cards_classifier()
+    train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
     # train_HAM_cards_classifier()

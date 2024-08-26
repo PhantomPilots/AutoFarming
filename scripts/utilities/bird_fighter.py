@@ -2,6 +2,7 @@ import time
 
 import numpy as np
 import utilities.vision_images as vio
+from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.utilities import (
@@ -9,6 +10,7 @@ from utilities.utilities import (
     count_empty_card_slots,
     find,
     find_and_click,
+    get_hand_cards,
 )
 
 
@@ -48,8 +50,9 @@ class BirdFighter(IFighter):
         screenshot, window_location = capture_window()
 
         find_and_click(vio.ok_bird_defeat, screenshot, window_location)
+        find_and_click(vio.forfeit_fight_ok, screenshot, window_location)
 
-        if find(vio.db_loading_screen, screenshot):
+        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False)
             IFighter.exit_thread = True
@@ -75,7 +78,12 @@ class BirdFighter(IFighter):
         if self.current_hand is None:
             self._update_current_hand(screenshot)
 
-        # TODO: If we have the whole hand disabled, restart the fight
+        # # If we have the whole hand disabled, restart the fight -- TODO: This is not the best logic
+        # if self.current_hand is not None and self._check_disabled_hand(self.current_hand[0]):
+        #     # We're fully disabled, we need to exit and restart the fight...
+        #     print("Our hand is fully disabled, let's restart the fight!")
+        #     self.current_state = FightingStates.EXIT_FIGHT
+        #     return
 
         # Attempt to play the cards
         if not self._attempt_to_play_cards():
@@ -89,6 +97,10 @@ class BirdFighter(IFighter):
             # Reset the hand
             self.current_hand = None
 
+    def _check_disabled_hand(self, house_of_cards: list[Card]):
+        """If we have a disabled hand"""
+        return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards])
+
     def _update_current_hand(self, screenshot):
         """Update the current hand of cards based on the phase."""
         current_phase = self._identify_phase(screenshot)
@@ -101,6 +113,22 @@ class BirdFighter(IFighter):
             return True
         except ValueError:
             return False
+
+    def exit_fight_state(self):
+        """We have to manually finish the fight because we've been fully disabled..."""
+        screenshot, window_location = capture_window()
+
+        if find(vio.forfeit_fight_ok, screenshot):
+            # Move to the fight complete state
+            self.current_state = FightingStates.DEFEAT
+            return
+
+        # Click on FORFEIT BATTLE
+        if find_and_click(vio.forfeit, screenshot, window_location):
+            return
+
+        # Click in the 'pause' icon
+        find_and_click(vio.pause, screenshot, window_location)
 
     def fight_complete_state(self):
 
@@ -132,6 +160,9 @@ class BirdFighter(IFighter):
 
             elif self.current_state == FightingStates.DEFEAT:
                 self.defeat_state()
+
+            elif self.current_state == FightingStates.EXIT_FIGHT:
+                self.exit_fight_state()
 
             if IFighter.exit_thread:
                 print("Closing Fighter thread!")

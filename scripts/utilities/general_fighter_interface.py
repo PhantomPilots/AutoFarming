@@ -24,6 +24,7 @@ class FightingStates(Enum):
     FIGHTING_COMPLETE = 1
     MY_TURN = 2
     DEFEAT = 3
+    EXIT_FIGHT = 4
 
 
 class IFighter(abc.ABC):
@@ -75,8 +76,7 @@ class IFighter(abc.ABC):
             index_to_play = selected_cards[1][slot_index]
 
             # Ensure the card we want to play is NOT ground (to avoid being stuck)
-            hand_cards = get_hand_cards()
-            while is_ground_card(hand_cards, index_to_play):
+            while is_ground_card((hand_cards := get_hand_cards()), index_to_play):
                 print("We cannot play a ground card!")
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
