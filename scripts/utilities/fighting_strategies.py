@@ -197,15 +197,15 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids):
+            if len(recovery_ids) and not np.any(picked_card_types == CardTypes.RECOVERY.value):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
         else:
-            # If we don't cure block-skill debuff, check if we need to do a card merge
+            # If we don't cure block-skill debuff, check if we can do a card merge
             silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
             if len(silver_cards) < 3 and Floor4BattleStrategy.card_turn == 0:
                 # Only do a manual card merge if it's the first card of the turn
-                if potential_idx := self._make_silver_merge(hand_of_cards) is not None:
+                if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                     return potential_idx
 
         # STANCE CARDS -- non-silver if possible
@@ -308,7 +308,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
         if total_num_silver_cards <= 2:
             # If we don't have a shield, move cards to try to make 3 silver cards
-            if potential_idx := self._make_silver_merge(hand_of_cards) is not None:
+            if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                 return potential_idx
 
         # Play level 2 cards or higher only if we can get the shield
@@ -455,7 +455,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
         num_immortalities = count_immortality_buffs(screenshot)
         print("These many immortalities:", num_immortalities)
-        if num_immortalities - len(picked_cards) > 0 and len(
+        picked_amplify_cards = sum(is_Thor_card(card) for card in picked_cards)
+        if num_immortalities - picked_amplify_cards > 0 and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
             # print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
@@ -464,7 +465,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Re-order the array of HAM IDs, with the thor_ids in the last position
             amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
             return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
-        elif num_immortalities - len(picked_card_types) <= 0:
+        elif num_immortalities - picked_amplify_cards <= 0:
             print("No need to select more amplify cards!")
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!

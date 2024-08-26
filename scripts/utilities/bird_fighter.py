@@ -75,6 +75,8 @@ class BirdFighter(IFighter):
         if self.current_hand is None:
             self._update_current_hand(screenshot)
 
+        # TODO: If we have the whole hand disabled, restart the fight
+
         # Attempt to play the cards
         if not self._attempt_to_play_cards():
             print("We're trying to play a GROUND card, we need to re-capture the hand...")

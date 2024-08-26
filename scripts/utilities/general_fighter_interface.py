@@ -76,8 +76,10 @@ class IFighter(abc.ABC):
 
             # Ensure the card we want to play is NOT ground (to avoid being stuck)
             hand_cards = get_hand_cards()
-            if is_ground_card(hand_cards, index_to_play):
-                raise ValueError("We cannot play a ground card!")
+            while is_ground_card(hand_cards, index_to_play):
+                print("We cannot play a ground card!")
+                index_to_play += 1
+                index_to_play %= len(hand_cards)
 
             self._play_card(hand_cards, index=index_to_play, window_location=window_location)
 
