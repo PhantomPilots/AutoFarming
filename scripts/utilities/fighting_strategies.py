@@ -183,7 +183,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # First of all, we may need to cure all the debuffs!
+        # We may need to cure all the debuffs!
         screenshot, _ = capture_window()
         if find(vio.block_skill_debuf, screenshot):
             # We need to use Meli's AOE and Megelda's recovery!
@@ -200,6 +200,13 @@ class Floor4BattleStrategy(IBattleStrategy):
             if len(recovery_ids):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
+        else:
+            # If we don't cure block-skill debuff, check if we need to do a card merge
+            silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
+            if len(silver_cards) < 3 and Floor4BattleStrategy.card_turn == 0:
+                # Only do a manual card merge if it's the first card of the turn
+                if potential_idx := self._make_silver_merge(hand_of_cards) is not None:
+                    return potential_idx
 
         # STANCE CARDS -- non-silver if possible
         screenshot, _ = capture_window()
@@ -301,19 +308,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         total_num_silver_cards = len(silver_ids) + len(picked_silver_cards)
         if total_num_silver_cards <= 2:
             # If we don't have a shield, move cards to try to make 3 silver cards
-            for i, card in enumerate(hand_of_cards):
-                for j in range(i + 2, len(hand_of_cards)):
-                    if (
-                        card.card_rank == CardRanks.BRONZE
-                        and determine_card_merge(card, hand_of_cards[j])
-                        and (
-                            # If `card` at `i` would merge with `i+2`, only move the card if `i+1` is SILVER,
-                            # because we wouldn't automatically play it
-                            j != i + 2
-                            or hand_of_cards[i + 1].card_rank == CardRanks.SILVER
-                        )
-                    ):
-                        return [i, j]
+            if potential_idx := self._make_silver_merge(hand_of_cards) is not None:
+                return potential_idx
 
         # Play level 2 cards or higher only if we can get the shield
         empty_slots = count_empty_card_slots(capture_window()[0])
@@ -543,6 +539,23 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
         return next_idx
+
+    def _make_silver_merge(self, hand_of_cards: list[Card]):
+        """See if we can make a silver merge"""
+        for i, card in enumerate(hand_of_cards):
+            for j in range(i + 2, len(hand_of_cards)):
+                if (
+                    card.card_rank == CardRanks.BRONZE
+                    and determine_card_merge(card, hand_of_cards[j])
+                    and (
+                        # If `card` at `i` would merge with `i+2`, only move the card if `i+1` is SILVER,
+                        # because we wouldn't automatically play it
+                        j != i + 2
+                        or hand_of_cards[i + 1].card_rank == CardRanks.SILVER
+                    )
+                ):
+                    return [i, j]
+        return None
 
 
 def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray):
