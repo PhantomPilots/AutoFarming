@@ -99,10 +99,12 @@ class Floor4Farmer(IFarmer):
         if victory:
             # Transition to another state or perform clean-up actions
             self.success_count += 1
-            print(f"FLOOR 4 COMPLETE, WOOO! We beat it {self.success_count}/{self.total_count} times.")
+            print("FLOOR 4 COMPLETE, WOOO!")
         else:
             phase = kwargs.get("phase", None)
             print(f"The bird fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
+
+        print(f"We beat it {self.success_count}/{self.total_count} times.")
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR

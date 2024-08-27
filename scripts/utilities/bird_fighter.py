@@ -117,7 +117,8 @@ class BirdFighter(IFighter):
             return
 
         # Click on FORFEIT BATTLE
-        find_and_click(vio.forfeit, screenshot, window_location)
+        if find_and_click(vio.forfeit, screenshot, window_location):
+            return
 
         # Click in the 'pause' icon
         find_and_click(vio.pause, screenshot, window_location)
