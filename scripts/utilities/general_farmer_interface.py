@@ -16,6 +16,9 @@ class IFarmer:
             "__init__ method should be defined by subclasses, with these two parameters: battle_strategy and starting_state"
         )
 
+    def stop_fighter_thread(self):
+        """Send a message to the IFighter class so that the thread exits"""
+
     def exit_message(self):
         """Final message to display on the screen when CTRL+C happens"""
 

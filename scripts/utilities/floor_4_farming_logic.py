@@ -52,6 +52,10 @@ class Floor4Farmer(IFarmer):
         print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
         self._print_defeats()
 
+    def stop_fighter_thread(self):
+        """Stop the fighter thread!"""
+        self.bird_fighter.stop_fighter()
+
     def _print_defeats(self):
         print("Defeats:")
         for phase, count in self.dict_of_defeats.items():

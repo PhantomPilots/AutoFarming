@@ -34,3 +34,5 @@ class FarmingFactory:
                 print(f"An error occurred:\n{e}")
                 # Recover the current state the bird farmer was in, and restart from there
                 starting_state = farmer_instance.current_state
+                # We also need to send a STOP command to the Fighter thread, so that it stops!
+                farmer_instance.stop_fighter_thread()

@@ -1,4 +1,5 @@
 import abc
+import threading
 import time
 from enum import Enum
 from numbers import Integral
@@ -30,9 +31,6 @@ class FightingStates(Enum):
 class IFighter(abc.ABC):
     """Interface that will encompass all different types of fights (Demonic beasts, KH boss, FB boss...)"""
 
-    # Static in case we want to set it to True it with a `signal`
-    exit_thread = False
-
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         """Initialize the fighter instance with a (optional) callback to call when the fight has finished,
         and a battle strategy.
@@ -40,16 +38,23 @@ class IFighter(abc.ABC):
         the current state of the fight, and should be independent of the type of fight.
         """
 
+        self._lock = threading.Lock()
+        self.exit_thread = False
         self.battle_strategy: IBattleStrategy = battle_strategy()
         self.complete_callback = callback or (lambda: None)
+
         self._reset_instance_variables()
 
     def _reset_instance_variables(self):
-        IFighter.exit_thread = False
+        self.exit_thread = False
         self.current_state = FightingStates.FIGHTING
         self.available_card_slots = 0
         # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
         self.current_hand: tuple[list[Card], list[int]] = None
+
+    def stop_fighter(self):
+        with self._lock:
+            self.exit_thread = True
 
     def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):
         """Click on the cards from the picked cards to play.

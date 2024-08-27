@@ -133,7 +133,8 @@ class BirdFighter(IFighter):
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=self.phase)
-            IFighter.exit_thread = True
+            with self._lock:
+                self.exit_thread = True
 
     def fight_complete_state(self):
 
@@ -145,7 +146,8 @@ class BirdFighter(IFighter):
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
             self.complete_callback(victory=True)
-            IFighter.exit_thread = True
+            with self._lock:
+                self.exit_thread = True
 
     @IFighter.run_wrapper
     def run(self):
@@ -169,7 +171,7 @@ class BirdFighter(IFighter):
             elif self.current_state == FightingStates.EXIT_FIGHT:
                 self.exit_fight_state()
 
-            if IFighter.exit_thread:
+            if self.exit_thread:
                 print("Closing Fighter thread!")
                 return
 
