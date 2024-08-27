@@ -516,6 +516,17 @@ class Floor4BattleStrategy(IBattleStrategy):
                 if find(vio.meli_ult, hand_of_cards[i].card_image):
                     return i
 
+            # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
+            if not np.any([find(vio.meli_ult, card.card_image) for card in picked_cards]):
+                if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
+                    return stance_idx
+                elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
+                    [card.card_type == CardTypes.RECOVERY for card in picked_cards]
+                ):
+                    return recovery_ids[-1]
+                elif len(non_ham_ids := np.where([not is_hard_hitting_card(card) for card in hand_of_cards])[0]):
+                    return non_ham_ids[-1]
+
         # Go HAM on the fricking bird
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
         if len(ham_card_ids):

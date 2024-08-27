@@ -53,8 +53,9 @@ class Floor4Farmer(IFarmer):
         self._print_defeats()
 
     def _print_defeats(self):
+        print("Defeats:")
         for phase, count in self.dict_of_defeats.items():
-            print(f"Phase {phase} -> Lost {count} times.")
+            print(f"* Phase {phase} -> Lost {count} times.")
 
     def going_to_floor_state(self):
 
