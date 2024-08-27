@@ -36,7 +36,7 @@ class BirdFighter(IFighter):
 
         elif (available_card_slots := count_empty_card_slots(screenshot)) > 0:
             # First, identify if we are fully disabled... If so, restart the fight
-            if self._check_disabled_hand():
+            if available_card_slots >= 3 and self._check_disabled_hand():
                 # We're fully disabled, we need to exit and restart the fight...
                 print("Our hand is fully disabled, let's restart the fight!")
                 self.current_state = FightingStates.EXIT_FIGHT
