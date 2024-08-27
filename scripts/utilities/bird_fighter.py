@@ -113,8 +113,7 @@ class BirdFighter(IFighter):
             return
 
         # Click on FORFEIT BATTLE
-        if find_and_click(vio.forfeit, screenshot, window_location):
-            return
+        find_and_click(vio.forfeit, screenshot, window_location)
 
         # Click in the 'pause' icon
         find_and_click(vio.pause, screenshot, window_location)
@@ -128,7 +127,7 @@ class BirdFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False)
+            self.complete_callback(victory=False, phase=self._identify_phase(screenshot))
             IFighter.exit_thread = True
 
     def fight_complete_state(self):

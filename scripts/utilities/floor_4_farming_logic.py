@@ -92,17 +92,17 @@ class Floor4Farmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.bird_fighter.run, daemon=True)
             self.fight_thread.start()
 
-    def fight_complete_callback(self, victory=True):
+    def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
+        self.total_count += 1
         if victory:
             # Transition to another state or perform clean-up actions
             self.success_count += 1
-            print(f"FLOOR 4 COMPLETE, WOOO! We beat it a total of {self.success_count} times.")
+            print(f"FLOOR 4 COMPLETE, WOOO! We beat it {self.success_count}/{self.total_count} times.")
         else:
-            print("The bird fighter told me they lost... :/")
-
-        self.total_count += 1
+            phase = kwargs.get("phase", None)
+            print(f"The bird fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR

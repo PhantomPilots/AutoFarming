@@ -314,7 +314,6 @@ class Floor4BattleStrategy(IBattleStrategy):
         empty_slots = 4 - IBattleStrategy.card_turn
         # We need to recompute the "total number of silver cards", since we may have moved cards and those take up slot space
         total_num_silver_cards = min(len(silver_ids), empty_slots) + len(picked_silver_cards)
-        print(len(silver_ids), empty_slots, len(picked_silver_cards))
         if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
             print("Picking a silver card...")
             return silver_ids[-1]
@@ -475,7 +474,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
         # Lets sort the attack cards based on their rank
-        attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=False)
+        attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
         if len(attack_ids):
             return attack_ids[-1]
 
@@ -505,7 +504,9 @@ class Floor4BattleStrategy(IBattleStrategy):
         # If instead we have a recovery card, use it
         if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
-        elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
+        elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
+            [card.card_type == CardTypes.RECOVERY for card in picked_cards]
+        ):
             return recovery_ids[-1]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
