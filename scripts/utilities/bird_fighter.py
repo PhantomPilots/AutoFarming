@@ -16,6 +16,8 @@ from utilities.utilities import (
 
 class BirdFighter(IFighter):
 
+    phase = 1
+
     def fighting_state(self):
 
         screenshot, window_location = capture_window()
@@ -46,6 +48,8 @@ class BirdFighter(IFighter):
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
+            # Update the current phase
+            self.phase = self._identify_phase(screenshot)
 
         elif find(vio.defeat, screenshot):
             # I may have lost though...
@@ -127,7 +131,7 @@ class BirdFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=self._identify_phase(screenshot))
+            self.complete_callback(victory=False, phase=self.phase)
             IFighter.exit_thread = True
 
     def fight_complete_state(self):
