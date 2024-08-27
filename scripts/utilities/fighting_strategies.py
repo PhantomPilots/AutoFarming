@@ -266,13 +266,13 @@ class Floor4BattleStrategy(IBattleStrategy):
             print("We can't play any bronze card! Defaulting to arbitrary moving cards")
             # Move cards until a merge of silver cards is NOT generated
             origin_idx = -1
-            target_idx = -2
+            target_idx = -3
             while (
                 determine_card_merge(hand_of_cards[target_idx], hand_of_cards[origin_idx])
                 and card_ranks[origin_idx] == CardRanks.SILVER.value
             ):
                 print(f"Index {origin_idx} will generate an unwanted merge with idx {target_idx}, skipping this move.")
-                target_idx -= 1
+                target_idx -= 2
             return [origin_idx, target_idx]
 
         # If we've found a non-silver card to play
