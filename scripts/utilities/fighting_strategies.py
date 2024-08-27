@@ -189,7 +189,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             print("We have a block-skill debuff, we need to cleanse!")
 
             # Play Meli's AOE card if we have it
-            if not np.any(find(vio.meli_aoe, card.card_image) for card in picked_cards):
+            if not np.any([find(vio.meli_aoe, card.card_image) for card in picked_cards]):
                 for i, card in enumerate(hand_of_cards):
                     if find(vio.meli_aoe, card.card_image):
                         print("Playing Meli's AOE at index", i)
@@ -197,7 +197,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids) and not np.any(picked_card_types == CardTypes.RECOVERY.value):
+            if len(recovery_ids) and not np.any([picked_card_types == CardTypes.RECOVERY.value]):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
         else:
@@ -334,7 +334,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         ### DISABLED
         # If we have any disabled card here but also recoveries available...
         if (
-            np.any(card_types == CardTypes.DISABLED.value)
+            np.any([card_types == CardTypes.DISABLED.value])
             and len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) > 0
         ):
             # Change all DISABLED to ATTACK
@@ -443,7 +443,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # Play Meli's AOE card if we don't have a cleanse, AND if we haven't played a Meli AOE yet
             elif not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size and not np.any(
-                find(vio.meli_aoe, card.card_image) for card in picked_cards
+                [find(vio.meli_aoe, card.card_image) for card in picked_cards]
             ):
                 for i, card in enumerate(hand_of_cards):
                     if find(vio.meli_aoe, card.card_image):
