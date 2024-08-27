@@ -115,7 +115,7 @@ class Floor4Farmer(IFarmer):
             if phase is not None:
                 self.dict_of_defeats[phase] += 1
 
-        print(f"We beat it {self.success_count}/{self.total_count} times.")
+        print(f"We beat the bird {self.success_count}/{self.total_count} times.")
         self._print_defeats()
 
         # Go straight to the original states
