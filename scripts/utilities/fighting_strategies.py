@@ -189,10 +189,11 @@ class Floor4BattleStrategy(IBattleStrategy):
             print("We have a block-skill debuff, we need to cleanse!")
 
             # Play Meli's AOE card if we have it
-            for i, card in enumerate(hand_of_cards):
-                if find(vio.meli_aoe, card.card_image):
-                    print("Playing Meli's AOE at index", i)
-                    return i
+            if not np.any(find(vio.meli_aoe, card.card_image) for card in picked_cards):
+                for i, card in enumerate(hand_of_cards):
+                    if find(vio.meli_aoe, card.card_image):
+                        print("Playing Meli's AOE at index", i)
+                        return i
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
@@ -207,11 +208,9 @@ class Floor4BattleStrategy(IBattleStrategy):
                 if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                     return potential_idx
 
-        # STANCE CARDS -- non-silver if possible
+        # STANCE CARDS -- non-silver
         screenshot, _ = capture_window()
-        stance_ids = sorted(
-            np.where(card_types == CardTypes.STANCE.value)[0], key=lambda idx: card_ranks[idx], reverse=True
-        )
+        stance_ids = np.where((card_types == CardTypes.STANCE.value) & (card_ranks != CardRanks.SILVER.value))[0]
         if (
             len(stance_ids)
             and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
@@ -267,13 +266,13 @@ class Floor4BattleStrategy(IBattleStrategy):
             print("We can't play any bronze card! Defaulting to arbitrary moving cards")
             # Move cards until a merge of silver cards is NOT generated
             origin_idx = -1
-            target_idx = -3
+            target_idx = -2
             while (
                 determine_card_merge(hand_of_cards[target_idx], hand_of_cards[origin_idx])
                 and card_ranks[origin_idx] == CardRanks.SILVER.value
             ):
                 print(f"Index {origin_idx} will generate an unwanted merge with idx {target_idx}, skipping this move.")
-                target_idx -= 2
+                target_idx -= 1
             return [origin_idx, target_idx]
 
         # If we've found a non-silver card to play
@@ -308,12 +307,14 @@ class Floor4BattleStrategy(IBattleStrategy):
         if total_num_silver_cards <= 2:
             # If we don't have a shield, move cards to try to make 3 silver cards
             if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
+                print("Moving cards:", potential_idx)
                 return potential_idx
 
         # Play level 2 cards or higher only if we can get the shield
-        empty_slots = count_empty_card_slots(capture_window()[0])
+        empty_slots = 4 - IBattleStrategy.card_turn
         # We need to recompute the "total number of silver cards", since we may have moved cards and those take up slot space
         total_num_silver_cards = min(len(silver_ids), empty_slots) + len(picked_silver_cards)
+        print(len(silver_ids), empty_slots, len(picked_silver_cards))
         if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
             print("Picking a silver card...")
             return silver_ids[-1]
@@ -455,6 +456,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
         if (amplify_id := self._pick_amplify_cards(screenshot, hand_of_cards, picked_cards)) is not None:
+            print("Picking amplify card at ID:", amplify_id)
             return amplify_id
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
