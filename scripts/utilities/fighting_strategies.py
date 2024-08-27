@@ -190,10 +190,11 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # Play Meli's AOE card if we have it
             if not np.any([find(vio.meli_aoe, card.card_image) for card in picked_cards]):
-                for i, card in enumerate(hand_of_cards):
-                    if find(vio.meli_aoe, card.card_image):
-                        print("Playing Meli's AOE at index", i)
-                        return i
+                meli_aoe_ids = np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])[0]
+                if len(meli_aoe_ids):
+                    meli_aoe_ids = sorted(meli_aoe_ids, reverse=True, key=lambda idx: card_ranks[idx])
+                    print("Playing Meli's AOE at index", meli_aoe_ids[-1])
+                    return meli_aoe_ids[-1]
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
@@ -518,12 +519,18 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
             if not np.any([find(vio.meli_ult, card.card_image) for card in picked_cards]):
+                # Stance cards:
                 if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
                     return stance_idx
+                # Recovery cards:
                 elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
                     [card.card_type == CardTypes.RECOVERY for card in picked_cards]
                 ):
                     return recovery_ids[-1]
+                # # Ults:
+                # elif len(ult_ids := np.where(card_types == CardTypes.ULTIMATE.value)[0]):
+                #     return ult_ids[-1]
+                # Regular non-HAM cards:
                 elif len(non_ham_ids := np.where([not is_hard_hitting_card(card) for card in hand_of_cards])[0]):
                     return non_ham_ids[-1]
 
