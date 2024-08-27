@@ -440,8 +440,10 @@ class Floor4BattleStrategy(IBattleStrategy):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
 
-            # Play Meli's AOE card if we don't have a cleanse
-            elif not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            # Play Meli's AOE card if we don't have a cleanse, AND if we haven't played a Meli AOE yet
+            elif not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size and not np.any(
+                find(vio.meli_aoe, card.card_image) for card in picked_cards
+            ):
                 for i, card in enumerate(hand_of_cards):
                     if find(vio.meli_aoe, card.card_image):
                         print("Playing Meli's AOE at index", i)
