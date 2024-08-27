@@ -50,6 +50,9 @@ class Floor4Farmer(IFarmer):
 
     def exit_message(self):
         print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
+        self._print_defeats()
+
+    def _print_defeats(self):
         for phase, count in self.dict_of_defeats.items():
             print(f"Phase {phase} -> Lost {count} times.")
 
@@ -112,6 +115,7 @@ class Floor4Farmer(IFarmer):
                 self.dict_of_defeats[phase] += 1
 
         print(f"We beat it {self.success_count}/{self.total_count} times.")
+        self._print_defeats()
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR
