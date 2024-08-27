@@ -52,18 +52,6 @@ class BirdFighter(IFighter):
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
-    def defeat_state(self):
-        """We've lost the battle..."""
-        screenshot, window_location = capture_window()
-
-        find_and_click(vio.ok_bird_defeat, screenshot, window_location)
-        find_and_click(vio.forfeit_fight_ok, screenshot, window_location)
-
-        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
-            # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False)
-            IFighter.exit_thread = True
-
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
         if find(vio.phase_4, screenshot):
@@ -130,6 +118,18 @@ class BirdFighter(IFighter):
 
         # Click in the 'pause' icon
         find_and_click(vio.pause, screenshot, window_location)
+
+    def defeat_state(self):
+        """We've lost the battle..."""
+        screenshot, window_location = capture_window()
+
+        find_and_click(vio.ok_bird_defeat, screenshot, window_location)
+        find_and_click(vio.forfeit_fight_ok, screenshot, window_location)
+
+        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
+            # We're going back to the main bird menu, let's end this thread
+            self.complete_callback(victory=False)
+            IFighter.exit_thread = True
 
     def fight_complete_state(self):
 
