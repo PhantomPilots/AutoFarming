@@ -1,5 +1,6 @@
 import threading
 import time
+from collections import defaultdict
 from enum import Enum
 
 import pyautogui as pyautogui
@@ -42,12 +43,15 @@ class Floor4Farmer(IFarmer):
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
 
-        # Keep track of how many times we've beat the fight
+        # Keep track of how many times we've beat/lost the fight
         self.success_count = 0
         self.total_count = 0
+        self.dict_of_defeats = defaultdict(int)
 
     def exit_message(self):
         print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
+        for phase, count in self.dict_of_defeats.items():
+            print(f"Phase {phase} -> Lost {count} times.")
 
     def going_to_floor_state(self):
 
@@ -103,6 +107,9 @@ class Floor4Farmer(IFarmer):
         else:
             phase = kwargs.get("phase", None)
             print(f"The bird fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
+            # Increment the defeat count of the corresponding phase
+            if phase is not None:
+                self.dict_of_defeats[phase] += 1
 
         print(f"We beat it {self.success_count}/{self.total_count} times.")
 
