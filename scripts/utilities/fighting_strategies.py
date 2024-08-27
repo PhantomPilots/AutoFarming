@@ -114,8 +114,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # STANCE CARDS
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        if stance_idx is not None:
+        if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
 
         # ULTIMATE CARDS
@@ -390,8 +389,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             return ult_ids[-1]
 
         # STANCE CARDS
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        if stance_idx is not None:
+        if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
 
         # RECOVERY CARDS
@@ -450,25 +448,12 @@ class Floor4BattleStrategy(IBattleStrategy):
                         return i
 
         # STANCE CARDS -- First, since they get disabled immediately!
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        if stance_idx is not None:
+        if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
 
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
-        num_immortalities = count_immortality_buffs(screenshot)
-        print("These many immortalities:", num_immortalities)
-        picked_amplify_cards = sum(is_amplify_card(card) for card in picked_cards)
-        if num_immortalities - picked_amplify_cards > 0 and len(
-            amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
-        ):
-            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
-            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
-            non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
-            # Re-order the array of HAM IDs, with the thor_ids in the last position
-            amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
-            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
-        elif num_immortalities - picked_amplify_cards <= 0:
-            print("No need to select more amplify cards!")
+        if (amplify_id := self._pick_amplify_cards(screenshot, hand_of_cards, picked_cards)) is not None:
+            return amplify_id
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
@@ -514,11 +499,9 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # STANCE CARDS -- Play it first since it may increase the output damage
         # If instead we have a recovery card, use it
-        stance_idx = play_stance_card(card_types, picked_card_types)
-        recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if stance_idx is not None:
+        if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
-        elif len(recovery_ids):
+        elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
             return recovery_ids[-1]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
@@ -545,6 +528,27 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
         return next_idx
+
+    def _pick_amplify_cards(
+        self, screenshot: np.ndarray, hand_of_cards: list[Card], picked_cards: list[Card]
+    ) -> int | None:
+        """Pick an amplify/Thor/powerstrike card if necessary"""
+        num_immortalities = count_immortality_buffs(screenshot)
+        print("These many immortalities:", num_immortalities)
+        picked_amplify_cards = sum(is_amplify_card(card) for card in picked_cards)
+        if num_immortalities - picked_amplify_cards > 0 and len(
+            amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
+        ):
+            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
+            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
+            non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
+            # Re-order the array of HAM IDs, with the thor_ids in the last position
+            amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
+            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
+        elif num_immortalities - picked_amplify_cards <= 0:
+            print("No need to select more amplify cards!")
+
+        return None
 
     def _make_silver_merge(self, hand_of_cards: list[Card]):
         """See if we can make a silver merge"""
