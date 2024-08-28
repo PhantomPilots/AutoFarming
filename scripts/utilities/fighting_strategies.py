@@ -519,6 +519,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
             if not np.any([find(vio.meli_ult, card.card_image) for card in picked_cards]):
+                print("We cannot remove evasion, playing non-HAM cards...")
                 # Stance cards:
                 if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
                     return stance_idx

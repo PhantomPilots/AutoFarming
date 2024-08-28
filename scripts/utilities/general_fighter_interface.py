@@ -54,6 +54,7 @@ class IFighter(abc.ABC):
 
     def stop_fighter(self):
         with self._lock:
+            print("An error occurred, closing the fighter thread!")
             self.exit_thread = True
 
     def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):

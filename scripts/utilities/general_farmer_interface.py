@@ -17,7 +17,7 @@ class IFarmer:
         )
 
     def stop_fighter_thread(self):
-        """Send a message to the IFighter class so that the thread exits"""
+        """Send a STOP signal to the IFighter thread"""
 
     def exit_message(self):
         """Final message to display on the screen when CTRL+C happens"""

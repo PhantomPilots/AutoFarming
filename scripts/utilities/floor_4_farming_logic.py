@@ -1,3 +1,5 @@
+import logging
+import os
 import threading
 import time
 from collections import defaultdict
@@ -16,6 +18,17 @@ from utilities.utilities import (
     find,
     find_and_click,
 )
+
+# Configure the logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(message)s",
+    filename=os.path.join("logs", "floor_4.log"),
+    filemode="a",  # 'a' for append mode if you want to continue logging to the same file
+)
+
+# Create a logger instance
+logger = logging.getLogger()
 
 
 class States(Enum):
@@ -50,16 +63,22 @@ class Floor4Farmer(IFarmer):
 
     def exit_message(self):
         print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
-        self._print_defeats()
+        # Log the defeats
+        defeat_msg = self._print_defeats()
+        logger.info(defeat_msg)
 
     def stop_fighter_thread(self):
         """Stop the fighter thread!"""
         self.bird_fighter.stop_fighter()
 
     def _print_defeats(self):
-        print("Defeats:")
+        """Generate a string message to log"""
+        str_msg = "Defeats:\n"
         for phase, count in self.dict_of_defeats.items():
-            print(f"* Phase {phase} -> Lost {count} times.")
+            str_msg += f"* Phase {phase} -> Lost {count} times.\n"
+
+        print(str_msg)
+        return str_msg
 
     def going_to_floor_state(self):
 
@@ -101,7 +120,7 @@ class Floor4Farmer(IFarmer):
         # Set the fighter thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Bird fight started!")
-            self.fight_thread = threading.Thread(target=self.bird_fighter.run, daemon=True)
+            self.fight_thread = threading.Thread(target=self.bird_fighter.run, name="Floor4FighterThread", daemon=True)
             self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, **kwargs):
@@ -119,8 +138,13 @@ class Floor4Farmer(IFarmer):
             if phase is not None:
                 self.dict_of_defeats[phase] += 1
 
-        print(f"We beat the bird {self.success_count}/{self.total_count} times.")
-        self._print_defeats()
+        fight_complete_msg = f"We beat the bird {self.success_count}/{self.total_count} times."
+        print(fight_complete_msg)
+        logger.info(fight_complete_msg)
+
+        # Log the defeat
+        defeat_msg = self._print_defeats()
+        logger.info(defeat_msg)
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR
