@@ -142,9 +142,8 @@ class Floor4Farmer(IFarmer):
         print(fight_complete_msg)
         logger.info(fight_complete_msg)
 
-        # Log the defeat
-        defeat_msg = self._print_defeats()
-        logger.info(defeat_msg)
+        # Don't log the defeats here, only on `exit_message()`
+        self._print_defeats()
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR
