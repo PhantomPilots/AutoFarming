@@ -378,6 +378,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 and card_ranks[i - 1] != CardRanks.SILVER.value
                 and card_ranks[i] != CardRanks.SILVER.value
             ):
+                print("Manually generating a merge on index", i)
                 return i
 
         # Disable all silver cards
@@ -501,14 +502,9 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # STANCE CARDS -- Play it first since it may increase the output damage
-        # If instead we have a recovery card, use it
+        # STANCE -- first thing, since it increases damage
         if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
-        elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
-            [card.card_type == CardTypes.RECOVERY for card in picked_cards]
-        ):
-            return recovery_ids[-1]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()
@@ -520,20 +516,23 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
             if not np.any([find(vio.meli_ult, card.card_image) for card in picked_cards]):
                 print("We cannot remove evasion, playing non-HAM cards...")
-                # Stance cards:
-                if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
-                    return stance_idx
-                # Recovery cards:
-                elif len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
-                    [card.card_type == CardTypes.RECOVERY for card in picked_cards]
-                ):
+                # RECOVERY: Play as many as we have!
+                if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
                     return recovery_ids[-1]
-                # # Ults:
+
+                # # ULTS
                 # elif len(ult_ids := np.where(card_types == CardTypes.ULTIMATE.value)[0]):
                 #     return ult_ids[-1]
+
                 # Regular non-HAM cards:
                 elif len(non_ham_ids := np.where([not is_hard_hitting_card(card) for card in hand_of_cards])[0]):
                     return non_ham_ids[-1]
+
+        # RECOVERY
+        if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
+            [card.card_type == CardTypes.RECOVERY for card in picked_cards]
+        ):
+            return recovery_ids[-1]
 
         # Go HAM on the fricking bird
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
