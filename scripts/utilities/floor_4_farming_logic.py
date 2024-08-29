@@ -20,14 +20,15 @@ from utilities.utilities import (
 )
 
 # Configure the logger
+logs_dir = "logs"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(message)s",
-    filename=os.path.join("logs", "floor_4.log"),
+    filename=os.path.join(logs_dir, "floor_4.log"),
     filemode="a",  # 'a' for append mode if you want to continue logging to the same file
 )
-
 # Create a logger instance
+os.makedirs(logs_dir, exist_ok=True)
 logger = logging.getLogger()
 
 

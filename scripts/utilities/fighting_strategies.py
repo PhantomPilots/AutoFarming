@@ -273,7 +273,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 and card_ranks[origin_idx] == CardRanks.SILVER.value
             ):
                 print(f"Index {origin_idx} will generate an unwanted merge with idx {target_idx}, skipping this move.")
-                target_idx -= 2
+                target_idx -= 1
             return [origin_idx, target_idx]
 
         # If we've found a non-silver card to play

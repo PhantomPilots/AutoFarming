@@ -20,15 +20,17 @@ from utilities.utilities import (
 def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
+    print("Screenshot shape:", screenshot.shape)
+
+    hand_image = capture_hand_image()
 
     # determine_relative_coordinates(screenshot)
-    screenshot_testing(vision_image=vio.evasion, threshold=0.8)
+    # screenshot_testing(vision_image=vio.evasion, threshold=0.8)
 
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
     cards = get_hand_cards()
-
     for i, card in enumerate(cards, start=0):
         print(f"Is {card.card_type.name} amplify?", is_amplify_card(card))
     #     print(card.card_type.name, card.card_rank.name)
