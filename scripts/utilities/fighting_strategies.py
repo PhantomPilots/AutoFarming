@@ -520,9 +520,9 @@ class Floor4BattleStrategy(IBattleStrategy):
                 if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
                     return recovery_ids[-1]
 
-                # # ULTS
-                # elif len(ult_ids := np.where(card_types == CardTypes.ULTIMATE.value)[0]):
-                #     return ult_ids[-1]
+                # ULTS
+                elif len(ult_ids := np.where(card_types == CardTypes.ULTIMATE.value)[0]):
+                    return ult_ids[-1]
 
                 # Regular non-HAM cards:
                 elif len(non_ham_ids := np.where([not is_hard_hitting_card(card) for card in hand_of_cards])[0]):
