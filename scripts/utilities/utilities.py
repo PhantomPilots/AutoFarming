@@ -457,15 +457,9 @@ def is_Thor_card(card: Card) -> bool:
     return ThorCardPredictor.is_Thor_card(card_interior)
 
 
-def is_ground_card(hand_of_cards: list[Card], index: int | tuple[int, int]) -> bool:
+def is_ground_card(hand_of_cards: list[Card], index: int) -> bool:
     """Return whether a card is of type GROUND"""
-    if isinstance(index, Integral):
-        return hand_of_cards[index].card_type == CardTypes.GROUND
-    else:
-        return (
-            hand_of_cards[index[0]].card_type == CardTypes.GROUND
-            or hand_of_cards[index[1]].card_type == CardTypes.GROUND
-        )
+    return hand_of_cards[index].card_type == CardTypes.GROUND
 
 
 def display_image(image: np.ndarray, title: str = "Image"):
