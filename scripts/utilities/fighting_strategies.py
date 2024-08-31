@@ -52,6 +52,8 @@ class IBattleStrategy(abc.ABC):
             if isinstance(next_index, Integral):
                 print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 picked_cards.append(hand_of_cards[next_index])
+            elif isinstance(next_index, (tuple, list)):
+                print(f"Moving cards: {next_index}")
 
             # Update the cards list
             hand_of_cards = self._update_hand_of_cards(hand_of_cards, [next_index])
@@ -513,7 +515,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
         if find(vio.evasion, screenshot):
             for i in range(len(hand_of_cards)):
-                if find(vio.meli_ult, hand_of_cards[i].card_image):
+                if find(vio.meli_ult, hand_of_cards[i].card_image, threshold=0.6):
                     return i
 
             # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
