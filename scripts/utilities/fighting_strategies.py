@@ -560,8 +560,8 @@ class Floor4BattleStrategy(IBattleStrategy):
     ) -> int | None:
         """Pick an amplify/Thor/powerstrike card if necessary"""
         num_immortalities = count_immortality_buffs(screenshot)
-        print("These many immortalities:", num_immortalities)
         picked_amplify_cards = sum(is_amplify_card(card) for card in picked_cards)
+        print("These many immortalities:", num_immortalities - picked_amplify_cards)
         if num_immortalities - picked_amplify_cards > 0 and len(
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
