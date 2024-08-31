@@ -192,15 +192,15 @@ class Floor4BattleStrategy(IBattleStrategy):
             if not np.any([find(vio.meli_aoe, card.card_image) for card in picked_cards]):
                 meli_aoe_ids = np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])[0]
                 if len(meli_aoe_ids):
-                    meli_aoe_ids = sorted(meli_aoe_ids, reverse=True, key=lambda idx: card_ranks[idx])
-                    print("Playing Meli's AOE at index", meli_aoe_ids[-1])
-                    return meli_aoe_ids[-1]
+                    print("Playing Meli's AOE")
+                    return sorted(meli_aoe_ids, reverse=True, key=lambda idx: card_ranks[idx])[-1]
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
             if len(recovery_ids) and not np.any([picked_card_types == CardTypes.RECOVERY.value]):
                 print("Playing recovery at index", recovery_ids[-1])
-                return recovery_ids[-1]
+                # Sort them in descending order of card ranks, and pick a bronze one if possible
+                return sorted(recovery_ids, key=lambda idx: card_ranks[idx], reverse=True)[-1]
         else:
             # If we don't cure block-skill debuff, check if we can do a card merge
             silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
@@ -337,14 +337,25 @@ class Floor4BattleStrategy(IBattleStrategy):
             np.any([card_types == CardTypes.DISABLED.value])
             and len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) > 0
         ):
+            print("We're fully disabled but re-enabling cards")
             # Change all DISABLED to ATTACK
             for i in range(len(hand_of_cards)):
-                if card_types[i] == CardTypes.DISABLED:
+                if card_types[i] == CardTypes.DISABLED.value:
+                    print(f"Re-enabling card at idx {i}!")
                     hand_of_cards[i].card_type = CardTypes.ATTACK
             # Return the recovery
             return recovery_ids[-1]
 
-        if not Floor4BattleStrategy.with_shield:
+        ### WITH/WITHOUT SHIELD DEFAULT STRATEGIES
+        if Floor4BattleStrategy.with_shield:
+            # If we have a shield, go HAM
+            next_idx = self._with_shield_phase2(hand_of_cards)
+
+            # Evaluate if we have to remove the shield
+            if Floor4BattleStrategy.card_turn == 3:
+                print("REMOVING SHIELD!")
+                Floor4BattleStrategy.with_shield = False
+        else:
             # If we don't have a shield, try to get it
             next_idx = self._without_shield_phase2(hand_of_cards, silver_ids, picked_silver_cards)
 
@@ -354,20 +365,12 @@ class Floor4BattleStrategy(IBattleStrategy):
             if len(picked_silver_cards) == 3 and Floor4BattleStrategy.card_turn == 3:
                 print("SETTING SHIELD!")
                 Floor4BattleStrategy.with_shield = True
-        else:
-            # If we have a shield, go HAM
-            next_idx = self._with_shield_phase2(hand_of_cards)
-
-            # Evaluate if we have to remove the shield
-            if Floor4BattleStrategy.card_turn == 3:
-                print("REMOVING SHIELD!")
-                Floor4BattleStrategy.with_shield = False
 
         if next_idx is not None:
-            # We may not have found any card to play
+            # If we've found a card to play for the specific strategy...
             return next_idx
         else:
-            print("Index is 'None', default to default strategy.")
+            print("Index is 'None', defaulting to default strategy.")
 
         ### If we cannot play HAM cards because we don't have any, just play normally BUT without clicking SILVER cards
 
