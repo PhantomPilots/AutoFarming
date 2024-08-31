@@ -21,6 +21,7 @@ from utilities.utilities import (
     get_hand_cards,
     is_amplify_card,
     is_hard_hitting_card,
+    is_Meli_card,
     is_Thor_card,
 )
 
@@ -510,6 +511,22 @@ class Floor4BattleStrategy(IBattleStrategy):
         # STANCE -- first thing, since it increases damage
         if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
+
+        # If we don't have Meli's ult ready, move a card if we can generate a Meli merge
+        if Floor4BattleStrategy.card_turn == 0 and not np.any(
+            [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
+        ):
+            print("We don't have Meli's ult, let's force playing a Meli card")
+            meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
+            if len(meli_cards):
+                return meli_cards[-1]
+            # for i in range(len(hand_of_cards)):
+            #     if is_Meli_card(hand_of_cards[i]):
+            #         # Try to find a merge for this Meli card
+            #         for j in range(i + 2, len(hand_of_cards)):
+            #             if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
+            #                 print(f"Generating Meli's merge {[i,j]}")
+            #                 return [i, j]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()

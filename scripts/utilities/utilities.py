@@ -457,6 +457,15 @@ def is_Thor_card(card: Card) -> bool:
     return ThorCardPredictor.is_Thor_card(card_interior)
 
 
+def is_Meli_card(card: Card) -> bool:
+    """Identify a Traitor Meli card"""
+    return (
+        find(vio.meli_ult, card.card_image)
+        or find(vio.meli_aoe, card.card_image)
+        or find(vio.meli_ampli, card.card_image)
+    )
+
+
 def is_ground_card(hand_of_cards: list[Card], index: int) -> bool:
     """Return whether a card is of type GROUND"""
     return hand_of_cards[index].card_type == CardTypes.GROUND
