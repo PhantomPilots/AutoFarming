@@ -30,6 +30,7 @@ class IBattleStrategy(abc.ABC):
     """Interface that groups all battle fighting strategies"""
 
     card_turn = 0
+    cards_to_play = 0
 
     def pick_cards(self, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
@@ -43,7 +44,12 @@ class IBattleStrategy(abc.ABC):
 
         card_indices = []
         picked_cards = []
-        for _ in range(4):  # Pick at most 4 cards
+
+        # Extract how many cards we have to play
+        screenshot, _ = capture_window()
+        IBattleStrategy.cards_to_play = count_empty_card_slots(screenshot)
+
+        for _ in range(IBattleStrategy.cards_to_play):
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
@@ -99,7 +105,7 @@ class DummyBattleStrategy(IBattleStrategy):
     """Always pick the rightmost four cards, regardless of what they are"""
 
     def get_next_card_index(self, *args, **kwargs) -> int:
-        """Always get the rightmost 4 cards"""
+        """Always get the rightmost card"""
         return 7
 
 
@@ -160,7 +166,7 @@ class SmarterBattleStrategy(IBattleStrategy):
 
 
 class Floor4BattleStrategy(IBattleStrategy):
-    """The logic behind the battle for FLoor 4"""
+    """The logic behind the battle for Floor 4"""
 
     # Static attribute that keeps track of whether we've enabled a shield on phase 2
     with_shield = False
@@ -207,7 +213,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         else:
             # If we don't cure block-skill debuff, check if we can do a card merge
             silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
-            if len(silver_cards) < 3 and Floor4BattleStrategy.card_turn == 0:
+            if len(silver_cards) < 3 and IBattleStrategy.card_turn == 0:
                 # Only do a manual card merge if it's the first card of the turn
                 if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                     return potential_idx
@@ -315,7 +321,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 return potential_idx
 
         # Play level 2 cards or higher only if we can get the shield
-        empty_slots = 4 - IBattleStrategy.card_turn
+        empty_slots = IBattleStrategy.cards_to_play - IBattleStrategy.card_turn
         # We need to recompute the "total number of silver cards", since we may have moved cards and those take up slot space
         total_num_silver_cards = min(len(silver_ids), empty_slots) + len(picked_silver_cards)
         if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
@@ -355,7 +361,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = self._with_shield_phase2(hand_of_cards)
 
             # Evaluate if we have to remove the shield
-            if Floor4BattleStrategy.card_turn == 3:
+            if IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
                 print("REMOVING SHIELD!")
                 Floor4BattleStrategy.with_shield = False
         else:
@@ -365,7 +371,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             # Evaluate here if we need to set the shield
             if isinstance(next_idx, Integral):
                 picked_silver_cards.append(next_idx)
-            if len(picked_silver_cards) == 3 and Floor4BattleStrategy.card_turn == 3:
+            if len(picked_silver_cards) == 3 and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
                 print("SETTING SHIELD!")
                 Floor4BattleStrategy.with_shield = True
 
@@ -512,8 +518,8 @@ class Floor4BattleStrategy(IBattleStrategy):
         if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
             return stance_idx
 
-        # If we don't have Meli's ult ready, move a card if we can generate a Meli merge
-        if Floor4BattleStrategy.card_turn == 0 and not np.any(
+        # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
+        if IBattleStrategy.card_turn == 0 and not np.any(
             [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
         ):
             print("We don't have Meli's ult, let's force playing a Meli card")
@@ -563,7 +569,11 @@ class Floor4BattleStrategy(IBattleStrategy):
             non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
             ham_card_ids = np.concatenate([thor_ids, non_thor_ham_ids])
-            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else ham_card_ids[-1]
+            return (
+                thor_ids[-1]
+                if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
+                else ham_card_ids[-1]
+            )
 
         # If we don't have hard-hitting cards, run the default strategy
         next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -589,7 +599,11 @@ class Floor4BattleStrategy(IBattleStrategy):
             non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
             amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
-            return thor_ids[-1] if len(thor_ids) and Floor4BattleStrategy.card_turn == 3 else amplify_ids[-1]
+            return (
+                thor_ids[-1]
+                if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
+                else amplify_ids[-1]
+            )
         elif num_immortalities - picked_amplify_cards <= 0:
             print("No need to select more amplify cards!")
 
