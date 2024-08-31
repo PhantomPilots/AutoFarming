@@ -65,8 +65,10 @@ class Floor4Farmer(IFarmer):
     def exit_message(self):
         print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
         # Log the defeats
-        defeat_msg = self._print_defeats()
-        logger.info(defeat_msg)
+        if len(self.dict_of_defeats):
+            defeat_msg = self._print_defeats()
+            print(defeat_msg)
+            logger.info(defeat_msg)
 
     def stop_fighter_thread(self):
         """Stop the fighter thread!"""
