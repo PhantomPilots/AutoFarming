@@ -27,14 +27,16 @@ class FarmingFactory:
 
             except KeyboardInterrupt as e:
                 print("Exiting the program.")
-                farmer_instance.exit_message()
                 sys.exit(0)
 
             except Exception as e:
                 print(f"An error occurred:\n{e}")
                 # Recover the current state the bird farmer was in, and restart from there
                 starting_state = farmer_instance.current_state
-                # Call the 'exit message' as if we had stopped the fight manually
+
+            finally:
+                print("FINALLY...:")
+                # Call the 'exit message'
                 farmer_instance.exit_message()
                 # We also need to send a STOP command to the Fighter thread
                 farmer_instance.stop_fighter_thread()
