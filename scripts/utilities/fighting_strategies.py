@@ -50,7 +50,7 @@ class IBattleStrategy(abc.ABC):
         IBattleStrategy.cards_to_play = count_empty_card_slots(screenshot)
 
         # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
-        for _ in range(IBattleStrategy.cards_to_play):
+        for _ in range(4):
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
@@ -519,20 +519,11 @@ class Floor4BattleStrategy(IBattleStrategy):
             return stance_idx
 
         # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
-        if IBattleStrategy.card_turn == 0 and not np.any(
-            [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
-        ):
+        if not np.any([find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]):
             print("We don't have Meli's ult, let's force playing a Meli card")
             meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
             if len(meli_cards):
                 return meli_cards[-1]
-            # for i in range(len(hand_of_cards)):
-            #     if is_Meli_card(hand_of_cards[i]):
-            #         # Try to find a merge for this Meli card
-            #         for j in range(i + 2, len(hand_of_cards)):
-            #             if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
-            #                 print(f"Generating Meli's merge {[i,j]}")
-            #                 return [i, j]
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()
