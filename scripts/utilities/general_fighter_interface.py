@@ -79,7 +79,11 @@ class IFighter(abc.ABC):
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
-            index_to_play = selected_cards[1][slot_index]
+            try:
+                index_to_play = selected_cards[1][slot_index]
+            except IndexError as e:
+                print("slot index:", slot_index, "len indices:", len(selected_cards[1]))
+                raise e
 
             # Ensure the card we want to play is NOT ground (to avoid being stuck)
             hand_cards = get_hand_cards()

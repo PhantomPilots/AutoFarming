@@ -49,6 +49,7 @@ class IBattleStrategy(abc.ABC):
         screenshot, _ = capture_window()
         IBattleStrategy.cards_to_play = count_empty_card_slots(screenshot)
 
+        # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
         for _ in range(IBattleStrategy.cards_to_play):
 
             # Extract the next index to click on
@@ -486,8 +487,8 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
-        # Lets sort the attack cards based on their rank
-        attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
+        # # Lets sort the attack cards based on their rank
+        # attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
         if len(attack_ids):
             return attack_ids[-1]
 
