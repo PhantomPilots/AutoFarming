@@ -87,11 +87,16 @@ class IFighter(abc.ABC):
 
             # Ensure the card we want to play is NOT ground (to avoid being stuck)
             hand_cards = get_hand_cards()
+            i = 0
             while isinstance(index_to_play, Integral) and is_ground_card(hand_cards, index_to_play):
-                print(f"Hand is:\n{hand_cards}\nIndex to play is: {index_to_play}")
+                print(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
                 print(f"We cannot play a ground card! Changing index to {index_to_play}")
+                i += 1
+                if i == 8:
+                    print("SOMETHING WENT VERY WRONG, GOTTA DEBUG...")
+                    self.stop_fighter()
 
             self._play_card(hand_cards, index=index_to_play, window_location=window_location)
 
