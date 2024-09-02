@@ -1,4 +1,3 @@
-import logging
 import os
 import threading
 import time
@@ -12,6 +11,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.logging_utils import MyLogger
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -19,17 +19,7 @@ from utilities.utilities import (
     find_and_click,
 )
 
-# Configure the logger
-logs_dir = "logs"
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(message)s",
-    filename=os.path.join(logs_dir, "floor_4.log"),
-    filemode="a",  # 'a' for append mode if you want to continue logging to the same file
-)
-# Create a logger instance
-os.makedirs(logs_dir, exist_ok=True)
-logger = logging.getLogger()
+logger = MyLogger("floor_4.log")
 
 
 class States(Enum):
@@ -68,7 +58,7 @@ class Floor4Farmer(IFarmer):
         if len(self.dict_of_defeats):
             defeat_msg = self._print_defeats()
             print(defeat_msg)
-            logger.info(defeat_msg)
+            logger().info(defeat_msg)
 
     def stop_fighter_thread(self):
         """Stop the fighter thread!"""
@@ -143,7 +133,7 @@ class Floor4Farmer(IFarmer):
 
         fight_complete_msg = f"We beat the bird {self.success_count}/{self.total_count} times."
         print(fight_complete_msg)
-        logger.info(fight_complete_msg)
+        logger().info(fight_complete_msg)
 
         # Don't log the defeats here, only on `exit_message()`
         self._print_defeats()

@@ -8,6 +8,7 @@ from typing import Callable
 import numpy as np
 from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
+from utilities.logging_utils import MyLogger
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -17,6 +18,8 @@ from utilities.utilities import (
     get_hand_cards,
     is_ground_card,
 )
+
+logger = MyLogger("fighting_interface.log")
 
 
 class FightingStates(Enum):
@@ -92,11 +95,11 @@ class IFighter(abc.ABC):
                 print(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
-                print(f"We cannot play a ground card! Changing index to {index_to_play}")
                 i += 1
+                logger().info(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
                 if i == 8:
-                    print("SOMETHING WENT VERY WRONG, GOTTA DEBUG...")
-                    self.stop_fighter()
+                    logger().debug("THE WHOLE HAND IS DISABLED!")
+                    raise RuntimeError("The whole hand is disabled!")
 
             self._play_card(hand_cards, index=index_to_play, window_location=window_location)
 
