@@ -519,7 +519,9 @@ class Floor4BattleStrategy(IBattleStrategy):
             return stance_idx
 
         # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
-        if not np.any([find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]):
+        if IBattleStrategy.card_turn == 0 and not np.any(
+            [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
+        ):
             print("We don't have Meli's ult, let's force playing a Meli card")
             meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
             if len(meli_cards):
@@ -587,15 +589,16 @@ class Floor4BattleStrategy(IBattleStrategy):
             amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
         ):
             print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
-            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
-            non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
-            # Re-order the array of HAM IDs, with the thor_ids in the last position
-            amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
-            return (
-                thor_ids[-1]
-                if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
-                else amplify_ids[-1]
-            )
+            # thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
+            # non_thor_amplify_ids = np.setdiff1d(amplify_ids, thor_ids)
+            # # Re-order the array of HAM IDs, with the thor_ids in the last position
+            # amplify_ids = np.concatenate([thor_ids, non_thor_amplify_ids])
+            # return (
+            #     thor_ids[-1]
+            #     if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
+            #     else amplify_ids[-1]
+            # )
+            return amplify_ids[-1]
         elif num_immortalities - picked_amplify_cards <= 0:
             print("No need to select more amplify cards!")
 
