@@ -12,10 +12,12 @@ from utilities.general_fighter_interface import IBattleStrategy
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    click_and_sleep,
     find,
     find_and_click,
     find_floor_coordinates,
 )
+from utilities.vision import Vision
 
 
 class States(Enum):
@@ -27,9 +29,18 @@ class States(Enum):
 
 class DemonFarmer(IFarmer):
 
-    def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_DEMONS):
+    def __init__(
+        self,
+        battle_strategy: IBattleStrategy = None,
+        starting_state=States.GOING_TO_DEMONS,
+        demon_to_farm: Vision = vio.og,
+    ):
 
+        # Starting state
         self.current_state = starting_state
+
+        # Demon to farm
+        self.demon_to_farm = demon_to_farm
 
         # No battle strategy needed, we'll auto
         self.battle_strategy = battle_strategy
@@ -43,15 +54,80 @@ class DemonFarmer(IFarmer):
 
     def going_to_demons_state(self):
         """Go to the demons page"""
+        screenshot, window_location = capture_window()
+
+        # If we see a 'CANCEL', change the state
+        if find(vio.cancel_realtime, screenshot):
+            self.current_state = States.LOOKING_FOR_DEMON
+            print(f"Moving to {self.current_state}!")
+            return
+
+        # Click OK if we see it (?)
+        click_and_sleep(vio.demon_ok, screenshot, window_location)
+
+        # Go to battle menu
+        click_and_sleep(vio.battle_menu, screenshot, window_location)
+
+        # Go to demons
+        click_and_sleep(vio.boss_menu, screenshot, window_location)
+
+        # Click on real-time menu
+        click_and_sleep(vio.real_time, screenshot, window_location)
+
+        # Click on the demon to farm
+        click_and_sleep(self.demon_to_farm, screenshot, window_location)
+
+        # Click on the difficuly -- ONLY HELL
+        click_and_sleep(vio.demon_hell_diff, screenshot, window_location)
 
     def looking_for_demon_state(self):
         """Waiting for someone to send us a demon"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.accept_invitation, screenshot):
+            # We've found an invitation, gotta wait before clicking on it!
+            print("Found a raid! Waiting before clicking...")
+            time.sleep(9.2)
+            find_and_click(vio.accept_invitation, screenshot, window_location)
+
+        if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
+            # Going to the raid screen
+            self.current_state = States.READY_TO_FIGHT
+            print(f"Moving to {self.current_state}!")
+            return
+
+        # We need a backup  in case the matchmaking gets cancelled
+        if not find(vio.join_request, screenshot):
+            click_and_sleep(vio.real_time, screenshot, window_location)
+        if find(self.demon_to_farm, screenshot):
+            # The matchmaking got cancelled, change states
+            self.current_state = States.GOING_TO_DEMONS
+            print(f"Moving to {self.current_state}!")
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
+        screenshot, window_location = capture_window()
+
+        # Click on the "preparation"
+        click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.7)
+
+        if find(vio.demons_loading_screen, screenshot):
+            # Going to the fight!
+            self.current_state = States.FIGHTING_DEMON
+            print(f"Moving to {self.current_state}!")
 
     def fighting_demon_state(self):
         """Fighting the demon hard..."""
+        screenshot, window_location = capture_window()
+
+        find_and_click(vio.demons_auto, screenshot, threshold=0.9)
+        find_and_click(vio.demons_destroyed, screenshot, window_location)
+
+        # If we find an OK, we've finished the fight
+        if find(vio.demon_ok, screenshot):
+            # Finished the fight!
+            self.current_state = States.GOING_TO_DEMONS
+            print(f"Moving to {self.current_state}!")
 
     def run(self):
 
@@ -72,6 +148,7 @@ class DemonFarmer(IFarmer):
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()
+                time.sleep(1)
 
             # We need the loop to run very fast
             time.sleep(0.1)

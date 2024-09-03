@@ -227,6 +227,21 @@ def find_and_click(
     return False
 
 
+def click_and_sleep(
+    vision_image: Vision,
+    screenshot: np.ndarray,
+    window_location: list[float],
+    threshold=0.8,
+    point_coordinates: tuple[float, float] | None = None,
+    sleep_time=1,  # In seconds
+) -> bool:
+    """First click, then sleep for 1 sec"""
+    if find_and_click(vision_image, screenshot, window_location, threshold, point_coordinates):
+        time.sleep(sleep_time)
+        return True
+    return False
+
+
 def find_floor_coordinates(screenshot: np.ndarray, window_location):
     """Given a screenshot of the DB screen, find the coordinates of the available floor"""
     rectangle = vio.available_floor.find(screenshot, threshold=0.8)
