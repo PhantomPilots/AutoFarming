@@ -93,11 +93,11 @@ class IFighter(abc.ABC):
             hand_cards = get_hand_cards()
             i = 0
             while isinstance(index_to_play, Integral) and is_ground_card(hand_cards, index_to_play):
-                print(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
+                logger.debug(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i+1}")
+                logger.debug(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
                 i += 1
-                logger.info(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
                 if i == 8:
                     logger.debug("THE WHOLE HAND IS DISABLED!")
                     raise RuntimeError("The whole hand is disabled!")
