@@ -21,12 +21,12 @@ from utilities.utilities import (
 def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
-    print("Screenshot shape:", screenshot.shape)
+    # print("Screenshot shape:", screenshot.shape)
 
     # hand_image = capture_hand_image()
 
     # determine_relative_coordinates(screenshot)
-    # screenshot_testing(vision_image=vio.evasion, threshold=0.8)
+    screenshot_testing(vision_image=vio.equipment, threshold=0.8)
 
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
