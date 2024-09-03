@@ -10,6 +10,7 @@ import utilities.vision_images as vio
 from termcolor import cprint
 from utilities.battle_utilities import process_card_move, process_card_play
 from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     count_empty_card_slots,
@@ -24,6 +25,8 @@ from utilities.utilities import (
     is_Meli_card,
     is_Thor_card,
 )
+
+logger = LoggerWrapper(name="FightingStrategies", log_file="fighter.log")
 
 
 class IBattleStrategy(abc.ABC):
@@ -190,7 +193,9 @@ class Floor4BattleStrategy(IBattleStrategy):
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
 
         # The first thing of all, remove the shield from floor 2, in case it comes from a previous run!
-        Floor4BattleStrategy.with_shield = False
+        if Floor4BattleStrategy.with_shield:
+            logger.info("We have a shield ON from a previous run, disabling it!")
+            Floor4BattleStrategy.with_shield = False
 
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
