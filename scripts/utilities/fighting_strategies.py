@@ -188,6 +188,10 @@ class Floor4BattleStrategy(IBattleStrategy):
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """The logic for phase 1... use the existing smarter strategy"""
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
+
+        # The first thing of all, remove the shield from floor 2, in case it comes from a previous run!
+        Floor4BattleStrategy.with_shield = False
+
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
