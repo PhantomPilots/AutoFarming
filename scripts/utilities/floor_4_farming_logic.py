@@ -57,7 +57,6 @@ class Floor4Farmer(IFarmer):
         # Log the defeats
         if len(self.dict_of_defeats):
             defeat_msg = self._print_defeats()
-            print(defeat_msg)
             logger.info(defeat_msg)
 
     def stop_fighter_thread(self):
@@ -132,7 +131,6 @@ class Floor4Farmer(IFarmer):
                 self.dict_of_defeats[phase] += 1
 
         fight_complete_msg = f"We beat the bird {self.success_count}/{self.total_count} times."
-        print(fight_complete_msg)
         logger.info(fight_complete_msg)
 
         # Don't log the defeats here, only on `exit_message()`

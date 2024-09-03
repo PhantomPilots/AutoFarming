@@ -252,7 +252,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 bronze_item
                 # Reverse the bronze_ids list o start searching from the right:
                 for bronze_item in np.where(card_ranks != CardRanks.SILVER.value)[0][::-1]
-                if hand_of_cards[bronze_item].card_type not in [CardTypes.GROUND, CardTypes.RECOVERY]
+                if hand_of_cards[bronze_item].card_type not in [CardTypes.GROUND, CardTypes.RECOVERY, CardTypes.NONE]
                 and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
                 and (
                     (
@@ -556,7 +556,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 elif len(
                     non_ham_ids := np.where(
                         [
-                            not is_hard_hitting_card(card) and card.card_type not in [CardTypes.GROUND]
+                            not is_hard_hitting_card(card) and card.card_type not in [CardTypes.GROUND, CardTypes.NONE]
                             for card in hand_of_cards
                         ]
                     )[0]
