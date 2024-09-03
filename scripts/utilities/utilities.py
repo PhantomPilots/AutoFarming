@@ -452,13 +452,14 @@ def is_Thor_card(card: Card) -> bool:
     """Identify Thor cards"""
     if card.card_image is None:
         return 0
-
     card_interior = get_card_interior_image(card.card_image)
     return ThorCardPredictor.is_Thor_card(card_interior)
 
 
 def is_Meli_card(card: Card) -> bool:
     """Identify a Traitor Meli card"""
+    if card.card_image is None:
+        return 0
     return (
         find(vio.meli_ult, card.card_image)
         or find(vio.meli_aoe, card.card_image)
