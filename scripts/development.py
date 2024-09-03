@@ -22,11 +22,12 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
+    # display_image(screenshot)
 
     # hand_image = capture_hand_image()
 
     # determine_relative_coordinates(screenshot)
-    screenshot_testing(vision_image=vio.save_party, threshold=0.8)
+    screenshot_testing(vision_image=vio.reset_bird, threshold=0.6)
 
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)

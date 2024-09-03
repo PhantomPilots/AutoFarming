@@ -189,7 +189,7 @@ class BirdFarmer(IFarmer):
         find_and_click(vio.bird_okay, screenshot, window_location)
 
         # Click on the 'reset' button
-        find_and_click(vio.reset_bird, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.reset_bird, screenshot, window_location, threshold=0.6)
 
         # Once we see the main bird screen again, we can move the the original state
         if find(vio.empty_party, screenshot):
