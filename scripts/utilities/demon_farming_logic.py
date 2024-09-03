@@ -33,7 +33,7 @@ class DemonFarmer(IFarmer):
         self,
         battle_strategy: IBattleStrategy = None,
         starting_state=States.GOING_TO_DEMONS,
-        demon_to_farm: Vision = vio.og,
+        demon_to_farm: Vision = vio.og_demon,
     ):
 
         # Starting state
@@ -47,6 +47,9 @@ class DemonFarmer(IFarmer):
 
         # Keep track of how many demons we've beat
         self.demons_destroyed = 0
+
+        # We need to keep track if 'auto' is clicked or not...
+        self.auto = False
 
     def exit_message(self):
         """Final message!"""
@@ -87,7 +90,7 @@ class DemonFarmer(IFarmer):
         if find(vio.accept_invitation, screenshot):
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
-            time.sleep(9.2)
+            time.sleep(9.4)
             find_and_click(vio.accept_invitation, screenshot, window_location)
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
@@ -109,9 +112,9 @@ class DemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Click on the "preparation"
-        click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.7)
+        click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
-        if find(vio.demons_loading_screen, screenshot):
+        if find(vio.demons_loading_screen, screenshot) or find(vio.demons_auto, screenshot):
             # Going to the fight!
             self.current_state = States.FIGHTING_DEMON
             print(f"Moving to {self.current_state}!")
@@ -120,12 +123,15 @@ class DemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.demons_auto, screenshot, threshold=0.9)
+        if not self.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.8):
+            self.auto = True
+
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
         # If we find an OK, we've finished the fight
         if find(vio.demon_ok, screenshot):
             # Finished the fight!
+            self.auto = False
             self.current_state = States.GOING_TO_DEMONS
             print(f"Moving to {self.current_state}!")
 
