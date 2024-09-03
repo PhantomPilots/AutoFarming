@@ -11,9 +11,11 @@ from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
+    capture_hand_image,
     capture_window,
     click_im,
     count_empty_card_slots,
+    display_image,
     drag_im,
     get_click_point_from_rectangle,
     get_hand_cards,
@@ -93,10 +95,12 @@ class IFighter(abc.ABC):
             hand_cards = get_hand_cards()
             i = 0
             while isinstance(index_to_play, Integral) and is_ground_card(hand_cards, index_to_play):
-                logger.debug(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i+1}")
                 logger.debug(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
+                logger.debug(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
+                # hand_card_image = capture_hand_image()
+                # display_image(hand_card_image)
                 i += 1
                 if i == 8:
                     logger.debug("THE WHOLE HAND IS DISABLED!")
