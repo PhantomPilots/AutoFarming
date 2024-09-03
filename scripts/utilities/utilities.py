@@ -464,7 +464,7 @@ def is_Meli_card(card: Card) -> bool:
         find(vio.meli_ult, card.card_image)
         or find(vio.meli_aoe, card.card_image)
         or find(vio.meli_ampli, card.card_image)
-    )
+    ) and card.card_type not in [CardTypes.GROUND]
 
 
 def is_ground_card(hand_of_cards: list[Card], index: int) -> bool:
