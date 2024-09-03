@@ -1,4 +1,5 @@
 import abc
+import logging
 import threading
 import time
 from enum import Enum
@@ -8,7 +9,7 @@ from typing import Callable
 import numpy as np
 from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.logging_utils import MyLogger
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -19,7 +20,7 @@ from utilities.utilities import (
     is_ground_card,
 )
 
-logger = MyLogger("fighting_interface.log")
+logger = LoggerWrapper("FighterLogger", "fighter.log", level=logging.DEBUG)
 
 
 class FightingStates(Enum):
@@ -96,9 +97,9 @@ class IFighter(abc.ABC):
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
                 i += 1
-                logger().info(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
+                logger.info(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
                 if i == 8:
-                    logger().debug("THE WHOLE HAND IS DISABLED!")
+                    logger.debug("THE WHOLE HAND IS DISABLED!")
                     raise RuntimeError("The whole hand is disabled!")
 
             self._play_card(hand_cards, index=index_to_play, window_location=window_location)

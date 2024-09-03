@@ -11,7 +11,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
-from utilities.logging_utils import MyLogger
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -19,7 +19,7 @@ from utilities.utilities import (
     find_and_click,
 )
 
-logger = MyLogger("floor_4.log")
+logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
 
 class States(Enum):
@@ -58,7 +58,7 @@ class Floor4Farmer(IFarmer):
         if len(self.dict_of_defeats):
             defeat_msg = self._print_defeats()
             print(defeat_msg)
-            logger().info(defeat_msg)
+            logger.info(defeat_msg)
 
     def stop_fighter_thread(self):
         """Stop the fighter thread!"""
@@ -133,7 +133,7 @@ class Floor4Farmer(IFarmer):
 
         fight_complete_msg = f"We beat the bird {self.success_count}/{self.total_count} times."
         print(fight_complete_msg)
-        logger().info(fight_complete_msg)
+        logger.info(fight_complete_msg)
 
         # Don't log the defeats here, only on `exit_message()`
         self._print_defeats()
