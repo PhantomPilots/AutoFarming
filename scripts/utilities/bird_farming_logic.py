@@ -82,7 +82,7 @@ class BirdFarmer(IFarmer):
 
         # Double-check that floor 3 is not cleared
         elif find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
-            vio.floor_3_cleard_2_bird, screenshot, threshold=0.9
+            vio.floor_3_cleard_2_bird, screenshot, threshold=0.8
         ):
             print("Floor 3 is cleared, we need to reset the bird!")
             self.current_state = States.RESETTING_BIRD
@@ -109,7 +109,7 @@ class BirdFarmer(IFarmer):
         find_and_click(vio.empty_party, screenshot, window_location)
 
         # Save the party
-        find_and_click(vio.save_party, screenshot, window_location, threshold=0.95)
+        find_and_click(vio.save_party, screenshot, window_location, threshold=0.8)
 
     def proceed_to_floor_state(self):
         """Start the floor fight!"""
@@ -181,7 +181,7 @@ class BirdFarmer(IFarmer):
         find_and_click(vio.bird_okay, screenshot, window_location)
 
         # Click on the 'reset' button
-        find_and_click(vio.reset_bird, screenshot, window_location)
+        find_and_click(vio.reset_bird, screenshot, window_location, threshold=0.7)
 
         # Once we see the main bird screen again, we can move the the original state
         if find(vio.empty_party, screenshot):
