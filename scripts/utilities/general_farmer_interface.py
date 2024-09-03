@@ -6,16 +6,6 @@ from utilities.fighting_strategies import IBattleStrategy
 class IFarmer:
     """Generic farmer interface."""
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state: int, **kargs):
-
-        # For type helping
-        self.current_state: int
-        self.battle_strategy: IBattleStrategy
-
-        raise NotImplementedError(
-            "__init__ method should be defined by subclasses, with these two parameters: battle_strategy and starting_state"
-        )
-
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
 
