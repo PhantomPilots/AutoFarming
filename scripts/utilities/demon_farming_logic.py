@@ -126,6 +126,10 @@ class DemonFarmer(IFarmer):
         if not self.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.8):
             self.auto = True
 
+        # If we see a skip
+        find_and_click(vio.skip_bird, screenshot, window_location)
+
+        # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
         # If we find an OK, we've finished the fight
@@ -133,6 +137,8 @@ class DemonFarmer(IFarmer):
             # Finished the fight!
             self.auto = False
             self.current_state = States.GOING_TO_DEMONS
+            self.demons_destroyed += 1
+            print(f"We've destroyed {self.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}!")
 
     def run(self):
