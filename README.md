@@ -94,6 +94,11 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 
+## Demon farming script
+
+In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Bellmoth and OG.
+So far, it only accepts the "Hell" difficulty.
+
 ## Floor 4 of Bird
 
 The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
