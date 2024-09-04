@@ -6,7 +6,6 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=FinalBossFarmer,
-        battle_strategy=None,  # The final boss is 'auto', no need for an AI
         starting_state=States.GOING_TO_FB,  # Should be 'GOING_TO_FB'
         difficulty="challenge",  # Can be "hard", "extreme", "hell", "challenge"
     )

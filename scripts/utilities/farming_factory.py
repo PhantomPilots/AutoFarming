@@ -13,7 +13,7 @@ class FarmingFactory:
     """
 
     @staticmethod
-    def main_loop(farmer: IFarmer, battle_strategy: IBattleStrategy | None, starting_state, **kwargs):
+    def main_loop(farmer: IFarmer, starting_state, battle_strategy: IBattleStrategy | None = None, **kwargs):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
 
         while True:
@@ -35,7 +35,7 @@ class FarmingFactory:
                 starting_state = farmer_instance.current_state
 
             finally:
-                print("FINALLY...:")
+                print("FINALLY:")
                 # Call the 'exit message'
                 farmer_instance.exit_message()
                 # We also need to send a STOP command to the Fighter thread

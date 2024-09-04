@@ -6,7 +6,6 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=EquipmentFarmer,
-        battle_strategy=None,  # Equipment farming uses 'auto' fighting, no need for a custom AI fighter
         starting_state=States.FARMING,  # Should be 'TAVERN_TO_FARM'
     )
 
