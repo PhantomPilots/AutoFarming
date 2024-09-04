@@ -71,6 +71,8 @@ class DemonFarmer(IFarmer):
 
         # Click OK if we see it (?)
         click_and_sleep(vio.demon_ok, screenshot, window_location)
+        click_and_sleep(vio.demon_defeat_ok, screenshot, window_location)
+        click_and_sleep(vio.demon_kicked_ok, screenshot, window_location)
 
         # Go to battle menu
         click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.7)
@@ -118,12 +120,19 @@ class DemonFarmer(IFarmer):
         # Click on the "preparation"
         click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
+        # We may have been kicked, move to initial state if so
+        if find(vio.demon_kicked_ok, screenshot):
+            self.current_state = States.GOING_TO_DEMONS
+            print(f"We've been kicked out... Moving to {self.current_state}")
+            return
+
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
             self.current_state = States.FIGHTING_DEMON
             print(f"Moving to {self.current_state}!")
 
     def fighting_demon_state(self):
+        # sourcery skip: extract-duplicate-method, split-or-ifs
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
@@ -136,12 +145,12 @@ class DemonFarmer(IFarmer):
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
-        # If we find an OK, we've finished the fight
-        if find(vio.demon_ok, screenshot):
+        if find(vio.demon_ok, screenshot) or find(vio.demon_defeat_ok, screenshot):
             # Finished the fight!
             self.auto = False
             self.current_state = States.GOING_TO_DEMONS
-            self.demons_destroyed += 1
+            if find(vio.demon_ok, screenshot):
+                self.demons_destroyed += 1
             print(f"We've destroyed {self.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}!")
 
