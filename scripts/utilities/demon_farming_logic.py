@@ -34,6 +34,7 @@ class DemonFarmer(IFarmer):
         battle_strategy: IBattleStrategy = None,
         starting_state=States.GOING_TO_DEMONS,
         demon_to_farm: Vision = vio.og_demon,
+        time_to_sleep=9.4,
     ):
 
         # Starting state
@@ -50,6 +51,9 @@ class DemonFarmer(IFarmer):
 
         # We need to keep track if 'auto' is clicked or not...
         self.auto = False
+
+        # How much time to sleep before accepting the invitation -- May need to me hand-tuned
+        self.sleep_before_accept = time_to_sleep
 
     def exit_message(self):
         """Final message!"""
@@ -90,7 +94,7 @@ class DemonFarmer(IFarmer):
         if find(vio.accept_invitation, screenshot):
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
-            time.sleep(9.4)
+            time.sleep(self.sleep_before_accept)
             find_and_click(vio.accept_invitation, screenshot, window_location)
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
@@ -114,7 +118,7 @@ class DemonFarmer(IFarmer):
         # Click on the "preparation"
         click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
-        if find(vio.demons_loading_screen, screenshot) or find(vio.demons_auto, screenshot):
+        if find(vio.demons_auto, screenshot):
             # Going to the fight!
             self.current_state = States.FIGHTING_DEMON
             print(f"Moving to {self.current_state}!")
