@@ -29,6 +29,10 @@ class States(Enum):
 
 class BirdFarmer(IFarmer):
 
+    # Need to be static in case we
+    success_count = 0
+    total_count = 0
+
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_BIRD):
 
         # Initialize the current state
@@ -44,10 +48,6 @@ class BirdFarmer(IFarmer):
 
         # Placeholder for the fight thread
         self.fight_thread = None
-
-        # To keep track of the success count
-        self.success_count = 0
-        self.total_count = 0
 
         # Keep track of the next floor to fight on
         self.current_floor = 1
@@ -165,13 +165,13 @@ class BirdFarmer(IFarmer):
     def fight_complete_callback(self, victory=True):
         """Called when the fight logic completes."""
 
-        self.total_count += 1
+        BirdFarmer.total_count += 1
         if victory:
             # Transition to another state or perform clean-up actions
-            self.success_count += 1
+            BirdFarmer.success_count += 1
             print(f"Floor {self.current_floor} complete! Going back to the original state")
             if self.current_floor == 3:
-                print(f"We beat the bird {self.success_count}/{self.total_count} times.")
+                print(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
             # Update the new bird floor
             self.current_floor = self.current_floor % 3 + 1
         else:

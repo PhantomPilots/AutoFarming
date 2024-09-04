@@ -29,6 +29,9 @@ class States(Enum):
 
 class DemonFarmer(IFarmer):
 
+    # Needs to be static in case we restart the instance
+    demons_destroyed = 0
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -46,9 +49,6 @@ class DemonFarmer(IFarmer):
         # No battle strategy needed, we'll auto
         self.battle_strategy = battle_strategy
 
-        # Keep track of how many demons we've beat
-        self.demons_destroyed = 0
-
         # We need to keep track if 'auto' is clicked or not...
         self.auto = False
 
@@ -57,7 +57,7 @@ class DemonFarmer(IFarmer):
 
     def exit_message(self):
         """Final message!"""
-        print(f"We destroyed {self.demons_destroyed} demons.")
+        print(f"We destroyed {DemonFarmer.demons_destroyed} demons.")
 
     def going_to_demons_state(self):
         """Go to the demons page"""
@@ -149,10 +149,10 @@ class DemonFarmer(IFarmer):
             # Finished the fight!
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
-                self.demons_destroyed += 1
+                DemonFarmer.demons_destroyed += 1
             self.auto = False
             self.current_state = States.GOING_TO_DEMONS
-            print(f"We've destroyed {self.demons_destroyed} demons.")
+            print(f"We've destroyed {DemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
 
     def run(self):

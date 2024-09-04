@@ -22,3 +22,4 @@ Index to play is: 3
 [<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ULTIMATE: -1>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
 Index to play is: 4
 2024-09-03 17:57:25,781 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 5
+2024-09-04 08:43:21,087 - FightingStrategies - INFO - We have a shield ON from a previous run, disabling it!
