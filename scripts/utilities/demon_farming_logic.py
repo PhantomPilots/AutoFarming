@@ -87,7 +87,7 @@ class DemonFarmer(IFarmer):
         click_and_sleep(self.demon_to_farm, screenshot, window_location)
 
         # Click on the difficuly -- ONLY HELL
-        click_and_sleep(vio.demon_hell_diff, screenshot, window_location)
+        click_and_sleep(vio.demon_hell_diff, screenshot, window_location, threshold=0.7)
 
     def looking_for_demon_state(self):
         """Waiting for someone to send us a demon"""
