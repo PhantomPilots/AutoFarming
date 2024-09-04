@@ -537,7 +537,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
             # If we're here, means we couldn't make a Meli merge. Just play a Meli card
             if len(meli_cards):
-                return meli_cards[-1]
+                return meli_cards[0]
 
         # STANCE
         if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
@@ -585,7 +585,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
             non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
-            ham_card_ids = np.concatenate([thor_ids[-1:], non_thor_ham_ids, thor_ids[:-1]])
+            ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
             return (
                 thor_ids[-1]
                 if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
