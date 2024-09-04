@@ -30,6 +30,11 @@ class States(Enum):
 
 class Floor4Farmer(IFarmer):
 
+    # Need to be static across instances
+    success_count = 0
+    total_count = 0
+    dict_of_defeats = defaultdict(int)
+
     def __init__(self, battle_strategy: IBattleStrategy, starting_state: States, **kargs):
 
         # For type helping
@@ -47,15 +52,10 @@ class Floor4Farmer(IFarmer):
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
 
-        # Keep track of how many times we've beat/lost the fight
-        self.success_count = 0
-        self.total_count = 0
-        self.dict_of_defeats = defaultdict(int)
-
     def exit_message(self):
-        print(f"We've beat Floor 4 of Bird {self.success_count} out of {self.total_count} times.")
+        print(f"We've beat Floor 4 of Bird {Floor4Farmer.success_count} out of {Floor4Farmer.total_count} times.")
         # Log the defeats
-        if len(self.dict_of_defeats):
+        if len(Floor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
             logger.info(defeat_msg)
 
@@ -66,7 +66,7 @@ class Floor4Farmer(IFarmer):
     def _print_defeats(self):
         """Generate a string message to log"""
         str_msg = "Defeats:\n"
-        for phase, count in self.dict_of_defeats.items():
+        for phase, count in Floor4Farmer.dict_of_defeats.items():
             str_msg += f"* Phase {phase} -> Lost {count} times.\n"
 
         print(str_msg)
@@ -118,19 +118,19 @@ class Floor4Farmer(IFarmer):
     def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
-        self.total_count += 1
+        Floor4Farmer.total_count += 1
         if victory:
             # Transition to another state or perform clean-up actions
-            self.success_count += 1
+            Floor4Farmer.success_count += 1
             print("FLOOR 4 COMPLETE, WOOO!")
         else:
             phase = kwargs.get("phase", None)
             print(f"The bird fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
             # Increment the defeat count of the corresponding phase
             if phase is not None:
-                self.dict_of_defeats[phase] += 1
+                Floor4Farmer.dict_of_defeats[phase] += 1
 
-        fight_complete_msg = f"We beat the bird {self.success_count}/{self.total_count} times."
+        fight_complete_msg = f"We beat the bird {Floor4Farmer.success_count}/{Floor4Farmer.total_count} times."
         logger.info(fight_complete_msg)
 
         # Don't log the defeats here, only on `exit_message()`
