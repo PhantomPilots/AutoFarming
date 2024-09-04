@@ -1,0 +1,136 @@
+2024-09-04 19:32:37,290 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.STANCE: 1>, <CardTypes.ATTACK: 0>]
+Index to play is: 4
+2024-09-04 19:32:37,291 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 0
+2024-09-04 19:32:40,773 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: -1
+2024-09-04 19:32:40,773 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:32:40,774 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:32:40,774 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:32:40,774 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:32:40,774 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:32:40,774 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 2
+2024-09-04 19:32:40,775 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 3, i: 3
+2024-09-04 19:32:40,775 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 3
+2024-09-04 19:32:40,775 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 4, i: 4
+2024-09-04 19:32:40,776 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 4
+2024-09-04 19:32:40,776 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 5
+2024-09-04 19:33:17,777 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ULTIMATE: -1>, <CardTypes.GROUND: 10>, <CardTypes.DISABLED: 9>, <CardTypes.DISABLED: 9>]
+Index to play is: 5
+2024-09-04 19:33:17,778 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 6, i: 0
+2024-09-04 19:33:41,597 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ULTIMATE: -1>, <CardTypes.GROUND: 10>, <CardTypes.DISABLED: 9>, <CardTypes.DISABLED: 9>]
+Index to play is: 3
+2024-09-04 19:33:41,597 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 4, i: 0
+2024-09-04 19:34:17,811 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.DISABLED: 9>, <CardTypes.GROUND: 10>, <CardTypes.DISABLED: 9>, <CardTypes.GROUND: 10>]
+Index to play is: 5
+2024-09-04 19:34:17,811 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 6, i: 0
+2024-09-04 19:34:48,687 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ULTIMATE: -1>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.DISABLED: 9>]
+Index to play is: 5
+2024-09-04 19:34:48,687 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 6, i: 0
+2024-09-04 19:34:52,848 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.DISABLED: 9>]
+Index to play is: 6
+2024-09-04 19:34:52,848 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 7, i: 0
+2024-09-04 19:43:51,874 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.BUFF: 5>, <CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>]
+Index to play is: 4
+2024-09-04 19:43:51,875 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 0
+2024-09-04 19:43:52,966 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>]
+Index to play is: 4
+2024-09-04 19:43:52,966 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 0
+2024-09-04 19:43:54,001 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 7
+2024-09-04 19:43:54,002 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:43:54,002 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:43:54,002 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:43:54,003 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:43:54,003 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:44:21,006 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>]
+Index to play is: 3
+2024-09-04 19:44:21,007 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 4, i: 0
+2024-09-04 19:44:22,081 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>]
+Index to play is: 4
+2024-09-04 19:44:22,082 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 0
+2024-09-04 19:44:23,128 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 7
+2024-09-04 19:44:23,128 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:44:23,129 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:44:23,129 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:44:23,129 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:44:23,130 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:44:24,214 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 7
+2024-09-04 19:44:24,214 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:44:24,215 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:44:24,215 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:44:24,215 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:44:24,216 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:44:24,216 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 2
+2024-09-04 19:44:24,216 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 3, i: 3
+2024-09-04 19:44:58,623 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>]
+Index to play is: 4
+2024-09-04 19:44:58,624 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 5, i: 0
+2024-09-04 19:44:59,768 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK_DEBUFF: 3>, <CardTypes.GROUND: 10>]
+Index to play is: 7
+2024-09-04 19:44:59,768 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:44:59,769 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK_DEBUFF: 3>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:44:59,769 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:44:59,769 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK_DEBUFF: 3>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:44:59,769 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:45:00,836 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 7
+2024-09-04 19:45:00,837 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 0, i: 0
+2024-09-04 19:45:00,837 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 0
+2024-09-04 19:45:00,837 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 1, i: 1
+2024-09-04 19:45:00,837 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 1
+2024-09-04 19:45:00,838 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 2, i: 2
+2024-09-04 19:45:00,838 - FighterLogger - DEBUG - Hand is:
+[<CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.GROUND: 10>, <CardTypes.ATTACK: 0>, <CardTypes.RECOVERY: 2>, <CardTypes.ATTACK: 0>, <CardTypes.ATTACK: 0>, <CardTypes.GROUND: 10>]
+Index to play is: 2
+2024-09-04 19:45:00,838 - FighterLogger - DEBUG - We cannot play a ground card! Changing index to 3, i: 3

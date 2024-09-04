@@ -12,6 +12,7 @@ class LoggerWrapper:
 
         # Create a file handler specific to this log file
         if not self.logger.hasHandlers():  # Avoid adding multiple handlers
+            os.makedirs("logs", exist_ok=True)
             file_handler = logging.FileHandler(os.path.join("logs", log_file))
             file_handler.setLevel(level)
 

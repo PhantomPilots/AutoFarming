@@ -10,6 +10,7 @@ from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -17,6 +18,8 @@ from utilities.utilities import (
     find_and_click,
     find_floor_coordinates,
 )
+
+logger = LoggerWrapper(name="BirdLogger", log_file="bird_logger.log")
 
 
 class States(Enum):
@@ -50,7 +53,8 @@ class BirdFarmer(IFarmer):
         # Placeholder for the fight thread
         self.fight_thread = None
 
-        # Keep track of the next floor to fight on
+    def exit_message(self):
+        logger.info(f"We beat {BirdFarmer.success_count}/{BirdFarmer.total_count} birds.")
 
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
@@ -169,7 +173,7 @@ class BirdFarmer(IFarmer):
             BirdFarmer.total_count += 1
             if victory:
                 BirdFarmer.success_count += 1
-            print(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
+            logger.info(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
         if victory:
             print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
