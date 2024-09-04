@@ -93,11 +93,11 @@ class DemonFarmer(IFarmer):
         """Waiting for someone to send us a demon"""
         screenshot, window_location = capture_window()
 
-        if find(vio.accept_invitation, screenshot):
+        if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
             time.sleep(self.sleep_before_accept)
-            find_and_click(vio.accept_invitation, screenshot, window_location)
+            find_and_click(vio.accept_invitation, screenshot, window_location, threshold=0.6)
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
             # Going to the raid screen
