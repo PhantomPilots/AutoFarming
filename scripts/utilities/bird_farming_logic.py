@@ -165,19 +165,20 @@ class BirdFarmer(IFarmer):
     def fight_complete_callback(self, victory=True):
         """Called when the fight logic completes."""
 
-        BirdFarmer.total_count += 1
+        if self.current_floor == 3:
+            BirdFarmer.total_count += 1
+            if victory:
+                BirdFarmer.success_count += 1
+            print(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
+
         if victory:
-            # Transition to another state or perform clean-up actions
-            BirdFarmer.success_count += 1
             print(f"Floor {self.current_floor} complete! Going back to the original state")
-            if self.current_floor == 3:
-                print(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
             # Update the new bird floor
-            self.current_floor = self.current_floor % 3 + 1
+            self.current_floor = (self.current_floor % 3) + 1
         else:
             print("The bird fighter told me they lost... :/")
 
-        # Go straight to the original states
+        # Transition to the original states
         self.current_state = States.GOING_TO_BIRD
 
     def resetting_bird_state(self):
