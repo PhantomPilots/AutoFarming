@@ -147,10 +147,11 @@ class DemonFarmer(IFarmer):
 
         if find(vio.demon_ok, screenshot) or find(vio.demon_defeat_ok, screenshot):
             # Finished the fight!
+            if find(vio.demon_ok, screenshot):
+                print("DEMON DESTROYED!")
+                self.demons_destroyed += 1
             self.auto = False
             self.current_state = States.GOING_TO_DEMONS
-            if find(vio.demon_ok, screenshot):
-                self.demons_destroyed += 1
             print(f"We've destroyed {self.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}!")
 
