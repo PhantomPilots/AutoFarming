@@ -32,6 +32,7 @@ class BirdFarmer(IFarmer):
     # Need to be static in case we
     success_count = 0
     total_count = 0
+    current_floor = 1
 
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_BIRD):
 
@@ -50,7 +51,6 @@ class BirdFarmer(IFarmer):
         self.fight_thread = None
 
         # Keep track of the next floor to fight on
-        self.current_floor = 1
 
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
@@ -106,7 +106,7 @@ class BirdFarmer(IFarmer):
             self.current_state = States.READY_TO_FIGHT
 
             print("Resetting the floor counter to 1")
-            self.current_floor = 1
+            BirdFarmer.current_floor = 1
             return
 
         # Click on "set party"
@@ -165,16 +165,16 @@ class BirdFarmer(IFarmer):
     def fight_complete_callback(self, victory=True):
         """Called when the fight logic completes."""
 
-        if self.current_floor == 3:
+        if BirdFarmer.current_floor == 3:
             BirdFarmer.total_count += 1
             if victory:
                 BirdFarmer.success_count += 1
             print(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
         if victory:
-            print(f"Floor {self.current_floor} complete! Going back to the original state")
+            print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
             # Update the new bird floor
-            self.current_floor = (self.current_floor % 3) + 1
+            BirdFarmer.current_floor = (BirdFarmer.current_floor % 3) + 1
         else:
             print("The bird fighter told me they lost... :/")
 
