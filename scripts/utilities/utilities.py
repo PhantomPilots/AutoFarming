@@ -473,18 +473,16 @@ def is_Thor_card(card: Card) -> bool:
 
 def is_Meli_card(card: Card) -> bool:
     """Identify a Traitor Meli card"""
-    if card.card_image is None:
-        return 0
-    return (
+    return not is_ground_card(card) and (
         find(vio.meli_ult, card.card_image)
         or find(vio.meli_aoe, card.card_image)
         or find(vio.meli_ampli, card.card_image)
-    ) and card.card_type not in [CardTypes.GROUND]
+    )
 
 
-def is_ground_card(hand_of_cards: list[Card], index: int) -> bool:
+def is_ground_card(card: Card) -> bool:
     """Return whether a card is of type GROUND"""
-    return hand_of_cards[index].card_type == CardTypes.GROUND
+    return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
 
 
 def display_image(image: np.ndarray, title: str = "Image"):
