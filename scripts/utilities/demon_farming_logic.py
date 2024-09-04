@@ -66,7 +66,7 @@ class DemonFarmer(IFarmer):
         # If we see a 'CANCEL', change the state
         if find(vio.cancel_realtime, screenshot):
             self.current_state = States.LOOKING_FOR_DEMON
-            print(f"Moving to {self.current_state}!")
+            print(f"Moving to {self.current_state}.")
             return
 
         # Click OK if we see it (?)
@@ -102,7 +102,7 @@ class DemonFarmer(IFarmer):
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
             # Going to the raid screen
             self.current_state = States.READY_TO_FIGHT
-            print(f"Moving to {self.current_state}!")
+            print(f"Moving to {self.current_state}.")
             return
 
         # We need a backup  in case the matchmaking gets cancelled
@@ -111,7 +111,7 @@ class DemonFarmer(IFarmer):
         if find(self.demon_to_farm, screenshot):
             # The matchmaking got cancelled, change states
             self.current_state = States.GOING_TO_DEMONS
-            print(f"Moving to {self.current_state}!")
+            print(f"Moving to {self.current_state}.")
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
@@ -123,13 +123,13 @@ class DemonFarmer(IFarmer):
         # We may have been kicked, move to initial state if so
         if find(vio.demon_kicked_ok, screenshot):
             self.current_state = States.GOING_TO_DEMONS
-            print(f"We've been kicked out... Moving to {self.current_state}")
+            print(f"We've been kicked out... Moving to {self.current_state}.")
             return
 
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
             self.current_state = States.FIGHTING_DEMON
-            print(f"Moving to {self.current_state}!")
+            print(f"Moving to {self.current_state}.")
 
     def fighting_demon_state(self):
         # sourcery skip: extract-duplicate-method, split-or-ifs
@@ -153,11 +153,11 @@ class DemonFarmer(IFarmer):
             self.auto = False
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've destroyed {self.demons_destroyed} demons.")
-            print(f"Moving to {self.current_state}!")
+            print(f"Moving to {self.current_state}.")
 
     def run(self):
 
-        print(f"Farming demons, starting from {self.current_state}")
+        print(f"Farming demons, starting from {self.current_state}.")
 
         while True:
             # Try to reconnect first
