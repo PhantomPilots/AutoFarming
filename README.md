@@ -103,6 +103,11 @@ To select the demon, inside `DemonFarmer.py` change the demon type in this line:
 
 ```demon_to_farm=vio.bell_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'```
 
+**Note** that you may need to play with the timing in the line:<br>
+```time_to_sleep=9.4,  # How many seconds to sleep before accepting an invitation```<br>
+If `9.4` is too high, lower it to `9.3` or `9.2` at most. Lower than that, you'll risk wasting all your 3 daily demon invites.
+
+
 ## Floor 4 of Bird
 
 The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
