@@ -534,7 +534,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             for i in range(len(meli_cards) - 2):
                 for j in range(i + 2, len(meli_cards)):
                     if determine_card_merge(hand_of_cards[meli_cards[i]], hand_of_cards[meli_cards[j]]):
-                        return [i, j]
+                        return [meli_cards[i], meli_cards[j]]
 
             # # If we're here, means we couldn't make a Meli merge. Just play a Meli card
             # if len(meli_cards):
