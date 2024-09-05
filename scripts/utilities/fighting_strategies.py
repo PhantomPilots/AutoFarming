@@ -546,7 +546,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
         screenshot, _ = capture_window()
-        if find(vio.evasion, screenshot):
+        if find(vio.evasion, screenshot, threshold=0.7):
             for i in range(len(hand_of_cards)):
                 if find(vio.meli_ult, hand_of_cards[i].card_image, threshold=0.6):
                     return i
