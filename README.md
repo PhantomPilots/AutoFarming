@@ -123,7 +123,7 @@ Requirements:
 * If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
 * The scripts don't account for random pop-ups (such as demon invitations), so make sure you have those notifications disabled.
 * If when updating the code with `git pull` you get an error/warning saying the code cannot be updated, first run `git stash` and then `git pull` again. You should now see the code updated.
-* For more errors, please open a new "issue" in the "Issues" tab of the website.
+* For more errors, please open a new "issue" in the "Issues" tab of this website.
 
 
 ## Shorter-term features
