@@ -107,7 +107,7 @@ class DemonFarmer(IFarmer):
 
         # We need a backup in case the matchmaking gets cancelled
         if not find(vio.join_request, screenshot):
-            click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6)
+            find_and_click(vio.real_time, screenshot, window_location, threshold=0.6)
         if find(self.demon_to_farm, screenshot):
             # The matchmaking got cancelled, change states
             self.current_state = States.GOING_TO_DEMONS
