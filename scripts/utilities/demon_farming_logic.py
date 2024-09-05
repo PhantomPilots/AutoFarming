@@ -75,7 +75,7 @@ class DemonFarmer(IFarmer):
         click_and_sleep(vio.demon_kicked_ok, screenshot, window_location)
 
         # Go to battle menu
-        click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.7)
+        click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
         # Go to demons
         click_and_sleep(vio.boss_menu, screenshot, window_location)
