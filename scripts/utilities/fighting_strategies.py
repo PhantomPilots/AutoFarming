@@ -521,15 +521,15 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # Extract card types and picked card types
         card_types = np.array([card.card_type.value for card in hand_of_cards])
+        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
         if IBattleStrategy.card_turn == 0 and not np.any(
             [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
         ):
-            print("We don't have Meli's ult, let's force merging/playing a Meli card")
+            print("We don't have Meli's ult, let's force merging a Meli card")
             meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
-            print("Meli cards:", meli_cards)
             # Try to make a merge
             for i in range(len(meli_cards) - 2):
                 for j in range(i + 2, len(meli_cards)):
@@ -541,7 +541,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             #     return meli_cards[0]
 
         # STANCE
-        if (stance_idx := play_stance_card(card_types, picked_card_types)) is not None:
+        if (stance_idx := play_stance_card(card_types, picked_card_types, card_ranks=card_ranks)) is not None:
             return stance_idx
 
         # We may need to ULT WITH MELI here, first thing to do after the stance
@@ -637,10 +637,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         return None
 
 
-def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray):
+def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray, card_ranks: np.ndarray = None):
     """Play a stance card if we have it and haven't played it yet"""
     screenshot, _ = capture_window()
     stance_ids = np.where(card_types == CardTypes.STANCE.value)[0]
+    if card_ranks is not None:
+        # Play higher ranked cards if possible
+        stance_ids = sorted(stance_ids, key=lambda idx: card_ranks[idx], reverse=False)
     if (
         len(stance_ids)
         and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
