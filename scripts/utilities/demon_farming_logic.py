@@ -81,7 +81,7 @@ class DemonFarmer(IFarmer):
         click_and_sleep(vio.boss_menu, screenshot, window_location)
 
         # Click on real-time menu
-        click_and_sleep(vio.real_time, screenshot, window_location)
+        click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6)
 
         # Click on the demon to farm
         click_and_sleep(self.demon_to_farm, screenshot, window_location)
@@ -105,9 +105,9 @@ class DemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
             return
 
-        # We need a backup  in case the matchmaking gets cancelled
+        # We need a backup in case the matchmaking gets cancelled
         if not find(vio.join_request, screenshot):
-            click_and_sleep(vio.real_time, screenshot, window_location)
+            click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6)
         if find(self.demon_to_farm, screenshot):
             # The matchmaking got cancelled, change states
             self.current_state = States.GOING_TO_DEMONS
