@@ -69,7 +69,6 @@ class Floor4Farmer(IFarmer):
         for phase, count in Floor4Farmer.dict_of_defeats.items():
             str_msg += f"* Phase {phase} -> Lost {count} times.\n"
 
-        print(str_msg)
         return str_msg
 
     def going_to_floor_state(self):
@@ -134,7 +133,7 @@ class Floor4Farmer(IFarmer):
         logger.info(fight_complete_msg)
 
         # Don't log the defeats here, only on `exit_message()`
-        self._print_defeats()
+        print(self._print_defeats())
 
         # Go straight to the original states
         self.current_state = States.GOING_TO_FLOOR
