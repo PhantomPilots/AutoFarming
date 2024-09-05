@@ -22,7 +22,7 @@ Follow these steps:
 
 #### Sizer
 
-Download and install the [Sizer](https://www.brianapps.net/sizer/) application for custom re-sizing of windows. 
+Download and install the [Sizer](https://www.brianapps.net/sizer4/) application for custom re-sizing of windows. 
 Once installed, open it as administrator and:
 1. Set the game in ***portrait*** mode instead of landscape mode (in-game settings).
 2. Open Sizer. It's hidden at the bottom-right of your screen:<br>
