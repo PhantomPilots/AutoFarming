@@ -6,7 +6,7 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=EquipmentFarmer,
-        starting_state=States.FARMING,  # Should be 'TAVERN_TO_FARM'
+        starting_state=States.TAVERN_TO_FARM,  # Should be 'TAVERN_TO_FARM'
     )
 
 
