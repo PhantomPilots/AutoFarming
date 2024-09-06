@@ -32,6 +32,9 @@ class DemonFarmer(IFarmer):
     # Needs to be static in case we restart the instance
     demons_destroyed = 0
 
+    # We need to keep track if 'auto' is clicked or not...
+    auto = False
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -48,9 +51,6 @@ class DemonFarmer(IFarmer):
 
         # No battle strategy needed, we'll auto
         self.battle_strategy = battle_strategy
-
-        # We need to keep track if 'auto' is clicked or not...
-        self.auto = False
 
         # How much time to sleep before accepting the invitation -- May need to me hand-tuned
         self.sleep_before_accept = time_to_sleep
@@ -136,8 +136,8 @@ class DemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        if not self.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.8):
-            self.auto = True
+        if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.8):
+            DemonFarmer.auto = True
 
         # If we see a skip
         find_and_click(vio.skip_bird, screenshot, window_location)
@@ -150,7 +150,7 @@ class DemonFarmer(IFarmer):
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
                 DemonFarmer.demons_destroyed += 1
-            self.auto = False
+            DemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've destroyed {DemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
