@@ -97,7 +97,7 @@ class DemonFarmer(IFarmer):
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
             time.sleep(self.sleep_before_accept)
-            click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.6, sleep_time=2)
+            click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.6, sleep_time=5)
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
             # Going to the raid screen
@@ -111,6 +111,7 @@ class DemonFarmer(IFarmer):
         if find(self.demon_to_farm, screenshot):
             # The matchmaking got cancelled, change states
             self.current_state = States.GOING_TO_DEMONS
+            print("Seems the matchmaking got cancelled...")
             print(f"Moving to {self.current_state}.")
 
     def ready_to_fight_state(self):
