@@ -142,7 +142,7 @@ class DemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.8):
+        if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             DemonFarmer.auto = True
 
         # If we see a skip
