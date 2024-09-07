@@ -204,7 +204,7 @@ class DemonRouletteFarmer(DemonFarmer):
         self.time_between_demons = time_between_demons
 
         # Roulette of demons
-        self.demon_roulette = [vio.red_demon, vio.gray_demon, vio.crimson_demon, vio.bell_demon, vio.og_demon]
+        self.demon_roulette = [vio.red_demon, vio.gray_demon, vio.crimson_demon]
         self.start_time = time.time()
 
     def rotate_demon(self):
