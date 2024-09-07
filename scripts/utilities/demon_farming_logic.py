@@ -2,6 +2,7 @@ import threading
 import time
 from enum import Enum
 
+import numpy as np
 import pyautogui as pyautogui
 
 # Import all images
@@ -9,6 +10,7 @@ import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -18,6 +20,8 @@ from utilities.utilities import (
     find_floor_coordinates,
 )
 from utilities.vision import Vision
+
+logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
 
 class States(Enum):
@@ -165,6 +169,71 @@ class DemonFarmer(IFarmer):
         while True:
             # Try to reconnect first
             check_for_reconnect()
+
+            if self.current_state == States.GOING_TO_DEMONS:
+                self.going_to_demons_state()
+
+            elif self.current_state == States.LOOKING_FOR_DEMON:
+                self.looking_for_demon_state()
+
+            elif self.current_state == States.READY_TO_FIGHT:
+                self.ready_to_fight_state()
+
+            elif self.current_state == States.FIGHTING_DEMON:
+                self.fighting_demon_state()
+                time.sleep(1)
+
+            # We need the loop to run very fast
+            time.sleep(0.1)
+
+
+class DemonRouletteFarmer(DemonFarmer):
+    """This class resets the demon to farm every X hours"""
+
+    def __init__(
+        self,
+        battle_strategy: IBattleStrategy = None,
+        starting_state=States.GOING_TO_DEMONS,
+        demon_to_farm: Vision = vio.og_demon,
+        time_to_sleep=9.4,
+        time_between_demons=2,  # In hours
+    ):
+        super().__init__(battle_strategy, starting_state, demon_to_farm, time_to_sleep)
+
+        # Every how many hours to switch between demons
+        self.time_between_demons = time_between_demons
+
+        # Roulette of demons
+        self.demon_roulette = [vio.red_demon, vio.gray_demon, vio.crimson_demon, vio.bell_demon, vio.og_demon]
+        self.start_time = time.time()
+
+    def rotate_demon(self):
+        """Rotate a demon if X hours have passed"""
+
+        if time.time() - self.start_time > self.time_between_demons * 3600:
+            # Increase the index by one
+            demon_names = [demon.image_name for demon in self.demon_roulette]
+            demon_idx = np.where(np.array(demon_names) == self.demon_to_farm.image_name)[0] + 1
+            demon_idx = int(demon_idx % len(self.demon_roulette))
+
+            # Get the new demon
+            self.demon_to_farm = self.demon_roulette[demon_idx]
+            logger.info(f"Switched demon to {self.demon_to_farm.image_name}")
+
+            # Record the new time
+            self.start_time = time.time()
+
+    def run(self):
+
+        print(f"Farming demons, starting from {self.current_state}.")
+        print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
+
+        while True:
+            # Try to reconnect first
+            check_for_reconnect()
+
+            # Check if to change the demon to farm
+            self.rotate_demon()
 
             if self.current_state == States.GOING_TO_DEMONS:
                 self.going_to_demons_state()

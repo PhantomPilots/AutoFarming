@@ -6,6 +6,9 @@ from utilities.fighting_strategies import IBattleStrategy
 class IFarmer:
     """Generic farmer interface."""
 
+    # For type helping
+    current_state: int
+
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
 
