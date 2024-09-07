@@ -160,7 +160,7 @@ class DemonFarmer(IFarmer):
     def run(self):
 
         print(f"Farming demons, starting from {self.current_state}.")
-        print(f"We'll be farming {self.demon_to_farm.image_name}")
+        print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
 
         while True:
             # Try to reconnect first
