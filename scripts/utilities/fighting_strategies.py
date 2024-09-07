@@ -533,11 +533,12 @@ class Floor4BattleStrategy(IBattleStrategy):
         ):
             print("We don't have Meli's ult, let's force merging a Meli card")
             meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
+            print("Meli cards:", meli_cards)
             # Try to make a merge
-            for i in range(len(meli_cards) - 2):
-                for j in range(i + 2, len(meli_cards)):
-                    if determine_card_merge(hand_of_cards[meli_cards[i]], hand_of_cards[meli_cards[j]]):
-                        return [meli_cards[i], meli_cards[j]]
+            for i in meli_cards[:-2]:
+                for j in meli_cards[i + 2 :]:
+                    if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
+                        return [i, j]
 
             # # If we're here, means we couldn't make a Meli merge. Just play a Meli card
             # if len(meli_cards):
