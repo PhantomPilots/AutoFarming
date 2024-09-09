@@ -533,8 +533,8 @@ class Floor4BattleStrategy(IBattleStrategy):
             meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
             print("Meli cards:", meli_cards)
             # Try to make a merge
-            for i in meli_cards[:-2]:
-                for j in meli_cards[i + 2 :]:
+            for i in meli_cards[:-1]:
+                for j in meli_cards[1:]:
                     if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
                         return [i, j]
 
