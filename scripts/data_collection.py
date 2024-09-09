@@ -294,66 +294,6 @@ def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
             print("Not saving dataset!")
 
 
-def collect_card_type_data():
-    """Collect data for learning card types"""
-    print("Collecting card type data.")
-
-    data_collector = CardTypeCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="card_types_data")
-
-
-def collect_merge_data():
-    """Collect data for identifying when a card click will result in a merge"""
-    print("Collecting card merges data.")
-
-    data_collector = MergeCardsCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="card_merges_data")
-
-
-def collect_amplify_data():
-    """Collect data for identifying amplify cards from Megellda/Traitor Meli, and Thor cards"""
-    print("Collecting amplify data...")
-
-    data_collector = AmplifyCardsCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="amplify_cards_data")
-
-
-def collect_HAM_data():
-    """Collect data for identifying amplify cards from Megellda/Traitor Meli, and Thor cards"""
-    print("Collecting HAM cards data...")
-
-    data_collector = HAMCardsCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="ham_cards_data")
-
-
-def collect_Thor_data():
-    """Collect data for identifying Thor cards only"""
-    print("Collecting Thor cards data...")
-
-    data_collector = ThorCardCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="thor_cards_data")
-
-
-def collect_ground_data():
-    """Collect data for identifying ground cards, to be used on a RBF SVM classifier"""
-    print("Collecting data for GROUND cards...")
-
-    data_collector = GroundDataCollector()
-    dataset, all_labels = data_collector.collect_data()
-    print("All labels:\n", all_labels)
-    save_data(dataset, all_labels, filename="ground_data")
-
-
 def collect_data(CollectorClass: DataCollector, filename: str):
     print(f"Collecting data for {CollectorClass.__class__.__name__}")
 
@@ -364,17 +304,16 @@ def collect_data(CollectorClass: DataCollector, filename: str):
 
 
 def main():
-    ### TODO: Replace all these standalone functions by 'collect_data' with the right arguments
 
-    # collect_merge_data()
+    # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    # collect_card_type_data()
+    # collect_data(CardTypeCollector, filename="card_types_data")
 
-    # collect_amplify_data()
+    # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
-    # collect_HAM_data()
+    # collect_data(HAMCardsCollector, filename="ham_cards_data")
 
-    # collect_Thor_data()
+    # collect_data(ThorCardCollector, filename="thor_cards_data")
 
     collect_data(GroundDataCollector, filename="ground_data")
 
