@@ -44,7 +44,7 @@ class Floor4Farmer(IFarmer):
 
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete
-        self.bird_fighter: IFighter = BirdFighter(
+        self.fighter: IFighter = BirdFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
@@ -58,10 +58,6 @@ class Floor4Farmer(IFarmer):
         if len(Floor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
             logger.info(defeat_msg)
-
-    def stop_fighter_thread(self):
-        """Stop the fighter thread!"""
-        self.bird_fighter.stop_fighter()
 
     def _print_defeats(self):
         """Generate a string message to log"""
@@ -111,7 +107,7 @@ class Floor4Farmer(IFarmer):
         # Set the fighter thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Bird fight started!")
-            self.fight_thread = threading.Thread(target=self.bird_fighter.run, name="Floor4FighterThread", daemon=True)
+            self.fight_thread = threading.Thread(target=self.fighter.run, name="Floor4FighterThread", daemon=True)
             self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, **kwargs):
