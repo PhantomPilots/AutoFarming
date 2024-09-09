@@ -1,6 +1,5 @@
 import abc
 
-from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_fighter_interface import IFighter
 
 
