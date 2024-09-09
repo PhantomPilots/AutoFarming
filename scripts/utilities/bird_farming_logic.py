@@ -56,6 +56,10 @@ class BirdFarmer(IFarmer):
     def exit_message(self):
         logger.info(f"We beat {BirdFarmer.success_count}/{BirdFarmer.total_count} birds.")
 
+    def stop_fighter_thread(self):
+        """Stop the fighter thread!"""
+        self.bird_fighter.stop_fighter()
+
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
         screenshot, window_location = capture_window()
