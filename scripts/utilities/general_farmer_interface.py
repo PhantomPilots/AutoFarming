@@ -1,6 +1,7 @@
 import abc
 
 from utilities.fighting_strategies import IBattleStrategy
+from utilities.general_fighter_interface import IFighter
 
 
 class IFarmer:
@@ -8,9 +9,13 @@ class IFarmer:
 
     # For type helping
     current_state: int
+    fighter: IFighter
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
+        if hasattr(self, "fighter") and isinstance(self.fighter, IFighter):
+            print("STOPPING FIGHTER!")
+            self.fighter.stop_fighter()
 
     def exit_message(self):
         """Final message to display on the screen when CTRL+C happens"""
