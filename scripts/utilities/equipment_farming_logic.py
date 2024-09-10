@@ -7,6 +7,7 @@ import utilities.vision_images as vio
 # Import all images
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import IFarmer
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -15,6 +16,8 @@ from utilities.utilities import (
     find_and_click,
     press_key,
 )
+
+logger = LoggerWrapper(name="EquipmentLogger", log_file="equipment_salvaging.log")
 
 
 class States(Enum):
@@ -141,6 +144,7 @@ class EquipmentFarmer(IFarmer):
             self.current_state = States.TAVERN_TO_FARM
             # Increment the number of salvaging done
             EquipmentFarmer.num_salvages += 1
+            logger.info(f"We've salvaged equipment {EquipmentFarmer.num_salvages} times.")
             print("Moving to TAVERN_TO_FARM")
 
     def tavern_to_farm_state(self):
