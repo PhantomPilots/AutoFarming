@@ -51,6 +51,7 @@ class EquipmentFarmer(IFarmer):
         if find_and_click(vio.auto_repeat_ended, screenshot, window_location):
             # Farming ended!
             press_key("esc")
+            print("Moving to GOING TO TAVERN")
             self.current_state = States.GOING_TO_TAVERN
             return
 
@@ -63,9 +64,9 @@ class EquipmentFarmer(IFarmer):
             # In case it didn't go away, press ESC again
             press_key("esc")
 
-        find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.ok_button, screenshot, window_location, threshold=0.7)
 
-        if find_and_click(vio.tavern, screenshot, window_location):
+        if find_and_click(vio.tavern, screenshot, window_location, threshold=0.7):
             # TODO: We should not have to capture the window twice in one state, make an additional state
             screenshot, _ = capture_window()
             if find(vio.main_menu, screenshot, threshold=0.7):
