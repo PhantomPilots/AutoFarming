@@ -29,6 +29,9 @@ class States(Enum):
 class EquipmentFarmer(IFarmer):
     """State machine that farms equipment even when equipment is full"""
 
+    # Keep track of how many times we've salvaged equipment
+    num_salvages = 0
+
     def __init__(self, battle_strategy=None, starting_state=States.TAVERN_TO_FARM):
 
         # Assume the state machine starts in a hardcoded state
@@ -37,12 +40,9 @@ class EquipmentFarmer(IFarmer):
         # Unused, how to make the code cleaner and still abide by the interface?
         self.battle_strategy = battle_strategy
 
-        # Keep track of how many times we've salvaged equipment
-        self.num_salvages = 0
-
     def exit_message(self):
         """Final message!"""
-        print(f"We salvaged equipment {self.num_salvages} times.")
+        print(f"We salvaged equipment {EquipmentFarmer.num_salvages} times.")
 
     def farming_state(self):
         """Polling checking to see if farming has ended"""
@@ -139,7 +139,7 @@ class EquipmentFarmer(IFarmer):
             # We're back in the tavern
             self.current_state = States.TAVERN_TO_FARM
             # Increment the number of salvaging done
-            self.num_salvages += 1
+            EquipmentFarmer.num_salvages += 1
             print("Moving to TAVERN_TO_FARM")
 
     def tavern_to_farm_state(self):
