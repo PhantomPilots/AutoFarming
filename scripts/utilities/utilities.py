@@ -384,6 +384,15 @@ def get_hand_cards() -> list[Card]:
     return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
 
 
+def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
+    """Get the sub-image where the card slots are"""
+    return crop_image(
+        screenshot,
+        Coordinates.get_coordinates("top_left_card_slots"),
+        Coordinates.get_coordinates("bottom_right_card_slots"),
+    )
+
+
 def determine_card_type(card: np.ndarray | None) -> CardTypes:
     """Predict the card type"""
 
