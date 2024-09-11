@@ -103,6 +103,7 @@ empty_slot_9 = Vision("dogs\\empty_slot_9.png")
 empty_slot_10 = Vision("dogs\\empty_slot_10.png")
 empty_slot_11 = Vision("dogs\\empty_slot_11.png")
 empty_slot_12 = Vision("dogs\\empty_slot_12.png")
+empty_slot_12 = Vision("dogs\\empty_slot_13.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

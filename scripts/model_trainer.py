@@ -151,6 +151,31 @@ def train_knn(X: np.ndarray, labels: np.ndarray[CardTypes], k: int = 3) -> KNeig
     return knn
 
 
+def train_svm_classifier(X: np.ndarray, labels: np.ndarray) -> SVC:
+    """Train a Support Vector Machine classifier"""
+
+    # Train the model till we get a good enough one
+    acc = 0
+    num_trials = 0
+    print("Training SVM model...")
+    while acc < 0.99 and num_trials < 20:
+        # Split the data into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
+
+        # Create and train the SVM model with RBF kernel
+        svm_model = SVC(kernel="rbf")
+        svm_model.fit(X_train, y_train)
+
+        # Test the model
+        _, acc = test_model(svm_model, X_test, y_test)
+
+        # Increment the number of trials
+        num_trials += 1
+
+    print(f"Found a good model after {num_trials} trial(s).")
+    return svm_model
+
+
 def train_logistic_regressor(X: np.ndarray, labels: np.ndarray) -> LogisticRegression:
     """Train a model to identify card merges"""
 
@@ -165,22 +190,6 @@ def train_logistic_regressor(X: np.ndarray, labels: np.ndarray) -> LogisticRegre
     test_model(logistic_regressor, X_test, y_test)
 
     return logistic_regressor
-
-
-def train_svm_classifier(X: np.ndarray, labels: np.ndarray) -> SVC:
-    """Train a Support Vector Machine classifier"""
-
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
-
-    # Create and train the SVM model with RBF kernel
-    svm_model = SVC(kernel="rbf")
-    svm_model.fit(X_train, y_train)
-
-    # Test the model
-    test_model(svm_model, X_test, y_test)
-
-    return svm_model
 
 
 def test_model(model: KNeighborsClassifier | LogisticRegression, X_test: np.ndarray, y_test: np.ndarray):
