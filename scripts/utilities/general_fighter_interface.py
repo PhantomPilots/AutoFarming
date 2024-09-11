@@ -107,6 +107,10 @@ class IFighter(abc.ABC):
 
             self._play_card(hand_cards, index=index_to_play, window_location=window_location)
 
+        elif empty_card_slots == 0:
+            print("Finished my turn!")
+            return 1
+
     def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):
         """Decide whether we're clicking or moving a card"""
         if isinstance(index, Integral):

@@ -69,7 +69,7 @@ class CardTypeCollector(DataCollector):
         labels = []
 
         for i, card in enumerate(cards):
-            if i > 3 and previous_labels is not None:
+            if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
                 card_label = previous_labels[i - 4]
                 print(f"Auto-appending label {CardTypes(card_label)}")
@@ -307,7 +307,7 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    # collect_data(CardTypeCollector, filename="card_types_data")
+    collect_data(CardTypeCollector, filename="card_types_data")
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
@@ -315,7 +315,7 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    collect_data(GroundDataCollector, filename="ground_data")
+    # collect_data(GroundDataCollector, filename="ground_data")
 
 
 if __name__ == "__main__":

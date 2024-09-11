@@ -109,7 +109,8 @@ class DogsFarmer(IFarmer):
             )
 
         # We may need to restore stamina
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            return
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)

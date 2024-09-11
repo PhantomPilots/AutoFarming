@@ -56,8 +56,11 @@ class DogsFighter(IFighter):
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
+            # For debugging...
+            self.count_empty_card_slots(screenshot, plot=True)
+
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.7):
+    def count_empty_card_slots(screenshot, threshold=0.8, plot=False):
         """Count how many empty card slots are there for DOGS"""
         rectangles = []
         for i in range(1, 20):
@@ -69,14 +72,13 @@ class DogsFighter(IFighter):
 
         # Group all rectangles
         grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
-        # if len(grouped_rectangles):
-        #     # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
-        #     rectangles_fig = draw_rectangles(screenshot, grouped_rectangles)
-        #     cv2.imshow("rectangles", rectangles_fig)
-        #     cv2.waitKey(0)
+        if plot and len(grouped_rectangles):
+            # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
+            rectangles_fig = draw_rectangles(screenshot, grouped_rectangles)
+            cv2.imshow("rectangles", rectangles_fig)
+            cv2.waitKey(0)
+            print(f"We have {len(grouped_rectangles)} empty slots.")
 
-        num_rectangles = len(grouped_rectangles)
-        print(f"We have {num_rectangles} empty slots.")
         return len(grouped_rectangles)
 
     def my_turn_state(self):
@@ -86,29 +88,29 @@ class DogsFighter(IFighter):
         # Before playing cards, first:
         # 1. Read the phase we're in
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
-        empty_card_slots = self.count_empty_card_slots(screenshot)
+        # empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        if find(vio.phase_1, screenshot) and DogsFighter.current_phase != 1:
+        if find(vio.phase_1, screenshot, threshold=0.8) and DogsFighter.current_phase != 1:
             # Click on light dog
-            click_im(Coordinates.get_coordinates("light_dog"), window_location)
             DogsFighter.current_phase = 1
-        elif find(vio.phase_2, screenshot) and DogsFighter.current_phase != 2:
+            print("Clicking on light dog, because current phase:", DogsFighter.current_phase)
+            click_im(Coordinates.get_coordinates("light_dog"), window_location)
+        elif find(vio.phase_2, screenshot, threshold=0.8) and DogsFighter.current_phase != 2:
             # Click on dark dog
-            click_im(Coordinates.get_coordinates("dark_dog"), window_location)
             DogsFighter.current_phase = 2
-        elif find(vio.phase_3, screenshot) and DogsFighter.current_phase != 3:
+            print("Clicking on dark dog, because current phase:", DogsFighter.current_phase)
+            click_im(Coordinates.get_coordinates("dark_dog"), window_location)
+        elif find(vio.phase_3_dogs, screenshot, threshold=0.8) and DogsFighter.current_phase != 3:
             # Click on dark dog
             DogsFighter.current_phase = 3
+            print("Clicking on dark dog, because current phase:", DogsFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
             self.current_hand = self.battle_strategy.pick_cards()
 
-        # We have the cards now, click on them
-        self.play_cards(self.current_hand)
-
-        if not self.count_empty_card_slots(screenshot):
+        if finished_turn := self.play_cards(self.current_hand):
             print("Finished my turn, going back to FIGHTING")
             self.current_state = FightingStates.FIGHTING
             # Reset the hand
