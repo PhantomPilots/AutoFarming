@@ -40,12 +40,13 @@ def get_window_size():
     return w, h
 
 
-def draw_rectangles(haystack_img, rectangles: np.ndarray) -> np.ndarray:
+def draw_rectangles(
+    haystack_img, rectangles: np.ndarray, line_color: tuple = (0, 255, 0), line_type=cv2.LINE_4
+) -> np.ndarray:
     """Given a list of [x, y, w, h] rectangles and a canvas image to draw on, return an image with
     all of those rectangles drawn"""
 
     # these colors are actually BGR
-    line_color = (0, 255, 0)
     line_type = cv2.LINE_4
 
     # Expand to 2D if 1-dimensional
@@ -61,7 +62,7 @@ def draw_rectangles(haystack_img, rectangles: np.ndarray) -> np.ndarray:
     return haystack_img
 
 
-def screenshot_testing(vision_image: Vision, threshold=0.8):
+def screenshot_testing(vision_image: Vision, threshold=0.7):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
     # screenshot, _ = get_unfocused_screenshot()
     screenshot, _ = capture_window()

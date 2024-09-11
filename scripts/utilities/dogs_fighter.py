@@ -57,20 +57,26 @@ class DogsFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.8):
+    def count_empty_card_slots(screenshot, threshold=0.7):
         """Count how many empty card slots are there for DOGS"""
         rectangles = []
-        for i in range(1, 10):
-            vio_image: Vision = getattr(vio, f"empty_slot_{i}")
-            temp_rectangles, _ = vio_image.find_all_rectangles(screenshot, threshold=threshold)
-            rectangles.extend(temp_rectangles)
+        for i in range(1, 20):
+            vio_image: Vision = getattr(vio, f"empty_slot_{i}", None)
+            if vio_image is not None and vio_image.needle_img is not None:
+                temp_rectangles, _ = vio_image.find_all_rectangles(screenshot, threshold=threshold)
+                rectangles.extend(temp_rectangles)
+                rectangles.extend(temp_rectangles)
 
         # Group all rectangles
         grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
         # if len(grouped_rectangles):
+        #     # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
         #     rectangles_fig = draw_rectangles(screenshot, grouped_rectangles)
         #     cv2.imshow("rectangles", rectangles_fig)
         #     cv2.waitKey(0)
+
+        num_rectangles = len(grouped_rectangles)
+        print(f"We have {num_rectangles} empty slots.")
         return len(grouped_rectangles)
 
     def my_turn_state(self):

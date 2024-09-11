@@ -27,9 +27,9 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    screenshot_testing(vision_image=vio.ok_button, threshold=0.8)
+    # screenshot_testing(vision_image=vio.empty_slot_3, threshold=0.7)
 
-    # DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
+    DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
 
     # # Test the 'move to location'
     # move_to_location(Coordinates.get_coordinates("fifth_slot"), window_location)
