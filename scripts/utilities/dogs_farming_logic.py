@@ -163,7 +163,7 @@ class DogsFarmer(IFarmer):
         find_and_click(vio.bird_okay, screenshot, window_location)
 
         # Click on the 'reset' button
-        find_and_click(vio.reset_bird, screenshot, window_location)
+        find_and_click(vio.reset_demonic_beast, screenshot, window_location, threshold=0.6)
 
         # Once we see the main dogs screen again, we can move the the original state
         if find(vio.empty_party, screenshot):
