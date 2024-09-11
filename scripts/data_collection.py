@@ -295,7 +295,7 @@ def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
 
 
 def collect_data(CollectorClass: DataCollector, filename: str):
-    print(f"Collecting data for {CollectorClass.__class__.__name__}")
+    print(f"Collecting data for {CollectorClass.__name__}")
 
     data_collector: DataCollector = CollectorClass()
     dataset, all_labels = data_collector.collect_data()

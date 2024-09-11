@@ -51,6 +51,9 @@ class EquipmentFarmer(IFarmer):
         """Polling checking to see if farming has ended"""
         screenshot, window_location = capture_window()
 
+        # TODO: Add the 'discrepancy with the change and time data'
+        # find_and_click(vio.time_date_change, screenshot, window_location, threshold=0.7)
+
         if find_and_click(vio.auto_repeat_ended, screenshot, window_location):
             # Farming ended!
             press_key("esc")
