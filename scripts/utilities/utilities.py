@@ -175,7 +175,7 @@ def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
     window_location: list[float],
-    threshold=0.8,
+    threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
 ) -> bool:
     """Tries to find the given `vision_image` on the screenshot; if it is found, clicks on it.
@@ -203,7 +203,7 @@ def click_and_sleep(
     vision_image: Vision,
     screenshot: np.ndarray,
     window_location: list[float],
-    threshold=0.8,
+    threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
     sleep_time=1,  # In seconds
 ) -> bool:
