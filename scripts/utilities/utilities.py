@@ -386,9 +386,9 @@ def get_hand_cards() -> list[Card]:
 def determine_card_type(card: np.ndarray | None) -> CardTypes:
     """Predict the card type"""
 
-    # # First, use the ground predictor. If it returns GROUND, no need to explore further
-    # if card is None or GroundCardPredictor.is_ground_card(get_card_interior_image(card)):
-    #     return CardTypes.GROUND
+    # First, use the ground predictor. If it returns GROUND, no need to explore further
+    if card is None or GroundCardPredictor.is_ground_card(get_card_interior_image(card)):
+        return CardTypes.GROUND
 
     # If the above didn't return GROUND, explore it further. This logic allows for backwards compatibility (with Bird, for instance)
     card_type_image = get_card_type_image(card)
