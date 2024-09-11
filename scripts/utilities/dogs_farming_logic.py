@@ -141,12 +141,18 @@ class DogsFarmer(IFarmer):
             # Transition to another state or perform clean-up actions
             print("Floor complete! Going back to the original state")
             if floor_defeated == 3:
+                print("We defeated all 3 floors, gotta reset the DB.")
+                self.current_state == States.RESETTING_DOGS
                 self.num_floor_3_victories += 1
+                return
+            else:
+                # Go straight to the original states
+                self.current_state = States.GOING_TO_DOGS
+
         else:
             print("The dogs fighter told me we lost... :/")
-
-        # Let's reset the whole demonic beast NO MATTER WHAT, in case the saved team has very little health
-        self.current_state = States.RESETTING_DOGS
+            print("Resetting the team in case the saved team has very little health")
+            self.current_state = States.RESETTING_DOGS
 
     def resetting_dogs_state(self):
         """If we've finished floor 3, we need to reset the dogs"""
