@@ -60,7 +60,7 @@ class DogsFighter(IFighter):
             # self.count_empty_card_slots(screenshot, plot=True)
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.8, plot=False):
+    def count_empty_card_slots(screenshot, threshold=0.7, plot=False):
         """Count how many empty card slots are there for DOGS"""
         rectangles = []
         for i in range(1, 20):
@@ -75,9 +75,9 @@ class DogsFighter(IFighter):
         if plot and len(grouped_rectangles):
             # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
             rectangles_fig = draw_rectangles(screenshot, grouped_rectangles)
+            print(f"We have {len(grouped_rectangles)} empty slots.")
             cv2.imshow("rectangles", rectangles_fig)
             cv2.waitKey(0)
-            print(f"We have {len(grouped_rectangles)} empty slots.")
 
         return len(grouped_rectangles)
 
