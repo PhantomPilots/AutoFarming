@@ -56,12 +56,12 @@ class BirdFighter(IFighter):
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
-        if find(vio.phase_4, screenshot):
+        if find(vio.phase_4, screenshot, threshold=0.8):
             # Phase 4 first, because it can be misread as a 1
             return 4
-        elif find(vio.phase_2, screenshot):
+        elif find(vio.phase_2, screenshot, threshold=0.8):
             return 2
-        elif find(vio.phase_3, screenshot):
+        elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
         # Default to phase 1 in case we don't see anything

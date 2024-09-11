@@ -161,7 +161,7 @@ def move_to_location(point: np.ndarray | tuple, window_location: list[float]):
     time.sleep(0.1)
 
 
-def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.8) -> bool:
+def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7) -> bool:
     """Simply return if a match is found"""
     if screenshot is None:
         return False
