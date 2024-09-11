@@ -42,6 +42,7 @@ To keep up-to-date with any updates, you'll need to install [Git](https://gitfor
 Updating the code is done using Git. The process is simple:
 1. Similarly to Installation point 3., open a PowerShell window within the AutoFarming folder.
 2. Type in `git pull` and press `ENTER`.
+   * If when running `git pull` you get an error/warning saying the code cannot be updated, first run `git stash` and then `git pull` again. You should now see the code updated.
 
 ### How to run the scripts
 
