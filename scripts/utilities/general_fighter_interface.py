@@ -82,6 +82,7 @@ class IFighter(abc.ABC):
 
         if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
+            # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
             slot_index = self.available_card_slots - empty_card_slots
             # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
             try:
@@ -115,6 +116,7 @@ class IFighter(abc.ABC):
         """Decide whether we're clicking or moving a card"""
         if isinstance(index, Integral):
             # Just click on the card
+            print("Clicking card with index:", index)
             self._click_card(list_of_cards[index], window_location)
 
         else:
