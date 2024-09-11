@@ -130,7 +130,7 @@ class DogsFarmer(IFarmer):
 
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
-            print("Bird fight started!")
+            print("Dogs fighter started!")
             self.fight_thread = threading.Thread(target=self.dogs_fighter.run, daemon=True)
             self.fight_thread.start()
 
@@ -141,17 +141,12 @@ class DogsFarmer(IFarmer):
             # Transition to another state or perform clean-up actions
             print("Floor complete! Going back to the original state")
             if floor_defeated == 3:
-                print("We defeated all 3 floors, gotta reset the DB.")
-                self.current_state == States.RESETTING_DOGS
                 self.num_floor_3_victories += 1
-                return
         else:
             print("The dogs fighter told me we lost... :/")
-            # Let's reset the whole demonic beast, in case the saved team has very little health
-            self.current_state = States.RESETTING_DOGS
 
-        # Go straight to the original states
-        self.current_state = States.GOING_TO_DOGS
+        # Let's reset the whole demonic beast NO MATTER WHAT, in case the saved team has very little health
+        self.current_state = States.RESETTING_DOGS
 
     def resetting_dogs_state(self):
         """If we've finished floor 3, we need to reset the dogs"""

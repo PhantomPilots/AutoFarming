@@ -56,8 +56,8 @@ class DogsFighter(IFighter):
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
-            # For debugging...
-            self.count_empty_card_slots(screenshot, plot=True)
+            # # For debugging...
+            # self.count_empty_card_slots(screenshot, plot=True)
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.8, plot=False):
