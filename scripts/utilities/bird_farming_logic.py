@@ -142,7 +142,9 @@ class BirdFarmer(IFarmer):
             )
 
         # We may need to restore stamina
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            # Return so that we don't try to click START right after
+            return
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
