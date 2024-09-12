@@ -26,7 +26,12 @@ class BirdFighter(IFighter):
         # To skip quickly to the rewards when the fight is done
         find_and_click(vio.creature_destroyed, screenshot, window_location)
 
-        if find(vio.finished_fight_ok, screenshot):
+        if find(vio.defeat, screenshot):
+            # I may have lost though...
+            print("I lost! :(")
+            self.current_state = FightingStates.DEFEAT
+
+        elif find(vio.finished_fight_ok, screenshot):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
@@ -48,11 +53,6 @@ class BirdFighter(IFighter):
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
-
-        elif find(vio.defeat, screenshot):
-            # I may have lost though...
-            print("I lost! :(")
-            self.current_state = FightingStates.DEFEAT
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
