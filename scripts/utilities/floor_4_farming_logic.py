@@ -87,7 +87,8 @@ class Floor4Farmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Restore stamina if we need to
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            return
 
         # Try to start the fight
         find_and_click(vio.startbutton, screenshot, window_location)
