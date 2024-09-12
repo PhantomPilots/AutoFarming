@@ -307,7 +307,7 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    collect_data(CardTypeCollector, filename="card_types_data")
+    # collect_data(CardTypeCollector, filename="card_types_data")
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
@@ -315,7 +315,7 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    # collect_data(GroundDataCollector, filename="ground_data")
+    collect_data(GroundDataCollector, filename="ground_data")
 
 
 if __name__ == "__main__":
