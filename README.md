@@ -79,7 +79,7 @@ Requirements for it to work properly:
 1. Have the "auto-farming" option of free stages set to 'infinite' with auto-renewal of stamina pots.
 2. Have the desired farming team set.
 3. Ensure the salvaging options on tavern-Diane are the desired ones.
-4. Start from the tavern to avoid code malfunctions, but you should be able to start from anywhere.
+4. Start the script already from within an equipment farming free stage.
 
 ## Hraesvelgr farming script
 
