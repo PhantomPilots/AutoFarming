@@ -13,6 +13,7 @@ from utilities.utilities import (
     determine_relative_coordinates,
     display_image,
     find,
+    get_card_slot_region_image,
     get_hand_cards,
     is_amplify_card,
     is_Meli_card,
@@ -27,9 +28,15 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    screenshot_testing(vision_image=vio.phase_3, threshold=0.7)
+    # screenshot_testing(vision_image=vio.phase_3, threshold=0.7)
 
     DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
+
+    # determine_relative_coordinates(screenshot)
+
+    # Get card slots image
+    card_slots = get_card_slot_region_image(screenshot)
+    display_image(card_slots)
 
     # # Test the 'move to location'
     # move_to_location(Coordinates.get_coordinates("fifth_slot"), window_location)
@@ -38,8 +45,6 @@ def development():
     # screenshot_testing(vision_image=vio.card_slot, threshold=0.9)
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
-
-    # determine_relative_coordinates(screenshot)
 
     # hand_image = capture_hand_image()
     # empty_slots = count_empty_card_slots(screenshot)
