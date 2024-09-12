@@ -525,21 +525,21 @@ class Floor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
-        # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
-        if IBattleStrategy.card_turn == 0 and not np.any(
-            [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
-        ):
-            print("We don't have Meli's ult, let's force merging a Meli card")
-            meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
-            # Try to make a merge
-            for idx_i, i in enumerate(meli_cards[:-1]):
-                for j in meli_cards[idx_i + 1 :]:
-                    if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
-                        return [i, j]
+        # # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
+        # if IBattleStrategy.card_turn == 0 and not np.any(
+        #     [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
+        # ):
+        #     print("We don't have Meli's ult, let's force merging a Meli card")
+        #     meli_cards = np.where([is_Meli_card(card) for card in hand_of_cards])[0]
+        #     # Try to make a merge
+        #     for idx_i, i in enumerate(meli_cards[:-1]):
+        #         for j in meli_cards[idx_i + 1 :]:
+        #             if determine_card_merge(hand_of_cards[i], hand_of_cards[j]):
+        #                 return [i, j]
 
-                # # If we're here, means we couldn't make a Meli merge. Just play a Meli card
-                # if len(meli_cards):
-                #     return meli_cards[0]
+        #         # # If we're here, means we couldn't make a Meli merge. Just play a Meli card
+        #         # if len(meli_cards):
+        #         #     return meli_cards[0]
 
         # STANCE
         if (stance_idx := play_stance_card(card_types, picked_card_types, card_ranks=card_ranks)) is not None:
