@@ -27,6 +27,7 @@ class States(Enum):
     SALVAGING = 3
     SALVAGING_DONE = 4
     GOING_TO_TAVERN = 5
+    DAILY_RESET = 6
 
 
 class EquipmentFarmer(IFarmer):
@@ -61,7 +62,30 @@ class EquipmentFarmer(IFarmer):
             self.current_state = States.GOING_TO_TAVERN
             return
 
+        # We may have found a daily reset
+        find_and_click(vio.bird_okay, screenshot, window_location)
+        if find(vio.new_tasks_unlocked, screenshot):
+            print("Daily reset!")
+            press_key("esc")
+            print("Moving to DAILY_RESET!")
+            self.current_state = States.DAILY_RESET
+            return
+
         sleep(2)  # In the FARMING state we can have a much lower frequency polling
+
+    def daily_reset_state(self):
+        screenshot, window_location = capture_window()
+
+        if find(vio.new_tasks_unlocked, screenshot):
+            # In case it didn't go away in the previous state
+            press_key("esc")
+
+        # Press the SKIP button from the daily reset
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
+
+        if find(vio.tavern, screenshot):
+            print("Moving to GOING_TO_TAVERN")
+            self.current_state = States.GOING_TO_TAVERN
 
     def going_to_tavern(self):
         screenshot, window_location = capture_window()
@@ -222,6 +246,9 @@ class EquipmentFarmer(IFarmer):
 
             elif self.current_state == States.SALVAGING_DONE:
                 self.salvaging_done_state()
+
+            elif self.current_state == States.DAILY_RESET:
+                self.daily_reset_state()
 
             # Run loop at 1 Hz, except when in the farming state
             sleep(1)

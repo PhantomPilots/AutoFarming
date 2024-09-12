@@ -51,6 +51,7 @@ card_slot = Vision("card_slot.png")
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
 salvaging_results = Vision("equipment\\salvaging_results.png")
+new_tasks_unlocked = Vision("equipment\\new_tasks_unlocked.png")
 
 # For Bird farming
 demonic_beast = Vision("demonic_beasts\\demonic_beast.png")
