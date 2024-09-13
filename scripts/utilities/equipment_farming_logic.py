@@ -52,9 +52,6 @@ class EquipmentFarmer(IFarmer):
         """Polling checking to see if farming has ended"""
         screenshot, window_location = capture_window()
 
-        # TODO: Add the 'discrepancy with the change and time data'
-        # find_and_click(vio.time_date_change, screenshot, window_location, threshold=0.7)
-
         if find_and_click(vio.auto_repeat_ended, screenshot, window_location):
             # Farming ended!
             press_key("esc")
@@ -83,8 +80,8 @@ class EquipmentFarmer(IFarmer):
         # Press the SKIP button from the daily reset
         find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
-        if find(vio.tavern, screenshot):
-            print("Moving to GOING_TO_TAVERN")
+        if find(vio.main_menu, screenshot):
+            print("Moving to GOING_TO_TAVERN from DAILY_RESET")
             self.current_state = States.GOING_TO_TAVERN
 
     def going_to_tavern(self):
