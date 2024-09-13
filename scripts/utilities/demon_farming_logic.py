@@ -101,6 +101,8 @@ class DemonFarmer(IFarmer):
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
             time.sleep(self.sleep_before_accept)
+            # Need to re-check if 'accept invitation' is there
+            screenshot, window_location = capture_window()
             click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.6, sleep_time=4)
             return
 
