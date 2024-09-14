@@ -51,6 +51,7 @@ class TemplateMatchingStrategy:
             detected_rectangles.extend((rectangle, rectangle))
 
         # Use groupRectangles to refine results
+        # TODO: Also keep those rectangles that have no overlapping as well?
         grouped_rectangles, confidence_weights = cv2.groupRectangles(detected_rectangles, groupThreshold=1, eps=0.5)
 
         return grouped_rectangles, confidence_weights

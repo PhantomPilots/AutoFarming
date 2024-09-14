@@ -77,6 +77,9 @@ class EquipmentFarmer(IFarmer):
             # In case it didn't go away in the previous state
             press_key("esc")
 
+        # We need to go to the tavern
+        find_and_click(vio.tavern, screenshot, window_location)
+
         # Press the SKIP button from the daily reset
         find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
