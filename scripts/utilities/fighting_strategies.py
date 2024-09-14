@@ -583,24 +583,8 @@ class Floor4BattleStrategy(IBattleStrategy):
             return recovery_ids[-1]
 
         # Go HAM on the fricking bird
-        # TODO: Ensure that the better Thor card is picked last, in case we need to get the Hammer buff first
-        ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
-        if len(ham_card_ids):
-            thor_thunder_ids = np.where([find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards])[0]
-            thor_ids = np.where(
-                [is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards]
-            )[0]
-            # Re-order the thor IDs by combining the two and setting the thunderstorm cards last
-            thor_ids = np.concatenate((thor_thunder_ids, thor_ids))
-
-            non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
-            # Re-order the array of HAM IDs, with the thor_ids in the last position
-            ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
-            return (
-                thor_ids[0]  # So we use the thunderstorm if we have it
-                if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
-                else ham_card_ids[-1]
-            )
+        if len(ham_card_ids := np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]):
+            return self._pick_HAM_cards(hand_of_cards, ham_card_ids)
 
         # If we don't have hard-hitting cards, run the default strategy
         next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -610,6 +594,25 @@ class Floor4BattleStrategy(IBattleStrategy):
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
         return next_idx
+
+    # TODO Rename this here and in `get_next_card_index_phase4`
+    def _pick_HAM_cards(self, hand_of_cards: list[Card], ham_card_ids: np.ndarray) -> int | None:
+        """Pick HAM cards to play. Ensure that a thunderstorm Thor card is picked last, if possible"""
+        thor_thunder_ids = np.where([find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards])[0]
+        thor_ids = np.where(
+            [is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards]
+        )[0]
+        # Re-order the thor IDs by combining the two and setting the thunderstorm cards last
+        thor_ids = np.concatenate((thor_thunder_ids, thor_ids))
+
+        non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
+        # Re-order the array of HAM IDs, with the thor_ids in the last position
+        ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
+        return (
+            thor_ids[0]  # So we use the thunderstorm if we have it
+            if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
+            else ham_card_ids[-1]
+        )
 
     def _pick_amplify_cards(
         self, screenshot: np.ndarray, hand_of_cards: list[Card], picked_cards: list[Card]
