@@ -84,8 +84,8 @@ class EquipmentFarmer(IFarmer):
         find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
         if find(vio.main_menu, screenshot):
-            print("Moving to GOING_TO_TAVERN from DAILY_RESET")
-            self.current_state = States.GOING_TO_TAVERN
+            print("Moving to TAVERN_TO_SALVAGE from DAILY_RESET")
+            self.current_state = States.TAVERN_TO_SALVAGE
 
     def going_to_tavern(self):
         screenshot, window_location = capture_window()
