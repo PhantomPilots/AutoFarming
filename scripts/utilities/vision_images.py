@@ -91,6 +91,7 @@ block_skill_debuf = Vision("demonic_beasts\\block_skill_debuff.png")
 evasion = Vision("demonic_beasts\\evasion.png")
 stance_active = Vision("demonic_beasts\\stance_active.png")
 immortality_buff = Vision("demonic_beasts\\immortality.png")
+thor_thunderstorm = Vision("demonic_beasts\\thor_thunderstorm.png")
 
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")

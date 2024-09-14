@@ -190,11 +190,6 @@ class Floor4BattleStrategy(IBattleStrategy):
         """The logic for phase 1... use the existing smarter strategy"""
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
 
-        # The first thing of all, remove the shield from floor 2, in case it comes from a previous run!
-        if Floor4BattleStrategy.with_shield:
-            logger.info("We have a shield ON from a previous run, disabling it!")
-            Floor4BattleStrategy.with_shield = False
-
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
@@ -447,9 +442,13 @@ class Floor4BattleStrategy(IBattleStrategy):
         NOTE: For these phase, we need to distinguis between Thor/amplify cards and the rest. Using simple template matching
         """
 
+        # The first thing of all, remove the shield from floor 2, in case it comes from a previous run!
+        if Floor4BattleStrategy.with_shield:
+            logger.info("We have a shield ON from a previous run, disabling it!")
+            Floor4BattleStrategy.with_shield = False
+
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
         card_types = np.array([card.card_type.value for card in hand_of_cards])
-        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # First of all, we may need to cure the block skill effect!
@@ -497,8 +496,6 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # ATTACK CARDS
         attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
-        # # Lets sort the attack cards based on their rank
-        # attack_ids = sorted(attack_ids, key=lambda idx: card_ranks[idx], reverse=True)
         if len(attack_ids):
             return attack_ids[-1]
 
@@ -561,7 +558,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                     return recovery_ids[-1]
 
                 # All Meli's AOE first
-                if len(meli_aoes := np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])):
+                if len(meli_aoes := np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])[0]):
                     return meli_aoes[-1]
 
                 # ULTS
@@ -586,15 +583,21 @@ class Floor4BattleStrategy(IBattleStrategy):
             return recovery_ids[-1]
 
         # Go HAM on the fricking bird
-        # Ensure that one Thor card is picked last... but most of them first too!
+        # TODO: Ensure that the better Thor card is picked last, in case we need to get the Hammer buff first
         ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
         if len(ham_card_ids):
-            thor_ids = np.where([is_Thor_card(card) for card in hand_of_cards])[0]
+            thor_thunder_ids = np.where([find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards])[0]
+            thor_ids = np.where(
+                [is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards]
+            )[0]
+            # Re-order the thor IDs by combining the two and setting the thunderstorm cards last
+            thor_ids = np.concatenate((thor_thunder_ids, thor_ids))
+
             non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
             # Re-order the array of HAM IDs, with the thor_ids in the last position
             ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
             return (
-                thor_ids[-1]
+                thor_ids[0]  # So we use the thunderstorm if we have it
                 if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
                 else ham_card_ids[-1]
             )
