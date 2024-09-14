@@ -560,6 +560,10 @@ class Floor4BattleStrategy(IBattleStrategy):
                 if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
                     return recovery_ids[-1]
 
+                # All Meli's AOE first
+                if len(meli_aoes := np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])):
+                    return meli_aoes[-1]
+
                 # ULTS
                 elif len(ult_ids := np.where(card_types == CardTypes.ULTIMATE.value)[0]):
                     return ult_ids[-1]
