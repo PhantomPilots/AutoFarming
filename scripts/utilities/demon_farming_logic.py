@@ -73,6 +73,10 @@ class DemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
             return
 
+        # We may be in the 'daily reset' state!
+        if click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6):
+            return
+
         # Click OK if we see it (?)
         click_and_sleep(vio.demon_ok, screenshot, window_location)
         click_and_sleep(vio.demon_defeat_ok, screenshot, window_location)

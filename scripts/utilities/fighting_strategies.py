@@ -595,7 +595,6 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         return next_idx
 
-    # TODO Rename this here and in `get_next_card_index_phase4`
     def _pick_HAM_cards(self, hand_of_cards: list[Card], ham_card_ids: np.ndarray) -> int | None:
         """Pick HAM cards to play. Ensure that a thunderstorm Thor card is picked last, if possible"""
         thor_thunder_ids = np.where([find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards])[0]
