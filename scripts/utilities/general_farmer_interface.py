@@ -9,6 +9,7 @@ class IFarmer:
     # For type helping
     current_state: int
     fighter: IFighter
+    stamina_pots: int = 0
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""

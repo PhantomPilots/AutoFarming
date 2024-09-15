@@ -53,7 +53,8 @@ class Floor4Farmer(IFarmer):
         self.fight_thread = None
 
     def exit_message(self):
-        print(f"We've beat Floor 4 of Bird {Floor4Farmer.success_count} out of {Floor4Farmer.total_count} times.")
+        print(f"We beat Floor 4 of Bird {Floor4Farmer.success_count} out of {Floor4Farmer.total_count} times.")
+        print(f"We used {IFarmer.stamina_pots} stamina pots.")
         # Log the defeats
         if len(Floor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
@@ -88,6 +89,7 @@ class Floor4Farmer(IFarmer):
 
         # Restore stamina if we need to
         if find_and_click(vio.restore_stamina, screenshot, window_location):
+            IFarmer.stamina_pots += 1
             return
 
         # Try to start the fight

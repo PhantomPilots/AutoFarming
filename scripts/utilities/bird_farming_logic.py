@@ -55,6 +55,7 @@ class BirdFarmer(IFarmer):
 
     def exit_message(self):
         logger.info(f"We beat {BirdFarmer.success_count}/{BirdFarmer.total_count} birds.")
+        logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
@@ -142,6 +143,7 @@ class BirdFarmer(IFarmer):
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             # Return so that we don't try to click START right after
+            IFarmer.stamina_pots += 1
             return
 
         # Click on start
