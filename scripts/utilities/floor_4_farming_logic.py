@@ -53,8 +53,8 @@ class Floor4Farmer(IFarmer):
         self.fight_thread = None
 
     def exit_message(self):
+        super().exit_message()
         print(f"We beat Floor 4 of Bird {Floor4Farmer.success_count} out of {Floor4Farmer.total_count} times.")
-        print(f"We used {IFarmer.stamina_pots} stamina pots.")
         # Log the defeats
         if len(Floor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()

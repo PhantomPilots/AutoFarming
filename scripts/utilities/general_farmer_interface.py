@@ -19,6 +19,7 @@ class IFarmer:
 
     def exit_message(self):
         """Final message to display on the screen when CTRL+C happens"""
+        print(f"We used {IFarmer.stamina_pots} stamina pots.")
 
     def fight_complete_callback(self, **kwargs):
         """Callback used for the fighter to notify the farmer when the fight has ended.

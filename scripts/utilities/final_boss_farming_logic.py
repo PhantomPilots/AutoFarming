@@ -41,6 +41,7 @@ class FinalBossFarmer(IFarmer):
         self.difficulty = kwargs["difficulty"]
 
     def exit_message(self):
+        super().exit_message()
         print(f"We beat the Final Boss {self.num_fights} times.")
 
     def going_to_fb_state(self):
@@ -110,7 +111,9 @@ class FinalBossFarmer(IFarmer):
             return
 
         # We may need to restore stamina
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            IFarmer.stamina_pots += 1
+            return
 
         # Click on START to begin the fight
         find_and_click(vio.startbutton, screenshot, window_location)
