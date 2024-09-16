@@ -83,7 +83,7 @@ class BirdFarmer(IFarmer):
             self.current_state = States.SET_PARTY
             return
 
-        elif find(vio.available_floor, screenshot):
+        elif find(vio.available_floor, screenshot, threshold=0.8):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
