@@ -179,6 +179,10 @@ class EquipmentFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
+        # We may need to restore stamina
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            return
+
         # If we're back in the tavern, click on the battle menu
         find_and_click(
             vio.main_menu,
