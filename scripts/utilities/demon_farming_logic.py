@@ -200,17 +200,18 @@ class DemonRouletteFarmer(DemonFarmer):
         self,
         battle_strategy: IBattleStrategy = None,
         starting_state=States.GOING_TO_DEMONS,
-        demon_to_farm: Vision = vio.og_demon,
+        demons_to_farm: list[Vision] = [vio.og_demon],
         time_to_sleep=9.4,
         time_between_demons=2,  # In hours
     ):
-        super().__init__(battle_strategy, starting_state, demon_to_farm, time_to_sleep)
+        # Initialize the DemonFarmer with the first demon of the list
+        super().__init__(battle_strategy, starting_state, demons_to_farm[0], time_to_sleep)
 
         # Every how many hours to switch between demons
         self.time_between_demons = time_between_demons
 
         # Roulette of demons
-        self.demon_roulette = [vio.red_demon, vio.gray_demon, vio.crimson_demon]
+        self.demon_roulette = demons_to_farm
         self.start_time = time.time()
 
     def rotate_demon(self):
