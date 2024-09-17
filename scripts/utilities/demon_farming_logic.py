@@ -200,10 +200,13 @@ class DemonRouletteFarmer(DemonFarmer):
         self,
         battle_strategy: IBattleStrategy = None,
         starting_state=States.GOING_TO_DEMONS,
-        demons_to_farm: list[Vision] = [vio.og_demon],
+        demons_to_farm: list[Vision] = None,
         time_to_sleep=9.4,
-        time_between_demons=2,  # In hours
+        time_between_demons=2,
     ):
+        if demons_to_farm is None:
+            demons_to_farm = [vio.og_demon]
+
         # Initialize the DemonFarmer with the first demon of the list
         super().__init__(battle_strategy, starting_state, demons_to_farm[0], time_to_sleep)
 
