@@ -590,6 +590,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
         if find(vio.meli_ult, hand_of_cards[next_idx].card_image):
             # Disable the meli ult for this round
+            print("We CANNOT use Meli's ultimate now!")
             hand_of_cards[next_idx].card_type = CardTypes.DISABLED
             next_idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
