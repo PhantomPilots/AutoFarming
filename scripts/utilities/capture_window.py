@@ -15,6 +15,8 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     h = window_rect[3] - window_rect[1]
     window_location = [window_rect[0], window_rect[1]]
 
+    print("Screen before reshaping:", w, h)
+
     # Remove border pixels -- TODO: Necessary?
     border_pixels = 2
     w = w - (border_pixels * 2)
