@@ -477,9 +477,14 @@ class Floor4BattleStrategy(IBattleStrategy):
             return stance_idx
 
         # AMPLIFY CARDS -- Use them if the bird still has immortality buffs
-        if (amplify_id := self._pick_amplify_cards(screenshot, hand_of_cards, picked_cards)) is not None:
+        if (amplify_id := self._pick_amplify_cards(screenshot, hand_of_cards, picked_cards)) not in [-1, None]:
             print("Picking amplify card at ID:", amplify_id)
             return amplify_id
+        elif amplify_id == -1:
+            # We need to pick an attack card, since we don't have immortalities left!
+            attack_ids = np.where(card_types == CardTypes.ATTACK.value)[0]
+            if len(attack_ids):
+                return attack_ids[-1]
 
         # CARD MERGE -- If there's a card that generates a merge, pick it!
         for i in range(1, len(hand_of_cards) - 1):
@@ -628,6 +633,7 @@ class Floor4BattleStrategy(IBattleStrategy):
             return amplify_ids[-1]
         elif num_immortalities - picked_amplify_cards <= 0:
             print("No need to select more amplify cards!")
+            return -1
 
         return None
 
