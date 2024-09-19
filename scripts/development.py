@@ -28,15 +28,14 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # screenshot_testing(vision_image=vio.phase_3, threshold=0.7)
-
-    DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
-
+    # screenshot_testing(vision_image=vio.auto_off, threshold=0.7)
     # determine_relative_coordinates(screenshot)
 
-    # Get card slots image
-    card_slots = get_card_slot_region_image(screenshot)
-    display_image(card_slots)
+    # DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
+
+    # # Get card slots image
+    # card_slots = get_card_slot_region_image(screenshot)
+    # display_image(card_slots)
 
     # # Test the 'move to location'
     # move_to_location(Coordinates.get_coordinates("fifth_slot"), window_location)
@@ -46,7 +45,8 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    # hand_image = capture_hand_image()
+    hand_image = capture_hand_image()
+    display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
