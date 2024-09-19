@@ -25,7 +25,7 @@ class Coordinates:
         "ok_after_salvaging": (281, 893),
         "salvage_equipment": (60, 525),
         # For final boss farming
-        "start_drag": (280, 810),
+        "start_drag": (280, 914),
         "end_drag": (280, 550),
         "showdown": (280, 870),
         # Dogs farming

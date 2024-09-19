@@ -146,10 +146,10 @@ class FinalBossFarmer(IFarmer):
         find_and_click(vio.again, screenshot, window_location)
 
         # Skip to the fight
-        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
 
         # Ensure AUTO is on
-        find_and_click(vio.auto_off, screenshot, window_location, threshold=0.9)
+        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.9)
 
         if find(vio.ok_bird_defeat, screenshot):
             print("Oh no, we have lost :( Retrying")

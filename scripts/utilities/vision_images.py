@@ -120,6 +120,7 @@ boss_results = Vision("final_boss\\boss_results.png")
 boss_mission = Vision("final_boss\\boss_mission.png")
 episode_clear = Vision("final_boss\\episode_clear.png")
 showdown = Vision("final_boss\\showdown.png")
+fb_aut_off = Vision("final_boss\\auto_off.png")
 
 
 # For demon farming
