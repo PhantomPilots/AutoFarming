@@ -23,9 +23,11 @@ Install Python 3.10 or higher from the Microsoft Store:<br>
 
 1. After you have installed Git from above, open a folder where you want to download the code.
 2. While pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
-3. Once the terminal is open, simply right-click inside to paste the command `git clone https://github.com/PhantomPilots/AutoFarming.git`, and press `ENTER`.
+3. Once the terminal is open, simply copy the following command and right-click inside the terminal to paste it:<br> 
+`git clone https://github.com/PhantomPilots/AutoFarming.git`<br>
+and press `ENTER`.
 This downloads the code into a folder named _AutoFarming_.
-4. Now we need to install some additional Python modules for the scripts to work. To do so, follow these steps:
+1. Now we need to install some additional Python modules for the scripts to work. To do so, follow these steps:
    1. Open the _AutoFarming_ folder.
    2. Like before, while pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
    3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt` and press `ENTER`.
