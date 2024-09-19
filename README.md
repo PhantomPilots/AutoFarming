@@ -10,14 +10,24 @@ Also, use this code at your own risk.
 
 ## Installation
 
-Follow these steps:
+#### Git
 
-1. Download the code: Either by downloading manually (at the top, click on `Code->Download ZIP`), or by using GIT (recommended) in a PowerShell terminal: `git clone https://github.com/PhantomPilots/AutoFarming.git`.
-2. Install Python 3.10 or higher from the Microsoft Store:<br>
+To keep up-to-date with any updates, you'll need to install [Git](https://gitforwindows.org/) for Windows. Simply download the executable and install it.
+
+#### Python 
+
+Install Python 3.10 or higher from the Microsoft Store:<br>
 <img src="readme_images/python311.png" alt="IDLE app" width="200"/><br>
-3. After Python is installed, we need to install some additional modules for the scripts to work. To do so, follow these steps:
-   1. Open the AutoFarming folder.
-   2. While pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
+
+#### Download the code
+
+1. After you have installed Git from above, open a folder where you want to download the code.
+2. While pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
+3. Once the terminal is open, simply right-click inside to paste the command `git clone https://github.com/PhantomPilots/AutoFarming.git`, and press `ENTER`.
+This downloads the code into a folder named _AutoFarming_.
+4. Now we need to install some additional Python modules for the scripts to work. To do so, follow these steps:
+   1. Open the _AutoFarming_ folder.
+   2. Like before, while pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
    3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt` and press `ENTER`.
 
 #### Sizer
@@ -33,14 +43,11 @@ Right-click on it and select `Configure sizer...`.
 <img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
 **This needs to be done ever time you want to run a script**.
 
-#### Git
-
-To keep up-to-date with any updates, you'll need to install [Git](https://gitforwindows.org/) for Windows. Simply download the executable and install it.
 
 ### Code updates
 
 Updating the code is done using Git. The process is simple:
-1. Similarly to Installation point 3., open a PowerShell window within the AutoFarming folder.
+1. Similarly to Installation point 4.2., open a PowerShell window within the AutoFarming folder.
 2. Type in `git pull` and press `ENTER`.
    * If when running `git pull` you get an error/warning saying the code cannot be updated, first run `git stash` and then `git pull` again. You should now see the code updated.
 
