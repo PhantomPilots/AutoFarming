@@ -84,6 +84,7 @@ class IFighter(abc.ABC):
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
             slot_index = self.available_card_slots - empty_card_slots
+            print("Selecting card for slot index", slot_index)
             # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
             try:
                 index_to_play = selected_cards[1][slot_index]
