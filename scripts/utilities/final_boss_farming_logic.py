@@ -140,7 +140,9 @@ class FinalBossFarmer(IFarmer):
             print(f"FB cleared! {self.num_fights} times so far.")
 
         # We may need to restore stamina
-        find_and_click(vio.restore_stamina, screenshot, window_location)
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            IFarmer.stamina_pots += 1
+            return
 
         # Click 'again'
         find_and_click(vio.again, screenshot, window_location)
