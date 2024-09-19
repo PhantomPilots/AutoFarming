@@ -93,7 +93,7 @@ class BirdFighter(IFighter):
         return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards])
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.6):
+    def count_empty_card_slots(screenshot, threshold=0.8):
         """Ideally used within a fight, count how many empty card slots we have available"""
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
         # The second one is in case we cannot play ANY card. Then, the empty card slots look different
