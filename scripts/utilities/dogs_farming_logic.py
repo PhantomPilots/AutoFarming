@@ -148,7 +148,7 @@ class DogsFarmer(IFarmer):
             print("Floor complete! Going back to the original state")
             if floor_defeated == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
-                self.current_state == States.RESETTING_DOGS
+                self.current_state = States.RESETTING_DOGS
                 self.num_floor_3_victories += 1
                 logger.info(f"We beat floor 3 {self.num_floor_3_victories} times!")
                 return
