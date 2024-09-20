@@ -75,6 +75,7 @@ class DemonFarmer(IFarmer):
 
         # We may be in the 'daily reset' state!
         if click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6):
+            logger.info("We entered the daily reset state!")
             return
 
         # Click OK if we see it (?)
