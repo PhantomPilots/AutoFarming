@@ -10,6 +10,7 @@ from utilities.coordinates import Coordinates
 from utilities.dogs_fighter import DogsFighter, IFighter
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -17,6 +18,8 @@ from utilities.utilities import (
     find_and_click,
     find_floor_coordinates,
 )
+
+logger = LoggerWrapper("DogsLogger", log_file="dogs_logger.log")
 
 
 class States(Enum):
@@ -47,9 +50,10 @@ class DogsFarmer(IFarmer):
 
         # Keep track of how many times we've defeated floor 3
         self.num_floor_3_victories = 0
+        self.num_losses = 0
 
     def exit_message(self):
-        print(f"We beat floor 3 of dogs {self.num_floor_3_victories} times.")
+        logger.info(f"We beat floor 3 of dogs {self.num_floor_3_victories} times and lost {self.num_losses}.")
 
     def going_to_dogs_state(self):
         """This should be the original state. Let's go to the dogs menu"""
@@ -84,7 +88,7 @@ class DogsFarmer(IFarmer):
         find_and_click(vio.empty_party, screenshot, window_location)
 
         # Save the party
-        find_and_click(vio.save_party, screenshot, window_location, threshold=0.95)
+        find_and_click(vio.save_party, screenshot, window_location, threshold=0.8)
 
     def proceed_to_floor_state(self):
         """Start the floor fight!"""
@@ -146,6 +150,7 @@ class DogsFarmer(IFarmer):
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state == States.RESETTING_DOGS
                 self.num_floor_3_victories += 1
+                logger.info(f"We beat floor 3 {self.num_floor_3_victories} times!")
                 return
             else:
                 # Go straight to the original states
@@ -155,6 +160,8 @@ class DogsFarmer(IFarmer):
         else:
             print("The dogs fighter told me we lost... :/")
             print("Resetting the team in case the saved team has very little health")
+            self.num_losses += 1
+            logger.info(f"We lost... a total of {self.num_losses} times so far.")
             self.current_state = States.RESETTING_DOGS
 
     def resetting_dogs_state(self):
