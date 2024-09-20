@@ -97,7 +97,7 @@ class IFighter(abc.ABC):
             i = 0
             while isinstance(index_to_play, Integral) and is_ground_card(hand_cards[index_to_play]):
                 logger.debug(
-                    f"Hand is:\n{[card.card_type.value for card in hand_cards]}\nIndex to play is: {index_to_play}"
+                    f"Hand is:\n{[card.card_type.name for card in hand_cards]}\nIndex to play is: {index_to_play}"
                 )
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
