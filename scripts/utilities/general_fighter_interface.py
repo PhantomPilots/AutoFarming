@@ -96,7 +96,9 @@ class IFighter(abc.ABC):
             hand_cards = get_hand_cards()
             i = 0
             while isinstance(index_to_play, Integral) and is_ground_card(hand_cards[index_to_play]):
-                logger.debug(f"Hand is:\n{[card.card_type for card in hand_cards]}\nIndex to play is: {index_to_play}")
+                logger.debug(
+                    f"Hand is:\n{[card.card_type.value for card in hand_cards]}\nIndex to play is: {index_to_play}"
+                )
                 index_to_play += 1
                 index_to_play %= len(hand_cards)
                 logger.debug(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
@@ -160,6 +162,7 @@ class IFighter(abc.ABC):
         """
 
     @staticmethod
+    @abc.abstractmethod
     def count_empty_card_slots(screenshot, threshold=0.7):
         """Count how many card slots are there. Needs to be overriden, because it's very fight-specific!"""
 

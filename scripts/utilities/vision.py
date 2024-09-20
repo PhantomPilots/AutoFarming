@@ -29,7 +29,7 @@ class Vision:
             cprint(f"No image can be found for '{needle_basename}'", "yellow")
             return
 
-    def find(self, haystack_img, threshold=0.5) -> np.ndarray:
+    def find(self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED) -> np.ndarray:
         """Run the defined pattern matching strategy.
 
         Returns:
@@ -39,13 +39,15 @@ class Vision:
         if self.needle_img is None:
             return None
 
-        return self.matching_strategy.find(
-            haystack_img, self.needle_img, threshold=threshold, cv_method=cv2.TM_CCOEFF_NORMED
-        )
+        return self.matching_strategy.find(haystack_img, self.needle_img, threshold=threshold, cv_method=method)
 
-    def find_all_rectangles(self, haystack_img, threshold=0.5) -> tuple[np.ndarray, np.ndarray]:
+    def find_all_rectangles(
+        self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Find all the rectangles corresponding to the needle image."""
         if self.needle_img is None:
             return None
 
-        return self.matching_strategy.find_all_rectangles(haystack_img, self.needle_img, threshold=threshold)
+        return self.matching_strategy.find_all_rectangles(
+            haystack_img, self.needle_img, threshold=threshold, method=method
+        )

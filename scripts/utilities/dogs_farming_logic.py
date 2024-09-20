@@ -147,6 +147,7 @@ class DogsFarmer(IFarmer):
                 return
             else:
                 # Go straight to the original states
+                print("Moving to GOING_TO_DOGS")
                 self.current_state = States.GOING_TO_DOGS
 
         else:

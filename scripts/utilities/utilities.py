@@ -62,7 +62,7 @@ def draw_rectangles(
     return haystack_img
 
 
-def screenshot_testing(vision_image: Vision, threshold=0.7):
+def screenshot_testing(vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
     # screenshot, _ = get_unfocused_screenshot()
     screenshot, _ = capture_window()
@@ -70,7 +70,7 @@ def screenshot_testing(vision_image: Vision, threshold=0.7):
     # cv2.imshow("screenshot", screenshot)
 
     # rectangle = vision_image.find(screenshot, threshold=threshold)
-    rectangles, _ = vision_image.find_all_rectangles(screenshot, threshold=threshold)
+    rectangles, _ = vision_image.find_all_rectangles(screenshot, threshold=threshold, method=cv_method)
     if rectangles.size:
         new_image = draw_rectangles(screenshot, rectangles)
         cv2.imshow("Rectangles", new_image)
@@ -162,12 +162,12 @@ def move_to_location(point: np.ndarray | tuple, window_location: list[float]):
     time.sleep(0.1)
 
 
-def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7) -> bool:
+def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, method=cv2.TM_CCOEFF_NORMED) -> bool:
     """Simply return if a match is found"""
     if screenshot is None:
         return False
 
-    rectangle = vision_image.find(screenshot, threshold=threshold)
+    rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
     return bool(rectangle.size)
 
 

@@ -1,3 +1,6 @@
+import time
+
+import cv2
 import numpy as np
 import pyautogui
 import utilities.vision_images as vio
@@ -28,10 +31,13 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # screenshot_testing(vision_image=vio.auto_off, threshold=0.7)
+    # screenshot_testing(vision_image=vio.reset_demonic_beast, threshold=0.6, cv_method=cv2.TM_CCOEFF_NORMED)
     # determine_relative_coordinates(screenshot)
 
-    # DogsFighter.count_empty_card_slots(screenshot, threshold=0.7)
+    while True:
+        screenshot, _ = capture_window()
+        DogsFighter.count_empty_card_slots(screenshot, threshold=0.6, plot=True)
+        time.sleep(0.5)
 
     # # Get card slots image
     # card_slots = get_card_slot_region_image(screenshot)

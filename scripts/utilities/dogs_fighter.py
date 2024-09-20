@@ -14,6 +14,7 @@ from utilities.utilities import (
     draw_rectangles,
     find,
     find_and_click,
+    get_card_slot_region_image,
 )
 from utilities.vision import Vision
 
@@ -50,7 +51,7 @@ class DogsFighter(IFighter):
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
-        elif (available_card_slots := self.count_empty_card_slots(screenshot)) > 0:
+        elif (available_card_slots := self.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -60,24 +61,39 @@ class DogsFighter(IFighter):
             # self.count_empty_card_slots(screenshot, plot=True)
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.7, plot=False):
+    def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
         """Count how many empty card slots are there for DOGS"""
+        card_slot_image = get_card_slot_region_image(screenshot)
         rectangles = []
-        for i in range(1, 20):
+        for i in range(1, 25):
             vio_image: Vision = getattr(vio, f"empty_slot_{i}", None)
             if vio_image is not None and vio_image.needle_img is not None:
-                temp_rectangles, _ = vio_image.find_all_rectangles(screenshot, threshold=threshold)
+                temp_rectangles, _ = vio_image.find_all_rectangles(
+                    card_slot_image, threshold=threshold, method=cv2.TM_CCOEFF_NORMED
+                )
                 rectangles.extend(temp_rectangles)
                 rectangles.extend(temp_rectangles)
 
         # Group all rectangles
         grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
         if plot and len(grouped_rectangles):
-            # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
-            rectangles_fig = draw_rectangles(screenshot, grouped_rectangles)
             print(f"We have {len(grouped_rectangles)} empty slots.")
+            # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
+            translated_rectangles = np.array(
+                [
+                    [
+                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
+                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
+                        r[2],
+                        r[3],
+                    ]
+                    for r in grouped_rectangles
+                ]
+            )
+            rectangles_fig = draw_rectangles(screenshot, translated_rectangles)
             cv2.imshow("rectangles", rectangles_fig)
             cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
         return len(grouped_rectangles)
 
