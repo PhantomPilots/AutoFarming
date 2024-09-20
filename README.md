@@ -6,7 +6,7 @@ For now it's built for Windows only, but it will change in the future.
 **Disclaimer**: One downside of these scripts is that they cannot run in the background, i.e., you won't be able to use your PC while autofarming.
 Also, use this code at your own risk.
 
-**Disclaimer 2**: These scripts don't work on 4k monitors for reasons yet unknown.
+**Disclaimer 2**: These scripts may not work on 4k monitors for reasons yet unknown.
 
 ## Installation
 
@@ -127,9 +127,10 @@ The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Fl
 * Blue Megellda
 
 Requirements:
-1. Always start from within the bird screen already (where all floors are displayed).
-2. 13M+ box CC (preferably).
-3. Constellation 6 (preferably).
+1. **Important**: Place Diane on the rightmost position in the team.
+2. Always start from within the floor 4 bird fight already.
+3. 13M+ box CC (preferably).
+4. Constellation 6 (preferably).
 
 **Disclaimer**: The script fails most of the times due to RNG, even if the AI logic is sound (e.g., not getting enough silver cards on phase 2, or not enough amplify/Thor cards on phase 3). Additionally, you need to have a very strong account, probably **13M+ box CC**, and be on or close to **Constellation 6**.
 
