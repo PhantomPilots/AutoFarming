@@ -47,6 +47,7 @@ pause = Vision("pause.png")
 forfeit = Vision("forfeit.png")
 tavern_loading_screen = Vision("tavern_loading_screen.png")
 card_slot = Vision("card_slot.png")
+close = Vision("close.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
