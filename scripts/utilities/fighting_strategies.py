@@ -19,6 +19,7 @@ from utilities.utilities import (
     find,
     get_hand_cards,
     is_amplify_card,
+    is_ground_card,
     is_hard_hitting_card,
     is_Meli_card,
     is_Thor_card,
@@ -55,14 +56,21 @@ class IBattleStrategy(abc.ABC):
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
+            if isinstance(next_index, Integral):
+                # Ensure we don't pick a GROUND card
+                while is_ground_card(hand_of_cards[next_index]):
+                    print(f"We can't pick card with index {next_index}, it's GROUND.")
+                    next_index += 1
+                    next_index %= len(hand_of_cards)
+
+                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
+                picked_cards.append(hand_of_cards[next_index])
+
+            elif isinstance(next_index, (tuple, list)):
+                print(f"Moving cards: {next_index}")
 
             # Update the indices and cards lists
             card_indices.append(next_index)
-            if isinstance(next_index, Integral):
-                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-                picked_cards.append(hand_of_cards[next_index])
-            elif isinstance(next_index, (tuple, list)):
-                print(f"Moving cards: {next_index}")
 
             # Update the cards list
             hand_of_cards = self._update_hand_of_cards(hand_of_cards, [next_index])
