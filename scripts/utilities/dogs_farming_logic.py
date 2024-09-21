@@ -81,7 +81,7 @@ class DogsFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        if find(vio.ok_save_party, screenshot):
+        if find_and_click(vio.ok_save_party, screenshot, window_location):
             # We're ready to start fighting floor 1!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
