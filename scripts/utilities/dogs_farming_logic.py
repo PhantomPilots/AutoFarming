@@ -32,6 +32,10 @@ class States(Enum):
 
 class DogsFarmer(IFarmer):
 
+    # Keep track of how many times we've defeated floor 3
+    num_floor_3_victories = 0
+    num_losses = 0
+
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_DOGS):
 
         # Initialize the current state
@@ -48,12 +52,10 @@ class DogsFarmer(IFarmer):
         # Placeholder for the fight thread
         self.fight_thread = None
 
-        # Keep track of how many times we've defeated floor 3
-        self.num_floor_3_victories = 0
-        self.num_losses = 0
-
     def exit_message(self):
-        logger.info(f"We beat floor 3 of dogs {self.num_floor_3_victories} times and lost {self.num_losses}.")
+        logger.info(
+            f"We beat floor 3 of dogs {DogsFarmer.num_floor_3_victories} times and lost {DogsFarmer.num_losses}."
+        )
 
     def going_to_dogs_state(self):
         """This should be the original state. Let's go to the dogs menu"""
@@ -149,8 +151,8 @@ class DogsFarmer(IFarmer):
             if floor_defeated == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_DOGS
-                self.num_floor_3_victories += 1
-                logger.info(f"We beat floor 3 {self.num_floor_3_victories} times!")
+                DogsFarmer.num_floor_3_victories += 1
+                logger.info(f"We beat floor 3 {DogsFarmer.num_floor_3_victories} times!")
                 return
             else:
                 # Go straight to the original states
@@ -160,8 +162,8 @@ class DogsFarmer(IFarmer):
         else:
             print("The dogs fighter told me we lost... :/")
             print("Resetting the team in case the saved team has very little health")
-            self.num_losses += 1
-            logger.info(f"We lost... a total of {self.num_losses} times so far.")
+            DogsFarmer.num_losses += 1
+            logger.info(f"We lost... a total of {DogsFarmer.num_losses} times so far.")
             self.current_state = States.RESETTING_DOGS
 
     def resetting_dogs_state(self):
