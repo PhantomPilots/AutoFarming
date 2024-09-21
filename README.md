@@ -90,13 +90,24 @@ Requirements for it to work properly:
 3. Ensure the salvaging options on tavern-Diane are the desired ones.
 4. Start the script already from within an equipment farming free stage.
 
-## Hraesvelgr farming script
+## Hraesvelgr (Bird) farming script
 
 Now, this script is far more interesting for the majority of the community. It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
 
 Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
+
+## Skoll and Hati (Dogs) farming script
+
+Recommended team (in this order):
+1. UR Escanor
+2. LR Lostvayne with relic
+3. Freyr
+4. Thonar with relic, and True Awakened.
+
+Requirements:
+1. Start the script from within the Dogs floors screen.
 
 ## Final Boss farming script
 
@@ -144,7 +155,7 @@ Requirements:
 
 ## Shorter-term features
 - [X] Farmer for Floor 4 of Bird.
-- [ ] Farmer for floors 1-3 of Dogs.
+- [X] Farmer for floors 1-3 of Dogs.
 - [ ] Farmer for floors 1-3 of Snake.
 
 ## Longer-term features
