@@ -63,19 +63,18 @@ class DogsFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Go into the 'Dogs' section
-        find_and_click(vio.skollandhati, screenshot, window_location)
+        if find_and_click(vio.skollandhati, screenshot, window_location):
+            return
 
         if find(vio.empty_party, screenshot):
             # We have to set the party.
             print("Moving to state SET_PARTY")
             self.current_state = States.SET_PARTY
-            return
 
         elif find(vio.available_floor, screenshot):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
-            return
 
     def set_party_state(self):
 
