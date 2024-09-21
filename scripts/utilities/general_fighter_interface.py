@@ -92,23 +92,6 @@ class IFighter(abc.ABC):
                 print("slot index:", slot_index, "len indices:", len(selected_cards[1]))
                 raise e
 
-            # # Ensure the card we want to play is NOT ground (to avoid being stuck)
-            # hand_cards = get_hand_cards()
-            # i = 0
-            # while isinstance(index_to_play, Integral) and is_ground_card(hand_cards[index_to_play]):
-            #     logger.debug(
-            #         f"Hand is:\n{[card.card_type.name for card in hand_cards]}\nIndex to play is: {index_to_play}"
-            #     )
-            #     index_to_play += 1
-            #     index_to_play %= len(hand_cards)
-            #     logger.debug(f"We cannot play a ground card! Changing index to {index_to_play}, i: {i}")
-            #     # hand_card_image = capture_hand_image()
-            #     # display_image(hand_card_image)
-            #     i += 1
-            #     if i == 8:
-            #         logger.debug("THE WHOLE HAND IS DISABLED!")
-            #         raise RuntimeError("The whole hand is disabled!")
-
             self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
 
         elif empty_card_slots == 0:

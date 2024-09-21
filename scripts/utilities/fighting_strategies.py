@@ -48,7 +48,6 @@ class IBattleStrategy(abc.ABC):
         picked_cards = []
 
         # Extract how many cards we have to play
-        screenshot, _ = capture_window()
         IBattleStrategy.cards_to_play = cards_to_play
 
         # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
