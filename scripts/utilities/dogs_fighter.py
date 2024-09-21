@@ -42,14 +42,14 @@ class DogsFighter(IFighter):
         # To skip quickly to the rewards when the fight is done
         find_and_click(vio.creature_destroyed, screenshot, window_location)
 
-        if find(vio.finished_fight_ok, screenshot):
-            # Fight is complete
-            self.current_state = FightingStates.FIGHTING_COMPLETE
-
-        elif find(vio.defeat, screenshot):
+        if find(vio.defeat, screenshot):
             # I may have lost though...
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
+
+        elif find(vio.finished_fight_ok, screenshot):
+            # Fight is complete
+            self.current_state = FightingStates.FIGHTING_COMPLETE
 
         elif (available_card_slots := self.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
