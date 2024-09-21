@@ -125,6 +125,9 @@ class BirdFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
+        # In case we didn't properly click it before
+        find_and_click(vio.ok_save_party, screenshot, window_location)
+
         # First double-check that floor 3 is not cleared
         if find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
             vio.floor_3_cleard_2_bird, screenshot, threshold=0.8

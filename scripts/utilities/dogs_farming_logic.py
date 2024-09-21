@@ -81,7 +81,7 @@ class DogsFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        if find_and_click(vio.ok_save_party, screenshot, window_location):
+        if find(vio.ok_save_party, screenshot):
             # We're ready to start fighting floor 1!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
@@ -98,13 +98,8 @@ class DogsFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        # # First double-check that floor 3 is not cleared
-        # if find(vio.floor_3_cleard_dogs, screenshot, threshold=0.8) or find(
-        #     vio.floor_3_cleard_2_dogs, screenshot, threshold=0.9
-        # ):
-        #     print("Floor 3 is cleared, we need to reset the dogs!")
-        #     self.current_state = States.RESETTING_DOGS
-        #     return
+        # In case we didn't properly click it
+        find_and_click(vio.ok_save_party, screenshot, window_location)
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
         if floor_coordinates := find_floor_coordinates(screenshot, window_location):
