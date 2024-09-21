@@ -54,7 +54,7 @@ class DogsFarmer(IFarmer):
 
     def exit_message(self):
         logger.info(
-            f"We beat floor 3 of dogs {DogsFarmer.num_floor_3_victories} times and lost {DogsFarmer.num_losses}."
+            f"We beat at least {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times."
         )
         logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
@@ -150,18 +150,20 @@ class DogsFarmer(IFarmer):
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_DOGS
                 DogsFarmer.num_floor_3_victories += 1
-                logger.info(f"We beat floor 3 {DogsFarmer.num_floor_3_victories} times!")
+                print(f"We beat {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times")
                 return
-            else:
-                # Go straight to the original states
-                print("Moving to GOING_TO_DOGS")
-                self.current_state = States.GOING_TO_DOGS
+
+            # Go straight to the original states
+            print("Moving to GOING_TO_DOGS")
+            self.current_state = States.GOING_TO_DOGS
 
         else:
             print("The dogs fighter told me we lost... :/")
             print("Resetting the team in case the saved team has very little health")
             DogsFarmer.num_losses += 1
-            logger.info(f"We lost... a total of {DogsFarmer.num_losses} times so far.")
+            print(
+                f"We lost... We beat {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times."
+            )
             self.current_state = States.RESETTING_DOGS
 
     def resetting_dogs_state(self):
