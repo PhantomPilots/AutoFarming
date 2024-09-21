@@ -26,7 +26,7 @@ Recommended team (in this order):
 1. UR Escanor
 2. LR Lostvayne with relic
 3. Freyr
-4. Thonar with relic, and True Awakened.
+4. Thonar with relic and crit-res gear with crit-res rolls. Ideally True Awakened too.
 
 Requirements:
 1. Start the script from within the Dogs floors screen.
