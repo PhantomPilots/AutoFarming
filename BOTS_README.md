@@ -20,6 +20,8 @@ Requirements:
 
 ## Skoll and Hati (Dogs) farming script
 
+The script is in `scripts/DogsFarmer.py`.
+
 Recommended team (in this order):
 1. UR Escanor
 2. LR Lostvayne with relic
