@@ -4,5 +4,5 @@ opencv-python
 pyautogui
 pynput
 pywin32
-scikit-learn
+scikit-learn==1.5.1
 termcolor
