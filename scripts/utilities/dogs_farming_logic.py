@@ -56,6 +56,7 @@ class DogsFarmer(IFarmer):
         logger.info(
             f"We beat floor 3 of dogs {DogsFarmer.num_floor_3_victories} times and lost {DogsFarmer.num_losses}."
         )
+        logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
     def going_to_dogs_state(self):
         """This should be the original state. Let's go to the dogs menu"""
