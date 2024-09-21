@@ -31,13 +31,13 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # screenshot_testing(vision_image=vio.reset_demonic_beast, threshold=0.6, cv_method=cv2.TM_CCOEFF_NORMED)
+    # screenshot_testing(vision_image=vio.close, threshold=0.8)
     # determine_relative_coordinates(screenshot)
 
-    while True:
-        screenshot, _ = capture_window()
-        DogsFighter.count_empty_card_slots(screenshot, threshold=0.6, plot=True)
-        time.sleep(0.5)
+    # while True:
+    #     screenshot, _ = capture_window()
+    #     DogsFighter.count_empty_card_slots(screenshot, threshold=0.6, plot=True)
+    #     time.sleep(0.5)
 
     # # Get card slots image
     # card_slots = get_card_slot_region_image(screenshot)
