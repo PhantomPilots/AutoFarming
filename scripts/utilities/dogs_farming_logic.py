@@ -44,7 +44,7 @@ class DogsFarmer(IFarmer):
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete.
         # Using the previous BirdFighter!
-        self.dogs_fighter: IFighter = DogsFighter(
+        self.fighter: IFighter = DogsFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
@@ -139,7 +139,7 @@ class DogsFarmer(IFarmer):
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Dogs fighter started!")
-            self.fight_thread = threading.Thread(target=self.dogs_fighter.run, daemon=True)
+            self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, floor_defeated=None):
