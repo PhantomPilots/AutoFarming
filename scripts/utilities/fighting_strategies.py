@@ -58,10 +58,13 @@ class IBattleStrategy(abc.ABC):
             next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
             if isinstance(next_index, Integral):
                 # Ensure we don't pick a GROUND card
-                while is_ground_card(hand_of_cards[next_index]):
+                while (
+                    next_index != -1
+                    and next_index < len(hand_of_cards) - 1
+                    and is_ground_card(hand_of_cards[next_index])
+                ):
                     print(f"We can't pick card with index {next_index}, it's GROUND.")
                     next_index += 1
-                    next_index %= len(hand_of_cards)
 
                 print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 picked_cards.append(hand_of_cards[next_index])
