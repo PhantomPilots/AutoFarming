@@ -43,8 +43,6 @@ class Coordinates:
     def get_coordinates(event):
         x, y = Coordinates.coordinates[event]
 
-        # return x, y
-
         # Adjust their size based on the window!
         screenshot, _ = capture_window()
         y_ref, x_ref = screenshot.shape[:2]
