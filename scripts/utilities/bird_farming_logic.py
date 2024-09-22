@@ -143,6 +143,7 @@ class BirdFarmer(IFarmer):
                 screenshot,
                 window_location,
                 point_coordinates=floor_coordinates,
+                threshold=0.8,
             )
 
         # We may need to restore stamina

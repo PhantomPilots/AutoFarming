@@ -71,7 +71,7 @@ class DogsFarmer(IFarmer):
             print("Moving to state SET_PARTY")
             self.current_state = States.SET_PARTY
 
-        elif find(vio.available_floor, screenshot):
+        elif find(vio.available_floor, screenshot, threshold=0.8):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
@@ -107,6 +107,7 @@ class DogsFarmer(IFarmer):
                 screenshot,
                 window_location,
                 point_coordinates=floor_coordinates,
+                threshold=0.8,
             )
 
         # We may need to restore stamina

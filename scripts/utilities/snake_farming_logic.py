@@ -63,7 +63,7 @@ class SnakeFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Go into the 'Snake' section
-        if find_and_click(vio.snake, screenshot, window_location):
+        if find_and_click(vio.nidhoggr, screenshot, window_location):
             return
 
         if find(vio.empty_party, screenshot):
@@ -71,7 +71,7 @@ class SnakeFarmer(IFarmer):
             print("Moving to state SET_PARTY")
             self.current_state = States.SET_PARTY
 
-        elif find(vio.available_floor, screenshot):
+        elif find(vio.available_floor, screenshot, threshold=0.8):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
@@ -107,6 +107,7 @@ class SnakeFarmer(IFarmer):
                 screenshot,
                 window_location,
                 point_coordinates=floor_coordinates,
+                threshold=0.8,
             )
 
         # We may need to restore stamina
@@ -137,8 +138,9 @@ class SnakeFarmer(IFarmer):
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Snake fighter started!")
-            self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
-            self.fight_thread.start()
+            # TODO: Enable when the rest of the farming logic is done
+            # self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
+            # self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, floor_defeated=None):
         """Called when the fight logic completes."""
