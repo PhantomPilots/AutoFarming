@@ -27,7 +27,7 @@ class States(Enum):
     SET_PARTY = 1
     READY_TO_FIGHT = 2
     FIGHTING_FLOOR = 3
-    RESETTING_DOGS = 4
+    RESETTING_SNAKE = 4
 
 
 class SnakeFarmer(IFarmer):
@@ -58,12 +58,12 @@ class SnakeFarmer(IFarmer):
         )
         logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
-    def going_to_dogs_state(self):
-        """This should be the original state. Let's go to the dogs menu"""
+    def going_to_snake_state(self):
+        """This should be the original state. Let's go to the snake menu"""
         screenshot, window_location = capture_window()
 
-        # Go into the 'Dogs' section
-        if find_and_click(vio.skollandhati, screenshot, window_location):
+        # Go into the 'Snake' section
+        if find_and_click(vio.snake, screenshot, window_location):
             return
 
         if find(vio.empty_party, screenshot):
@@ -128,7 +128,7 @@ class SnakeFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        # Skip the dogs screen
+        # Skip the snake screen
         find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.8)
 
         # In case we see a 'Close' pop-up
@@ -136,7 +136,7 @@ class SnakeFarmer(IFarmer):
 
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
-            print("Dogs fighter started!")
+            print("Snake fighter started!")
             self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.fight_thread.start()
 
@@ -148,26 +148,26 @@ class SnakeFarmer(IFarmer):
             print("Floor complete! Going back to the original state")
             if floor_defeated == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
-                self.current_state = States.RESETTING_DOGS
+                self.current_state = States.RESETTING_SNAKE
                 SnakeFarmer.num_floor_3_victories += 1
                 print(f"We beat {SnakeFarmer.num_floor_3_victories*3} floors and lost {SnakeFarmer.num_losses} times")
                 return
 
             # Go straight to the original states
-            print("Moving to GOING_TO_DOGS")
-            self.current_state = States.GOING_TO_DOGS
+            print("Moving to GOING_TO_SNAKE")
+            self.current_state = States.GOING_TO_SNAKE
 
         else:
-            print("The dogs fighter told me we lost... :/")
+            print("The Snake fighter told me we lost... :/")
             print("Resetting the team in case the saved team has very little health")
             SnakeFarmer.num_losses += 1
             print(
                 f"We lost... We beat {SnakeFarmer.num_floor_3_victories*3} floors and lost {SnakeFarmer.num_losses} times."
             )
-            self.current_state = States.RESETTING_DOGS
+            self.current_state = States.RESETTING_SNAKE
 
-    def resetting_dogs_state(self):
-        """If we've finished floor 3, we need to reset the dogs"""
+    def resetting_snake_state(self):
+        """If we've finished floor 3, we need to reset the Snake"""
 
         screenshot, window_location = capture_window()
 
@@ -177,10 +177,10 @@ class SnakeFarmer(IFarmer):
         # Click on the 'reset' button
         find_and_click(vio.reset_demonic_beast, screenshot, window_location, threshold=0.6)
 
-        # Once we see the main dogs screen again, we can move the the original state
+        # Once we see the main Snake screen again, we can move the the original state
         if find(vio.empty_party, screenshot):
-            print("Moving to the original state, GOING_TO_DOGS")
-            self.current_state = States.GOING_TO_DOGS
+            print("Moving to the original state, GOING_TO_SNAKE")
+            self.current_state = States.GOING_TO_SNAKE
 
     def run(self):
 
@@ -188,8 +188,8 @@ class SnakeFarmer(IFarmer):
 
             check_for_reconnect()
 
-            if self.current_state == States.GOING_TO_DOGS:
-                self.going_to_dogs_state()
+            if self.current_state == States.GOING_TO_SNAKE:
+                self.going_to_snake_state()
 
             elif self.current_state == States.SET_PARTY:
                 self.set_party_state()
@@ -200,7 +200,7 @@ class SnakeFarmer(IFarmer):
             elif self.current_state == States.FIGHTING_FLOOR:
                 self.fighting_floor()
 
-            elif self.current_state == States.RESETTING_DOGS:
-                self.resetting_dogs_state()
+            elif self.current_state == States.RESETTING_SNAKE:
+                self.resetting_snake_state()
 
             time.sleep(0.8)
