@@ -51,7 +51,7 @@ class DogsFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := self.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
+        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")

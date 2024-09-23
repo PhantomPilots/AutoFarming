@@ -25,6 +25,9 @@ class SnakeFighter(IFighter):
     # Keep track of what floor has been defeated
     floor_defeated = None
 
+    # Keep track of what floor we're fighting
+    current_floor = -1
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
 
@@ -51,7 +54,7 @@ class SnakeFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := self.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
+        elif (available_card_slots := SnakeFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -88,18 +91,16 @@ class SnakeFighter(IFighter):
 
         screenshot, window_location = capture_window()
 
-        if find(vio.guaranteed_reward, screenshot):
-            SnakeFighter.floor_defeated = 3
+        # if find(vio.guaranteed_reward, screenshot):
+        #     SnakeFighter.floor_defeated = 3
 
         # Click on the OK button to end the fight
         find_and_click(vio.finished_fight_ok, screenshot, window_location)
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback(victory=True, floor_defeated=SnakeFighter.floor_defeated)
+            self.complete_callback(victory=True, floor_defeated=SnakeFighter.current_floor)
             self.exit_thread = True
-            # Reset the defeated floor
-            SnakeFighter.floor_defeated = None
 
     def defeat_state(self):
         """We've lost the battle..."""
@@ -113,7 +114,10 @@ class SnakeFighter(IFighter):
             self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self):
+    def run(self, floor_num: int):
+
+        # First, set the floor number
+        SnakeFighter.current_floor = floor_num
 
         print("Fighting very hard...")
 

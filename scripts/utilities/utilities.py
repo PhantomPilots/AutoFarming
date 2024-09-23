@@ -62,10 +62,8 @@ def draw_rectangles(
     return haystack_img
 
 
-def screenshot_testing(vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
+def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
-    # screenshot, _ = get_unfocused_screenshot()
-    screenshot, _ = capture_window()
 
     # cv2.imshow("screenshot", screenshot)
 
@@ -430,6 +428,27 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
         return CardRanks.SILVER
 
     return CardRanks.GOLD if find(vio.gold_card, card, threshold=0.7) else CardRanks.NONE
+
+
+def determine_db_floor(screenshot: np.ndarray) -> int:
+    """Determine the Demonic Beast floor"""
+    # sourcery skip: assign-if-exp, reintroduce-else
+    floor_img_region = crop_image(
+        screenshot,
+        Coordinates.get_coordinates("floor_top_left"),
+        Coordinates.get_coordinates("floor_bottom_right"),
+    )
+
+    if find(vio.floor2, floor_img_region):
+        return 2
+    if find(vio.floor3, floor_img_region):
+        return 3
+    if find(vio.floor4, floor_img_region):
+        return 4
+    if find(vio.floor1, floor_img_region):
+        return 1
+
+    return -1
 
 
 def is_amplify_card(card: Card) -> bool:

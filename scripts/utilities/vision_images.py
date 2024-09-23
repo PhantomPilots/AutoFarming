@@ -54,6 +54,12 @@ auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
 salvaging_results = Vision("equipment\\salvaging_results.png")
 new_tasks_unlocked = Vision("equipment\\new_tasks_unlocked.png")
 
+# Demonic beasts
+floor1 = Vision("demonic_beasts\\floor1.png")
+floor2 = Vision("demonic_beasts\\floor2.png")
+floor3 = Vision("demonic_beasts\\floor3.png")
+floor4 = Vision("demonic_beasts\\floor4.png")
+
 # For Bird farming
 demonic_beast = Vision("demonic_beasts\\demonic_beast.png")
 hraesvelgr = Vision("demonic_beasts\\hraesvelgr.png")
@@ -84,7 +90,6 @@ phase_3 = Vision("demonic_beasts\\phase_3.png")
 phase_3_dogs = Vision("dogs\\phase_3_dogs.png")
 phase_4 = Vision("demonic_beasts\\phase_4.png")
 guaranteed_reward = Vision("demonic_beasts\\guaranteed_reward.png")
-empty_card_slot_dogs = Vision("demonic_beasts\\empty_card_slot_dogs.png")
 meli_aoe = Vision("demonic_beasts\\meli_aoe.png")
 meli_ult = Vision("demonic_beasts\\meli_ult.png")
 meli_ampli = Vision("demonic_beasts\\meli_ampli.png")

@@ -150,7 +150,7 @@ class IFighter(abc.ABC):
         """Count how many card slots are there. Needs to be overriden, because it's very fight-specific!"""
 
     @abc.abstractmethod
-    def run(self):
+    def run(self, **kwargs):
         """Main fighter state machine.
         Needs to be implemented by subclasses.
         """

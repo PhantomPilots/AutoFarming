@@ -118,7 +118,7 @@ class DummyBattleStrategy(IBattleStrategy):
 
     def get_next_card_index(self, *args, **kwargs) -> int:
         """Always get the rightmost card"""
-        return 7
+        return -1
 
 
 class SmarterBattleStrategy(IBattleStrategy):
@@ -664,6 +664,14 @@ class Floor4BattleStrategy(IBattleStrategy):
                 ):
                     return [i, j]
         return None
+
+
+class SnakeBattleStrategy(IBattleStrategy):
+    """The logic behind the AI for Snake"""
+
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
+        """Extract the next card index based on the hand and picked cards information"""
+        return -1
 
 
 def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray, card_ranks: np.ndarray = None):

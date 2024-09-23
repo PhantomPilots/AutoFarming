@@ -14,6 +14,7 @@ from utilities.snake_fighter import IFighter, SnakeFighter
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    determine_db_floor,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -31,6 +32,8 @@ class States(Enum):
 
 
 class SnakeFarmer(IFarmer):
+
+    current_floor = 1
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
@@ -97,6 +100,8 @@ class SnakeFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
+        #
+
         # In case we didn't properly click it
         find_and_click(vio.ok_save_party, screenshot, window_location)
 
@@ -115,6 +120,11 @@ class SnakeFarmer(IFarmer):
             # Keep track of how many stamina pots we used
             IFarmer.stamina_pots += 1
             return
+
+        if find(vio.startbutton, screenshot):
+            # We can determine the floor number!
+            SnakeFarmer.current_floor = determine_db_floor(screenshot)
+            print(f"We're gonna fight floor {SnakeFarmer.current_floor}")
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
@@ -137,10 +147,12 @@ class SnakeFarmer(IFarmer):
 
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
-            print("Snake fighter started!")
             # TODO: Enable when the rest of the farming logic is done
-            # self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
-            # self.fight_thread.start()
+            self.fight_thread = threading.Thread(
+                target=self.fighter.run, daemon=True, args=(SnakeFarmer.current_floor,)
+            )
+            self.fight_thread.start()
+            print("Snake fighter started!")
 
     def fight_complete_callback(self, victory=True, floor_defeated=None):
         """Called when the fight logic completes."""

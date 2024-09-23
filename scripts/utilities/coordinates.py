@@ -13,6 +13,9 @@ class Coordinates:
         # The region in the screenshot corresponding to the card slots
         "top_left_card_slots": (154, 700),
         "bottom_right_card_slots": (404, 793),
+        # General demonic beasts
+        "floor_top_left": (365, 133),
+        "floor_bottom_right": (457, 161),
         # For bird
         "4_cards_top_left": (61, 822),  # Top-left corner of the hand when we can use 4 cards
         "4_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 4 cards
