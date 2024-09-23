@@ -439,7 +439,8 @@ def determine_db_floor(screenshot: np.ndarray, threshold=0.9) -> int:
         Coordinates.get_coordinates("floor_bottom_right"),
     )
 
-    # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
+    # display_image(floor_img_region)
+    # screenshot_testing(floor_img_region, vio.floor1, threshold=threshold)
 
     # Default
     db_floor = -1
