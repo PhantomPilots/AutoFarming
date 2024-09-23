@@ -9,7 +9,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=SnakeFarmer,
         battle_strategy=SnakeBattleStrategy,  # The AI that will pick the cards
-        starting_state=States.FIGHTING_FLOOR,  # Should be 'GOING_TO_DOGS'
+        starting_state=States.GOING_TO_SNAKE,  # Should be 'GOING_TO_DOGS'
     )
 
 
