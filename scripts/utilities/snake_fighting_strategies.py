@@ -84,6 +84,7 @@ class SnakeBattleStrategy(IBattleStrategy):
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor_3_phase_2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+        # sourcery skip: for-index-replacement
         """Use stance card at the very end of each turn?"""
 
         stance_ids = np.where([is_stance_cancel_card(card) for card in hand_of_cards])[0]
@@ -99,11 +100,11 @@ class SnakeBattleStrategy(IBattleStrategy):
         if not len(played_freyja_ids) and len(freyja_ids):
             return freyja_ids[-1]
 
-        elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
-            # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
-            return stance_ids[-1]
+        # elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
+        #     # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
+        #     return stance_ids[-1]
 
-        # Otherwhise, set all stance IDs to DISABLED, and run the SmarterBattleStrategy
+        # Set all stance IDs to DISABLED, and run the SmarterBattleStrategy
         for i in range(len(hand_of_cards)):
             if is_stance_cancel_card(hand_of_cards[i]):
                 hand_of_cards[i].card_type = CardTypes.DISABLED
