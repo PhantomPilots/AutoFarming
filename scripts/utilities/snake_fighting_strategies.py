@@ -103,10 +103,10 @@ class SnakeBattleStrategy(IBattleStrategy):
             # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
             return stance_ids[-1]
 
-        # # Otherwhise, set all stance IDs to DISABLED, and run the SmarterBattleStrategy
-        # for hand_of_card in hand_of_cards:
-        #     if is_stance_cancel_card(hand_of_card):
-        #         hand_of_card.card_type = CardTypes.DISABLED
+        # Otherwhise, set all stance IDs to DISABLED, and run the SmarterBattleStrategy
+        for i in range(len(hand_of_cards)):
+            if is_stance_cancel_card(hand_of_cards[i]):
+                hand_of_cards[i].card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
