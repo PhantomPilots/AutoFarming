@@ -77,7 +77,9 @@ class CardTypeCollector(DataCollector):
             else:
                 # cv2.imshow("card type", card_type)
                 # cv2.waitKey(0)
-                card_label = int(input("Card type (att=0, att_debuff=3, ult=-1, disabled=9, ground=10, buff=5): "))
+                card_label = int(
+                    input("Card type (att=0, att_debuff=3, ult=-1, disabled=9, ground=10, buff=5, stance=1, recov=2): ")
+                )
                 # cv2.destroyAllWindows()
 
             # Extract card type image
