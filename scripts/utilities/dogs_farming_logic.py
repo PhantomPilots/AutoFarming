@@ -14,6 +14,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    determine_db_floor,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -35,6 +36,7 @@ class DogsFarmer(IFarmer):
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
     num_losses = 0
+    current_floor = 1
 
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_DOGS):
 
@@ -71,7 +73,7 @@ class DogsFarmer(IFarmer):
             print("Moving to state SET_PARTY")
             self.current_state = States.SET_PARTY
 
-        elif find(vio.available_floor, screenshot):
+        elif find(vio.available_floor, screenshot, threshold=0.8):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
@@ -107,6 +109,7 @@ class DogsFarmer(IFarmer):
                 screenshot,
                 window_location,
                 point_coordinates=floor_coordinates,
+                threshold=0.8,
             )
 
         # We may need to restore stamina
@@ -114,6 +117,10 @@ class DogsFarmer(IFarmer):
             # Keep track of how many stamina pots we used
             IFarmer.stamina_pots += 1
             return
+
+        if find(vio.startbutton, screenshot):
+            # We can determine the floor number!
+            DogsFarmer.current_floor = determine_db_floor(screenshot)
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
@@ -140,13 +147,13 @@ class DogsFarmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.fight_thread.start()
 
-    def fight_complete_callback(self, victory=True, floor_defeated=None):
+    def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
         if victory:
             # Transition to another state or perform clean-up actions
-            print("Floor complete! Going back to the original state")
-            if floor_defeated == 3:
+            print(f"Floor {DogsFarmer.current_floor} complete! Going back to the original state")
+            if DogsFarmer.current_floor == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_DOGS
                 DogsFarmer.num_floor_3_victories += 1

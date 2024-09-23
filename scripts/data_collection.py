@@ -77,7 +77,7 @@ class CardTypeCollector(DataCollector):
             else:
                 # cv2.imshow("card type", card_type)
                 # cv2.waitKey(0)
-                card_label = int(input("Card type (att=0, att_debuff=3, ult=-1, disabled=9, ground=10): "))
+                card_label = int(input("Card type (att=0, att_debuff=3, ult=-1, disabled=9, ground=10, buff=5): "))
                 # cv2.destroyAllWindows()
 
             # Extract card type image
@@ -307,7 +307,7 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    collect_data(CardTypeCollector, filename="card_types_data")
+    # collect_data(CardTypeCollector, filename="card_types_data")
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
@@ -315,7 +315,7 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    # collect_data(GroundDataCollector, filename="ground_data")
+    collect_data(GroundDataCollector, filename="ground_data")
 
 
 if __name__ == "__main__":

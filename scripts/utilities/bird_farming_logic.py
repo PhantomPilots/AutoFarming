@@ -14,6 +14,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    determine_db_floor,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -109,9 +110,6 @@ class BirdFarmer(IFarmer):
             # We're ready to start fighting floor 1!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
-
-            print("Resetting the floor counter to 1")
-            BirdFarmer.current_floor = 1
             return
 
         # Click on "set party"
@@ -143,6 +141,7 @@ class BirdFarmer(IFarmer):
                 screenshot,
                 window_location,
                 point_coordinates=floor_coordinates,
+                threshold=0.8,
             )
 
         # We may need to restore stamina
@@ -150,6 +149,10 @@ class BirdFarmer(IFarmer):
             # Return so that we don't try to click START right after
             IFarmer.stamina_pots += 1
             return
+
+        if find(vio.startbutton, screenshot):
+            # We can determine the floor number!
+            BirdFarmer.current_floor = determine_db_floor(screenshot)
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
@@ -184,8 +187,7 @@ class BirdFarmer(IFarmer):
 
         if victory:
             print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
-            # Update the new bird floor
-            BirdFarmer.current_floor = (BirdFarmer.current_floor % 3) + 1
+
         else:
             print("The bird fighter told me they lost... :/")
 

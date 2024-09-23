@@ -25,6 +25,9 @@ class SnakeFighter(IFighter):
     # Keep track of what floor has been defeated
     floor_defeated = None
 
+    # Keep track of what floor we're fighting
+    current_floor = -1
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
 
@@ -51,30 +54,25 @@ class SnakeFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := self.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
+        elif (available_card_slots := SnakeFighter.count_empty_card_slots(screenshot, threshold=0.7)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
+            # Update the phase
+            if (phase := self._identify_phase(screenshot)) != SnakeFighter.current_phase:
+                print(f"Moving to phase {phase}!")
+                SnakeFighter.current_phase = phase
+
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
-        """TODO: Count how many empty card slots are there for SNAKE"""
-        card_slot_image = get_card_slot_region_image(screenshot)
-        rectangles = []
-        for i in range(1, 25):
-            vio_image: Vision = getattr(vio, f"empty_slot_{i}", None)
-            if vio_image is not None and vio_image.needle_img is not None:
-                temp_rectangles, _ = vio_image.find_all_rectangles(
-                    card_slot_image, threshold=threshold, method=cv2.TM_CCOEFF_NORMED
-                )
-                rectangles.extend(temp_rectangles)
-                rectangles.extend(temp_rectangles)
+        """Count how many empty card slots are there for SNAKE"""
+        card_slots_image = get_card_slot_region_image(screenshot)
+        rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
 
-        # Group all rectangles
-        grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
-        if plot and len(grouped_rectangles):
-            print(f"We have {len(grouped_rectangles)} empty slots.")
+        if plot and len(rectangles):
+            print(f"We have {len(rectangles)} empty slots.")
             # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
             translated_rectangles = np.array(
                 [
@@ -84,7 +82,7 @@ class SnakeFighter(IFighter):
                         r[2],
                         r[3],
                     ]
-                    for r in grouped_rectangles
+                    for r in rectangles
                 ]
             )
             rectangles_fig = draw_rectangles(screenshot, translated_rectangles)
@@ -92,22 +90,22 @@ class SnakeFighter(IFighter):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        return len(grouped_rectangles)
+        return len(rectangles)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, window_location = capture_window()
 
         # Before playing cards, first:
         # 1. Read the phase we're in
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
         # empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        # TODO: Identify Snake phase here (like in Dogs)
-
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards()
+            self.current_hand = self.battle_strategy.pick_cards(
+                floor=SnakeFighter.current_floor,
+                phase=SnakeFighter.current_phase,
+            )
 
         if finished_turn := self.play_cards(self.current_hand):
             print("Finished my turn, going back to FIGHTING")
@@ -115,22 +113,30 @@ class SnakeFighter(IFighter):
             # Reset the hand
             self.current_hand = None
 
+    def _identify_phase(self, screenshot: np.ndarray):
+        """Read the screenshot and identify the phase we're currently in"""
+        if find(vio.phase_2, screenshot, threshold=0.8):
+            return 2
+        elif find(vio.phase_3, screenshot, threshold=0.8):
+            return 3
+
+        # Default to phase 1 in case we don't see anything
+        return 1
+
     def fight_complete_state(self):
 
         screenshot, window_location = capture_window()
 
-        if find(vio.guaranteed_reward, screenshot):
-            SnakeFighter.floor_defeated = 3
+        # if find(vio.guaranteed_reward, screenshot):
+        #     SnakeFighter.floor_defeated = 3
 
         # Click on the OK button to end the fight
         find_and_click(vio.finished_fight_ok, screenshot, window_location)
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback(victory=True, floor_defeated=SnakeFighter.floor_defeated)
+            self.complete_callback(victory=True, floor_defeated=SnakeFighter.current_floor)
             self.exit_thread = True
-            # Reset the defeated floor
-            SnakeFighter.floor_defeated = None
 
     def defeat_state(self):
         """We've lost the battle..."""
@@ -144,9 +150,12 @@ class SnakeFighter(IFighter):
             self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self):
+    def run(self, floor_num=1):
 
-        print("Fighting very hard...")
+        # First, set the floor number
+        SnakeFighter.current_floor = floor_num
+
+        print(f"Fighting very hard on floor {SnakeFighter.current_floor}...")
 
         while True:
 

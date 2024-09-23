@@ -128,9 +128,9 @@ class IFighter(abc.ABC):
         NOTE: This decorator should be used on the `run()` method of all subclasses.
         """
 
-        def wrapper_func(self: IFighter):
+        def wrapper_func(self: IFighter, *args, **kwargs):
             # Call the original function
-            func(self)
+            func(self, *args, **kwargs)
 
             # Clean up the attributes by resetting them, in case the subclass instance is reused
             print("Resetting fighter...")
@@ -150,7 +150,7 @@ class IFighter(abc.ABC):
         """Count how many card slots are there. Needs to be overriden, because it's very fight-specific!"""
 
     @abc.abstractmethod
-    def run(self):
+    def run(self, **kwargs):
         """Main fighter state machine.
         Needs to be implemented by subclasses.
         """

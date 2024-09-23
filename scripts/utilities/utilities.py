@@ -62,10 +62,8 @@ def draw_rectangles(
     return haystack_img
 
 
-def screenshot_testing(vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
+def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
-    # screenshot, _ = get_unfocused_screenshot()
-    screenshot, _ = capture_window()
 
     # cv2.imshow("screenshot", screenshot)
 
@@ -432,6 +430,32 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
     return CardRanks.GOLD if find(vio.gold_card, card, threshold=0.7) else CardRanks.NONE
 
 
+def determine_db_floor(screenshot: np.ndarray, threshold=0.9) -> int:
+    """Determine the Demonic Beast floor"""
+    # sourcery skip: assign-if-exp, reintroduce-else
+    floor_img_region = crop_image(
+        screenshot,
+        Coordinates.get_coordinates("floor_top_left"),
+        Coordinates.get_coordinates("floor_bottom_right"),
+    )
+
+    # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
+
+    # Default
+    db_floor = -1
+
+    if find(vio.floor2, floor_img_region, threshold=threshold):
+        db_floor = 2
+    elif find(vio.floor3, floor_img_region, threshold=threshold):
+        db_floor = 3
+    elif find(vio.floor1, floor_img_region, threshold=threshold):
+        db_floor = 1
+
+    print(f"We're gonna fight floor {db_floor}.")
+
+    return db_floor
+
+
 def is_amplify_card(card: Card) -> bool:
     """Identify if a card is amplify or Thor"""
     if card.card_image is None:
@@ -470,6 +494,26 @@ def is_Meli_card(card: Card) -> bool:
 def is_ground_card(card: Card) -> bool:
     """Return whether a card is of type GROUND"""
     return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
+
+
+def is_stance_cancel_card(card: Card) -> bool:
+    """Return whether the card is Stance Cancel"""
+    if card.card_image is None:
+        return False
+    return find(vio.freyja_st, card.card_image) or find(vio.margaret_st, card.card_image)
+
+
+def is_hard_hitting_snake_card(card: Card) -> bool:
+    """Return whether a card can be used as hard-hitting on Snake (excluding ultimates)"""
+    if card.card_image is None:
+        return False
+    card_image = card.card_image
+    return (
+        find(vio.mael_aoe, card_image)
+        or find(vio.mael_st, card_image)
+        or find(vio.freyja_st, card_image)
+        or find(vio.freyja_aoe, card_image)
+    )
 
 
 def display_image(image: np.ndarray, title: str = "Image"):

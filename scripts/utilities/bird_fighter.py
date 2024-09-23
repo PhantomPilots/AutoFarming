@@ -35,7 +35,7 @@ class BirdFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := self.count_empty_card_slots(screenshot)) > 0:
+        elif (available_card_slots := BirdFighter.count_empty_card_slots(screenshot)) > 0:
             # First, identify if we are fully disabled... If so, restart the fight
             if available_card_slots >= 3 and self._check_disabled_hand():
                 # We're fully disabled, we need to exit and restart the fight...
@@ -103,7 +103,7 @@ class BirdFighter(IFighter):
     def _update_current_hand(self, screenshot):
         """Update the current hand of cards based on the phase."""
         current_phase = self._identify_phase(screenshot)
-        cards_to_play = self.count_empty_card_slots(screenshot)
+        cards_to_play = BirdFighter.count_empty_card_slots(screenshot)
         self.current_hand = self.battle_strategy.pick_cards(cards_to_play=cards_to_play, phase=current_phase)
 
     def _attempt_to_play_cards(self) -> bool:
