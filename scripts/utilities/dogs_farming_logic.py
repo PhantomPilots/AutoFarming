@@ -14,6 +14,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    determine_db_floor,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -35,6 +36,7 @@ class DogsFarmer(IFarmer):
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
     num_losses = 0
+    current_floor = 1
 
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_DOGS):
 
@@ -116,6 +118,10 @@ class DogsFarmer(IFarmer):
             IFarmer.stamina_pots += 1
             return
 
+        if find(vio.startbutton, screenshot):
+            # We can determine the floor number!
+            DogsFarmer.current_floor = determine_db_floor(screenshot)
+
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
 
@@ -141,13 +147,13 @@ class DogsFarmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.fight_thread.start()
 
-    def fight_complete_callback(self, victory=True, floor_defeated=None):
+    def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
         if victory:
             # Transition to another state or perform clean-up actions
             print("Floor complete! Going back to the original state")
-            if floor_defeated == 3:
+            if DogsFarmer.current_floor == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_DOGS
                 DogsFarmer.num_floor_3_victories += 1

@@ -99,13 +99,27 @@ class DogsFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, window_location = capture_window()
 
         # Before playing cards, first:
         # 1. Read the phase we're in
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
         # empty_card_slots = self.count_empty_card_slots(screenshot)
 
+        self._identify_current_phase()
+
+        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
+        if self.current_hand is None:
+            self.current_hand = self.battle_strategy.pick_cards()
+
+        if finished_turn := self.play_cards(self.current_hand):
+            print("Finished my turn, going back to FIGHTING")
+            self.current_state = FightingStates.FIGHTING
+            # Reset the hand
+            self.current_hand = None
+
+    def _identify_current_phase(self):
+        """Identify DB phase"""
+        screenshot, window_location = capture_window()
         if find(vio.phase_1, screenshot, threshold=0.8) and DogsFighter.current_phase != 1:
             # Click on light dog
             DogsFighter.current_phase = 1
@@ -121,16 +135,6 @@ class DogsFighter(IFighter):
             DogsFighter.current_phase = 3
             print("Clicking on dark dog, because current phase:", DogsFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
-        if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards()
-
-        if finished_turn := self.play_cards(self.current_hand):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
 
     def fight_complete_state(self):
 

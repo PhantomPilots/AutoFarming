@@ -68,7 +68,6 @@ class SnakeFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, window_location = capture_window()
 
         # Before playing cards, first:
         # 1. Read the phase we're in
@@ -76,16 +75,22 @@ class SnakeFighter(IFighter):
         # empty_card_slots = self.count_empty_card_slots(screenshot)
 
         # TODO: Identify Snake phase here (like in Dogs)
+        phase = self._identify_current_phase()
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards()
+            self.current_hand = self.battle_strategy.pick_cards(floor=SnakeFighter.current_floor, phase=phase)
 
         if finished_turn := self.play_cards(self.current_hand):
             print("Finished my turn, going back to FIGHTING")
             self.current_state = FightingStates.FIGHTING
             # Reset the hand
             self.current_hand = None
+
+    def _identify_current_phase(self):
+        """TODO: Identify what DB phase we're in"""
+        screenshot, window_location = capture_window()
+        return 1
 
     def fight_complete_state(self):
 
@@ -122,6 +127,7 @@ class SnakeFighter(IFighter):
         print("Fighting very hard...")
 
         while True:
+            continue
 
             if self.current_state == FightingStates.FIGHTING:
                 self.fighting_state()

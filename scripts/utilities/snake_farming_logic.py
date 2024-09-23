@@ -124,7 +124,6 @@ class SnakeFarmer(IFarmer):
         if find(vio.startbutton, screenshot):
             # We can determine the floor number!
             SnakeFarmer.current_floor = determine_db_floor(screenshot)
-            print(f"We're gonna fight floor {SnakeFarmer.current_floor}")
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
