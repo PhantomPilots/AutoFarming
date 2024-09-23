@@ -448,8 +448,6 @@ def determine_db_floor(screenshot: np.ndarray, threshold=0.9) -> int:
         db_floor = 2
     elif find(vio.floor3, floor_img_region, threshold=threshold):
         db_floor = 3
-    elif find(vio.floor4, floor_img_region, threshold=threshold):
-        db_floor = 4
     elif find(vio.floor1, floor_img_region, threshold=threshold):
         db_floor = 1
 

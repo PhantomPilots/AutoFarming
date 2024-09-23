@@ -158,7 +158,7 @@ class SnakeFarmer(IFarmer):
 
         if victory:
             # Transition to another state or perform clean-up actions
-            print("Floor complete! Going back to the original state")
+            print(f"Floor {SnakeFarmer.current_floor} complete! Going back to the original state")
             if floor_defeated == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_SNAKE

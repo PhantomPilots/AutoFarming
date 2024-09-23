@@ -54,16 +54,22 @@ class SnakeFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := SnakeFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
+        elif (available_card_slots := SnakeFighter.count_empty_card_slots(screenshot, threshold=0.7)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
+            # Update the phase
+            if (phase := self._identify_current_phase()) != SnakeFighter.current_phase:
+                print(f"Moving to phase {phase}!")
+                SnakeFighter.current_phase = phase
+
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.6):
+    def count_empty_card_slots(screenshot, threshold=0.55):
         """Count how many empty card slots are there for SNAKE"""
-        rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
+        card_slots_image = get_card_slot_region_image(screenshot)
+        rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
         return len(rectangles)
 
     def my_turn_state(self):
@@ -74,12 +80,12 @@ class SnakeFighter(IFighter):
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
         # empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        # TODO: Identify Snake phase here (like in Dogs)
-        phase = self._identify_current_phase()
-
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards(floor=SnakeFighter.current_floor, phase=phase)
+            self.current_hand = self.battle_strategy.pick_cards(
+                floor=SnakeFighter.current_floor,
+                phase=SnakeFighter.current_phase,
+            )
 
         if finished_turn := self.play_cards(self.current_hand):
             print("Finished my turn, going back to FIGHTING")
@@ -119,7 +125,7 @@ class SnakeFighter(IFighter):
             self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self, floor_num: int):
+    def run(self, floor_num=1):
 
         # First, set the floor number
         SnakeFighter.current_floor = floor_num
@@ -127,7 +133,6 @@ class SnakeFighter(IFighter):
         print("Fighting very hard...")
 
         while True:
-            continue
 
             if self.current_state == FightingStates.FIGHTING:
                 self.fighting_state()
