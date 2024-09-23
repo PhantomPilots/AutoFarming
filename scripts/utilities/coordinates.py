@@ -15,7 +15,7 @@ class Coordinates:
         "bottom_right_card_slots": (404, 793),
         # General demonic beasts
         "floor_top_left": (344, 122),
-        "floor_bottom_right": (459, 159),
+        "floor_bottom_right": (459, 165),
         # For bird
         "4_cards_top_left": (61, 822),  # Top-left corner of the hand when we can use 4 cards
         "4_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 4 cards
@@ -46,7 +46,9 @@ class Coordinates:
     def get_coordinates(event):
         x, y = Coordinates.coordinates[event]
 
-        # Adjust their size based on the window!
-        screenshot, _ = capture_window()
-        y_ref, x_ref = screenshot.shape[:2]
-        return int(x / 552 * x_ref), int(y / 948 * y_ref)
+        return x, y
+
+        # # Adjust their size based on the window!
+        # screenshot, _ = capture_window()
+        # y_ref, x_ref = screenshot.shape[:2]
+        # return int(x / 552 * x_ref), int(y / 948 * y_ref)
