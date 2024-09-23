@@ -99,6 +99,10 @@ class SnakeBattleStrategy(IBattleStrategy):
         if not len(played_freyja_ids) and len(freyja_ids):
             return freyja_ids[-1]
 
+        elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
+            # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
+            return stance_ids[-1]
+
         # # Otherwhise, set all stance IDs to DISABLED, and run the SmarterBattleStrategy
         # for hand_of_card in hand_of_cards:
         #     if is_stance_cancel_card(hand_of_card):
