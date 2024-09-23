@@ -152,6 +152,11 @@ class SmarterBattleStrategy(IBattleStrategy):
         ):
             return recovery_ids[-1]
 
+        # BUFF CARDS
+        buff_ids = sorted(np.where(card_types == CardTypes.BUFF.value)[0], key=lambda idx: card_ranks[idx])
+        if len(buff_ids) and not np.where(picked_card_types == CardTypes.BUFF.value)[0].size:
+            return buff_ids[-1]
+
         # CARD MERGE -- If there's a card that generates a merge (and not disabled), pick it!
         for i in range(1, len(hand_of_cards) - 1):
             if hand_of_cards[i].card_type != CardTypes.DISABLED and determine_card_merge(
