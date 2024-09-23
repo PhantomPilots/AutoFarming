@@ -1,5 +1,5 @@
+from utilities.bird_floor4_fighting_strategies import Floor4BattleStrategy
 from utilities.farming_factory import FarmingFactory
-from utilities.fighting_strategies import Floor4BattleStrategy
 from utilities.floor_4_farming_logic import Floor4Farmer, States
 
 
