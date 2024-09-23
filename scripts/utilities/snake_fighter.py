@@ -61,15 +61,35 @@ class SnakeFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            if (phase := self._identify_current_phase()) != SnakeFighter.current_phase:
+            if (phase := self._identify_phase(screenshot)) != SnakeFighter.current_phase:
                 print(f"Moving to phase {phase}!")
                 SnakeFighter.current_phase = phase
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.55):
+    def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
         """Count how many empty card slots are there for SNAKE"""
         card_slots_image = get_card_slot_region_image(screenshot)
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
+
+        if plot and len(rectangles):
+            print(f"We have {len(rectangles)} empty slots.")
+            # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
+            translated_rectangles = np.array(
+                [
+                    [
+                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
+                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
+                        r[2],
+                        r[3],
+                    ]
+                    for r in rectangles
+                ]
+            )
+            rectangles_fig = draw_rectangles(screenshot, translated_rectangles)
+            cv2.imshow("rectangles", rectangles_fig)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+
         return len(rectangles)
 
     def my_turn_state(self):
@@ -93,9 +113,14 @@ class SnakeFighter(IFighter):
             # Reset the hand
             self.current_hand = None
 
-    def _identify_current_phase(self):
-        """TODO: Identify what DB phase we're in"""
-        screenshot, window_location = capture_window()
+    def _identify_phase(self, screenshot: np.ndarray):
+        """Read the screenshot and identify the phase we're currently in"""
+        if find(vio.phase_2, screenshot, threshold=0.8):
+            return 2
+        elif find(vio.phase_3, screenshot, threshold=0.8):
+            return 3
+
+        # Default to phase 1 in case we don't see anything
         return 1
 
     def fight_complete_state(self):
@@ -130,7 +155,7 @@ class SnakeFighter(IFighter):
         # First, set the floor number
         SnakeFighter.current_floor = floor_num
 
-        print("Fighting very hard...")
+        print(f"Fighting very hard on floor {SnakeFighter.current_floor}...")
 
         while True:
 

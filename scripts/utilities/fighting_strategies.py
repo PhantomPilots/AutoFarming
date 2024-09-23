@@ -140,6 +140,7 @@ class SmarterBattleStrategy(IBattleStrategy):
 
         # ULTIMATE CARDS
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        print("Picking ultimates?")
         if len(ult_ids):
             return ult_ids[-1]
 

@@ -120,6 +120,13 @@ empty_slot_18 = Vision("dogs\\empty_slot_18.png")
 
 # For Snake
 nidhoggr = Vision("snake\\nidhoggr.png")
+mael_st = Vision("snake\\mael_st.png")
+mael_aoe = Vision("snake\\mael_aoe.png")
+margaret_st = Vision("snake\\margaret_st.png")
+freyja_st = Vision("snake\\freyja_st.png")
+freyja_aoe = Vision("snake\\freyja_aoe.png")
+lr_liz_aoe = Vision("snake\\lr_liz_aoe.png")
+snake_stance = Vision("snake\\enemy_stance.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

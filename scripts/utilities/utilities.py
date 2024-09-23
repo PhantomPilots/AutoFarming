@@ -496,6 +496,26 @@ def is_ground_card(card: Card) -> bool:
     return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
 
 
+def is_stance_cancel_card(card: Card) -> bool:
+    """Return whether the card is Stance Cancel"""
+    if card.card_image is None:
+        return False
+    return find(vio.freyja_st, card.card_image) or find(vio.margaret_st, card.card_image)
+
+
+def is_hard_hitting_snake_card(card: Card) -> bool:
+    """Return whether a card can be used as hard-hitting on Snake (excluding ultimates)"""
+    if card.card_image is None:
+        return False
+    card_image = card.card_image
+    return (
+        find(vio.mael_aoe, card_image)
+        or find(vio.mael_st, card_image)
+        or find(vio.freyja_st, card_image)
+        or find(vio.freyja_aoe, card_image)
+    )
+
+
 def display_image(image: np.ndarray, title: str = "Image"):
     cv2.imshow(title, image)
     cv2.waitKey(0)
