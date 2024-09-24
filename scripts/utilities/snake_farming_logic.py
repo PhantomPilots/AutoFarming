@@ -177,14 +177,15 @@ class SnakeFarmer(IFarmer):
 
                 # Go straight to the original states
                 print("Moving to GOING_TO_SNAKE")
-                self.current_state = States.GOING_TO_SNAKE
 
             else:
                 print("The Snake fighter told me we lost... :/")
-                print("Resetting the team in case the saved team has very little health")
+                # print("Resetting the team in case the saved team has very little health")
                 SnakeFarmer.num_losses += 1
                 print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
-                self.current_state = States.RESETTING_SNAKE
+                # self.current_state = States.RESETTING_SNAKE
+
+            self.current_state = States.GOING_TO_SNAKE
 
     def resetting_snake_state(self):
         """If we've finished floor 3, we need to reset the Snake"""
