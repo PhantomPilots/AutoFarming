@@ -87,14 +87,18 @@ class SnakeBattleStrategy(IBattleStrategy):
         # sourcery skip: for-index-replacement
         """Use stance card at the very end of each turn?"""
 
-        stance_ids = np.where([is_stance_cancel_card(card) for card in hand_of_cards])[0]
-        played_stance_ids = np.where([is_stance_cancel_card(card) for card in picked_cards])[0]
-        freyja_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
-        played_freyja_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in picked_cards])[0]
+        played_freyja_ids = np.where(
+            [find(vio.freyja_aoe, card.card_image) or find(vio.freyja_st, card.card_image) for card in picked_cards]
+        )[0]
 
         # Play a Freyja card to avoid getting darkness!
-        if not len(played_freyja_ids) and len(freyja_ids):
-            return freyja_ids[-1]
+        freyja_aoe_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
+        if not len(played_freyja_ids):
+            if len(freyja_aoe_ids):
+                return freyja_aoe_ids[-1]
+            freyja_st_ids = np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
+            if len(freyja_st_ids):
+                return freyja_st_ids[-1]
 
         # elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
         #     # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
