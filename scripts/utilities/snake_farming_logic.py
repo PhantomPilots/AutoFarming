@@ -35,7 +35,7 @@ class SnakeFarmer(IFarmer):
 
     lock = threading.Lock()
 
-    current_floor = 1
+    current_floor = 3
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
@@ -161,17 +161,18 @@ class SnakeFarmer(IFarmer):
 
         with SnakeFarmer.lock:
             if victory:
+                SnakeFarmer.num_victories += 1
+                print(f"Floor {SnakeFarmer.current_floor} complete!")
+                print(f"We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times")
+
                 # Update the floor number
                 SnakeFarmer.current_floor = (SnakeFarmer.current_floor % 3) + 1
 
                 # Transition to another state or perform clean-up actions
-                print(f"Floor {SnakeFarmer.current_floor} complete! Going back to the original state")
-                SnakeFarmer.num_victories += 1
                 if SnakeFarmer.current_floor == 1:  # Since we updated it already beforehand!
                     print("We defeated all 3 floors, gotta reset the DB.")
                     self.current_state = States.RESETTING_SNAKE
                     SnakeFarmer.num_floor_3_victories += 1
-                    print(f"We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times")
                     return
 
                 # Go straight to the original states

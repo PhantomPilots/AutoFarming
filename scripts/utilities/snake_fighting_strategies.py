@@ -91,13 +91,19 @@ class SnakeBattleStrategy(IBattleStrategy):
             [find(vio.freyja_aoe, card.card_image) or find(vio.freyja_st, card.card_image) for card in picked_cards]
         )[0]
 
+        # First, play a buff if possible
+        buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]
+        played_buff_ids = np.where([card.card_type == CardTypes.BUFF for card in picked_cards])[0]
+        if len(buff_ids) and not len(played_buff_ids):
+            return buff_ids[-1]
+
         # Play a Freyja card to avoid getting darkness!
         freyja_aoe_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
         if not len(played_freyja_ids):
             if len(freyja_aoe_ids):
                 return freyja_aoe_ids[-1]
             freyja_st_ids = np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
-            if len(freyja_st_ids):
+            if len(freyja_st_ids) and not len(played_buff_ids):
                 return freyja_st_ids[-1]
 
         # elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
@@ -109,7 +115,9 @@ class SnakeBattleStrategy(IBattleStrategy):
             if is_stance_cancel_card(hand_of_cards[i]):
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+        #  At this point, we need to re-enable BUFF cards, removing them from 'picked_cards'
+        modified_picked_cards = [card for card in picked_cards if card.card_type != CardTypes.BUFF]
+        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, modified_picked_cards)
 
     def floor_3_phase_3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """If we see an enemy stance, use a stance cancel"""
