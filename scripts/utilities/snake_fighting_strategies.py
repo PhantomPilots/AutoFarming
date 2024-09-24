@@ -145,8 +145,19 @@ class SnakeBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        # Remaining BUFF cards, if not default to moving a card!
-        return buff_ids[-1] if len(buff_ids) else [-1, -2]
+        # Other BUFF CARDS
+        if len(buff_ids):
+            return buff_ids[-1]
+
+        # CARD MERGE
+        for i in range(len(hand_of_cards) - 2, 0, -1):
+            if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
+                # We can generate a merge, play that card
+                print("Generating a merge, even if it's a stance cancel...")
+                return i
+
+        # Default to moving cards
+        return [-1, -2]
 
     def floor_3_phase_3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """If we see an enemy stance, use a stance cancel"""
