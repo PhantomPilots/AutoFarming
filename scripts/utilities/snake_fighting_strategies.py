@@ -86,10 +86,14 @@ class SnakeBattleStrategy(IBattleStrategy):
     def floor_3_phase_2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         # sourcery skip: for-index-replacement
         """Use stance card at the very end of each turn?"""
-        card_types = np.array([card.card_type.value for card in hand_of_cards])
 
         played_freyja_ids = np.where(
-            [find(vio.freyja_aoe, card.card_image) or find(vio.freyja_st, card.card_image) for card in picked_cards]
+            [
+                find(vio.freyja_aoe, card.card_image)
+                or find(vio.freyja_st, card.card_image)
+                or find(vio.freyja_ult, card.card_image)
+                for card in picked_cards
+            ]
         )[0]
 
         # First, play a buff if possible
@@ -101,16 +105,24 @@ class SnakeBattleStrategy(IBattleStrategy):
         # Play a Freyja card to avoid getting darkness!
         freyja_aoe_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
         if not len(played_freyja_ids):
+            # Try to play the ult
+            if len(freyja_ult_id := np.where([find(vio.freyja_ult, card.card_image) for card in hand_of_cards])[0]):
+                return freyja_ult_id[-1]
+            # If not, try to play an AOE
             if len(freyja_aoe_ids):
                 return freyja_aoe_ids[-1]
+            # If not, try to play a single target IF we are not playing any buff this turn
             freyja_st_ids = np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
-            if len(freyja_st_ids):
+            if len(freyja_st_ids) and not len(played_buff_ids):
                 return freyja_st_ids[-1]
 
         # Set all stance IDs to DISABLED
         for i in range(len(hand_of_cards)):
             if is_stance_cancel_card(hand_of_cards[i]):
                 hand_of_cards[i].card_type = CardTypes.DISABLED
+
+        # Extract the card types
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
 
         # ULTIMATES
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]

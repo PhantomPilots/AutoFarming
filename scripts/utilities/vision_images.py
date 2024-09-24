@@ -125,6 +125,7 @@ mael_aoe = Vision("snake\\mael_aoe.png")
 margaret_st = Vision("snake\\margaret_st.png")
 freyja_st = Vision("snake\\freyja_st.png")
 freyja_aoe = Vision("snake\\freyja_aoe.png")
+freyja_ult = Vision("snake\\freyja_ult.png")
 lr_liz_aoe = Vision("snake\\lr_liz_aoe.png")
 snake_stance = Vision("snake\\enemy_stance.png")
 
