@@ -1,5 +1,6 @@
 import threading
 import time
+from collections import defaultdict
 from enum import Enum
 
 import pyautogui as pyautogui
@@ -42,6 +43,8 @@ class SnakeFarmer(IFarmer):
     num_victories = 0
     num_losses = 0
 
+    dict_of_defeats = defaultdict(int)
+
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_SNAKE):
 
         # Initialize the current state
@@ -63,6 +66,14 @@ class SnakeFarmer(IFarmer):
             f"We beat {SnakeFarmer.num_victories} floors, {SnakeFarmer.num_floor_3_victories} times floor 3, and lost {SnakeFarmer.num_losses} times."
         )
         logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
+
+        self.print_defeats()
+
+    def print_defeats(self):
+        """Print on-screen the defeats"""
+        if len(SnakeFarmer.dict_of_defeats):
+            for key, val in SnakeFarmer.dict_of_defeats.items():
+                print(f"{key} -> Lost {val} times")
 
     def going_to_snake_state(self):
         """This should be the original state. Let's go to the snake menu"""
@@ -156,7 +167,7 @@ class SnakeFarmer(IFarmer):
             self.fight_thread.start()
             print("Snake fighter started!")
 
-    def fight_complete_callback(self, victory=True, floor_defeated=None):
+    def fight_complete_callback(self, victory=True, phase="unknown"):
         """Called when the fight logic completes."""
 
         with SnakeFarmer.lock:
@@ -177,14 +188,17 @@ class SnakeFarmer(IFarmer):
 
                 # Go straight to the original states
                 print("Moving to GOING_TO_SNAKE")
+                # self.current_state = States.GOING_TO_SNAKE
 
             else:
                 print("The Snake fighter told me we lost... :/")
                 # print("Resetting the team in case the saved team has very little health")
                 SnakeFarmer.num_losses += 1
                 print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
+                SnakeFarmer.dict_of_defeats[f"Floor {SnakeFarmer.current_floor} Phase {phase}"] += 1
                 # self.current_state = States.RESETTING_SNAKE
 
+            self.print_defeats()
             self.current_state = States.GOING_TO_SNAKE
 
     def resetting_snake_state(self):

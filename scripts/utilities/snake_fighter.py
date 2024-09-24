@@ -135,7 +135,7 @@ class SnakeFighter(IFighter):
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback(victory=True, floor_defeated=SnakeFighter.current_floor)
+            self.complete_callback(victory=True)
             self.exit_thread = True
 
     def defeat_state(self):
@@ -146,7 +146,7 @@ class SnakeFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False)
+            self.complete_callback(victory=False, phase=SnakeFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
