@@ -33,10 +33,11 @@ class States(Enum):
 
 class SnakeFarmer(IFarmer):
 
-    current_floor = 1
+    current_floor = 3
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
+    num_victories = 0
     num_losses = 0
 
     def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_SNAKE):
@@ -57,7 +58,7 @@ class SnakeFarmer(IFarmer):
 
     def exit_message(self):
         logger.info(
-            f"We beat at least {SnakeFarmer.num_floor_3_victories*3} floors and lost {SnakeFarmer.num_losses} times."
+            f"We beat {SnakeFarmer.num_victories} floors, {SnakeFarmer.num_floor_3_victories} times floor 3, and lost {SnakeFarmer.num_losses} times."
         )
         logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
@@ -159,11 +160,12 @@ class SnakeFarmer(IFarmer):
         if victory:
             # Transition to another state or perform clean-up actions
             print(f"Floor {SnakeFarmer.current_floor} complete! Going back to the original state")
-            if floor_defeated == 3:
+            SnakeFarmer.num_victories += 1
+            if SnakeFarmer.current_floor == 3:
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_SNAKE
                 SnakeFarmer.num_floor_3_victories += 1
-                print(f"We beat {SnakeFarmer.num_floor_3_victories*3} floors and lost {SnakeFarmer.num_losses} times")
+                print(f"We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times")
                 return
 
             # Go straight to the original states
@@ -174,9 +176,7 @@ class SnakeFarmer(IFarmer):
             print("The Snake fighter told me we lost... :/")
             print("Resetting the team in case the saved team has very little health")
             SnakeFarmer.num_losses += 1
-            print(
-                f"We lost... We beat {SnakeFarmer.num_floor_3_victories*3} floors and lost {SnakeFarmer.num_losses} times."
-            )
+            print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
             self.current_state = States.RESETTING_SNAKE
 
     def resetting_snake_state(self):

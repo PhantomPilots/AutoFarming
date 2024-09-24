@@ -89,12 +89,8 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         stance_ids = np.where([is_stance_cancel_card(card) for card in hand_of_cards])[0]
         played_stance_ids = np.where([is_stance_cancel_card(card) for card in picked_cards])[0]
-        freyja_ids = np.where(
-            [find(vio.freyja_st, card.card_image) or find(vio.freyja_aoe, card.card_image) for card in hand_of_cards]
-        )[0]
-        played_freyja_ids = np.where(
-            [find(vio.freyja_st, card.card_image) or find(vio.freyja_aoe, card.card_image) for card in picked_cards]
-        )[0]
+        freyja_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
+        played_freyja_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in picked_cards])[0]
 
         # Play a Freyja card to avoid getting darkness!
         if not len(played_freyja_ids) and len(freyja_ids):
