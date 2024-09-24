@@ -114,17 +114,17 @@ class SnakeBattleStrategy(IBattleStrategy):
             hand_of_cards[mael_ult_id[-1]].card_type = CardTypes.DISABLED
 
         # Play a Freyja card to avoid getting darkness!
-        freyja_aoe_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
         if not len(played_freyja_ids):
             # Try to play the ult
             if len(freyja_ult_id := np.where([find(vio.freyja_ult, card.card_image) for card in hand_of_cards])[0]):
                 return freyja_ult_id[-1]
             # If not, try to play an AOE
-            if len(freyja_aoe_ids):
+            if len(freyja_aoe_ids := np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]):
                 return freyja_aoe_ids[-1]
-            # If not, try to play a single target IF we are not playing any buff this turn
-            freyja_st_ids = np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
-            if len(freyja_st_ids) and not len(played_buff_ids):
+            # If not, try to play a single target IF we are not playing any buff this turn (arbitrary)
+            if not len(played_buff_ids) and len(
+                freyja_st_ids := np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
+            ):
                 return freyja_st_ids[-1]
 
         # Set all stance IDs to DISABLED
