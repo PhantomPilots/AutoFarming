@@ -87,6 +87,8 @@ class SnakeBattleStrategy(IBattleStrategy):
         # sourcery skip: for-index-replacement
         """Use stance card at the very end of each turn?"""
 
+        screenshot, _ = capture_window()
+
         played_freyja_ids = np.where(
             [
                 find(vio.freyja_aoe, card.card_image)
@@ -101,6 +103,15 @@ class SnakeBattleStrategy(IBattleStrategy):
         played_buff_ids = np.where([card.card_type == CardTypes.BUFF for card in picked_cards])[0]
         if len(buff_ids) and not len(played_buff_ids):
             return buff_ids[-1]
+
+        # If enemy has stance and we have Mael's ult, use it:
+        mael_ult_id = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
+        if find(vio.snake_f3p2_counter, screenshot) and len(mael_ult_id):
+            print("Removing the counter with Mael's ultimate")
+            return mael_ult_id[-1]
+        elif len(mael_ult_id):
+            # Disable Mael's ultimate, to save it for later
+            hand_of_cards[mael_ult_id[-1]].card_type = CardTypes.DISABLED
 
         # Play a Freyja card to avoid getting darkness!
         freyja_aoe_ids = np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]
