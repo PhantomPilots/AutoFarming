@@ -122,9 +122,8 @@ class SnakeBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        #  At this point, we need to re-enable BUFF cards, removing them from 'picked_cards'
-        modified_picked_cards = [card for card in picked_cards if card.card_type != CardTypes.BUFF]
-        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, modified_picked_cards)
+        # Remaining BUFF cards, if not default to -1
+        return buff_ids[-1] if len(buff_ids) else -1
 
     def floor_3_phase_3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """If we see an enemy stance, use a stance cancel"""
