@@ -400,7 +400,12 @@ def determine_card_type(card: np.ndarray | None) -> CardTypes:
 
     # If the above didn't return GROUND, explore it further. This logic allows for backwards compatibility (with Bird, for instance)
     card_type_image = get_card_type_image(card)
-    return CardTypePredictor.predict_card_type(card_type_image)
+    card_type = CardTypePredictor.predict_card_type(card_type_image)
+    # If we predict GROUND, assume it's an ULTIMATE, therefore relying entirely on the GroundCardPredictor
+    if card_type == CardTypes.GROUND:
+        print("Detecting GROUND, but setting ULTIMATE instead. Is this correct?")
+        card_type = CardTypes.ULTIMATE
+    return card_type
 
 
 def determine_card_merge(card_1: Card | None, card_2: Card | None) -> bool:
