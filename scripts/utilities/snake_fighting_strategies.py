@@ -86,6 +86,7 @@ class SnakeBattleStrategy(IBattleStrategy):
     def floor_3_phase_2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         # sourcery skip: for-index-replacement
         """Use stance card at the very end of each turn?"""
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
 
         played_freyja_ids = np.where(
             [find(vio.freyja_aoe, card.card_image) or find(vio.freyja_st, card.card_image) for card in picked_cards]
@@ -103,17 +104,23 @@ class SnakeBattleStrategy(IBattleStrategy):
             if len(freyja_aoe_ids):
                 return freyja_aoe_ids[-1]
             freyja_st_ids = np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
-            if len(freyja_st_ids) and not len(played_buff_ids):
+            if len(freyja_st_ids):
                 return freyja_st_ids[-1]
 
-        # elif not len(played_freyja_ids) and len(stance_ids) and not len(played_stance_ids):
-        #     # Arbitrary logic: If we're not playing a Freyja card, play a stance cancel
-        #     return stance_ids[-1]
-
-        # Set all stance IDs to DISABLED, and run the SmarterBattleStrategy
+        # Set all stance IDs to DISABLED
         for i in range(len(hand_of_cards)):
             if is_stance_cancel_card(hand_of_cards[i]):
                 hand_of_cards[i].card_type = CardTypes.DISABLED
+
+        # ULTIMATES
+        ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
+        if len(ult_ids):
+            return ult_ids[-1]
+
+        # ATTACK CARDS
+        attack_ids = np.where((card_types == CardTypes.ATTACK.value) | (card_types == CardTypes.ATTACK_DEBUFF.value))[0]
+        if len(attack_ids):
+            return attack_ids[-1]
 
         #  At this point, we need to re-enable BUFF cards, removing them from 'picked_cards'
         modified_picked_cards = [card for card in picked_cards if card.card_type != CardTypes.BUFF]
