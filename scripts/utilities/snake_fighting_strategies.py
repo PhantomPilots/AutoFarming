@@ -104,6 +104,16 @@ class SnakeBattleStrategy(IBattleStrategy):
         if len(buff_ids) and not len(played_buff_ids):
             return buff_ids[-1]
 
+        # If we have an extort...
+        if (
+            not len(played_buff_ids)
+            and find(vio.extort, screenshot)
+            and not np.where([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards])[0]
+        ):
+            if len(liz_aoe_ids := np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]):
+                print("We need to remove the extort!")
+                return liz_aoe_ids[-1]
+
         # If enemy has stance and we have Mael's ult, use it:
         mael_ult_id = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
         if find(vio.snake_f3p2_counter, screenshot) and len(mael_ult_id):
