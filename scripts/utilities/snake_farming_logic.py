@@ -33,6 +33,8 @@ class States(Enum):
 
 class SnakeFarmer(IFarmer):
 
+    lock = threading.Lock()
+
     current_floor = 3
 
     # Keep track of how many times we've defeated floor 3
@@ -124,7 +126,8 @@ class SnakeFarmer(IFarmer):
 
         if find(vio.startbutton, screenshot):
             # We can determine the floor number!
-            SnakeFarmer.current_floor = determine_db_floor(screenshot)
+            with SnakeFarmer.lock:
+                SnakeFarmer.current_floor = determine_db_floor(screenshot)
 
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
@@ -147,7 +150,6 @@ class SnakeFarmer(IFarmer):
 
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
-            # TODO: Enable when the rest of the farming logic is done
             self.fight_thread = threading.Thread(
                 target=self.fighter.run, daemon=True, args=(SnakeFarmer.current_floor,)
             )
@@ -157,27 +159,31 @@ class SnakeFarmer(IFarmer):
     def fight_complete_callback(self, victory=True, floor_defeated=None):
         """Called when the fight logic completes."""
 
-        if victory:
-            # Transition to another state or perform clean-up actions
-            print(f"Floor {SnakeFarmer.current_floor} complete! Going back to the original state")
-            SnakeFarmer.num_victories += 1
-            if SnakeFarmer.current_floor == 3:
-                print("We defeated all 3 floors, gotta reset the DB.")
+        with SnakeFarmer.lock:
+            if victory:
+                # Update the floor number
+                SnakeFarmer.current_floor = (SnakeFarmer.current_floor % 3) + 1
+
+                # Transition to another state or perform clean-up actions
+                print(f"Floor {SnakeFarmer.current_floor} complete! Going back to the original state")
+                SnakeFarmer.num_victories += 1
+                if SnakeFarmer.current_floor == 3:
+                    print("We defeated all 3 floors, gotta reset the DB.")
+                    self.current_state = States.RESETTING_SNAKE
+                    SnakeFarmer.num_floor_3_victories += 1
+                    print(f"We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times")
+                    return
+
+                # Go straight to the original states
+                print("Moving to GOING_TO_SNAKE")
+                self.current_state = States.GOING_TO_SNAKE
+
+            else:
+                print("The Snake fighter told me we lost... :/")
+                print("Resetting the team in case the saved team has very little health")
+                SnakeFarmer.num_losses += 1
+                print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
                 self.current_state = States.RESETTING_SNAKE
-                SnakeFarmer.num_floor_3_victories += 1
-                print(f"We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times")
-                return
-
-            # Go straight to the original states
-            print("Moving to GOING_TO_SNAKE")
-            self.current_state = States.GOING_TO_SNAKE
-
-        else:
-            print("The Snake fighter told me we lost... :/")
-            print("Resetting the team in case the saved team has very little health")
-            SnakeFarmer.num_losses += 1
-            print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
-            self.current_state = States.RESETTING_SNAKE
 
     def resetting_snake_state(self):
         """If we've finished floor 3, we need to reset the Snake"""
