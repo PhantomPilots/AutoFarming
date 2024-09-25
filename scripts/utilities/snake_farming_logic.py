@@ -72,8 +72,9 @@ class SnakeFarmer(IFarmer):
     def print_defeats(self):
         """Print on-screen the defeats"""
         if len(SnakeFarmer.dict_of_defeats):
+            print("Defeats:")
             for key, val in SnakeFarmer.dict_of_defeats.items():
-                print(f"{key} -> Lost {val} times")
+                print(f"* {key} -> Lost {val} times")
 
     def going_to_snake_state(self):
         """This should be the original state. Let's go to the snake menu"""
