@@ -1,3 +1,4 @@
+import sys
 import time
 from enum import Enum
 
@@ -22,9 +23,13 @@ class States(Enum):
     IN_FINAL_BOSS_MENU = 1
     READY_TO_FIGHT = 2
     FIGHTING = 3
+    EXIT_FARMER = 4
 
 
 class FinalBossFarmer(IFarmer):
+
+    # Keep track of how many fights have been done
+    num_fights = 0
 
     def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_FB, **kwargs):
 
@@ -32,17 +37,19 @@ class FinalBossFarmer(IFarmer):
         self.current_state = starting_state
 
         # TODO: Unused, bad coding
-        self.bird_fighter = battle_strategy
-
-        # Keep track of how many fights have been done
-        self.num_fights = 0
+        self.fighter = battle_strategy
 
         # Decide whether hell or challenge difficulty
         self.difficulty = kwargs["difficulty"]
 
+        # In case we have a limited amount of runs we want to make
+        self.max_num_runs = kwargs.get("num_runs", float("inf"))
+        if self.max_num_runs < float("inf"):
+            print(f"We're gonna farm the Final Boss {self.max_num_runs} times.")
+
     def exit_message(self):
         super().exit_message()
-        print(f"We beat the Final Boss {self.num_fights} times.")
+        print(f"We beat the Final Boss {FinalBossFarmer.num_fights} times.")
 
     def going_to_fb_state(self):
         """This should be the original state. Let's go to the bird menu"""
@@ -136,8 +143,14 @@ class FinalBossFarmer(IFarmer):
             vio.showdown, screenshot, window_location, point_coordinates=Coordinates.get_coordinates("showdown")
         )
         if find_and_click(vio.boss_mission, screenshot, window_location):
-            self.num_fights += 1
-            print(f"FB cleared! {self.num_fights} times so far.")
+            FinalBossFarmer.num_fights += 1
+            print(f"FB cleared! {FinalBossFarmer.num_fights} times so far.")
+
+            # Now, exit the fight if we've reached the desired number of runs
+            if FinalBossFarmer.num_fights >= self.max_num_runs:
+                print("Reached the desired number of runs, exiting the farmer...")
+                self.current_state = States.EXIT_FARMER
+                return
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
@@ -156,6 +169,10 @@ class FinalBossFarmer(IFarmer):
         if find(vio.ok_bird_defeat, screenshot):
             print("Oh no, we have lost :( Retrying")
             self.current_state = States.IN_FINAL_BOSS_MENU
+
+    def exit_farmer_state(self):
+        """Exit the farming!"""
+        raise KeyboardInterrupt("Terminating process: farming cycle completed.")
 
     def run(self):
 
@@ -176,5 +193,8 @@ class FinalBossFarmer(IFarmer):
 
             elif self.current_state == States.FIGHTING:
                 self.fighting_state()
+
+            elif self.current_state == States.EXIT_FARMER:
+                self.exit_farmer_state()
 
             time.sleep(0.8)
