@@ -56,7 +56,7 @@ class BirdFarmer(IFarmer):
 
     def exit_message(self):
         super().exit_message()
-        logger.info(f"We beat {BirdFarmer.success_count}/{BirdFarmer.total_count} birds.")
+        logger.info(f"We beat floor 3 of bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
@@ -183,7 +183,7 @@ class BirdFarmer(IFarmer):
             BirdFarmer.total_count += 1
             if victory:
                 BirdFarmer.success_count += 1
-            logger.info(f"We beat the bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
+            logger.info(f"We beat floor 3 of bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
         if victory:
             print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
