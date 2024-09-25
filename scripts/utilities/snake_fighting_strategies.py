@@ -106,9 +106,9 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         # If we have an extort...
         if (
-            not len(played_buff_ids)
-            and find(vio.extort, screenshot)
-            and not np.where([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards])[0]
+            find(vio.extort, screenshot)
+            and not len(played_buff_ids)
+            and not np.any([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards])[0]
         ):
             if len(liz_aoe_ids := np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]):
                 print("We need to remove the extort!")
