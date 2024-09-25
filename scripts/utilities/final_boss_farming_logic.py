@@ -43,7 +43,7 @@ class FinalBossFarmer(IFarmer):
         self.difficulty = kwargs["difficulty"]
 
         # In case we have a limited amount of runs we want to make
-        self.max_num_runs = kwargs.get("num_runs", float("inf"))
+        self.max_num_runs = float(kwargs.get("num_runs", "inf"))
         if self.max_num_runs < float("inf"):
             print(f"We're gonna farm the Final Boss {self.max_num_runs} times.")
 
