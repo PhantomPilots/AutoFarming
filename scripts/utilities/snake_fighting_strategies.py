@@ -116,11 +116,12 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         # If enemy has stance and we have Mael's ult, use it:
         mael_ult_id = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
-        if find(vio.snake_f3p2_counter, screenshot) and len(mael_ult_id):
-            print("Removing the counter with Mael's ultimate")
+        if find(vio.snake_f3p2_counter, screenshot, threshold=0.6) and len(mael_ult_id):
+            print("Removing the counter with Mael's ultimate!")
             return mael_ult_id[-1]
         elif len(mael_ult_id):
             # Disable Mael's ultimate, to save it for later
+            print("No counter, saving Mael's ultimate for the future.")
             hand_of_cards[mael_ult_id[-1]].card_type = CardTypes.DISABLED
 
         # Play a Freyja card to avoid getting darkness!
