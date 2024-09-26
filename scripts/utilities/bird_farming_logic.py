@@ -55,8 +55,9 @@ class BirdFarmer(IFarmer):
         self.fight_thread = None
 
     def exit_message(self):
-        super().exit_message()
+        # super().exit_message() # Not needed anymore due to the logger below
         logger.info(f"We beat floor 3 of bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
+        logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
     def going_to_bird_state(self):
         """This should be the original state. Let's go to the bird menu"""
