@@ -192,6 +192,7 @@ class BirdFarmer(IFarmer):
         else:
             print("The bird fighter told me they lost... :/")
 
+        print(f"We've used {IFarmer.stamina_pots} stamina pots so far.")
         # Transition to the original states
         self.current_state = States.GOING_TO_BIRD
 
