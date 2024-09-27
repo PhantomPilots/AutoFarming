@@ -110,12 +110,15 @@ class DemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, if it's time to check in, do it
-        if not DemonFarmer.daily_checkin:
-            now = datetime.now()
-            if now.hour == 7 and find(vio.cancel_realtime, screenshot):
-                print("Going to CHECK IN!")
-                self.current_state = States.DAILY_RESET
-                return
+        now = datetime.now()
+        if not DemonFarmer.daily_checkin and now.hour == 7 and find(vio.cancel_realtime, screenshot):
+            print("Going to CHECK IN!")
+            self.current_state = States.DAILY_RESET
+            return
+
+        # Reset the daily check in flag
+        if now.hour > 20:
+            DemonFarmer.daily_checkin = False
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
