@@ -48,6 +48,10 @@ forfeit = Vision("forfeit.png")
 tavern_loading_screen = Vision("tavern_loading_screen.png")
 card_slot = Vision("card_slot.png")
 close = Vision("close.png")
+knighthood = Vision("knighthood.png")
+check_in = Vision("check_in.png")
+check_in_reward = Vision("check_in_reward.png")
+check_in_complete = Vision("check_in_complete.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

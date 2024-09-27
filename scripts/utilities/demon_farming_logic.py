@@ -1,5 +1,6 @@
 import threading
 import time
+from datetime import datetime
 from enum import Enum
 
 import numpy as np
@@ -18,6 +19,7 @@ from utilities.utilities import (
     find,
     find_and_click,
     find_floor_coordinates,
+    press_key,
 )
 from utilities.vision import Vision
 
@@ -29,6 +31,8 @@ class States(Enum):
     LOOKING_FOR_DEMON = 1
     READY_TO_FIGHT = 2
     FIGHTING_DEMON = 3
+    DAILY_RESET = 4
+    CHECK_IN = 5
 
 
 class DemonFarmer(IFarmer):
@@ -38,6 +42,9 @@ class DemonFarmer(IFarmer):
 
     # We need to keep track if 'auto' is clicked or not...
     auto = False
+
+    # Keep track if we've done the daily check in
+    daily_checkin = False
 
     def __init__(
         self,
@@ -101,6 +108,14 @@ class DemonFarmer(IFarmer):
     def looking_for_demon_state(self):
         """Waiting for someone to send us a demon"""
         screenshot, window_location = capture_window()
+
+        # First, if it's time to check in, do it
+        if not DemonFarmer.daily_checkin:
+            now = datetime.now()
+            if now.hour == 7 and find(vio.cancel_realtime, screenshot):
+                print("Going to CHECK IN!")
+                self.current_state = States.DAILY_RESET
+                return
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
@@ -168,6 +183,54 @@ class DemonFarmer(IFarmer):
             print(f"We've destroyed {DemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
 
+    def daily_reset_state(self):
+        """Click on skip as much as needed, check in, then go back to GOING_TO_DEMONS"""
+        screenshot, window_location = capture_window()
+
+        # Cancel the demon search
+        click_and_sleep(vio.cancel_realtime, screenshot, window_location)
+
+        # We may be receiving the daily rewards now
+        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
+
+        # Go to CHECKIN state
+        if find(vio.knighthood, screenshot):
+            print("Going to CHECK IN state")
+            self.current_state = States.CHECK_IN
+            return
+
+        # Click on "Knighthood"
+        if click_and_sleep(
+            vio.battle_menu,
+            screenshot,
+            window_location,
+            point_coordinates=Coordinates.get_coordinates("knighthood"),
+        ):
+            return
+
+        # Go to tavern
+        click_and_sleep(vio.tavern, screenshot, window_location)
+
+    def check_in_state(self):
+        """Check in, and go back to"""
+        screenshot, window_location = capture_window()
+
+        # Check in
+        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
+            logger.info("Checked in successfully!")
+
+        # Click on the reward
+        click_and_sleep(vio.check_in_reward, screenshot, window_location)
+
+        # Exit the knighthood after checking in...
+        if find(vio.check_in_complete, screenshot):
+            press_key("esc")
+
+        if find(vio.battle_menu, screenshot):
+            DemonFarmer.daily_checkin = True
+            print("Back to GOING_TO_DEMONS!")
+            self.current_state = States.GOING_TO_DEMONS
+
     def run(self):
 
         print(f"Farming demons, starting from {self.current_state}.")
@@ -185,6 +248,12 @@ class DemonFarmer(IFarmer):
 
             elif self.current_state == States.READY_TO_FIGHT:
                 self.ready_to_fight_state()
+
+            elif self.current_state == States.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == States.CHECK_IN:
+                self.check_in_state()
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()
@@ -254,6 +323,12 @@ class DemonRouletteFarmer(DemonFarmer):
 
             elif self.current_state == States.READY_TO_FIGHT:
                 self.ready_to_fight_state()
+
+            elif self.current_state == States.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == States.CHECK_IN:
+                self.check_in_state()
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

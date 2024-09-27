@@ -10,6 +10,7 @@ class Coordinates:
     coordinates = {
         # General
         "battle_menu": (502, 676),  # Coordinates for the battle menu in the Tavern screen
+        "knighthood": (421, 677),
         # The region in the screenshot corresponding to the card slots
         "top_left_card_slots": (154, 700),
         "bottom_right_card_slots": (404, 793),
