@@ -69,13 +69,6 @@ class SnakeFarmer(IFarmer):
 
         self.print_defeats()
 
-    def print_defeats(self):
-        """Print on-screen the defeats"""
-        if len(SnakeFarmer.dict_of_defeats):
-            print("Defeats:")
-            for key, val in SnakeFarmer.dict_of_defeats.items():
-                print(f"* {key} -> Lost {val} times")
-
     def going_to_snake_state(self):
         """This should be the original state. Let's go to the snake menu"""
         screenshot, window_location = capture_window()
@@ -196,7 +189,7 @@ class SnakeFarmer(IFarmer):
                 # print("Resetting the team in case the saved team has very little health")
                 SnakeFarmer.num_losses += 1
                 print(f"We lost... We beat {SnakeFarmer.num_victories} floors and lost {SnakeFarmer.num_losses} times.")
-                SnakeFarmer.dict_of_defeats[f"Floor {SnakeFarmer.current_floor} Phase {phase}"] += 1
+                IFarmer.dict_of_defeats[f"Floor {SnakeFarmer.current_floor} Phase {phase}"] += 1
                 # self.current_state = States.RESETTING_SNAKE
 
             self.print_defeats()

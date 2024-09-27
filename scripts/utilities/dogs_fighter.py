@@ -148,7 +148,7 @@ class DogsFighter(IFighter):
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback(victory=True, floor_defeated=DogsFighter.floor_defeated)
+            self.complete_callback(victory=True, phase=DogsFighter.current_phase)
             self.exit_thread = True
             # Reset the defeated floor
             DogsFighter.floor_defeated = None

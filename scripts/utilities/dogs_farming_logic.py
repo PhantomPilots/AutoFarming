@@ -1,5 +1,6 @@
 import threading
 import time
+from collections import defaultdict
 from enum import Enum
 
 import pyautogui as pyautogui
@@ -59,6 +60,8 @@ class DogsFarmer(IFarmer):
             f"We beat at least {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times."
         )
         logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
+
+        self.print_defeats()
 
     def going_to_dogs_state(self):
         """This should be the original state. Let's go to the dogs menu"""
@@ -147,7 +150,7 @@ class DogsFarmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.fight_thread.start()
 
-    def fight_complete_callback(self, victory=True, **kwargs):
+    def fight_complete_callback(self, victory=True, phase="unknown", **kwargs):
         """Called when the fight logic completes."""
 
         if victory:
@@ -171,7 +174,11 @@ class DogsFarmer(IFarmer):
             print(
                 f"We lost... We beat {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times."
             )
+            # Update the dictionary of defeats
+            IFarmer.dict_of_defeats[f"Floor {DogsFarmer.current_floor} Phase {phase}"] += 1
             self.current_state = States.RESETTING_DOGS
+
+        self.print_defeats()
 
     def resetting_dogs_state(self):
         """If we've finished floor 3, we need to reset the dogs"""
