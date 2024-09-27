@@ -168,11 +168,9 @@ class DogsFarmer(IFarmer):
             self.current_state = States.GOING_TO_DOGS
 
         else:
-            print("The dogs fighter told me we lost... :/")
-            print("Resetting the team in case the saved team has very little health")
             DogsFarmer.num_losses += 1
             print(
-                f"We lost... We beat {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times."
+                f"We lost... We beat {DogsFarmer.num_floor_3_victories*3} times floor 3 and lost {DogsFarmer.num_losses} times."
             )
             # Update the dictionary of defeats
             IFarmer.dict_of_defeats[f"Floor {DogsFarmer.current_floor} Phase {phase}"] += 1
