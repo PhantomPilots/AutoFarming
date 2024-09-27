@@ -160,22 +160,20 @@ class DogsFarmer(IFarmer):
                 print("We defeated all 3 floors, gotta reset the DB.")
                 self.current_state = States.RESETTING_DOGS
                 DogsFarmer.num_floor_3_victories += 1
-                print(f"We beat {DogsFarmer.num_floor_3_victories*3} floors and lost {DogsFarmer.num_losses} times")
-                return
-
-            # Go straight to the original states
-            print("Moving to GOING_TO_DOGS")
-            self.current_state = States.GOING_TO_DOGS
+            else:
+                # Go straight to the original states
+                print("Moving to GOING_TO_DOGS")
+                self.current_state = States.GOING_TO_DOGS
 
         else:
             DogsFarmer.num_losses += 1
-            print(
-                f"We lost... We beat {DogsFarmer.num_floor_3_victories*3} times floor 3 and lost {DogsFarmer.num_losses} times."
-            )
+            print("We lost :(")
             # Update the dictionary of defeats
             IFarmer.dict_of_defeats[f"Floor {DogsFarmer.current_floor} Phase {phase}"] += 1
             self.current_state = States.RESETTING_DOGS
 
+        print(f"We beat {DogsFarmer.num_floor_3_victories} times Floor 3 and lost {DogsFarmer.num_losses} times.")
+        print(f"We've used {IFarmer.stamina_pots} stamina pots so far.")
         self.print_defeats()
 
     def resetting_dogs_state(self):
