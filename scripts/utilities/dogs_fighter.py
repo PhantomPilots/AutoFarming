@@ -161,7 +161,7 @@ class DogsFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False)
+            self.complete_callback(victory=False, phase=DogsFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
