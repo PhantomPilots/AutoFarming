@@ -13,10 +13,10 @@ def main():
             vio.red_demon,
             vio.gray_demon,
             vio.crimson_demon,
-            vio.bell_demon,
+            # vio.bell_demon,
         ],
-        time_to_sleep=9.4,  # How many seconds to sleep before accepting an invitation
-        time_between_demons=2,  # How many hours before switching to next demon
+        time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation
+        time_between_demons=1,  # How many hours before switching to next demon
     )
 
 
