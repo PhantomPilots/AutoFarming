@@ -25,6 +25,9 @@ class DogsFighter(IFighter):
     # Keep track of what floor has been defeated
     floor_defeated = None
 
+    # Keep track of the current floor
+    current_floor = 1
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
 
@@ -109,7 +112,10 @@ class DogsFighter(IFighter):
 
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards()
+            self.current_hand = self.battle_strategy.pick_cards(
+                floor=DogsFighter.current_floor,
+                phase=DogsFighter.current_phase,
+            )
 
         if finished_turn := self.play_cards(self.current_hand):
             print("Finished my turn, going back to FIGHTING")
@@ -165,9 +171,10 @@ class DogsFighter(IFighter):
             self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self):
+    def run(self, floor=1):
 
-        print("Fighting very hard...")
+        print(f"Fighting very hard on floor {floor}...")
+        DogsFighter.current_floor = floor
 
         while True:
 

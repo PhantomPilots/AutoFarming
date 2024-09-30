@@ -147,7 +147,7 @@ class DogsFarmer(IFarmer):
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Dogs fighter started!")
-            self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
+            self.fight_thread = threading.Thread(target=self.fighter.run, daemon=True, args=(self.current_floor,))
             self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, phase="unknown", **kwargs):
