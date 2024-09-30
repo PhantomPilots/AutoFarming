@@ -48,7 +48,7 @@ class DogsBattleStrategy(IBattleStrategy):
 
         # Disable the first 2 ultimates
         for i, id in enumerate(ult_ids):
-            if i <= 2:
+            if i < 2:
                 print("Disabling an ultimate!")
                 hand_of_cards[id].card_type = CardTypes.DISABLED
 
