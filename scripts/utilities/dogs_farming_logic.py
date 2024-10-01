@@ -39,7 +39,7 @@ class DogsFarmer(IFarmer):
     num_losses = 0
     current_floor = 1
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_DOGS):
+    def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_DOGS, max_stamina_pots="inf"):
 
         # Initialize the current state
         self.current_state = starting_state
@@ -54,6 +54,10 @@ class DogsFarmer(IFarmer):
 
         # Placeholder for the fight thread
         self.fight_thread = None
+
+        self.max_stamina_pots = float(max_stamina_pots)
+        if self.max_stamina_pots < float("inf"):
+            print(f"We're gonna use at most {self.max_stamina_pots} stamina pots.")
 
     def exit_message(self):
         logger.info(
@@ -116,10 +120,14 @@ class DogsFarmer(IFarmer):
             )
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if IFarmer.stamina_pots < self.max_stamina_pots and find_and_click(
+            vio.restore_stamina, screenshot, window_location
+        ):
             # Keep track of how many stamina pots we used
             IFarmer.stamina_pots += 1
             return
+        elif find(vio.restore_stamina, screenshot):
+            print(f"We reached the max number of {self.max_stamina_pots} stamina pots, not restoring stamina.")
 
         if find(vio.startbutton, screenshot):
             # We can determine the floor number!
