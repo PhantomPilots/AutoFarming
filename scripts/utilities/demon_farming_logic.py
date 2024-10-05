@@ -170,6 +170,14 @@ class DemonFarmer(IFarmer):
         if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             DemonFarmer.auto = True
 
+        # TODO: Add clicking on network instability OK, then move to GOING_TO_DEMONS
+        if find_and_click(vio.ok_button, screenshot, window_location, threshold=0.6):
+            print("Network instability, exiting fight...")
+        if find(vio.tavern_loading_screen, screenshot):
+            print("Seeing a loading screen, moving to GOING_TO_DEMONS")
+            self.current_state = States.GOING_TO_DEMONS
+            return
+
         # If we see a skip
         find_and_click(vio.skip_bird, screenshot, window_location)
 
