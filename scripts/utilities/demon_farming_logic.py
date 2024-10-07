@@ -117,7 +117,8 @@ class DemonFarmer(IFarmer):
             return
 
         # Reset the daily check in flag
-        if now.hour > 20:
+        if now.hour > 20 and DemonFarmer.daily_checkin:
+            print("Resetting daily checkin")
             DemonFarmer.daily_checkin = False
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
@@ -346,4 +347,4 @@ class DemonRouletteFarmer(DemonFarmer):
                 time.sleep(1)
 
             # We need the loop to run very fast
-            time.sleep(0.1)
+            time.sleep(0.01)
