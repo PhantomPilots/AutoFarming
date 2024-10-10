@@ -29,6 +29,7 @@ class States(Enum):
     READY_TO_FIGHT = 2
     FIGHTING_FLOOR = 3
     RESETTING_BIRD = 4
+    EXIT_FARMER = 5
 
 
 class BirdFarmer(IFarmer):
@@ -38,7 +39,10 @@ class BirdFarmer(IFarmer):
     total_count = 0
     current_floor = 1
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_BIRD):
+    # How many floor 3 clears we want
+    num_floor_3_clears = "inf"
+
+    def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_BIRD, num_floor_3_clears="inf"):
 
         # Initialize the current state
         self.current_state = starting_state
@@ -50,6 +54,10 @@ class BirdFarmer(IFarmer):
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
+
+        BirdFarmer.num_floor_3_clears = float(num_floor_3_clears)
+        if BirdFarmer.num_floor_3_clears < float("inf"):
+            print(f"We're gonna clear floor 3 {num_floor_3_clears} times.")
 
         # Placeholder for the fight thread
         self.fight_thread = None
@@ -186,6 +194,10 @@ class BirdFarmer(IFarmer):
                 BirdFarmer.success_count += 1
             logger.info(f"We beat floor 3 of bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
+            if BirdFarmer.total_count >= BirdFarmer.num_floor_3_clears:
+                self.current_state = States.EXIT_FARMER
+                return
+
         if victory:
             print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
 
@@ -234,7 +246,8 @@ class BirdFarmer(IFarmer):
 
             elif self.current_state == States.RESETTING_BIRD:
                 self.resetting_bird_state()
-                # print("We've finished all 3 floors, exiting...")
-                # return
+
+            elif self.current_floor == States.EXIT_FARMER:
+                self.exit_farmer_state()
 
             time.sleep(0.8)

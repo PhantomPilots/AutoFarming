@@ -37,6 +37,10 @@ class IFarmer:
         Not abstract since not all farmers use a fighter, and therefore a 'fight complete callback'.
         """
 
+    def exit_farmer_state(self):
+        """Exit the farming!"""
+        raise KeyboardInterrupt("Terminating process: farming cycle completed.")
+
     @abc.abstractmethod
     def run(self):
         """Needs to be implemented by a subclass"""

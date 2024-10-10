@@ -170,10 +170,6 @@ class FinalBossFarmer(IFarmer):
             print("Oh no, we have lost :( Retrying")
             self.current_state = States.IN_FINAL_BOSS_MENU
 
-    def exit_farmer_state(self):
-        """Exit the farming!"""
-        raise KeyboardInterrupt("Terminating process: farming cycle completed.")
-
     def run(self):
 
         print(f"Farming {self.difficulty} Final Boss, starting from state {self.current_state}.")
