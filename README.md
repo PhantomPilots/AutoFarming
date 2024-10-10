@@ -96,7 +96,7 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for Floor 4 of Bird.
 - [ ] Farmer for floors 1-3 of Deer.
 - [X] Farmer for floors 1-3 of Dogs.
-- [ ] Farmer for floors 1-3 of Snake.
+- [X] Farmer for floors 1-3 of Snake.
 
 ## Longer-term features
 
