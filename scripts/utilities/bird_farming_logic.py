@@ -195,6 +195,7 @@ class BirdFarmer(IFarmer):
             logger.info(f"We beat floor 3 of bird {BirdFarmer.success_count}/{BirdFarmer.total_count} times.")
 
             if BirdFarmer.total_count >= BirdFarmer.num_floor_3_clears:
+                print("We've reached the desired number of floor 3 clears, closing the farmer.")
                 self.current_state = States.EXIT_FARMER
                 return
 
