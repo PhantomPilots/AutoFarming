@@ -73,8 +73,9 @@ class IFighter(abc.ABC):
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        # if empty_card_slots == 1:
-        #     raise RuntimeError("Debugging")
+        if empty_card_slots == 1:
+            index_to_play = selected_cards[1][self.available_card_slots - 1]
+            raise RuntimeError(f"Debugging. Now we should be playing slot index {index_to_play}")
 
         if empty_card_slots > self.available_card_slots:
             # A patch in case we read the available card slots wrongly earlier

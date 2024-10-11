@@ -77,10 +77,17 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
         house_of_cards.insert(0, Card(CardTypes.GROUND, None, None))
 
         # We may need to call this function recursively, in case multiple merges happen!
+        # Right merge
         handle_card_merges(
             house_of_cards,
             left_card_idx=right_card_idx,
             right_card_idx=right_card_idx + 1,
+        )
+        # Left merge
+        handle_card_merges(
+            house_of_cards,
+            left_card_idx=right_card_idx - 1,
+            right_card_idx=right_card_idx,
         )
 
     else:
