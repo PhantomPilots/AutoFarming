@@ -70,6 +70,7 @@ class FinalBossFarmer(IFarmer):
 
         if find(vio.hell_difficulty, screenshot):
             # We're in the final boss menu, move to the next state
+            print("Moving to IN_FINAL_BOSS_MENU")
             self.current_state = States.IN_FINAL_BOSS_MENU
 
     def in_final_boss_menu_state(self):
@@ -81,6 +82,7 @@ class FinalBossFarmer(IFarmer):
 
         # After clicking, if we're on start, move to the battle!
         if find(vio.startbutton, screenshot):
+            print("Moving to READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
             return
 
@@ -128,6 +130,7 @@ class FinalBossFarmer(IFarmer):
         # If we see a SKIP button
         if find(vio.skip_bird, screenshot, threshold=0.7):
             # Go to fight!
+            print("Moving to FIGHTING")
             self.current_state = States.FIGHTING
             return
 
