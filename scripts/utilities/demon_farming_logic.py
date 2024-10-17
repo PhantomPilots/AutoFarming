@@ -111,13 +111,13 @@ class DemonFarmer(IFarmer):
 
         # First, if it's time to check in, do it
         now = datetime.now()
-        if not DemonFarmer.daily_checkin and now.hour == 7 and find(vio.cancel_realtime, screenshot):
+        if not DemonFarmer.daily_checkin and now.hour == 3 and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
             self.current_state = States.DAILY_RESET
             return
 
         # Reset the daily check in flag
-        if now.hour > 20 and DemonFarmer.daily_checkin:
+        if now.hour > 4 and DemonFarmer.daily_checkin:
             print("Resetting daily checkin")
             DemonFarmer.daily_checkin = False
 
