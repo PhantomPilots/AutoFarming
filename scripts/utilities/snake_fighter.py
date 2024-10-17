@@ -70,7 +70,10 @@ class SnakeFighter(IFighter):
         """Count how many empty card slots are there for SNAKE"""
         card_slots_image = get_card_slot_region_image(screenshot)
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
-        # rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
+        rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.7)
+
+        # Pick what type of rectangles to keep
+        rectangles = rectangles_2 if rectangles_2.size else rectangles
 
         if plot and len(rectangles):
             print(f"We have {len(rectangles)} empty slots.")
@@ -91,7 +94,7 @@ class SnakeFighter(IFighter):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        return len(rectangles)  # + len(rectangles_2)
+        return len(rectangles)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
