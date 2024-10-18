@@ -169,6 +169,8 @@ class DogsFighter(IFighter):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=DogsFighter.current_phase)
             self.exit_thread = True
+            # Reset the current phase
+            DogsFighter.current_phase = None
 
     @IFighter.run_wrapper
     def run(self, floor=1):
