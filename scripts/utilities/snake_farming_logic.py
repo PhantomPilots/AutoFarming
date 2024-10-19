@@ -75,11 +75,12 @@ class SnakeFarmer(IFarmer):
         """This should be the original state. Let's go to the snake menu"""
         screenshot, window_location = capture_window()
 
-        # First of all, if we have a dead unit, reset the demonic beast!
-        if find(vio.dead_unit, screenshot, threshold=0.6):
-            logger.info("We have a dead unit! Resetting the demonic beast.")
-            self.current_state = States.RESETTING_SNAKE
-            return
+        # TODO: Implement, currently not working
+        # # First of all, if we have a dead unit, reset the demonic beast!
+        # if find(vio.dead_unit, screenshot, threshold=0.6):
+        #     logger.info("We have a dead unit! Resetting the demonic beast.")
+        #     self.current_state = States.RESETTING_SNAKE
+        #     return
 
         # Go into the 'Snake' section
         if find_and_click(vio.nidhoggr, screenshot, window_location):
