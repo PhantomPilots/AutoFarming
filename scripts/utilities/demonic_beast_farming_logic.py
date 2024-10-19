@@ -77,16 +77,6 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if self.max_floor_3_clears < float("inf"):
             print(f"We're gonna clear floor 3 at most {self.max_floor_3_clears} times.")
 
-    @property
-    @abc.abstractmethod
-    def fighter(self):
-        return self.__fighter
-
-    @fighter.setter
-    @abc.abstractmethod
-    def fighter(self, value: IFighter):
-        self.__fighter = value
-
     def exit_message(self):
         self.logger.info(
             f"We beat {DemonicBeastFarmer.num_victories} floors, {DemonicBeastFarmer.num_floor_3_victories} times floor 3, and lost {DemonicBeastFarmer.num_losses} times."

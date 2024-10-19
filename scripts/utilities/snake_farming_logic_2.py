@@ -38,11 +38,3 @@ class SnakeFarmer(DemonicBeastFarmer):
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
-
-    @property
-    def fighter(self):
-        return self.__fighter
-
-    @fighter.setter
-    def fighter(self, value: IFighter):
-        self.__fighter = value
