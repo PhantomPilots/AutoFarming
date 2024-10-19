@@ -12,8 +12,8 @@ class Coordinates:
         "battle_menu": (502, 676),  # Coordinates for the battle menu in the Tavern screen
         "knighthood": (421, 677),
         # The region in the screenshot corresponding to the card slots
-        "top_left_card_slots": (154, 700),
-        "bottom_right_card_slots": (404, 793),
+        "top_left_card_slots": (150, 690),
+        "bottom_right_card_slots": (410, 800),
         # General demonic beasts
         "floor_top_left": (344, 122),
         "floor_bottom_right": (459, 165),

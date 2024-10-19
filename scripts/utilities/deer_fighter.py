@@ -54,16 +54,16 @@ class DeerFighter(IFighter):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := SnakeFighter.count_empty_card_slots(screenshot, threshold=0.7)) > 0:
+        elif (available_card_slots := DeerFighter.count_empty_card_slots(screenshot, threshold=0.7)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            if (phase := self._identify_phase(screenshot)) != SnakeFighter.current_phase:
+            if (phase := self._identify_phase(screenshot)) != DeerFighter.current_phase:
                 print(f"Moving to phase {phase}!")
-                SnakeFighter.current_phase = phase
+                DeerFighter.current_phase = phase
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -107,8 +107,8 @@ class DeerFighter(IFighter):
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
             self.current_hand = self.battle_strategy.pick_cards(
-                floor=SnakeFighter.current_floor,
-                phase=SnakeFighter.current_phase,
+                floor=DeerFighter.current_floor,
+                phase=DeerFighter.current_phase,
             )
 
         if finished_turn := self.play_cards(self.current_hand):
@@ -132,7 +132,7 @@ class DeerFighter(IFighter):
         screenshot, window_location = capture_window()
 
         # if find(vio.guaranteed_reward, screenshot):
-        #     SnakeFighter.floor_defeated = 3
+        #     DeerFighter.floor_defeated = 3
 
         # Click on the OK button to end the fight
         find_and_click(vio.finished_fight_ok, screenshot, window_location)
@@ -150,16 +150,16 @@ class DeerFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=SnakeFighter.current_phase)
+            self.complete_callback(victory=False, phase=DeerFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
     def run(self, floor_num=1):
 
         # First, set the floor number
-        SnakeFighter.current_floor = floor_num
+        DeerFighter.current_floor = floor_num
 
-        print(f"Fighting very hard on floor {SnakeFighter.current_floor}...")
+        print(f"Fighting very hard on floor {DeerFighter.current_floor}...")
 
         while True:
 
