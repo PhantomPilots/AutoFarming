@@ -148,13 +148,18 @@ class SnakeBattleStrategy(IBattleStrategy):
             if is_stance_cancel_card(hand_of_cards[i]):
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        # Extract the card types
+        # Extract the card types AFTER disabling stance cards
         card_types = np.array([card.card_type.value for card in hand_of_cards])
 
         # ULTIMATES
         ult_ids = np.where(card_types == CardTypes.ULTIMATE.value)[0]
         if len(ult_ids):
             return ult_ids[-1]
+
+        # Liz AOE card
+        liz_aoe_ids = np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]
+        if len(liz_aoe_ids) and not np.any([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards]):
+            return liz_aoe_ids[-1]
 
         # ATTACK CARDS
         attack_ids = np.where((card_types == CardTypes.ATTACK.value) | (card_types == CardTypes.ATTACK_DEBUFF.value))[0]
