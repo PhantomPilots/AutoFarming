@@ -1,4 +1,5 @@
 import abc
+import threading
 from collections import defaultdict
 
 from utilities.general_fighter_interface import IFighter
@@ -6,6 +7,9 @@ from utilities.general_fighter_interface import IFighter
 
 class IFarmer:
     """Generic farmer interface."""
+
+    # For thread-safe variables
+    _lock = threading.Lock()
 
     # For type helping
     current_state: int
