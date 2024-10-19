@@ -89,6 +89,9 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
+        # Card ranks for sorting
+        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
+
         played_freyja_ids = np.where(
             [
                 find(vio.freyja_aoe, card.card_image)
@@ -100,6 +103,8 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         # First, play a buff if possible
         buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]
+        # Sort the buff IDs based on card ranks
+        buff_ids = sorted(buff_ids, key=lambda idx: card_ranks[idx])
         played_buff_ids = np.where([card.card_type == CardTypes.BUFF for card in picked_cards])[0]
         if len(buff_ids) and not len(played_buff_ids):
             return buff_ids[-1]

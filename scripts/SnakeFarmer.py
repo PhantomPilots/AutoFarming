@@ -1,6 +1,5 @@
 from utilities.farming_factory import FarmingFactory
-from utilities.fighting_strategies import SmarterBattleStrategy
-from utilities.snake_farming_logic import SnakeFarmer, States
+from utilities.snake_farming_logic_2 import SnakeFarmer, States
 from utilities.snake_fighting_strategies import SnakeBattleStrategy
 
 
@@ -9,7 +8,10 @@ def main():
     FarmingFactory.main_loop(
         farmer=SnakeFarmer,
         battle_strategy=SnakeBattleStrategy,  # The AI that will pick the cards
-        starting_state=States.GOING_TO_SNAKE,  # Should be 'GOING_TO_DOGS'
+        starting_state=States.GOING_TO_DB,  # It should be 'GOING_TO_DB'
+        reset_after_defeat=False,  # After we lose, should we reset the Demonic Beast team?
+        max_stamina_pots="inf",  # How many stamina pots at most
+        max_floor_3_clears=1,  # How many floor 3 clears at most
     )
 
 

@@ -1,16 +1,14 @@
 import abc
 import threading
 import time
-from collections import defaultdict
 from enum import Enum
 
 import pyautogui as pyautogui
+import utilities.vision_images as vio
+from utilities.general_farmer_interface import IFarmer
 
 # Import all images
-import utilities.vision_images as vio
-from utilities.coordinates import Coordinates
-from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import IFarmer
+from utilities.general_fighter_interface import IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -30,6 +28,7 @@ class States(Enum):
     READY_TO_FIGHT = 2
     FIGHTING_FLOOR = 3
     RESETTING_DB = 4
+    EXIT_FARMER = 5
 
 
 class DemonicBeastFarmer(IFarmer, abc.ABC):
@@ -42,12 +41,24 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
     num_losses = 0
 
     def __init__(
-        self, starting_state=States.GOING_TO_DB, max_stamina_pots="inf", demonic_beast_image: vio.Vision | None = None
+        self,
+        starting_state=States.GOING_TO_DB,
+        max_stamina_pots="inf",
+        max_floor_3_clears="inf",
+        demonic_beast_image: vio.Vision | None = None,
+        reset_after_defeat=False,
+        logger=logger,
     ):
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
 
         # Save the image we want
         self.db_image = demonic_beast_image
+
+        # Save the logger
+        self.logger = logger
+
+        # After we lose, should we reset the Demonic Beast?
+        self.reset_after_defeat = reset_after_defeat
 
         # Initialize the current state
         self.current_state = starting_state
@@ -55,15 +66,32 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # Placeholder for the fight thread
         self.fight_thread = None
 
+        # Ending conditions:
+        # * One will just stop using stamina pots and wait till enough stamina is available.
+        # * The other will exit the farmer when enough floor 3 clears have been reached (especially useful for floor 4's)
         self.max_stamina_pots = float(max_stamina_pots)
         if self.max_stamina_pots < float("inf"):
             print(f"We're gonna use at most {self.max_stamina_pots} stamina pots.")
 
+        self.max_floor_3_clears = float(max_floor_3_clears)
+        if self.max_floor_3_clears < float("inf"):
+            print(f"We're gonna clear floor 3 at most {self.max_floor_3_clears} times.")
+
+    @property
+    @abc.abstractmethod
+    def fighter(self):
+        return self.__fighter
+
+    @fighter.setter
+    @abc.abstractmethod
+    def fighter(self, value: IFighter):
+        self.__fighter = value
+
     def exit_message(self):
-        logger.info(
+        self.logger.info(
             f"We beat {DemonicBeastFarmer.num_victories} floors, {DemonicBeastFarmer.num_floor_3_victories} times floor 3, and lost {DemonicBeastFarmer.num_losses} times."
         )
-        logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
+        self.logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
         self.print_defeats()
 
@@ -74,7 +102,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # TODO: Implement, currently not working
         # # First of all, if we have a dead unit, reset the demonic beast!
         # if find(vio.dead_unit, screenshot, threshold=0.6):
-        #     logger.info("We have a dead unit! Resetting the demonic beast.")
+        #     self.logger.info("We have a dead unit! Resetting the demonic beast.")
         #     self.current_state = States.RESETTING_DB
         #     return
 
@@ -112,8 +140,6 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         """Start the floor fight!"""
 
         screenshot, window_location = capture_window()
-
-        #
 
         # In case we didn't properly click it
         find_and_click(vio.ok_save_party, screenshot, window_location)
@@ -178,36 +204,40 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
                 DemonicBeastFarmer.num_victories += 1
 
                 print(f"Floor {DemonicBeastFarmer.current_floor} complete!")
-                print(
-                    f"We beat {DemonicBeastFarmer.num_victories} floors, {DemonicBeastFarmer.num_floor_3_victories} times floor 3, and lost {DemonicBeastFarmer.num_losses} times"
-                )
 
                 # Update the floor number
                 DemonicBeastFarmer.current_floor = (DemonicBeastFarmer.current_floor % 3) + 1
 
                 # Transition to another state or perform clean-up actions
                 if DemonicBeastFarmer.current_floor == 1:  # Since we updated it already beforehand!
-                    print("We defeated all 3 floors, gotta reset the DB.")
-                    self.current_state = States.RESETTING_DB
                     DemonicBeastFarmer.num_floor_3_victories += 1
-                    return
 
-                # Go straight to the original states
-                print("Moving to GOING_TO_DB")
-                # self.current_state = States.GOING_TO_DB
+                    # Check if we need to exit the farmer due to reaching the max number of desired floor 3 clears
+                    if DemonicBeastFarmer.num_floor_3_victories >= self.max_floor_3_clears:
+                        print("We've reached the desired number of floor 3 clears, closing the farmer.")
+                        self.current_state = States.EXIT_FARMER
+                    else:
+                        # Just reset the team
+                        print("We defeated all 3 floors, gotta reset the DB.")
+                        self.current_state = States.RESETTING_DB
+
+                else:
+                    # Go straight to the original states
+                    print("Moving to GOING_TO_DB")
+                    self.current_state = States.GOING_TO_DB
 
             else:
                 print("The Demonic Beast fighter told me we lost... :/")
                 # print("Resetting the team in case the saved team has very little health")
                 DemonicBeastFarmer.num_losses += 1
-                print(
-                    f"We lost... We beat {DemonicBeastFarmer.num_victories} floors and lost {DemonicBeastFarmer.num_losses} times."
-                )
                 IFarmer.dict_of_defeats[f"Floor {DemonicBeastFarmer.current_floor} Phase {phase}"] += 1
-                # self.current_state = States.RESETTING_DB
 
-            self.print_defeats()
-            self.current_state = States.GOING_TO_DB
+                if self.reset_after_defeat:
+                    self.current_state = States.RESETTING_DB
+                else:
+                    self.current_state = States.GOING_TO_DB
+
+            self.exit_message()
 
     def resetting_db_state(self):
         """If we've finished floor 3, we need to reset the Demonic Beast"""
@@ -245,5 +275,8 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
             elif self.current_state == States.RESETTING_DB:
                 self.resetting_db_state()
+
+            elif self.current_floor == States.EXIT_FARMER:
+                self.exit_farmer_state()
 
             time.sleep(0.8)
