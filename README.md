@@ -10,10 +10,11 @@ Also, use this code at your own risk.
 
 ## Samples
 
-<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="15%" style="margin-right: 10px;">
-<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="15%" style="margin-right: 10px;">
-<img src="readme_images/bird_floor_4_sample.gif" alt="Dogs GIF" width="15%">
-
+<div style="display: flex; justify-content: space-between;">
+<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%">
+<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%">
+<img src="readme_images/bird_floor_4_sample.gif" alt="Dogs GIF" width="20%">
+</div>
 
 
 ## Installation
