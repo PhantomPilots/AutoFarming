@@ -8,6 +8,14 @@ Also, use this code at your own risk.
 
 **Disclaimer 2**: These scripts may not work on 4k monitors for reasons yet unknown.
 
+## Samples
+
+<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%" style="margin-right: 20px;">
+<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%" style="margin-right: 20px;">
+<img src="readme_images/bird_floor_4_sample.gif" alt="Dogs GIF" width="20%">
+
+
+
 ## Installation
 
 #### Git
