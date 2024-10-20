@@ -10,23 +10,13 @@ Also, use this code at your own risk.
 
 ## Samples
 
+Snake farmer, the Dogs farmer, and the Bird Floor 4 farmer:
+
 <div style="display: flex; justify-content: space-between;">
-
-  <div style="text-align: center;">
-    <img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%">
-    <p>Snake farmer</p>
-  </div>
-  <div style="text-align: center;">
-    <img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%">
-    <p>Dogs farmer</p>
-  </div>
-  <div style="text-align: center;">
-    <img src="readme_images/bird_floor_4_sample.gif" alt="Bird GIF" width="20%">
-    <p>Bird Floor 4 farmer</p>
-  </div>
-
+<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%">
+<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%">
+<img src="readme_images/bird_floor_4_sample.gif" alt="Dogs GIF" width="20%">
 </div>
-
 
 
 ## Installation
