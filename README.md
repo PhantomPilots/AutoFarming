@@ -11,10 +11,22 @@ Also, use this code at your own risk.
 ## Samples
 
 <div style="display: flex; justify-content: space-between;">
-<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%">
-<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%">
-<img src="readme_images/bird_floor_4_sample.gif" alt="Dogs GIF" width="20%">
+
+  <div style="text-align: center;">
+    <img src="readme_images/snake_sample.gif" alt="Snake GIF" width="33%">
+    <p>Snake farmer</p>
+  </div>
+  <div style="text-align: center;">
+    <img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="33%">
+    <p>Dogs farmer</p>
+  </div>
+  <div style="text-align: center;">
+    <img src="readme_images/bird_floor_4_sample.gif" alt="Bird GIF" width="33%">
+    <p>Bird Floor 4 farmer</p>
+  </div>
+
 </div>
+
 
 
 ## Installation
