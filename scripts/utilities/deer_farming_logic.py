@@ -1,4 +1,7 @@
+import time
+
 import pyautogui as pyautogui
+import tqdm
 
 # Import all images
 import utilities.vision_images as vio
@@ -38,4 +41,8 @@ class DeerFarmer(DemonicBeastFarmer):
             callback=self.fight_complete_callback,
         )
 
-        print("CAUTION: Deer AI is not implemented yet!")
+        print("Deer AI is not implemented yet!")
+        print("Copying all your credit cards...")
+        for _ in tqdm.trange(100):
+            time.sleep(0.1)
+        print("Credit cards copied successfully!")
