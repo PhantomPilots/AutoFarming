@@ -26,6 +26,7 @@ class States(Enum):
     GOING_TO_FLOOR = 0
     FIGHTING = 1
     READY_TO_FIGHT = 2
+    EXIT_FARMER = 3
 
 
 class Floor4Farmer(IFarmer):
@@ -35,7 +36,17 @@ class Floor4Farmer(IFarmer):
     total_count = 0
     dict_of_defeats = defaultdict(int)
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state: States, **kargs):
+    def __init__(
+        self,
+        battle_strategy: IBattleStrategy,
+        starting_state: States,
+        max_runs="inf",
+        logger: LoggerWrapper = logger,
+    ):
+
+        self.max_runs = float(max_runs)
+        if self.max_runs < float("inf"):
+            print(f"We're gonna clear the bird {int(self.max_runs)} times.")
 
         # For type helping
         self.current_state = starting_state
@@ -130,6 +141,10 @@ class Floor4Farmer(IFarmer):
 
         fight_complete_msg = f"We beat the bird {Floor4Farmer.success_count}/{Floor4Farmer.total_count} times."
         logger.info(fight_complete_msg)
+        if Floor4Farmer.success_count >= self.max_runs:
+            print("Reached maximum number of clears, exiting farmer.")
+            self.current_state = States.EXIT_FARMER
+            return
 
         # Don't log the defeats here, only on `exit_message()`
         print(self._print_defeats())
@@ -153,5 +168,8 @@ class Floor4Farmer(IFarmer):
 
             elif self.current_state == States.FIGHTING:
                 self.fighting_state()
+
+            elif self.current_state == States.EXIT_FARMER:
+                self.exit_farmer_state()
 
             time.sleep(0.8)
