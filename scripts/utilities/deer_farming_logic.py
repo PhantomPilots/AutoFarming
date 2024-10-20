@@ -7,7 +7,7 @@ from utilities.demonic_beast_farming_logic import DemonicBeastFarmer, States
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 
-logger = LoggerWrapper("SnakeLogger", log_file="snake_logger.log")
+logger = LoggerWrapper("DeerLogger", log_file="deer_logger.log")
 
 
 class DeerFarmer(DemonicBeastFarmer):
@@ -27,14 +27,15 @@ class DeerFarmer(DemonicBeastFarmer):
             max_stamina_pots=max_stamina_pots,
             max_floor_3_clears=max_floor_3_clears,
             reset_after_defeat=reset_after_defeat,
-            demonic_beast_image=vio.nidhoggr,
+            demonic_beast_image=vio.eikthyrnir,
             logger=logger,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete.
-        # Using the previous BirdFighter!
         self.fighter: IFighter = DeerFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
+
+        print("CAUTION: Deer AI is not implemented yet!")

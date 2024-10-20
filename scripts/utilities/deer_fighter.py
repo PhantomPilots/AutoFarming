@@ -67,7 +67,7 @@ class DeerFighter(IFighter):
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
-        """Count how many empty card slots are there for SNAKE"""
+        """Count how many empty card slots are there for DEER"""
         card_slots_image = get_card_slot_region_image(screenshot)
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.7)

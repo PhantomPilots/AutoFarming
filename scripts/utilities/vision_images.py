@@ -103,6 +103,12 @@ stance_active = Vision("demonic_beasts\\stance_active.png")
 immortality_buff = Vision("demonic_beasts\\immortality.png")
 thor_thunderstorm = Vision("demonic_beasts\\thor_thunderstorm.png")
 
+# For Deer
+eikthyrnir = Vision("deer\\Eikthyrnir.png")
+red_buff = Vision("deer\\red_buff.png")
+blue_buff = Vision("deer\\blue_buff.png")
+green_buff = Vision("deer\\green_buff.png")
+
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")
 empty_slot_2 = Vision("dogs\\empty_slot_2.png")
