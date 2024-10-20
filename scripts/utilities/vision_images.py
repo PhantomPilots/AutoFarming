@@ -136,6 +136,7 @@ lr_liz_aoe = Vision("snake\\lr_liz_aoe.png")
 snake_stance = Vision("snake\\snake_stance.png")
 snake_f3p2_counter = Vision("snake\\f3p2_counter.png")
 extort = Vision("snake\\extort.png")
+damage_increase = Vision("snake\\damage_increase.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

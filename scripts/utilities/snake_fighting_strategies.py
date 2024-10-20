@@ -85,6 +85,14 @@ class SnakeBattleStrategy(IBattleStrategy):
                 for card in picked_cards
             ]
         )[0]
+        played_stance_cancel_ids = np.where(
+            [
+                find(vio.freyja_st, card.card_image)
+                or find(vio.mael_ult, card.card_image)
+                or find(vio.margaret_st, card.card_image)
+                for card in picked_cards
+            ]
+        )[0]
 
         # First, play a buff if possible
         buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]
@@ -104,14 +112,33 @@ class SnakeBattleStrategy(IBattleStrategy):
                 print("We need to remove the extort!")
                 return liz_aoe_ids[-1]
 
-        # If enemy has stance and we have Mael's ult, use it:
-        mael_ult_id = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
-        if find(vio.snake_f3p2_counter, screenshot, threshold=0.6) and len(mael_ult_id):
-            print("Removing the counter with Mael's ultimate!")
-            return mael_ult_id[-1]
+        mael_ult_id: list[int] = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
+        # If enemy has stance/damage increase, gotta remove it:
+        if find(vio.snake_f3p2_counter, screenshot, threshold=0.6) or find(
+            vio.damage_increase, screenshot, threshold=0.8
+        ):
+            if len(mael_ult_id):
+                print("Removing counter/damage increase with Mael's ultimate!")
+                return mael_ult_id[-1]
+            elif len(
+                freyja_st_ids := np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
+            ) and not len(played_stance_cancel_ids):
+                print("Playing a Freyja ST to remove damage increase or counter.")
+                return freyja_st_ids[-1]
+            # If we don't have Freyja ST cards or Mael's ult, use a Margaret ST ONLY if damage increase is on!
+            elif (
+                find(vio.damage_increase, screenshot, threshold=0.8)
+                and len(
+                    margaret_st_ids := np.where([find(vio.margaret_st, card.card_image) for card in hand_of_cards])[0]
+                )
+                and not len(played_stance_cancel_ids)
+            ):
+                print("Playing a Margaret ST to remove damage increase.")
+                return margaret_st_ids[-1]
+
         elif len(mael_ult_id):
             # Disable Mael's ultimate, to save it for later
-            print("No counter, saving Mael's ultimate for the future.")
+            print("Saving Mael's ultimate for the future...")
             hand_of_cards[mael_ult_id[-1]].card_type = CardTypes.DISABLED
 
         # Play a Freyja card to avoid getting darkness!
