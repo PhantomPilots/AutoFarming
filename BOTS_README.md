@@ -12,11 +12,26 @@ Requirements for it to work properly:
 
 ## Hraesvelgr (Bird) farming script
 
-Now, this script is far more interesting for the majority of the community. It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
+It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
 
 Requirements:
 1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
+3. **Important**: If using green/red Diane, place her in the rightmost position.
+
+## Eikthyrnir (Deer) farming script
+
+The script is named `scripts/DeerFarmer.py`. 
+
+Required team:
+* LR Lostvayne Meli
+* Jormungandr
+* Blue crazy Roxy
+* UR Escanor
+
+Other requirements:
+1. Start the script from within the Deer floor selection screen.
+2. Have the team ready with proper gear.
 
 ## Skoll and Hati (Dogs) farming script
 
@@ -29,7 +44,7 @@ Recommended team (in this order):
 * Thonar with relic and crit-res gear with crit-res rolls. Ideally True Awakened too.
 
 Requirements:
-1. Start the script from within the Dogs floors screen.
+1. Start the script from within the Dogs floor selection screen.
 
 ## Nidhogrr (Snake) farming script
 
@@ -42,7 +57,7 @@ Recommended team:
 * LR Liz
 
 Requirements:
-1. Start the script from within the Snake floors screen.
+1. Start the script from within the Snake floor selection screen.
 
 ## Final Boss farming script
 
