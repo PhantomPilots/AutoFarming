@@ -11,10 +11,10 @@ Also, use this code at your own risk.
 ## Samples
 
 <div style="display: flex; justify-content: space-between;">
-<img src="readme_images/deer_sample.gif" alt="Deer GIF" width="20%">
-<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="20%">
-<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="20%">
-<img src="readme_images/bird_floor_4_sample.gif" alt="Floor4 GIF" width="20%">
+<img src="readme_images/deer_sample.gif" alt="Deer GIF" width="24%">
+<img src="readme_images/dogs_sample.gif" alt="Dogs GIF" width="24%">
+<img src="readme_images/snake_sample.gif" alt="Snake GIF" width="24%">
+<img src="readme_images/bird_floor_4_sample.gif" alt="Floor4 GIF" width="24%">
 </div>
 
 
