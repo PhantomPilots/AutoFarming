@@ -6,7 +6,6 @@ For now it's built for Windows only, but it will change in the future.
 **Disclaimer**: One downside of these scripts is that they cannot run in the background, i.e., you won't be able to use your PC while autofarming.
 Also, use this code at your own risk.
 
-**Disclaimer 2**: These scripts may not work on 4k monitors for reasons yet unknown.
 
 ## Samples
 
