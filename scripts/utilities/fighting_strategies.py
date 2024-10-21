@@ -34,6 +34,9 @@ class IBattleStrategy(abc.ABC):
     card_turn = 0
     cards_to_play = 0
 
+    # In case the fighter dies!
+    picked_cards = []
+
     def pick_cards(self, cards_to_play=4, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
@@ -44,17 +47,16 @@ class IBattleStrategy(abc.ABC):
         print("Card types:", [card.card_type.name for card in hand_of_cards])
         print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
 
-        card_indices = []
-        picked_cards = []
-
         # Extract how many cards we have to play
         IBattleStrategy.cards_to_play = cards_to_play
+
+        card_indices = []
 
         # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
         for _ in range(4):
 
             # Extract the next index to click on
-            next_index = self.get_next_card_index(hand_of_cards, picked_cards, **kwargs)
+            next_index = self.get_next_card_index(hand_of_cards, IBattleStrategy.picked_cards, **kwargs)
             if isinstance(next_index, Integral):
                 # Ensure we don't pick a GROUND card
                 while (
@@ -66,7 +68,7 @@ class IBattleStrategy(abc.ABC):
                     next_index += 1
 
                 print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-                picked_cards.append(hand_of_cards[next_index])
+                IBattleStrategy.picked_cards.append(hand_of_cards[next_index])
 
             elif isinstance(next_index, (tuple, list)):
                 print(f"Moving cards: {next_index}")
@@ -80,7 +82,11 @@ class IBattleStrategy(abc.ABC):
             # Increment the card turn
             IBattleStrategy.card_turn += 1
 
+        # Reset the static variables
         IBattleStrategy.card_turn = 0
+        IBattleStrategy.picked_cards = []
+
+        # Return the result afterwards
         return original_hand_of_cards, card_indices
 
     def _update_hand_of_cards(self, house_of_cards: list[Card], indices: list[int]) -> list[Card]:
