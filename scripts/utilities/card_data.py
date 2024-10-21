@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 import numpy as np
@@ -26,7 +26,7 @@ class CardRanks(Enum):
 
 @dataclass
 class Card:
-    card_type: CardTypes  # From above
-    rectangle: tuple[float, float, float, float]  # window values: [x,y,w,h]
-    card_image: np.ndarray | None  # The card image itself
+    card_type: CardTypes = CardTypes.NONE  # From above
+    rectangle: tuple[float, float, float, float] = field(default_factory=list)  # window values: [x,y,w,h]
+    card_image: np.ndarray | None = None  # The card image itself
     card_rank: CardRanks = CardRanks.NONE  # From above
