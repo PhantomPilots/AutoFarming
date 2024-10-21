@@ -1,17 +1,9 @@
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.deer_utilities import *
+from utilities.card_data import Card, CardTypes
 from utilities.deer_utilities import is_blue_card, is_green_card, is_red_card
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
-from utilities.utilities import (
-    capture_window,
-    determine_card_merge,
-    find,
-    is_ground_card,
-    is_hard_hitting_snake_card,
-    is_stance_cancel_card,
-)
+from utilities.utilities import capture_window, find, is_ground_card
 
 
 class DeerBattleStrategy(IBattleStrategy):
@@ -26,16 +18,6 @@ class DeerBattleStrategy(IBattleStrategy):
             return self.phase_2_4(hand_of_cards, picked_cards)
 
         return self.default_strategy(hand_of_cards, picked_cards)
-
-    def phase_1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
-        """Try not to pick two cards from the same unit"""
-        card_idx = -1 - DeerBattleStrategy.card_turn
-
-        while is_ground_card(hand_of_cards[card_idx]):
-            card_idx -= 1
-            card_idx %= len(hand_of_cards)
-
-        return card_idx
 
     def phase_2_4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Take into account the roulette"""
