@@ -77,10 +77,10 @@ class DeerBattleStrategy(IBattleStrategy):
             return green_card_ids[-1]
 
         # If it's the beginning of the roulette and no color is present...
-        if last_card.card_image is None and len(green_card_ids):
+        if last_card.card_image is None:
             # Pick a green card, since we have twice the chances to have one of those
-            print("Roulette hasn't started, picking a green card by default")
-            return green_card_ids[-1]
+            print("Roulette hasn't started, picking the type that has the most cards.")
+            return max(green_card_ids, red_card_ids, blue_card_ids, key=len)[-1]
 
         # If the above doesn't happen, meaning we don't have available cards for this:
         print("Couldn't find the right card, defaulting to -1...")
