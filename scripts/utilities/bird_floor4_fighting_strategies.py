@@ -376,6 +376,14 @@ class Floor4BattleStrategy(IBattleStrategy):
         if len(ult_ids):
             return ult_ids[-1]
 
+        # If everything is DISABLED, GROUND or NONE except one card, play it (even if it's Meli's ult)
+        not_disabled_ids = np.where(
+            [card.card_type not in [CardTypes.NONE, CardTypes.DISABLED, CardTypes.GROUND] for card in hand_of_cards]
+        )[0]
+        if len(not_disabled_ids) == 1:
+            print("We ONLY have one card available! Playing it even if it's Meli's ultimate")
+            return not_disabled_ids[-1]
+
         # Default to the rightmost index, as long as it's not a Meli ult!
         default_idx = -1
         while find(vio.meli_ult, hand_of_cards[default_idx].card_image):
