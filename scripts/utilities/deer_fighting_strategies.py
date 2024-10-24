@@ -24,19 +24,29 @@ class DeerBattleStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
-        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
-        card_types = np.array([card.card_type.value for card in hand_of_cards])
-        card_ranks[card_types == CardTypes.ULTIMATE.value] = 100
+        card_ranks = self._get_card_ranks(hand_of_cards)
 
+        # Get all card types
         red_card_ids = sorted(
             np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
         blue_card_ids = sorted(
             np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        green_card_ids = sorted(
+        green_card_ids: list[int] = sorted(
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
+
+        # Place buff removal card at the beginning of the list, to save it if necessary
+        green_card_ids = self._reorder_buff_removal_card(hand_of_cards, green_card_ids)
+
+        # First of all, if the beast has an evasion and we haven't played one yet:
+        buff_removal_ids = np.where([find(vio.jorm_2, card.card_image) for card in hand_of_cards])[0]
+        if find(vio.evasion, screenshot, threshold=0.7) and (
+            len(buff_removal_ids) and not np.any([find(vio.jorm_2, card.card_image) for card in picked_cards])
+        ):
+            print("Deer has an evasion, let's remove it")
+            return buff_removal_ids[-1]
 
         # Keep track of last picked card
         last_card = picked_cards[-1] if len(picked_cards) else Card()
@@ -79,9 +89,7 @@ class DeerBattleStrategy(IBattleStrategy):
     def default_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Default strategy: Picked a card whose type has the most number of cards"""
 
-        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
-        card_types = np.array([card.card_type.value for card in hand_of_cards])
-        card_ranks[card_types == CardTypes.ULTIMATE.value] = 100
+        card_ranks = self._get_card_ranks(hand_of_cards)
 
         red_card_ids = sorted(
             np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
@@ -93,6 +101,9 @@ class DeerBattleStrategy(IBattleStrategy):
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
 
+        # Place buff removal card at the beginning of the list, to save it if necessary
+        green_card_ids = self._reorder_buff_removal_card(hand_of_cards, green_card_ids)
+
         max_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=len)
         if len(max_ids):
             print("Defaulting to picking the type that has the most cards.")
@@ -100,3 +111,23 @@ class DeerBattleStrategy(IBattleStrategy):
 
         print("Defaulting...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+
+    def _get_card_ranks(self, hand_of_cards: list[Card]):
+        """Return card ranks with ULTIMATE set to maximum value"""
+        result = np.array([card.card_rank.value for card in hand_of_cards])
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
+        result[card_types == CardTypes.ULTIMATE.value] = 100
+        return result
+
+    def _reorder_buff_removal_card(self, hand_of_cards: list[Card], green_card_ids: list[int]) -> list[Card]:
+        """Place the buff removal card at the beginning of the list"""
+
+        # Add the buff removal ID to the beginning of the list
+        buff_removal_ids = np.where([find(vio.jorm_2, hand_of_cards[idx].card_image) for idx in green_card_ids])[0]
+        if len(buff_removal_ids):
+            print("Setting lowest priority to buff removal card")
+            green_card_ids = np.concatenate(
+                ([green_card_ids[buff_removal_ids[0]]], np.delete(green_card_ids, buff_removal_ids[0]))
+            )
+
+        return green_card_ids
