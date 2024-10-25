@@ -185,7 +185,7 @@ class BirdFarmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.fighter.run, name="BirdFighterTread", daemon=True)
             self.fight_thread.start()
 
-    def fight_complete_callback(self, victory=True):
+    def fight_complete_callback(self, victory=True, phase="unknown"):
         """Called when the fight logic completes."""
 
         if BirdFarmer.current_floor == 3:
@@ -203,7 +203,10 @@ class BirdFarmer(IFarmer):
             print(f"Floor {BirdFarmer.current_floor} complete! Going back to the original state")
 
         else:
-            print("The bird fighter told me they lost... :/")
+            print(f"The bird fighter told me they lost on phase {phase}... ")
+            # Let's reset the bird
+            self.current_state = States.RESETTING_BIRD
+            return
 
         print(f"We've used {IFarmer.stamina_pots} stamina pots so far.")
         # Transition to the original states
