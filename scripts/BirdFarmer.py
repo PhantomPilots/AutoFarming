@@ -9,7 +9,7 @@ def main():
         farmer=BirdFarmer,
         battle_strategy=SmarterBattleStrategy,  # The AI that will pick the cards
         starting_state=States.GOING_TO_BIRD,  # Should be 'GOING_TO_BIRD'
-        num_floor_3_clears=20,  # A number or "inf"
+        num_floor_3_clears="inf",  # A number or "inf"
     )
 
 
