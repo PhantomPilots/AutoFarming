@@ -5,10 +5,13 @@ from enum import Enum
 
 import numpy as np
 import pyautogui as pyautogui
+import pytz
 
 # Import all images
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
+from utilities.daily_farming_logic import DailyFarmer
+from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_farmer_interface import IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
@@ -24,6 +27,9 @@ from utilities.utilities import (
 from utilities.vision import Vision
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
+pacific_timezone = pytz.timezone("America/Los_Angeles")
+
+CHECK_IN_HOUR = 2
 
 
 class States(Enum):
@@ -33,6 +39,7 @@ class States(Enum):
     FIGHTING_DEMON = 3
     DAILY_RESET = 4
     CHECK_IN = 5
+    DAILIES_STATE = 6
 
 
 class DemonFarmer(IFarmer):
@@ -46,12 +53,17 @@ class DemonFarmer(IFarmer):
     # Keep track if we've done the daily check in
     daily_checkin = False
 
+    # The thread for doing dailies
+    dailies_thread = None
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
         starting_state=States.GOING_TO_DEMONS,
         demon_to_farm: Vision = vio.og_demon,
-        time_to_sleep=9.4,
+        time_to_sleep=9.3,
+        do_dailies=False,
+        do_daily_pvp=False,
     ):
 
         # Starting state
@@ -65,6 +77,14 @@ class DemonFarmer(IFarmer):
 
         # How much time to sleep before accepting the invitation -- May need to me hand-tuned
         self.sleep_before_accept = time_to_sleep
+
+        # Thread that will do the dailies
+        self.do_dailies = do_dailies
+        self.daily_farmer = DailyFarmer(
+            starting_state=DailyFarmerStates.IN_TAVERN_STATE,
+            do_daily_pvp=do_daily_pvp,
+            complete_callback=self.dailies_complete_callback,
+        )
 
     def exit_message(self):
         """Final message!"""
@@ -110,14 +130,13 @@ class DemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, if it's time to check in, do it
-        now = datetime.now()
-        if not DemonFarmer.daily_checkin and now.hour == 3 and find(vio.cancel_realtime, screenshot):
+        now = datetime.now(pacific_timezone)
+        if not DemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
             self.current_state = States.DAILY_RESET
             return
-
         # Reset the daily check in flag
-        if now.hour > 4 and DemonFarmer.daily_checkin:
+        if now.hour > CHECK_IN_HOUR and DemonFarmer.daily_checkin:
             print("Resetting daily checkin")
             DemonFarmer.daily_checkin = False
 
@@ -138,7 +157,7 @@ class DemonFarmer(IFarmer):
 
         # We need a backup in case the matchmaking gets cancelled
         if not find(vio.join_request, screenshot):
-            find_and_click(vio.real_time, screenshot, window_location, threshold=0.6)
+            find_and_click(vio.real_time, screenshot, window_location, threshold=0.7)
         if find(self.demon_to_farm, screenshot):
             # The matchmaking got cancelled, change states
             self.current_state = States.GOING_TO_DEMONS
@@ -240,8 +259,26 @@ class DemonFarmer(IFarmer):
 
         if find(vio.battle_menu, screenshot):
             DemonFarmer.daily_checkin = True
-            print("Back to GOING_TO_DEMONS!")
-            self.current_state = States.GOING_TO_DEMONS
+            if self.do_dailies:
+                print("Going to do all dailies!")
+                self.current_state = States.DAILIES_STATE
+            else:
+                print("Back to GOING_TO_DEMONS!")
+                self.current_state = States.GOING_TO_DEMONS
+
+    def dailies_state(self):
+        """Run the thread to do all dailies"""
+
+        if DemonFarmer.dailies_thread is None or not DemonFarmer.dailies_thread.is_alive():
+            DemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
+            DemonFarmer.dailies_thread.start()
+            print("Dailies farmer started!")
+
+    def dailies_complete_callback(self):
+        """The dailies thread told us we're done with all the dailies, go back to farming demons"""
+
+        print("All dailies complete! Going back to farming demons.")
+        self.current_state = States.GOING_TO_DEMONS
 
     def run(self):
 
@@ -266,6 +303,9 @@ class DemonFarmer(IFarmer):
 
             elif self.current_state == States.CHECK_IN:
                 self.check_in_state()
+
+            elif self.current_state == States.DAILIES_STATE:
+                self.dailies_state()
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

@@ -221,7 +221,15 @@ normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
 plus_auto_ticket = Vision("dailies\\plus_auto_ticket.png")
 # Patrol
 complete_all = Vision("dailies\\complete_all.png")
-patrol_reward = Vision("dailies\\patrol_reward.png")
+reward = Vision("dailies\\patrol_reward.png")
 set_all_patrol = Vision("dailies\\set_all.png")
 patrol_all = Vision("dailies\\patrol_all.png")
 patrol_dispatched = Vision("dailies\\patrol_dispatched.png")
+# Fort Solgress
+fort_solgress_special = Vision("dailies\\fs_special.png")
+fs_event_dungeon = Vision("dailies\\event_dungeon.png")
+fs_special_6th_floor = Vision("dailies\\6th_floor.png")
+# Friendship coins
+send_friendship_coins = Vision("dailies\\send_friendship_coins.png")
+claim_all = Vision("dailies\\claim_all.png")
+exit_cross = Vision("dailies\\exit_cross.png")
