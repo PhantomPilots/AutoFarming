@@ -2,7 +2,7 @@ from utilities.vision import Vision
 
 # TODO:
 
-# Load all images
+# General images
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")
@@ -52,6 +52,8 @@ knighthood = Vision("knighthood.png")
 check_in = Vision("check_in.png")
 check_in_reward = Vision("check_in_reward.png")
 check_in_complete = Vision("check_in_complete.png")
+battle_menu = Vision("battle_menu.jpg")
+
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
@@ -173,7 +175,6 @@ fb_aut_off = Vision("final_boss\\auto_off.png")
 
 # For demon farming
 boss_menu = Vision("demons\\demons.jpg")
-battle_menu = Vision("demons\\battle_menu.jpg")
 red_demon = Vision("demons\\red.jpg")
 gray_demon = Vision("demons\\gray.jpg")
 crimson_demon = Vision("demons\\crimson.jpg")
@@ -191,3 +192,20 @@ demons_destroyed = Vision("demons\\demons_destroyed.png")
 demon_ok = Vision("demons\\demon_ok.jpg")
 demon_defeat_ok = Vision("demons\\dead_ok.jpg")
 demon_kicked_ok = Vision("demons\\kicked_ok.png")
+
+
+# For dailies
+go_now = Vision("dailies\\go_now.png")
+coins_shop = Vision("dailies\\coins.png")
+mail = Vision("dailies\\mail.png")
+normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
+pvp_mode = Vision("dailies\\pvp_mode.png")
+quest_info = Vision("dailies\\quest_info.png")
+daily_result = Vision("dailies\\result.png")
+shop = Vision("dailies\\shop.png")
+auto_clear = Vision("dailies\\auto_clear.png")
+strart_auto_clear = Vision("dailies\\start_auto_clear.png")
+quests = Vision("dailies\\quests.png")
+tasks = Vision("dailies\\tasks.png")
+daily_pvp = Vision("dailies\\daily_pvp.png")
+daily_boss_battle = Vision("dailies\\daily_boss_battle.png")

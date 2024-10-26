@@ -54,8 +54,19 @@ class DailyFarmer(IFarmer):
         # Cleanup before exiting
         DailyFarmer.exit_flag = True
 
+    def find_next_mission(self) -> States | None:
+        """Identify the next mission to do, by scrolling if we can't find any match.
+        Returns a State or None if nothing can be found"""
+        screenshot, window_location = capture_window()
+
     def in_tavern_state(self):
         """We're in the tavern, go to the next task."""
+
+        screenshot, window_location = capture_window()
+
+        # Click on the dailies menu
+
+        # Click on the next "Go now" -> How to identify the next state from this?
 
     def boss_state(self):
         """Handle the boss state."""
