@@ -122,6 +122,27 @@ class DailyFarmer(IFarmer):
             window_location=(window_location[0] + rectangle[0], window_location[1] + rectangle[1]),
         )
 
+    def mission_complete_state(self):
+        """We've complete a mission, go back to the tavern"""
+        screenshot, window_location = capture_window()
+
+        # If we can already go to the quest menu, go right away!
+        if find(vio.quests, screenshot):
+            print("Going back to the Quests menu")
+            self.current_state = States.IN_TAVERN_STATE
+            return
+
+        # Patrol dispatched successfully
+        find_and_click(vio.patrol_dispatched, screenshot, window_location)
+        # Daily quest for when a battle happened
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+        # In case we need to cancel something
+        find_and_click(vio.cancel, screenshot, window_location)
+        # Click on the Result
+        find_and_click(vio.daily_result, screenshot, window_location)
+        # Go back
+        find_and_click(vio.back, screenshot, window_location)
+
     def in_tavern_state(self):
         """We're in the tavern, go to the next task."""
 
@@ -163,24 +184,6 @@ class DailyFarmer(IFarmer):
             self.current_state = States.MISSION_COMPLETE_STATE
             return
 
-    def mission_complete_state(self):
-        """We've complete a mission, go back to the tavern"""
-        screenshot, window_location = capture_window()
-
-        # If we can already go to the quest menu, go right away!
-        if find(vio.quests, screenshot):
-            print("Going back to the Quests menu")
-            self.current_state = States.IN_TAVERN_STATE
-            return
-
-        find_and_click(vio.daily_quest_info, screenshot, window_location)
-        # In case we need to cancel something
-        find_and_click(vio.cancel, screenshot, window_location)
-        # Click on the Result
-        find_and_click(vio.daily_result, screenshot, window_location)
-        # Go back
-        find_and_click(vio.back, screenshot, window_location)
-
     def vanya_ale_state(self):
         """Handle the Vanya Ale state."""
 
@@ -195,6 +198,22 @@ class DailyFarmer(IFarmer):
 
     def patrol_state(self):
         """Handle the Patrol state."""
+        screenshot, window_location = capture_window()
+
+        if find(vio.daily_tasks, screenshot):
+            # Go to the mission
+            print("Going to the mission...")
+            self.go_to_mission(vio.daily_patrol, screenshot, window_location)
+
+        if find(vio.patrol_dispatched, screenshot):
+            print("Finished Patrol mission")
+            self.current_state = States.MISSION_COMPLETE_STATE
+            return
+
+        find_and_click(vio.patrol_all, screenshot, window_location)
+        find_and_click(vio.set_all_patrol, screenshot, window_location)
+        find_and_click(vio.patrol_reward, screenshot, window_location)
+        find_and_click(vio.complete_all, screenshot, window_location)
 
     def friendship_coins_state(self):
         """Handle the Friendship Coins state."""
@@ -238,4 +257,4 @@ class DailyFarmer(IFarmer):
             if DailyFarmer.exit_flag:
                 break
 
-            time.sleep(0.8)
+            time.sleep(1)
