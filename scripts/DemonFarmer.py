@@ -8,8 +8,8 @@ def main():
     FarmingFactory.main_loop(
         farmer=DemonFarmer,
         starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
-        demon_to_farm=vio.bell_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'
-        time_to_sleep=9.4,  # How many seconds to sleep before accepting an invitation
+        demon_to_farm=vio.og_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'
+        time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation
     )
 
 
