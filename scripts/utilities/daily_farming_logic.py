@@ -47,7 +47,6 @@ class DailyFarmer(IFarmer):
 
     def __init__(
         self,
-        battle_strategy=None,
         starting_state=States.IN_TAVERN_STATE,
         do_daily_pvp=False,
         logger=logger,
@@ -58,8 +57,6 @@ class DailyFarmer(IFarmer):
             DailyFarmer.current_state = starting_state
 
         self.logger = logger
-        # Not needed, remove?
-        self.batle_strategy = battle_strategy
 
         # Do we do daily PVP?
         self.do_daily_pvp = do_daily_pvp
