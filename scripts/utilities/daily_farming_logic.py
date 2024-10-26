@@ -43,7 +43,7 @@ class States(Enum):
 
 class DailyFarmer(IFarmer):
 
-    current_state = States.IN_TAVERN_STATE
+    current_state = None
 
     def __init__(
         self,
@@ -54,7 +54,8 @@ class DailyFarmer(IFarmer):
         complete_callback: Callable = None,
     ):
 
-        DailyFarmer.current_state = starting_state
+        if DailyFarmer.current_state is None:
+            DailyFarmer.current_state = starting_state
 
         self.logger = logger
         # Not needed, remove?
