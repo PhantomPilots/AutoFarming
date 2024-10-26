@@ -53,6 +53,7 @@ check_in = Vision("check_in.png")
 check_in_reward = Vision("check_in_reward.png")
 check_in_complete = Vision("check_in_complete.png")
 battle_menu = Vision("battle_menu.jpg")
+cancel = Vision("cancel.png")
 
 
 # Equipment farming
@@ -198,7 +199,6 @@ demon_kicked_ok = Vision("demons\\kicked_ok.png")
 go_now = Vision("dailies\\go_now.png")
 coins_shop = Vision("dailies\\coins.png")
 mail = Vision("dailies\\mail.png")
-normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
 pvp_mode = Vision("dailies\\pvp_mode.png")
 daily_quest_info = Vision("dailies\\quest_info.png")
 daily_result = Vision("dailies\\result.png")
@@ -215,3 +215,7 @@ daily_vanya_ale = Vision("dailies\\daily_vanya_ale.png")
 take_all_rewards = Vision("dailies\\take_all.png")
 tasks = Vision("dailies\\tasks.png")
 daily_tasks = Vision("dailies\\daily_tasks.png")
+# Daily boss fight
+boss_battle = Vision("dailies\\boss_battle.png")
+normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
+plus_auto_ticket = Vision("dailies\\plus_auto_ticket.png")
