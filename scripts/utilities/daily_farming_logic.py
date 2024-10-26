@@ -27,7 +27,7 @@ logger = LoggerWrapper(name="DailyLogger", log_file="daily_farmer_logger.log")
 
 
 class States(Enum):
-    IN_TAVERN = 0
+    IN_TAVERN_STATE = 0
     BOSS_STATE = auto()
     VANYA_ALE_STATE = auto()
     FORT_SOLRGESS_STATE = auto()
@@ -42,31 +42,86 @@ class DailyFarmer(IFarmer):
 
     exit_flag = False
 
-    def __init__(self, battle_strategy=None, starting_state=States.IN_TAVERN, logger=logger):
+    def __init__(
+        self,
+        battle_strategy=None,
+        starting_state=States.IN_TAVERN_STATE,
+        do_daily_pvp=False,
+        logger=logger,
+    ):
 
         self.logger = logger
         self.current_state = starting_state
         # Not needed, remove?
         self.batle_strategy = battle_strategy
 
+        self.do_daily_pvp = do_daily_pvp
+
     def exit_farmer_state(self):
+        screenshot, window_location = capture_window()
+
+        # First, ensure we're back on the tavern
+        find_and_click(vio.tavern, screenshot, window_location)
 
         # Cleanup before exiting
         DailyFarmer.exit_flag = True
 
     def find_next_mission(self) -> States | None:
         """Identify the next mission to do, by scrolling if we can't find any match.
-        Returns a State or None if nothing can be found"""
+        If we don't find a match by "Take all" is available, click on it.
+        Else, we're done with all the dailies.
+
+        Returns:
+            State | None: The next state to move to. `None` if we're staying in the tavern state for now.
+        """
         screenshot, window_location = capture_window()
+
+        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.8):
+            print("Going to PVP_STATE")
+            return States.PVP_STATE
+        if find(vio.daily_boss_battle, screenshot, threshold=0.8):
+            print("Going to BOSS_STATE")
+            return States.BOSS_STATE
+        if find(vio.daily_patrol, screenshot, threshold=0.8):
+            print("Going to PATROL_STATE")
+            return States.PATROL_STATE
+        if find(vio.daily_fort_solgress, screenshot, threshold=0.8):
+            print("Going to FORT_SOLGRESS_STATE")
+            return States.FORT_SOLRGESS_STATE
+        if find(vio.daily_vanya_ale, screenshot, threshold=0.8):
+            print("Going to VANYA_ALE_STATE")
+            return States.VANYA_ALE_STATE
+        if find(vio.daily_friendship_coins, screenshot, threshold=0.8):
+            print("Going to FRIENDSHIP_COINS_STATE")
+            return States.FRIENDSHIP_COINS_STATE
+
+        # If we're here, we can find no missions. Take all and try again
+        if find_and_click(vio.take_all_rewards, screenshot, threshold=0.8):
+            print("Can't find any mission, taking all rewards for now.")
+            return
+
+        # If we're here, means we're done with all dailies.
+        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8)
+        if find(vio.battle_menu, screenshot):
+            print("We're done with daily missions, hooray!")
+            # Only go to the EXIT state if we're in the tavern already.
+            return States.EXIT_FARMER
 
     def in_tavern_state(self):
         """We're in the tavern, go to the next task."""
 
         screenshot, window_location = capture_window()
 
-        # Click on the dailies menu
+        if find(vio.daily_tasks, screenshot):
+            # Find the next mission and change the state accordingly
+            print("Picking next daily to complete...")
+            next_state = self.find_next_mission()
+            self.current_state = next_state if next_state is not None else States.IN_TAVERN_STATE
 
-        # Click on the next "Go now" -> How to identify the next state from this?
+        # Try to go to tasks
+        elif not find_and_click(vio.tasks, screenshot, window_location):
+            # Go to quests
+            find_and_click(vio.quests, screenshot, window_location)
 
     def boss_state(self):
         """Handle the boss state."""
@@ -94,7 +149,7 @@ class DailyFarmer(IFarmer):
         self.logger.info("Doing dailies!")
 
         while True:
-            if self.current_state == States.IN_TAVERN:
+            if self.current_state == States.IN_TAVERN_STATE:
                 self.in_tavern_state()
 
             elif self.current_state == States.BOSS_STATE:
@@ -124,3 +179,5 @@ class DailyFarmer(IFarmer):
             # Close the daily farmer
             if DailyFarmer.exit_flag:
                 break
+
+            time.sleep(0.8)
