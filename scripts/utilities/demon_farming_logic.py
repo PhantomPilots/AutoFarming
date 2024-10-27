@@ -29,7 +29,7 @@ from utilities.vision import Vision
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 pacific_timezone = pytz.timezone("America/Los_Angeles")
 
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 4
 
 
 class States(Enum):

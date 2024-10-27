@@ -34,11 +34,12 @@ class States(Enum):
     VANYA_ALE_STATE = auto()
     FORT_SOLRGESS_STATE = auto()
     PVP_STATE = auto()
-    BRAWL_STATE = auto()
     PATROL_STATE = auto()
     FRIENDSHIP_COINS_STATE = auto()
     EXIT_FARMER = auto()
     MISSION_COMPLETE_STATE = auto()
+    GOING_TO_BRAWL = auto()
+    BRAWL_STATE = auto()
 
 
 class DailyFarmer(IFarmer):
@@ -48,6 +49,7 @@ class DailyFarmer(IFarmer):
     def __init__(
         self,
         starting_state=States.IN_TAVERN_STATE,
+        battle_strategy=None,  # Find a way to remove this, not all farmers need a battle strategy
         do_daily_pvp=False,
         logger=logger,
         complete_callback: Callable = None,
@@ -68,10 +70,13 @@ class DailyFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, ensure we're back on the tavern
-        find_and_click(vio.tavern, screenshot, window_location)
+        click_and_sleep(vio.tavern, screenshot, window_location, sleep_time=1)
+        screenshot, window_location = capture_window()
+        find_and_click(vio.fb_ok_button, screenshot, window_location)
 
         # Call the complete callback!
-        self.complete_callback()
+        if self.complete_callback is not None:
+            self.complete_callback()
 
         # Cleanup before exiting
         super().exit_farmer_state()
@@ -86,55 +91,61 @@ class DailyFarmer(IFarmer):
         """
         screenshot, window_location = capture_window()
 
-        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.9):
+        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.85):
             print("Going to PVP_STATE")
             return States.PVP_STATE
-        if find(vio.daily_boss_battle, screenshot, threshold=0.9):
+        if find(vio.daily_boss_battle, screenshot, threshold=0.85):
             print("Going to BOSS_STATE")
             return States.BOSS_STATE
-        if find(vio.daily_patrol, screenshot, threshold=0.9):
+        if find(vio.daily_patrol, screenshot, threshold=0.85):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
-        if find(vio.daily_fort_solgress, screenshot, threshold=0.9):
+        if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
             print("Going to FORT_SOLGRESS_STATE")
             return States.FORT_SOLRGESS_STATE
-        if find(vio.daily_vanya_ale, screenshot, threshold=0.9):
+        if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
             print("Going to VANYA_ALE_STATE")
             return States.VANYA_ALE_STATE
-        if find(vio.daily_friendship_coins, screenshot, threshold=0.9):
+        if find(vio.daily_friendship_coins, screenshot, threshold=0.85):
             print("Going to FRIENDSHIP_COINS_STATE")
             return States.FRIENDSHIP_COINS_STATE
 
-        # If there's no 'go now', means we're done with the missions
-        if not find(vio.go_now, screenshot):
-            print("No more missions, exiting the daily farmer")
-            return States.EXIT_FARMER
-
         # If we're here, we can find no missions. Take all and try again
-        if find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.9):
+        if find(vio.daily_complete, screenshot):
+            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.85)
             # TODO: Re-take the 'take all rewards' image
             print("Can't find any mission, taking all rewards for now.")
             return
 
-        # If we're here, means we're done with all dailies.
-        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8)
-        if find(vio.battle_menu, screenshot):
-            print("We're done with daily missions, hooray!")
-            # Only go to the EXIT state if we're in the tavern already.
-            return States.EXIT_FARMER
+        # If there's no 'go now', means we're done with the missions
+        if not find(vio.go_now, screenshot):
+            print("No more missions, going to collect Brawl reward now.")
+            # return States.EXIT_FARMER
+            find_and_click(vio.back, screenshot, window_location)
+            return States.GOING_TO_BRAWL
+
+        # # If we're here, means we're done with all dailies.
+        # find_and_click(vio.tavern, screenshot, window_location, threshold=0.8)
+        # if find(vio.battle_menu, screenshot):
+        #     print("We're done with daily missions, hooray!")
+        #     # Only go to the EXIT state if we're in the tavern already.
+        #     return States.EXIT_FARMER
 
     def go_to_mission(self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int]):
         """Click on 'Go Now' corresponding to the specific vision image"""
         # Extract the portion we want to click on
         rectangle = vision_image.find(screenshot, threshold=0.8)
-        rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
 
-        # Click on `Go Now`
-        find_and_click(
-            vio.go_now,
-            rectangle_image,
-            window_location=(window_location[0] + rectangle[0], window_location[1] + rectangle[1]),
-        )
+        if len(rectangle):
+            rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
+
+            print("Going to the mission...")
+            # Click on `Go Now`
+            find_and_click(
+                vio.go_now,
+                rectangle_image,
+                window_location=(window_location[0] + rectangle[0], window_location[1] + rectangle[1]),
+            )
 
     def mission_complete_state(self):
         """We've complete a mission, go back to the tavern"""
@@ -146,6 +157,8 @@ class DailyFarmer(IFarmer):
             DailyFarmer.current_state = States.IN_TAVERN_STATE
             return
 
+        # If there's any OK button
+        find_and_click(vio.ok_button, screenshot, window_location)
         # In case we see a cross, exit
         find_and_click(vio.exit_cross, screenshot, window_location)
         # Patrol dispatched successfully
@@ -182,7 +195,6 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_boss_battle, screenshot, window_location)
 
         if find(vio.daily_quest_info, screenshot):
@@ -207,11 +219,11 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_vanya_ale, screenshot, window_location)
 
-        # Consider the mission done already, since it's all automatic!
-        DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
+        if find(vio.meli_affection, screenshot):
+            # Consider the mission done already, since it's all automatic!
+            DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
     def fort_solrgess_state(self):
         """Handle the Fort Solrgess state."""
@@ -219,7 +231,6 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location)
 
         if find(vio.daily_quest_info, screenshot):
@@ -253,11 +264,7 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_pvp, screenshot, window_location)
-
-    def brawl_state(self):
-        """Handle the Brawl state."""
 
     def patrol_state(self):
         """Handle the Patrol state."""
@@ -265,7 +272,6 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_patrol, screenshot, window_location)
 
         if find(vio.patrol_dispatched, screenshot):
@@ -284,7 +290,6 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            print("Going to the mission...")
             self.go_to_mission(vio.daily_friendship_coins, screenshot, window_location)
 
         if find_and_click(vio.send_friendship_coins, screenshot, window_location, threshold=0.8):
@@ -296,6 +301,34 @@ class DailyFarmer(IFarmer):
         if find_and_click(vio.claim_all, screenshot, window_location):
             print("Mission complete!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
+
+    def going_to_brawl_state(self):
+        """Go get Brawl."""
+        screenshot, window_location = capture_window()
+
+        find_and_click(vio.battle_menu, screenshot, window_location)
+
+        if find(vio.brawl, screenshot):
+            print("Going to BRAWL")
+            DailyFarmer.current_state = States.BRAWL_STATE
+
+    def brawl_state(self):
+        """Once we collect the reward, exit the farmer"""
+        screenshot, window_location = capture_window()
+
+        find_and_click(vio.brawl, screenshot, window_location)
+
+        if find(vio.receive_brawl, screenshot):
+            # Only try it once. If it fails, tough luck
+            time.sleep(4)
+            find_and_click(vio.receive_brawl, screenshot, window_location)
+            time.sleep(1)
+            press_key("esc")
+            time.sleep(1)
+            find_and_click(vio.back, screenshot, window_location)
+            print("Assuming Brawl reward collected, exiting daily farmer.")
+            DailyFarmer.current_state = States.EXIT_FARMER
+            return
 
     def run(self):
 
@@ -328,6 +361,11 @@ class DailyFarmer(IFarmer):
 
             elif DailyFarmer.current_state == States.MISSION_COMPLETE_STATE:
                 self.mission_complete_state()
+
+            elif DailyFarmer.current_state == States.GOING_TO_BRAWL:
+                self.going_to_brawl_state()
+            elif DailyFarmer.current_state == States.BRAWL_STATE:
+                self.brawl_state()
 
             elif DailyFarmer.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()

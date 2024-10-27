@@ -215,6 +215,7 @@ daily_vanya_ale = Vision("dailies\\daily_vanya_ale.png")
 take_all_rewards = Vision("dailies\\take_all.png")
 tasks = Vision("dailies\\tasks.png")
 daily_tasks = Vision("dailies\\daily_tasks.png")
+daily_complete = Vision("dailies\\complete.png")
 # Daily boss fight
 boss_battle = Vision("dailies\\boss_battle.png")
 normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
@@ -233,3 +234,8 @@ fs_special_6th_floor = Vision("dailies\\6th_floor.png")
 send_friendship_coins = Vision("dailies\\send_friendship_coins.png")
 claim_all = Vision("dailies\\claim_all.png")
 exit_cross = Vision("dailies\\exit_cross.png")
+# Vanya ale
+meli_affection = Vision("dailies\\meli_affection.png")
+# Brawl
+brawl = Vision("dailies\\brawl.png")
+receive_brawl = Vision("dailies\\receive_brawl.png")
