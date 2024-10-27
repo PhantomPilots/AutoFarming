@@ -209,6 +209,8 @@ class DemonFarmer(IFarmer):
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
                 DemonFarmer.demons_destroyed += 1
+            else:
+                print("We lost :(")
             DemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've destroyed {DemonFarmer.demons_destroyed} demons.")
