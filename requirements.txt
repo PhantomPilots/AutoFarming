@@ -3,6 +3,7 @@ numpy==1.26.1
 opencv-python
 pyautogui
 pynput
+pytz
 pywin32
 scikit-learn==1.5.1
 termcolor

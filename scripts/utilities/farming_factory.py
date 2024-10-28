@@ -1,3 +1,5 @@
+import io
+import os
 import sys
 
 from utilities.fighting_strategies import IBattleStrategy

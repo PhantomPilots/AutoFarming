@@ -2,7 +2,7 @@ from utilities.vision import Vision
 
 # TODO:
 
-# Load all images
+# General images
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")
@@ -52,6 +52,9 @@ knighthood = Vision("knighthood.png")
 check_in = Vision("check_in.png")
 check_in_reward = Vision("check_in_reward.png")
 check_in_complete = Vision("check_in_complete.png")
+battle_menu = Vision("battle_menu.jpg")
+cancel = Vision("cancel.png")
+
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
@@ -173,7 +176,6 @@ fb_aut_off = Vision("final_boss\\auto_off.png")
 
 # For demon farming
 boss_menu = Vision("demons\\demons.jpg")
-battle_menu = Vision("demons\\battle_menu.jpg")
 red_demon = Vision("demons\\red.jpg")
 gray_demon = Vision("demons\\gray.jpg")
 crimson_demon = Vision("demons\\crimson.jpg")
@@ -191,3 +193,51 @@ demons_destroyed = Vision("demons\\demons_destroyed.png")
 demon_ok = Vision("demons\\demon_ok.jpg")
 demon_defeat_ok = Vision("demons\\dead_ok.jpg")
 demon_kicked_ok = Vision("demons\\kicked_ok.png")
+
+
+# For dailies
+go_now = Vision("dailies\\go_now.png")
+coins_shop = Vision("dailies\\coins.png")
+mail = Vision("dailies\\mail.png")
+pvp_mode = Vision("dailies\\pvp_mode.png")
+daily_quest_info = Vision("dailies\\quest_info.png")
+daily_result = Vision("dailies\\result.png")
+shop = Vision("dailies\\shop.png")
+auto_clear = Vision("dailies\\auto_clear.png")
+strart_auto_clear = Vision("dailies\\start_auto_clear.png")
+quests = Vision("dailies\\quests.png")
+daily_pvp = Vision("dailies\\daily_pvp.png")
+daily_boss_battle = Vision("dailies\\daily_boss_battle.png")
+daily_fort_solgress = Vision("dailies\\daily_fort_solgress.png")
+daily_friendship_coins = Vision("dailies\\daily_friendship_coins.png")
+daily_patrol = Vision("dailies\\daily_patrol.png")
+daily_vanya_ale = Vision("dailies\\daily_vanya_ale.png")
+take_all_rewards = Vision("dailies\\take_all.png")
+tasks = Vision("dailies\\tasks.png")
+daily_tasks = Vision("dailies\\daily_tasks.png")
+daily_complete = Vision("dailies\\complete.png")
+# Daily boss fight
+boss_battle = Vision("dailies\\boss_battle.png")
+normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
+plus_auto_ticket = Vision("dailies\\plus_auto_ticket.png")
+# Patrol
+complete_all = Vision("dailies\\complete_all.png")
+reward = Vision("dailies\\patrol_reward.png")
+set_all_patrol = Vision("dailies\\set_all.png")
+patrol_all = Vision("dailies\\patrol_all.png")
+patrol_dispatched = Vision("dailies\\patrol_dispatched.png")
+# Fort Solgress
+fort_solgress_special = Vision("dailies\\fs_special.png")
+fs_event_dungeon = Vision("dailies\\event_dungeon.png")
+fs_special_6th_floor = Vision("dailies\\6th_floor.png")
+# Friendship coins
+send_friendship_coins = Vision("dailies\\send_friendship_coins.png")
+claim_all = Vision("dailies\\claim_all.png")
+exit_cross = Vision("dailies\\exit_cross.png")
+# Vanya ale
+meli_affection = Vision("dailies\\meli_affection.png")
+# Brawl
+brawl = Vision("dailies\\brawl.png")
+receive_brawl = Vision("dailies\\receive_brawl.png")
+view_pvp_results = Vision("dailies\\view_results.png")
+join_all = Vision("dailies\\join_all.png")
