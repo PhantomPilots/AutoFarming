@@ -387,6 +387,9 @@ class DemonRouletteFarmer(DemonFarmer):
             elif self.current_state == States.CHECK_IN:
                 self.check_in_state()
 
+            elif self.current_state == States.DAILIES_STATE:
+                self.dailies_state()
+
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()
                 time.sleep(1)
