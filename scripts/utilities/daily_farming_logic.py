@@ -70,16 +70,15 @@ class DailyFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, ensure we're back on the tavern
-        click_and_sleep(vio.tavern, screenshot, window_location, sleep_time=1)
-        screenshot, window_location = capture_window()
-        find_and_click(vio.fb_ok_button, screenshot, window_location)
+        find_and_click(vio.back, screenshot, window_location)
 
         # Call the complete callback!
-        if self.complete_callback is not None:
-            self.complete_callback()
+        if find(vio.tavern, screenshot):
+            if self.complete_callback is not None:
+                self.complete_callback()
 
-        # Cleanup before exiting
-        super().exit_farmer_state()
+            # Cleanup before exiting
+            super().exit_farmer_state()
 
     def find_next_mission(self) -> States | None:
         """Identify the next mission to do, by scrolling if we can't find any match.
@@ -124,12 +123,13 @@ class DailyFarmer(IFarmer):
             find_and_click(vio.back, screenshot, window_location)
             return States.GOING_TO_BRAWL
 
-        # # If we're here, means we're done with all dailies.
-        # find_and_click(vio.tavern, screenshot, window_location, threshold=0.8)
-        # if find(vio.battle_menu, screenshot):
-        #     print("We're done with daily missions, hooray!")
-        #     # Only go to the EXIT state if we're in the tavern already.
-        #     return States.EXIT_FARMER
+        # If we're here, means we're done with all dailies.
+        click_and_sleep(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
+        screenshot, _ = capture_window()
+        if find(vio.battle_menu, screenshot, threshold=0.6):
+            print("No more missions, going to collect Brawl reward now.")
+            # Only go to the EXIT state if we're in the tavern already.
+            return States.GOING_TO_BRAWL
 
     def go_to_mission(self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int]):
         """Click on 'Go Now' corresponding to the specific vision image"""
@@ -139,7 +139,7 @@ class DailyFarmer(IFarmer):
         if len(rectangle):
             rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
 
-            print("Going to the mission...")
+            print(f"Going to the '{vision_image.image_name}' mission...")
             # Click on `Go Now`
             find_and_click(
                 vio.go_now,
@@ -293,20 +293,21 @@ class DailyFarmer(IFarmer):
             self.go_to_mission(vio.daily_friendship_coins, screenshot, window_location)
 
         if find_and_click(vio.send_friendship_coins, screenshot, window_location, threshold=0.8):
-            return
-
-        if find_and_click(vio.mail, screenshot, window_location):
-            return
-
-        if find_and_click(vio.claim_all, screenshot, window_location):
-            print("Mission complete!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
+            return
+
+        # if find_and_click(vio.mail, screenshot, window_location):
+        #     return
+
+        # if find_and_click(vio.claim_all, screenshot, window_location):
+        #     print("Mission complete!")
+        #     DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
     def going_to_brawl_state(self):
         """Go get Brawl."""
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.battle_menu, screenshot, window_location)
+        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
         if find(vio.brawl, screenshot):
             print("Going to BRAWL")
@@ -317,6 +318,11 @@ class DailyFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         find_and_click(vio.brawl, screenshot, window_location)
+        find_and_click(vio.view_pvp_results, screenshot, window_location)
+        find_and_click(vio.join_all, screenshot, window_location)
+        find_and_click(vio.ok_button, screenshot, window_location)
+        # For when CHAOS BATTTLE, the only OK button that worked:
+        find_and_click(vio.ok_save_party, screenshot, window_location)
 
         if find(vio.receive_brawl, screenshot):
             # Only try it once. If it fails, tough luck
@@ -325,10 +331,10 @@ class DailyFarmer(IFarmer):
             time.sleep(1)
             press_key("esc")
             time.sleep(1)
-            find_and_click(vio.back, screenshot, window_location)
-            print("Assuming Brawl reward collected, exiting daily farmer.")
-            DailyFarmer.current_state = States.EXIT_FARMER
-            return
+            # find_and_click(vio.back, screenshot, window_location)
+            if find(vio.tavern, screenshot) or find(vio.back, screenshot):
+                print("Assuming Brawl reward collected, exiting daily farmer.")
+                DailyFarmer.current_state = States.EXIT_FARMER
 
     def run(self):
 

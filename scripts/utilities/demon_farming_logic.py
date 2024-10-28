@@ -29,7 +29,7 @@ from utilities.vision import Vision
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 pacific_timezone = pytz.timezone("America/Los_Angeles")
 
-CHECK_IN_HOUR = 4
+CHECK_IN_HOUR = 2
 
 
 class States(Enum):
@@ -85,6 +85,8 @@ class DemonFarmer(IFarmer):
             do_daily_pvp=do_daily_pvp,
             complete_callback=self.dailies_complete_callback,
         )
+        if self.do_dailies:
+            print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
     def exit_message(self):
         """Final message!"""
@@ -237,6 +239,7 @@ class DemonFarmer(IFarmer):
             vio.battle_menu,
             screenshot,
             window_location,
+            threshold=0.6,
             point_coordinates=Coordinates.get_coordinates("knighthood"),
         ):
             return
@@ -259,7 +262,7 @@ class DemonFarmer(IFarmer):
         if find(vio.check_in_complete, screenshot):
             press_key("esc")
 
-        if find(vio.battle_menu, screenshot):
+        if find(vio.battle_menu, screenshot, threshold=0.6):
             DemonFarmer.daily_checkin = True
             if self.do_dailies:
                 print("Going to do all dailies!")
@@ -389,4 +392,4 @@ class DemonRouletteFarmer(DemonFarmer):
                 time.sleep(1)
 
             # We need the loop to run very fast
-            time.sleep(0.01)
+            time.sleep(0.05)
