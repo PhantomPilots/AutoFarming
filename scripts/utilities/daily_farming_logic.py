@@ -18,10 +18,12 @@ from utilities.utilities import (
     check_for_reconnect,
     click_and_sleep,
     crop_image,
+    display_image,
     find,
     find_and_click,
     find_floor_coordinates,
     press_key,
+    screenshot_testing,
 )
 from utilities.vision import Vision
 
@@ -32,7 +34,7 @@ class States(Enum):
     IN_TAVERN_STATE = 0
     BOSS_STATE = auto()
     VANYA_ALE_STATE = auto()
-    FORT_SOLRGESS_STATE = auto()
+    FORT_SOLGRESS_STATE = auto()
     PVP_STATE = auto()
     PATROL_STATE = auto()
     FRIENDSHIP_COINS_STATE = auto()
@@ -99,9 +101,9 @@ class DailyFarmer(IFarmer):
         if find(vio.daily_patrol, screenshot, threshold=0.85):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
-        if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
+        if find(vio.daily_fort_solgress, screenshot, threshold=0.9):
             print("Going to FORT_SOLGRESS_STATE")
-            return States.FORT_SOLRGESS_STATE
+            return States.FORT_SOLGRESS_STATE
         if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
             print("Going to VANYA_ALE_STATE")
             return States.VANYA_ALE_STATE
@@ -131,15 +133,18 @@ class DailyFarmer(IFarmer):
             # Only go to the EXIT state if we're in the tavern already.
             return States.GOING_TO_BRAWL
 
-    def go_to_mission(self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int]):
+    def go_to_mission(
+        self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int], threshold=0.85
+    ):
         """Click on 'Go Now' corresponding to the specific vision image"""
         # Extract the portion we want to click on
-        rectangle = vision_image.find(screenshot, threshold=0.8)
+        rectangle = vision_image.find(screenshot, threshold=threshold)
 
         if len(rectangle):
             rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
 
             print(f"Going to the '{vision_image.image_name}' mission...")
+
             # Click on `Go Now`
             find_and_click(
                 vio.go_now,
@@ -225,13 +230,13 @@ class DailyFarmer(IFarmer):
             # Consider the mission done already, since it's all automatic!
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
-    def fort_solrgess_state(self):
+    def fort_solgress_state(self):
         """Handle the Fort Solrgess state."""
         screenshot, window_location = capture_window()
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location)
+            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.9)
 
         if find(vio.daily_quest_info, screenshot):
             print("Mission complete!")
@@ -350,8 +355,8 @@ class DailyFarmer(IFarmer):
             elif DailyFarmer.current_state == States.VANYA_ALE_STATE:
                 self.vanya_ale_state()
 
-            elif DailyFarmer.current_state == States.FORT_SOLRGESS_STATE:
-                self.fort_solrgess_state()
+            elif DailyFarmer.current_state == States.FORT_SOLGRESS_STATE:
+                self.fort_solgress_state()
 
             elif DailyFarmer.current_state == States.PVP_STATE:
                 self.pvp_state()

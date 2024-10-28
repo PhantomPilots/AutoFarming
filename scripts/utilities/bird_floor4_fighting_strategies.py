@@ -266,7 +266,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         # ULTIMATE CARDS, but DON'T use Meli's ultimate!
         ult_ids = np.where(
             (card_types == CardTypes.ULTIMATE.value)
-            & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
+            # & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
         )[0]
         if len(ult_ids):
             return ult_ids[-1]
