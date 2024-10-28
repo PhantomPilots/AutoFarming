@@ -105,6 +105,7 @@ evasion = Vision("demonic_beasts\\evasion.png")
 stance_active = Vision("demonic_beasts\\stance_active.png")
 immortality_buff = Vision("demonic_beasts\\immortality.png")
 thor_thunderstorm = Vision("demonic_beasts\\thor_thunderstorm.png")
+first_reward = Vision("demonic_beasts\\first_reward.png")
 
 # For Deer
 eikthyrnir = Vision("deer\\Eikthyrnir.png")

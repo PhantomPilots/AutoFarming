@@ -178,6 +178,9 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # In case we see a 'Close' pop-up
         find_and_click(vio.close, screenshot, window_location, threshold=0.8)
 
+        # If first reward
+        find_and_click(vio.first_reward, screenshot, window_location)
+
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             self.fight_thread = threading.Thread(

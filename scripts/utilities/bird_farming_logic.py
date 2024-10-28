@@ -179,6 +179,9 @@ class BirdFarmer(IFarmer):
         # Skip the bird screen
         find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.8)
 
+        # If first reward
+        find_and_click(vio.first_reward, screenshot, window_location)
+
         # Set the fight thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
             print("Bird fight started!")
