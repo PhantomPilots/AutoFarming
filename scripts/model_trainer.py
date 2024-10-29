@@ -310,7 +310,7 @@ def main():
     # train_empty_card_slots_model()
 
     ### Train model for amplify cards
-    # train_amplify_cards_classifier()
+    train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
     # train_HAM_cards_classifier()
@@ -319,7 +319,7 @@ def main():
     # train_thor_cards_classifier()
 
     ### Train a model that identifies GROUND cards
-    train_ground_cards_classifier()
+    # train_ground_cards_classifier()
 
     return
 
