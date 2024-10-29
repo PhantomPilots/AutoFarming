@@ -101,7 +101,7 @@ class DailyFarmer(IFarmer):
         if find(vio.daily_patrol, screenshot, threshold=0.85):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
-        if find(vio.daily_fort_solgress, screenshot, threshold=0.9):
+        if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
             print("Going to FORT_SOLGRESS_STATE")
             return States.FORT_SOLGRESS_STATE
         if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
@@ -236,7 +236,7 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.9)
+            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.85)
 
         if find(vio.daily_quest_info, screenshot):
             print("Mission complete!")
