@@ -244,3 +244,6 @@ brawl = Vision("dailies\\brawl.png")
 receive_brawl = Vision("dailies\\receive_brawl.png")
 view_pvp_results = Vision("dailies\\view_results.png")
 join_all = Vision("dailies\\join_all.png")
+# PVP
+search_pvp_match = Vision("dailies\\search_pvp_match.png")
+ok_pvp_defeat = Vision("dailies\\ok_pvp_defeat.png")

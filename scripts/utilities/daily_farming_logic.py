@@ -51,6 +51,8 @@ class DailyFarmer(IFarmer):
     # How many dungeons keys we'll try to use
     num_dungeon_keys = 3
 
+    pvp_auto = False
+
     def __init__(
         self,
         starting_state=States.IN_TAVERN_STATE,
@@ -84,6 +86,8 @@ class DailyFarmer(IFarmer):
 
             # Let's reset the number of dungeon keys for tomorrow
             DailyFarmer.num_dungeon_keys = 3
+            # Reset the PVP auto
+            DailyFarmer.pvp_auto = False
 
             # Cleanup before exiting
             super().exit_farmer_state()
@@ -170,6 +174,7 @@ class DailyFarmer(IFarmer):
 
         # If there's any OK button
         find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.ok_pvp_defeat, screenshot, window_location)
         # In case we see a cross, exit
         find_and_click(vio.exit_cross, screenshot, window_location)
         # Patrol dispatched successfully
@@ -283,6 +288,28 @@ class DailyFarmer(IFarmer):
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_pvp, screenshot, window_location)
+
+        # For when Monday
+        find_and_click(vio.view_pvp_results, screenshot, window_location)
+        find_and_click(vio.join_all, screenshot, window_location)
+        find_and_click(vio.ok_button, screenshot, window_location)
+        # For when CHAOS BATTTLE, the only OK button that worked:
+        find_and_click(vio.ok_save_party, screenshot, window_location)
+
+        # Find a match...
+        find_and_click(vio.search_pvp_match, screenshot, window_location)
+
+        # Set PVP to auto
+        if not DailyFarmer.pvp_auto and find_and_click(vio.demons_auto, screenshot, window_location):
+            DailyFarmer.pvp_auto = True
+
+        # After the match...
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
+        # If we win, or lose:
+        if find(vio.ok_button, screenshot) or find(vio.ok_pvp_defeat, screenshot):
+            print("PVP fight finished! Ending mission")
+            DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
     def patrol_state(self):
         """Handle the Patrol state."""
