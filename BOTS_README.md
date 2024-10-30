@@ -19,6 +19,20 @@ Requirements:
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
 3. **Important**: If using green/red Diane, place her in the rightmost position.
 
+## Floor 4 of Bird
+
+The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
+* Traitor Meli
+* Thor
+* Blue Megellda
+* Shion (recommended) / Green Diane
+
+Requirements:
+1. **Important**: If you use Diane, place her on the rightmost position in the team.
+2. Always start from within the floor 4 bird fight already.
+3. 13M+ box CC (preferably).
+4. Constellation 6 (preferably).
+
 ## Eikthyrnir (Deer) farming script
 
 The script is named `scripts/DeerFarmer.py`. 
@@ -93,17 +107,3 @@ FarmingFactory.main_loop(
 ⚠ Lower than `9.2`, you'll risk wasting all your 3 daily demon invites.
 
 * Doing the automatic dailies can be disabled by setting its option to `False`. PVP daily mission can be enabled by setting its option to `True`.
-
-## Floor 4 of Bird
-
-The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
-* Traitor Meli
-* Thor
-* Blue Megellda
-* Green Diane
-
-Requirements:
-1. **Important**: Place Diane on the rightmost position in the team.
-2. Always start from within the floor 4 bird fight already.
-3. 13M+ box CC (preferably).
-4. Constellation 6 (preferably).
