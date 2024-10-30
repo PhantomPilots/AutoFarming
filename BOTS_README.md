@@ -70,14 +70,29 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Bellmoth and OG.
 So far, it only accepts the "Hell" difficulty.
 
-To select the demon, inside `DemonFarmer.py` change the demon type in this line:
+**An important feature** is that the bot will stop farming demons **at 2am PT time** to **check in and do all the daily missions** except PVP (unless the option is enabled, see below).
 
-```demon_to_farm=vio.bell_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'```
+You can find all the setup options inside the file:
 
-**Note** that you may need to play with the timing in the line:<br>
-```time_to_sleep=9.4,  # How many seconds to sleep before accepting an invitation```<br>
-If `9.4` is too high, lower it to `9.3` or `9.2` at most. Lower than that, you'll risk wasting all your 3 daily demon invites.
+```python
+FarmingFactory.main_loop(
+    farmer=DemonFarmer,
+    starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
+    demon_to_farm=vio.og_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'
+    time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation
+    do_dailies=True,  # Do we halt demon farming to do dailies?
+    do_daily_pvp=False,  # If we do dailies, do we do PVP?
+)
+```
 
+* To select the demon, inside `DemonFarmer.py` change the demon type in this line:<br>
+```demon_to_farm=vio.bell_demon,  # Accepts: vio.og_demon, vio.bell_demon, vio.red_demon, vio.gray_demon, vio.crimson_demon```
+
+* You may need to play with the timing in the line:<br>
+```time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation```<br>
+⚠ Lower than `9.2`, you'll risk wasting all your 3 daily demon invites.
+
+* Doing the automatic dailies can be disabled by setting its option to `False`. PVP daily mission can be enabled by setting its option to `True`.
 
 ## Floor 4 of Bird
 

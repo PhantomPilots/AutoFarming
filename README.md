@@ -106,7 +106,8 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for floors 1-3 of Deer.
 - [X] Farmer for floors 1-3 of Dogs.
 - [X] Farmer for floors 1-3 of Snake.
-- [ ] Bot for all daily missions.
+- [X] Bot for all daily missions.
+- [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
 ## Longer-term features
 
