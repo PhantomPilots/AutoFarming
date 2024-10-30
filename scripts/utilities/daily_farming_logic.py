@@ -48,6 +48,9 @@ class DailyFarmer(IFarmer):
 
     current_state = None
 
+    # How many dungeons keys we'll try to use
+    num_dungeon_keys = 3
+
     def __init__(
         self,
         starting_state=States.IN_TAVERN_STATE,
@@ -78,6 +81,9 @@ class DailyFarmer(IFarmer):
         if find(vio.tavern, screenshot):
             if self.complete_callback is not None:
                 self.complete_callback()
+
+            # Let's reset the number of dungeon keys for tomorrow
+            DailyFarmer.num_dungeon_keys = 3
 
             # Cleanup before exiting
             super().exit_farmer_state()
@@ -243,6 +249,12 @@ class DailyFarmer(IFarmer):
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
+        if find(vio.not_enough_dungeon_keys, screenshot):
+            print(f"We don't have enough dungeon keys, trying with {DailyFarmer.num_dungeon_keys}.")
+            DailyFarmer.num_dungeon_keys -= 1
+            press_key("esc")
+            return
+
         # Click on the Special FS dungeon
         find_and_click(vio.fort_solgress_special, screenshot, window_location)
 
@@ -255,8 +267,9 @@ class DailyFarmer(IFarmer):
         ## Below, we're inside the team setting
 
         # Increase the auto ticket by two and clear mission
-        click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
-        click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
+        for _ in range(DailyFarmer.num_dungeon_keys):
+            click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
+
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
 
