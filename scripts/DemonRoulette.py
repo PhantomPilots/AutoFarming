@@ -18,6 +18,8 @@ def main():
         ],
         time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation
         time_between_demons=1,  # How many hours before switching to next demon
+        do_dailies=False,  # Do we halt demon farming to do dailies?
+        do_daily_pvp=False,  # If we do dailies, do we do PVP?
     )
 
 

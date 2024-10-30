@@ -330,12 +330,21 @@ class DemonRouletteFarmer(DemonFarmer):
         demons_to_farm: list[Vision] = None,
         time_to_sleep=9.4,
         time_between_demons=2,
+        do_dailies=False,  # Do we halt demon farming to do dailies?
+        do_daily_pvp=False,  # If we do dailies, do we do PVP?
     ):
         if demons_to_farm is None:
             demons_to_farm = [vio.og_demon]
 
         # Initialize the DemonFarmer with the first demon of the list
-        super().__init__(battle_strategy, starting_state, demons_to_farm[0], time_to_sleep)
+        super().__init__(
+            battle_strategy,
+            starting_state,
+            demons_to_farm[0],
+            time_to_sleep,
+            do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
+        )
 
         # Every how many hours to switch between demons
         self.time_between_demons = time_between_demons
