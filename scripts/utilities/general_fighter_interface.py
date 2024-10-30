@@ -77,9 +77,9 @@ class IFighter(abc.ABC):
         #     index_to_play = selected_cards[1][self.available_card_slots - 1]
         #     raise RuntimeError(f"Debugging. Now we should be playing slot index {index_to_play}")
 
-        if empty_card_slots > self.available_card_slots:
-            # A patch in case we read the available card slots wrongly earlier
-            self.available_card_slots = empty_card_slots
+        # if empty_card_slots > self.available_card_slots:
+        #     # A patch in case we read the available card slots wrongly earlier
+        #     self.available_card_slots = empty_card_slots
 
         if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now

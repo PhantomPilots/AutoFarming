@@ -125,7 +125,7 @@ class ThorCardPredictor(IModel):
 
         # Ensure all models are properly loaded
         ThorCardPredictor._load_feature_transform_model("pca_Thor_cards_model.pca")
-        ThorCardPredictor._load_model("Thor_cards_predictor.knn")
+        ThorCardPredictor._load_model("Thor_cards_predictor.svm")
 
         # Extract the features
         features = extract_color_histograms_features(card, bins=(8, 8, 8))

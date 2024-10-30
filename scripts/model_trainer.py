@@ -284,8 +284,8 @@ def train_thor_cards_classifier():
     """Train a model that identifies hard-hitting cards (excluding ultimates)"""
 
     features, labels, pca_model = load_thor_cards_features()
-    model = train_knn(X=features, labels=labels)
-    save_model(model, filename="Thor_cards_predictor.knn")
+    model = train_svm_classifier(X=features, labels=labels)
+    save_model(model, filename="Thor_cards_predictor.svm")
     save_model(pca_model, filename="pca_Thor_cards_model.pca")
 
 
@@ -313,10 +313,10 @@ def main():
     # train_amplify_cards_classifier()
 
     ### Train model for identifying HAM cards
-    train_HAM_cards_classifier()
+    # train_HAM_cards_classifier()
 
     ### Train model to identify Thor cards
-    # train_thor_cards_classifier()
+    train_thor_cards_classifier()
 
     ### Train a model that identifies GROUND cards
     # train_ground_cards_classifier()

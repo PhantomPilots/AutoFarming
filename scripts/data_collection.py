@@ -313,9 +313,9 @@ def main():
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
-    collect_data(HAMCardsCollector, filename="ham_cards_data")
+    # collect_data(HAMCardsCollector, filename="ham_cards_data")
 
-    # collect_data(ThorCardCollector, filename="thor_cards_data")
+    collect_data(ThorCardCollector, filename="thor_cards_data")
 
     # collect_data(GroundDataCollector, filename="ground_data")
 
