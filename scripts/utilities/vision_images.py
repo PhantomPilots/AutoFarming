@@ -247,3 +247,4 @@ join_all = Vision("dailies\\join_all.png")
 # PVP
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
 ok_pvp_defeat = Vision("dailies\\ok_pvp_defeat.png")
+tier_up_failed = Vision("dailies\\tier_up_failed.png")

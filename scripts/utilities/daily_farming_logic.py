@@ -289,6 +289,9 @@ class DailyFarmer(IFarmer):
             # Go to the mission
             self.go_to_mission(vio.daily_pvp, screenshot, window_location)
 
+        # If we've failed tier up...
+        find_and_click(vio.tier_up_failed, screenshot, window_location)
+
         # For when Monday
         find_and_click(vio.view_pvp_results, screenshot, window_location)
         find_and_click(vio.join_all, screenshot, window_location)
