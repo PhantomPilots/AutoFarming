@@ -102,6 +102,12 @@ class DailyFarmer(IFarmer):
         """
         screenshot, window_location = capture_window()
 
+        # Get rewards
+        if find(vio.daily_complete, screenshot):
+            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.85)
+            print("We have complete rewards, let's take them.")
+            return
+
         if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.85):
             print("Going to PVP_STATE")
             return States.PVP_STATE
@@ -120,13 +126,6 @@ class DailyFarmer(IFarmer):
         if find(vio.daily_friendship_coins, screenshot, threshold=0.85):
             print("Going to FRIENDSHIP_COINS_STATE")
             return States.FRIENDSHIP_COINS_STATE
-
-        # If we're here, we can find no missions. Take all and try again
-        if find(vio.daily_complete, screenshot):
-            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.85)
-            # TODO: Re-take the 'take all rewards' image
-            print("Can't find any mission, taking all rewards for now.")
-            return
 
         # If there's no 'go now', means we're done with the missions
         if not find(vio.go_now, screenshot):
@@ -328,9 +327,11 @@ class DailyFarmer(IFarmer):
             return
 
         find_and_click(vio.patrol_all, screenshot, window_location)
+        # First click on complete all
+        find_and_click(vio.complete_all, screenshot, window_location)
+        # Then click on set all
         find_and_click(vio.set_all_patrol, screenshot, window_location)
         find_and_click(vio.reward, screenshot, window_location)
-        find_and_click(vio.complete_all, screenshot, window_location)
 
     def friendship_coins_state(self):
         """Handle the Friendship Coins state."""
