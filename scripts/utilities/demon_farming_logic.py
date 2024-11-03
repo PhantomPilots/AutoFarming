@@ -26,10 +26,11 @@ from utilities.utilities import (
 )
 from utilities.vision import Vision
 
-logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
-pacific_timezone = pytz.timezone("America/Los_Angeles")
-
+# Some constants
+PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 CHECK_IN_HOUR = 0
+
+logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
 
 class States(Enum):
@@ -132,7 +133,7 @@ class DemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, if it's time to check in, do it
-        now = datetime.now(pacific_timezone)
+        now = datetime.now(PACIFIC_TIMEZONE)
         if not DemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
             self.current_state = States.DAILY_RESET
