@@ -233,6 +233,8 @@ fs_event_dungeon = Vision("dailies\\event_dungeon.png")
 fs_special_6th_floor = Vision("dailies\\6th_floor.png")
 minus_auto_ticket = Vision("dailies\\minus_auto_ticket.png")
 not_enough_dungeon_keys = Vision("dailies\\not_enough_dungeon_keys.png")
+event_special_fs_dungeon = Vision("dailies\\event_special_fs_dungeon.png")
+event_special_fs_battle = Vision("dailies\\event_special_fs_battle.png")
 # Friendship coins
 send_friendship_coins = Vision("dailies\\send_friendship_coins.png")
 claim_all = Vision("dailies\\claim_all.png")
