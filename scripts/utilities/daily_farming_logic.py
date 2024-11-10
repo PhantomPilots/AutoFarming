@@ -35,6 +35,8 @@ class States(Enum):
     BOSS_STATE = auto()
     VANYA_ALE_STATE = auto()
     FORT_SOLGRESS_STATE = auto()
+    SPECIAL_EVENT_FS_STATE = auto()
+    FINISHED_SPECIAL_EVENT_FS = auto()
     PVP_STATE = auto()
     PATROL_STATE = auto()
     FRIENDSHIP_COINS_STATE = auto()
@@ -52,6 +54,9 @@ class DailyFarmer(IFarmer):
     num_dungeon_keys = 3
 
     pvp_auto = False
+
+    # For event-special dungeon
+    event_special_dungeon_complete = False
 
     def __init__(
         self,
@@ -88,6 +93,8 @@ class DailyFarmer(IFarmer):
             DailyFarmer.num_dungeon_keys = 3
             # Reset the PVP auto
             DailyFarmer.pvp_auto = False
+            # Reset the event-special dungeon complete
+            DailyFarmer.event_special_dungeon_complete = False
 
             # Cleanup before exiting
             super().exit_farmer_state()
@@ -240,6 +247,48 @@ class DailyFarmer(IFarmer):
             # Consider the mission done already, since it's all automatic!
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
+    def special_event_fs_state(self):
+        """We have a special event dungeon, let's clear it"""
+
+        screenshot, window_location = capture_window()
+
+        # Click on the battle
+        find_and_click(vio.event_special_fs_battle, screenshot, window_location)
+        find_and_click(vio.event_special_fs_dungeon, screenshot, window_location)
+
+        # Fight...
+        find_and_click(
+            vio.auto_repeat_on,
+            screenshot,
+            window_location,
+            point_coordinates=Coordinates.get_coordinates("start_fight"),
+        )
+        find_and_click(vio.auto_repeat_off, screenshot, window_location)
+
+        # Fight is done, let's go back
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
+        if find(vio.auto_repeat_ended, screenshot):
+            press_key("esc")
+
+        # Exit this state
+        if find(vio.ok_button, screenshot):
+            print("Finished special FS event...")
+            DailyFarmer.current_state = States.FINISHED_SPECIAL_EVENT_FS
+
+    def finished_special_event_fs_state(self):
+        """We've finished the special event, go back to FS state"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.fort_solgress_special, screenshot):
+            print("Going back to FS state!")
+            DailyFarmer.current_state = States.FORT_SOLGRESS_STATE
+            return
+
+        find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.daily_result, screenshot, window_location)
+        find_and_click(vio.back, screenshot, window_location)
+
     def fort_solgress_state(self):
         """Handle the Fort Solrgess state."""
         screenshot, window_location = capture_window()
@@ -248,7 +297,7 @@ class DailyFarmer(IFarmer):
             # Go to the mission
             self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.85)
 
-        if find(vio.daily_quest_info, screenshot):
+        if find(vio.daily_quest_info, screenshot) or find(vio.daily_result, screenshot):
             print("Mission complete!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
@@ -257,6 +306,13 @@ class DailyFarmer(IFarmer):
             print(f"We don't have enough dungeon keys, trying with {DailyFarmer.num_dungeon_keys}.")
             DailyFarmer.num_dungeon_keys -= 1
             press_key("esc")
+            return
+
+        # If we find an event-special dungeon, go there first instead!
+        if not DailyFarmer.event_special_dungeon_complete and find(vio.event_special_fs_dungeon, screenshot):
+            print("Found an event-special dungeon! We should go there")
+            DailyFarmer.event_special_dungeon_complete = True
+            DailyFarmer.current_state = States.SPECIAL_EVENT_FS_STATE
             return
 
         # Click on the Special FS dungeon
@@ -390,6 +446,7 @@ class DailyFarmer(IFarmer):
         self.logger.info("Doing dailies!")
 
         while True:
+
             if DailyFarmer.current_state == States.IN_TAVERN_STATE:
                 self.in_tavern_state()
 
@@ -401,6 +458,11 @@ class DailyFarmer(IFarmer):
 
             elif DailyFarmer.current_state == States.FORT_SOLGRESS_STATE:
                 self.fort_solgress_state()
+
+            elif DailyFarmer.current_state == States.SPECIAL_EVENT_FS_STATE:
+                self.special_event_fs_state()
+            elif DailyFarmer.current_state == States.FINISHED_SPECIAL_EVENT_FS:
+                self.finished_special_event_fs_state()
 
             elif DailyFarmer.current_state == States.PVP_STATE:
                 self.pvp_state()
