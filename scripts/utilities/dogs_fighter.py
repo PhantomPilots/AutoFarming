@@ -98,7 +98,7 @@ class DogsFighter(IFighter):
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 
-        return len(grouped_rectangles)
+        return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else len(grouped_rectangles)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""

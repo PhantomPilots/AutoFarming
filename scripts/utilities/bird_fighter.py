@@ -89,8 +89,12 @@ class BirdFighter(IFighter):
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""
+        screenshot, _ = capture_window()
         house_of_cards = get_hand_cards()
-        return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards])
+
+        return np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in house_of_cards]) or find(
+            vio.skill_locked, screenshot, threshold=0.6
+        )
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.7):
@@ -98,7 +102,8 @@ class BirdFighter(IFighter):
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(screenshot, threshold=threshold)
         # The second one is in case we cannot play ANY card. Then, the empty card slots look different
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
-        return rectangles.shape[0] + rectangles_2.shape[0]
+
+        return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else rectangles.shape[0] + rectangles_2.shape[0]
 
     def _update_current_hand(self, screenshot):
         """Update the current hand of cards based on the phase."""

@@ -54,7 +54,7 @@ check_in_reward = Vision("check_in_reward.png")
 check_in_complete = Vision("check_in_complete.png")
 battle_menu = Vision("battle_menu.jpg")
 cancel = Vision("cancel.png")
-
+skill_locked = Vision("skill_locked.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
