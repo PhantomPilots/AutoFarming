@@ -47,7 +47,7 @@ class DogsBattleStrategy(IBattleStrategy):
         ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
 
         # Disable the first 2 ultimates
-        for i, id in enumerate(ult_ids):
+        for i, id in enumerate(ult_ids[::-1]):
             if i < 2:
                 print("Disabling an ultimate!")
                 hand_of_cards[id].card_type = CardTypes.DISABLED
