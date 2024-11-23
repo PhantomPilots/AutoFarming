@@ -57,7 +57,7 @@ class BirdFarmer(IFarmer):
 
         BirdFarmer.num_floor_3_clears = float(num_floor_3_clears)
         if BirdFarmer.num_floor_3_clears < float("inf"):
-            print(f"We're gonna clear floor 3 {num_floor_3_clears} times.")
+            print(f"We're gonna clear floor 3 at most {num_floor_3_clears} times.")
 
         # Placeholder for the fight thread
         self.fight_thread = None
