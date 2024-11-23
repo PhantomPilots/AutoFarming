@@ -461,7 +461,7 @@ class Floor4BattleStrategy(IBattleStrategy):
 
         # Go HAM on the fricking bird
         if len(ham_card_ids := np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]):
-            print(f"These HAM cards: {ham_card_ids}")
+            # print(f"These HAM cards: {ham_card_ids}")
             print("Picking HAM index:", self._pick_HAM_cards(hand_of_cards, ham_card_ids))
             return self._pick_HAM_cards(hand_of_cards, ham_card_ids)
 
@@ -481,7 +481,7 @@ class Floor4BattleStrategy(IBattleStrategy):
         thor_ids = np.where(
             [is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards]
         )[0]
-        print("These THOR IDs:", thor_ids)
+        # print("These THOR IDs:", thor_ids)
 
         # Re-order the thor IDs by combining the two and setting the thunderstorm cards last
         thor_ids = np.concatenate((thor_thunder_ids, thor_ids))
