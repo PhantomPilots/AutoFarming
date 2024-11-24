@@ -59,6 +59,8 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
         # After we lose, should we reset the Demonic Beast?
         self.reset_after_defeat = reset_after_defeat
+        if reset_after_defeat:
+            print("We're gonna reset the DB if we lose.")
 
         # Initialize the current state
         self.current_state = starting_state
