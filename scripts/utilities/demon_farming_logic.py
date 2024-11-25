@@ -207,6 +207,9 @@ class DemonFarmer(IFarmer):
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
+        # For when we've ranked up
+        find_and_click(vio.ok_button, screenshot, window_location)
+
         if find(vio.demon_ok, screenshot) or find(vio.demon_defeat_ok, screenshot):
             # Finished the fight!
             if find(vio.demon_ok, screenshot):
