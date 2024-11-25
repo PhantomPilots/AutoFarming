@@ -7,7 +7,7 @@ class Coordinates:
     """Namespace-like class to group all the hardcoded coordinates"""
 
     # Screen coordinates for each floor
-    coordinates = {
+    __coordinates = {
         # General
         "battle_menu": (502, 676),  # Coordinates for the battle menu in the Tavern screen
         "knighthood": (421, 677),
@@ -41,11 +41,13 @@ class Coordinates:
         "third_slot": (276, 746),
         "fourth_slot": (331, 746),
         "fifth_slot": (397, 746),
+        # Receive Brawl coordinates
+        "receive_brawl": (384, 187),
     }
 
     @staticmethod
     def get_coordinates(event):
-        x, y = Coordinates.coordinates[event]
+        x, y = Coordinates.__coordinates[event]
 
         return x, y
 

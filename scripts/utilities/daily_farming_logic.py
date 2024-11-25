@@ -432,7 +432,12 @@ class DailyFarmer(IFarmer):
         if find(vio.receive_brawl, screenshot):
             # Only try it once. If it fails, tough luck
             time.sleep(4)
-            find_and_click(vio.receive_brawl, screenshot, window_location)
+            find_and_click(
+                vio.receive_brawl_extended,
+                screenshot,
+                window_location,
+                point_coordinates=Coordinates.get_coordinates("receive_brawl"),
+            )
             time.sleep(1)
             press_key("esc")
             time.sleep(1)
