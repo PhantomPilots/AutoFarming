@@ -69,21 +69,21 @@ class CardTypeCollector(DataCollector):
         labels = []
 
         for i, card in enumerate(cards):
+            # Extract card type image
+            card_type_image = get_card_type_image(card.card_image)
+
             if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
                 card_label = previous_labels[i - 4]
                 print(f"Auto-appending label {CardTypes(card_label)}")
 
             else:
-                # cv2.imshow("card type", card_type)
+                # cv2.imshow("card type", card_type_image)
                 # cv2.waitKey(0)
                 card_label = int(
                     input("Card type (att=0, att_debuff=3, ult=-1, disabled=9, ground=10, buff=5, stance=1, recov=2): ")
                 )
                 # cv2.destroyAllWindows()
-
-            # Extract card type image
-            card_type_image = get_card_type_image(card.card_image)
 
             # Append the new card to the dataset, and the label to the labels list
             data.append(card_type_image)
@@ -287,13 +287,13 @@ def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
     # Append the numpy extension
     filepath += ".npy"
     # Save the dataset
-    with open(filepath, "wb") as pfile:
-        save = input(f"About to save dataset in {filepath}, continue? (Y/n) ")
-        if not save or "y" in save.lower():
+    save = input(f"About to save dataset in {filepath}, continue? (Y/n) ")
+    if not save or "y" in save.lower():
+        with open(filepath, "wb") as pfile:
             pickle.dump(data_dict, pfile)
             print(f"New dataset saved in {filepath}")
-        else:
-            print("Not saving dataset!")
+    else:
+        print("Not saving dataset!")
 
 
 def collect_data(CollectorClass: DataCollector, filename: str):
@@ -309,13 +309,13 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    # collect_data(CardTypeCollector, filename="card_types_data")
+    collect_data(CardTypeCollector, filename="card_types_data")
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
     # collect_data(HAMCardsCollector, filename="ham_cards_data")
 
-    collect_data(ThorCardCollector, filename="thor_cards_data")
+    # collect_data(ThorCardCollector, filename="thor_cards_data")
 
     # collect_data(GroundDataCollector, filename="ground_data")
 

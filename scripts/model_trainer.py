@@ -148,6 +148,10 @@ def train_knn(X: np.ndarray, labels: np.ndarray[CardTypes], k: int = 3) -> KNeig
         num_trials += 1
 
     print(f"Found a model after {num_trials} trial(s).")
+
+    # After validating that we have enough data, fit all the data into the model
+    knn.fit(X, labels)
+
     return knn
 
 
@@ -192,7 +196,7 @@ def train_logistic_regressor(X: np.ndarray, labels: np.ndarray) -> LogisticRegre
     return logistic_regressor
 
 
-def test_model(model: KNeighborsClassifier | LogisticRegression, X_test: np.ndarray, y_test: np.ndarray):
+def test_model(model: KNeighborsClassifier | LogisticRegression | SVC, X_test: np.ndarray, y_test: np.ndarray):
     """Test a generic pre-trained model.
 
     Args:
