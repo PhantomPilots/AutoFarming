@@ -28,7 +28,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 0
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -112,6 +112,8 @@ class DemonFarmer(IFarmer):
         click_and_sleep(vio.demon_ok, screenshot, window_location)
         click_and_sleep(vio.demon_defeat_ok, screenshot, window_location)
         click_and_sleep(vio.demon_kicked_ok, screenshot, window_location)
+        # Regarding network instability:
+        click_and_sleep(vio.bird_okay, screenshot, window_location, threshold=0.7)
 
         # Go to battle menu
         click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
@@ -193,8 +195,8 @@ class DemonFarmer(IFarmer):
         if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             DemonFarmer.auto = True
 
-        # # TODO: Add clicking on network instability OK, then move to GOING_TO_DEMONS
-        # if find_and_click(vio.ok_button, screenshot, window_location, threshold=0.6):
+        # # Click on network instability OK, then move to GOING_TO_DEMONS
+        # if find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.7):
         #     print("Network instability, exiting fight...")
         # if find(vio.tavern_loading_screen, screenshot):
         #     print("Seeing a loading screen, moving to GOING_TO_DEMONS")
@@ -210,11 +212,17 @@ class DemonFarmer(IFarmer):
         # For when we've ranked up
         find_and_click(vio.ok_button, screenshot, window_location)
 
-        if find(vio.demon_ok, screenshot) or find(vio.demon_defeat_ok, screenshot):
+        if (
+            find(vio.demon_ok, screenshot)
+            or find(vio.demon_defeat_ok, screenshot)
+            or find(vio.bird_okay, screenshot, threshold=0.7)
+        ):
             # Finished the fight!
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
                 DemonFarmer.demons_destroyed += 1
+            elif find(vio.bird_okay, screenshot, threshold=0.7):
+                print("Network instability!!")
             else:
                 print("We lost :(")
             DemonFarmer.auto = False
@@ -247,6 +255,9 @@ class DemonFarmer(IFarmer):
             point_coordinates=Coordinates.get_coordinates("knighthood"),
         ):
             return
+
+        # In case an OK pop-up shows up
+        find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.7)
 
         # Go to tavern
         click_and_sleep(vio.tavern, screenshot, window_location)

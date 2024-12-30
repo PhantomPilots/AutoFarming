@@ -125,7 +125,7 @@ class BirdFarmer(IFarmer):
         find_and_click(vio.empty_party, screenshot, window_location)
 
         # Save the party
-        find_and_click(vio.save_party, screenshot, window_location, threshold=0.8)
+        find_and_click(vio.save_party, screenshot, window_location)
 
     def proceed_to_floor_state(self):
         """Start the floor fight!"""

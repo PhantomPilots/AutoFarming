@@ -309,6 +309,7 @@ class DailyFarmer(IFarmer):
             return
 
         # If we find an event-special dungeon, go there first instead!
+        # TODO: Fix to add multiple dungeons? Otherwise, keep it for one dungeon only
         if not DailyFarmer.event_special_dungeon_complete and find(vio.event_special_fs_dungeon, screenshot):
             print("Found an event-special dungeon! We should go there")
             DailyFarmer.event_special_dungeon_complete = True
