@@ -43,7 +43,7 @@ class States(Enum):
     DAILIES_STATE = 6
 
 
-class DemonFarmer(IFarmer):
+class IDemonFarmer(IFarmer):
 
     # Needs to be static in case we restart the instance
     demons_destroyed = 0
@@ -91,7 +91,7 @@ class DemonFarmer(IFarmer):
 
     def exit_message(self):
         """Final message!"""
-        print(f"We destroyed {DemonFarmer.demons_destroyed} demons.")
+        print(f"We destroyed {IDemonFarmer.demons_destroyed} demons.")
 
     def going_to_demons_state(self):
         """Go to the demons page"""
@@ -136,14 +136,14 @@ class DemonFarmer(IFarmer):
 
         # First, if it's time to check in, do it
         now = datetime.now(PACIFIC_TIMEZONE)
-        if not DemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
+        if not IDemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
             self.current_state = States.DAILY_RESET
             return
         # Reset the daily check in flag
-        if now.hour > CHECK_IN_HOUR and DemonFarmer.daily_checkin:
+        if now.hour > CHECK_IN_HOUR and IDemonFarmer.daily_checkin:
             print("Resetting daily checkin")
-            DemonFarmer.daily_checkin = False
+            IDemonFarmer.daily_checkin = False
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
@@ -192,8 +192,8 @@ class DemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        if not DemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
-            DemonFarmer.auto = True
+        if not IDemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
+            IDemonFarmer.auto = True
 
         # # Click on network instability OK, then move to GOING_TO_DEMONS
         # if find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.7):
@@ -220,14 +220,14 @@ class DemonFarmer(IFarmer):
             # Finished the fight!
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
-                DemonFarmer.demons_destroyed += 1
+                IDemonFarmer.demons_destroyed += 1
             elif find(vio.bird_okay, screenshot, threshold=0.7):
                 print("Network instability!!")
             else:
                 print("We lost :(")
-            DemonFarmer.auto = False
+            IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
-            print(f"We've destroyed {DemonFarmer.demons_destroyed} demons.")
+            print(f"We've destroyed {IDemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
 
     def daily_reset_state(self):
@@ -278,7 +278,7 @@ class DemonFarmer(IFarmer):
             press_key("esc")
 
         if find(vio.battle_menu, screenshot, threshold=0.6):
-            DemonFarmer.daily_checkin = True
+            IDemonFarmer.daily_checkin = True
             if self.do_dailies:
                 print("Going to do all dailies!")
                 self.current_state = States.DAILIES_STATE
@@ -289,9 +289,9 @@ class DemonFarmer(IFarmer):
     def dailies_state(self):
         """Run the thread to do all dailies"""
 
-        if DemonFarmer.dailies_thread is None or not DemonFarmer.dailies_thread.is_alive():
-            DemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
-            DemonFarmer.dailies_thread.start()
+        if IDemonFarmer.dailies_thread is None or not IDemonFarmer.dailies_thread.is_alive():
+            IDemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
+            IDemonFarmer.dailies_thread.start()
             print("Dailies farmer started!")
 
     def dailies_complete_callback(self):
@@ -301,41 +301,42 @@ class DemonFarmer(IFarmer):
         self.current_state = States.GOING_TO_DEMONS
 
     def run(self):
+        raise NotImplementedError("Virtual method. Need to implement this method in a derived class.")
 
-        print(f"Farming demons, starting from {self.current_state}.")
-        print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
+        # print(f"Farming demons, starting from {self.current_state}.")
+        # print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
 
-        while True:
-            # Try to reconnect first
-            check_for_reconnect()
+        # while True:
+        #     # Try to reconnect first
+        #     check_for_reconnect()
 
-            if self.current_state == States.GOING_TO_DEMONS:
-                self.going_to_demons_state()
+        #     if self.current_state == States.GOING_TO_DEMONS:
+        #         self.going_to_demons_state()
 
-            elif self.current_state == States.LOOKING_FOR_DEMON:
-                self.looking_for_demon_state()
+        #     elif self.current_state == States.LOOKING_FOR_DEMON:
+        #         self.looking_for_demon_state()
 
-            elif self.current_state == States.READY_TO_FIGHT:
-                self.ready_to_fight_state()
+        #     elif self.current_state == States.READY_TO_FIGHT:
+        #         self.ready_to_fight_state()
 
-            elif self.current_state == States.DAILY_RESET:
-                self.daily_reset_state()
+        #     elif self.current_state == States.DAILY_RESET:
+        #         self.daily_reset_state()
 
-            elif self.current_state == States.CHECK_IN:
-                self.check_in_state()
+        #     elif self.current_state == States.CHECK_IN:
+        #         self.check_in_state()
 
-            elif self.current_state == States.DAILIES_STATE:
-                self.dailies_state()
+        #     elif self.current_state == States.DAILIES_STATE:
+        #         self.dailies_state()
 
-            elif self.current_state == States.FIGHTING_DEMON:
-                self.fighting_demon_state()
-                time.sleep(1)
+        #     elif self.current_state == States.FIGHTING_DEMON:
+        #         self.fighting_demon_state()
+        #         time.sleep(1)
 
-            # We need the loop to run very fast
-            time.sleep(0.1)
+        #     # We need the loop to run very fast
+        #     time.sleep(0.1)
 
 
-class DemonRouletteFarmer(DemonFarmer):
+class DemonFarmer(IDemonFarmer):
     """This class resets the demon to farm every X hours"""
 
     def __init__(
@@ -387,7 +388,7 @@ class DemonRouletteFarmer(DemonFarmer):
     def run(self):
 
         print(f"Farming demons, starting from {self.current_state}.")
-        print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
+        print(f"We'll be farming {[demon.image_name for demon in self.demon_roulette]} demon(s).")
 
         while True:
             # Try to reconnect first
@@ -419,4 +420,4 @@ class DemonRouletteFarmer(DemonFarmer):
                 time.sleep(1)
 
             # We need the loop to run very fast
-            time.sleep(0.05)
+            time.sleep(0.1)

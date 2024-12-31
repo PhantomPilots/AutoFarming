@@ -24,7 +24,7 @@ class BirdFighter(IFighter):
             point_coordinates=Coordinates.get_coordinates("lazy_weekly_bird_mission"),
         )
         # To skip quickly to the rewards when the fight is done
-        find_and_click(vio.creature_destroyed, screenshot, window_location)
+        find_and_click(vio.creature_destroyed, screenshot, window_location, threshold=0.6)
 
         if find(vio.defeat, screenshot):
             # I may have lost though...
