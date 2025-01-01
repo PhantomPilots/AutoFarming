@@ -19,6 +19,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
+    drag_im,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -28,7 +29,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 0
+CHECK_IN_HOUR = 6
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -41,6 +42,7 @@ class States(Enum):
     DAILY_RESET = 4
     CHECK_IN = 5
     DAILIES_STATE = 6
+    FORTUNE_CARD = 7
 
 
 class IDemonFarmer(IFarmer):
@@ -230,9 +232,29 @@ class IDemonFarmer(IFarmer):
             print(f"We've destroyed {IDemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
 
+    def fortune_card_state(self):
+        """Open the fortune card"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.bird_okay, screenshot, threshold=0.6):
+            print("Got a good fortune? Going back to daily reset state")
+            self.current_state = States.DAILY_RESET
+            return
+
+        drag_im(
+            Coordinates.get_coordinates("daily_fortune_bottom"),
+            Coordinates.get_coordinates("daily_fortune_top"),
+            window_location,
+        )
+
     def daily_reset_state(self):
         """Click on skip as much as needed, check in, then go back to GOING_TO_DEMONS"""
         screenshot, window_location = capture_window()
+
+        if find(vio.fortune_card, screenshot):
+            print("We're seeing a fortune card!")
+            self.current_state = States.FORTUNE_CARD
+            return
 
         # Cancel the demon search
         click_and_sleep(vio.cancel_realtime, screenshot, window_location)
@@ -257,7 +279,7 @@ class IDemonFarmer(IFarmer):
             return
 
         # In case an OK pop-up shows up
-        find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.6)
 
         # Go to tavern
         click_and_sleep(vio.tavern, screenshot, window_location)
@@ -414,6 +436,9 @@ class DemonFarmer(IDemonFarmer):
 
             elif self.current_state == States.DAILIES_STATE:
                 self.dailies_state()
+
+            elif self.current_state == States.FORTUNE_CARD:
+                self.fortune_card_state()
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

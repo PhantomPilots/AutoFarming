@@ -43,6 +43,9 @@ class Coordinates:
         "fifth_slot": (397, 746),
         # Receive Brawl coordinates
         "receive_brawl": (384, 187),
+        # Daily fortune card
+        "daily_fortune_bottom": (277, 651),
+        "daily_fortune_top": (277, 215),
     }
 
     @staticmethod
