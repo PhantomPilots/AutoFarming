@@ -106,8 +106,9 @@ class IDemonFarmer(IFarmer):
             return
 
         # We may be in the 'daily reset' state!
-        if click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6):
+        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot):
             logger.info("We entered the daily reset state!")
+            self.current_state = States.DAILY_RESET
             return
 
         # Click OK if we see it (?)
@@ -262,7 +263,7 @@ class IDemonFarmer(IFarmer):
         # We may be receiving the daily rewards now
         click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
 
-        # Go to CHECKIN state
+        # Go to CHECK IN state
         if find(vio.knighthood, screenshot):
             print("Going to CHECK IN state")
             self.current_state = States.CHECK_IN
