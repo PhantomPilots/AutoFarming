@@ -106,7 +106,7 @@ class IDemonFarmer(IFarmer):
             return
 
         # We may be in the 'daily reset' state!
-        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot):
+        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             logger.info("We entered the daily reset state!")
             self.current_state = States.DAILY_RESET
             return
@@ -252,7 +252,7 @@ class IDemonFarmer(IFarmer):
         """Click on skip as much as needed, check in, then go back to GOING_TO_DEMONS"""
         screenshot, window_location = capture_window()
 
-        if find(vio.fortune_card, screenshot):
+        if find(vio.fortune_card, screenshot, threshold=0.8):
             print("We're seeing a fortune card!")
             self.current_state = States.FORTUNE_CARD
             return
