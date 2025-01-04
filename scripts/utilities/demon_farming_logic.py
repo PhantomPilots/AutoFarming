@@ -397,13 +397,15 @@ class DemonFarmer(IDemonFarmer):
 
         if time.time() - self.start_time > self.time_between_demons * 3600:
             # Increase the index by one
-            demon_names = [demon.image_name for demon in self.demon_roulette]
+            demon_names: list[str] = [demon.image_name for demon in self.demon_roulette]
             demon_idx = np.where(np.array(demon_names) == self.demon_to_farm.image_name)[0] + 1
             demon_idx = int(demon_idx % len(self.demon_roulette))
 
-            # Get the new demon
-            self.demon_to_farm = self.demon_roulette[demon_idx]
-            logger.info(f"Switched demon to {self.demon_to_farm.image_name}")
+            # Update the new demon to farm
+            new_demon_to_farm = self.demon_roulette[demon_idx]
+            if new_demon_to_farm != self.demon_to_farm:
+                self.demon_to_farm = new_demon_to_farm
+                logger.info(f"Switched demon to {self.demon_to_farm.image_name}")
 
             # Record the new time
             self.start_time = time.time()

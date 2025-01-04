@@ -29,6 +29,11 @@ class Vision:
             cprint(f"No image can be found for '{needle_basename}'", "yellow")
             return
 
+    def __eq__(self, other):
+        if isinstance(other, Vision):
+            return self.image_name == other.image_name
+        return NotImplementedError(f"Cannot compare Vision instance with {type(other)}")
+
     def find(self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED) -> np.ndarray:
         """Run the defined pattern matching strategy.
 
