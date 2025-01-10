@@ -252,6 +252,11 @@ class DailyFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
+        # If we have a monthly...
+        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+            # We don't want to do anything else until the ad wheel is complete
+            return
+
         # Click on the battle
         find_and_click(vio.event_special_fs_battle, screenshot, window_location)
         find_and_click(vio.event_special_fs_dungeon, screenshot, window_location)
@@ -272,8 +277,9 @@ class DailyFarmer(IFarmer):
             press_key("esc")
 
         # Exit this state
-        if find(vio.ok_button, screenshot):
+        if find(vio.ok_button, screenshot) and not find(vio.ad_wheel_play, screenshot, threshold=0.6):
             print("Finished special FS event...")
+            DailyFarmer.event_special_dungeon_complete = True
             DailyFarmer.current_state = States.FINISHED_SPECIAL_EVENT_FS
 
     def finished_special_event_fs_state(self):
@@ -288,6 +294,14 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.ok_button, screenshot, window_location)
         find_and_click(vio.daily_result, screenshot, window_location)
         find_and_click(vio.back, screenshot, window_location)
+
+    def ad_wheel(self, screenshot, window_location, threshold=0.7):
+        """For when we have a monthly"""
+        # To spin the wheel
+        find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold)
+
+        # To skip the reward
+        return find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=threshold)
 
     def fort_solgress_state(self):
         """Handle the Fort Solrgess state."""
@@ -312,8 +326,11 @@ class DailyFarmer(IFarmer):
         # TODO: Fix to add multiple dungeons? Otherwise, keep it for one dungeon only
         if not DailyFarmer.event_special_dungeon_complete and find(vio.event_special_fs_dungeon, screenshot):
             print("Found an event-special dungeon! We should go there")
-            DailyFarmer.event_special_dungeon_complete = True
             DailyFarmer.current_state = States.SPECIAL_EVENT_FS_STATE
+            return
+
+        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+            # We don't want to do anything else until the ad wheel is complete
             return
 
         # Click on the Special FS dungeon
