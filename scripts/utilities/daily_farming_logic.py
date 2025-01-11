@@ -286,6 +286,11 @@ class DailyFarmer(IFarmer):
         """We've finished the special event, go back to FS state"""
         screenshot, window_location = capture_window()
 
+        # If we have a monthly...
+        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+            # We don't want to do anything else until the ad wheel is complete
+            return
+
         if find(vio.fort_solgress_special, screenshot):
             print("Going back to FS state!")
             DailyFarmer.current_state = States.FORT_SOLGRESS_STATE
