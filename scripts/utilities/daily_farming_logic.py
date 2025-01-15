@@ -467,6 +467,12 @@ class DailyFarmer(IFarmer):
         # For when CHAOS BATTTLE, the only OK button that worked:
         find_and_click(vio.ok_save_party, screenshot, window_location)
 
+        # TODO Improve the logic in this function
+        self.collect_brawl_reward(screenshot, window_location)
+
+    def collect_brawl_reward(self, screenshot, window_location):
+        """Collect the Brawl reward"""
+
         if find(vio.receive_brawl, screenshot):
             # Only try it once. If it fails, tough luck
             time.sleep(4)
