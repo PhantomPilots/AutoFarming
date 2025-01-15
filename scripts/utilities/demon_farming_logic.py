@@ -29,7 +29,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -321,6 +321,7 @@ class IDemonFarmer(IFarmer):
         """The dailies thread told us we're done with all the dailies, go back to farming demons"""
 
         print("All dailies complete! Going back to farming demons.")
+        IDemonFarmer.dailies_thread = None
         self.current_state = States.GOING_TO_DEMONS
 
     def run(self):

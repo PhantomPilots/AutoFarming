@@ -125,8 +125,13 @@ class DailyFarmer(IFarmer):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
         if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
-            print("Going to FORT_SOLGRESS_STATE")
-            return States.FORT_SOLGRESS_STATE
+            # Here, we may have wrongly clicked on death match
+            mission_rectangle = self.extract_mission_rectangle(vio.daily_fort_solgress, screenshot)
+            if not find(vio.blue_stone, mission_rectangle, threshold=0.8):
+                print("Going to FORT_SOLGRESS_STATE")
+                return States.FORT_SOLGRESS_STATE
+            else:
+                print("We WRONGLY want to click on death match thinking it's FORT SOLGRESS!")
         if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
             print("Going to VANYA_ALE_STATE")
             return States.VANYA_ALE_STATE
@@ -148,6 +153,14 @@ class DailyFarmer(IFarmer):
             print("No more missions, going to collect Brawl reward now.")
             # Only go to the EXIT state if we're in the tavern already.
             return States.GOING_TO_BRAWL
+
+    def extract_mission_rectangle(self, vision_image: Vision, screenshot: np.ndarray):
+        """Extarct the part of the image that contains the mission information"""
+        rectangle = vision_image.find(screenshot, threshold=0.85)
+
+        if len(rectangle):
+            return crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
+        return np.empty(0)
 
     def go_to_mission(
         self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int], threshold=0.85

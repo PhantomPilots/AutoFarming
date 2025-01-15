@@ -218,6 +218,7 @@ tasks = Vision("dailies\\tasks.png")
 daily_tasks = Vision("dailies\\daily_tasks.png")
 daily_complete = Vision("dailies\\complete.png")
 fortune_card = Vision("dailies\\fortune_card.png")
+blue_stone = Vision("dailies\\blue_stone.png")
 # Daily boss fight
 boss_battle = Vision("dailies\\boss_battle.png")
 normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
