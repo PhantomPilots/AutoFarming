@@ -95,6 +95,8 @@ class DailyFarmer(IFarmer):
             DailyFarmer.pvp_auto = False
             # Reset the event-special dungeon complete
             DailyFarmer.event_special_dungeon_complete = False
+            # Reset the current state!
+            DailyFarmer.current_state = States.IN_TAVERN_STATE
 
             # Cleanup before exiting
             super().exit_farmer_state()
