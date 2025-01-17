@@ -126,6 +126,12 @@ class DailyFarmer(IFarmer):
         if find(vio.daily_patrol, screenshot, threshold=0.85):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
+        if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
+            print("Going to VANYA_ALE_STATE")
+            return States.VANYA_ALE_STATE
+        if find(vio.daily_friendship_coins, screenshot, threshold=0.85):
+            print("Going to FRIENDSHIP_COINS_STATE")
+            return States.FRIENDSHIP_COINS_STATE
         if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
             # Here, we may have wrongly clicked on death match
             mission_rectangle = self.extract_mission_rectangle(vio.daily_fort_solgress, screenshot)
@@ -134,12 +140,6 @@ class DailyFarmer(IFarmer):
                 return States.FORT_SOLGRESS_STATE
             else:
                 print("We WRONGLY want to click on death match thinking it's FORT SOLGRESS!")
-        if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
-            print("Going to VANYA_ALE_STATE")
-            return States.VANYA_ALE_STATE
-        if find(vio.daily_friendship_coins, screenshot, threshold=0.85):
-            print("Going to FRIENDSHIP_COINS_STATE")
-            return States.FRIENDSHIP_COINS_STATE
 
         # If there's no 'go now', means we're done with the missions
         if not find(vio.go_now, screenshot):
