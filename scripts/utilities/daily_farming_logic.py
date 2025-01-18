@@ -113,26 +113,26 @@ class DailyFarmer(IFarmer):
 
         # Get rewards
         if find(vio.daily_complete, screenshot):
-            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.85)
+            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.89)
             print("We have complete rewards, let's take them.")
             return
 
-        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.85):
+        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.89):
             print("Going to PVP_STATE")
             return States.PVP_STATE
-        if find(vio.daily_boss_battle, screenshot, threshold=0.85):
+        if find(vio.daily_boss_battle, screenshot, threshold=0.89):
             print("Going to BOSS_STATE")
             return States.BOSS_STATE
-        if find(vio.daily_patrol, screenshot, threshold=0.85):
+        if find(vio.daily_patrol, screenshot, threshold=0.89):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
-        if find(vio.daily_vanya_ale, screenshot, threshold=0.85):
+        if find(vio.daily_vanya_ale, screenshot, threshold=0.89):
             print("Going to VANYA_ALE_STATE")
             return States.VANYA_ALE_STATE
-        if find(vio.daily_friendship_coins, screenshot, threshold=0.85):
+        if find(vio.daily_friendship_coins, screenshot, threshold=0.89):
             print("Going to FRIENDSHIP_COINS_STATE")
             return States.FRIENDSHIP_COINS_STATE
-        if find(vio.daily_fort_solgress, screenshot, threshold=0.85):
+        if find(vio.daily_fort_solgress, screenshot, threshold=0.89):
             # Here, we may have wrongly clicked on death match
             mission_rectangle = self.extract_mission_rectangle(vio.daily_fort_solgress, screenshot)
             if not find(vio.blue_stone, mission_rectangle, threshold=0.8):
@@ -158,14 +158,14 @@ class DailyFarmer(IFarmer):
 
     def extract_mission_rectangle(self, vision_image: Vision, screenshot: np.ndarray):
         """Extarct the part of the image that contains the mission information"""
-        rectangle = vision_image.find(screenshot, threshold=0.85)
+        rectangle = vision_image.find(screenshot, threshold=0.89)
 
         if len(rectangle):
             return crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
         return np.empty(0)
 
     def go_to_mission(
-        self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int], threshold=0.85
+        self, vision_image: Vision, screenshot: np.ndarray, window_location: tuple[int, int], threshold=0.89
     ):
         """Click on 'Go Now' corresponding to the specific vision image"""
         # Extract the portion we want to click on
@@ -329,7 +329,7 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.85)
+            self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.89)
 
         if find(vio.daily_quest_info, screenshot) or find(vio.daily_result, screenshot):
             print("Mission complete!")
