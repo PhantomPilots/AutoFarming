@@ -22,14 +22,13 @@ from utilities.utilities import (
     drag_im,
     find,
     find_and_click,
-    find_floor_coordinates,
     press_key,
 )
 from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 

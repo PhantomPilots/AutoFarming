@@ -1,6 +1,4 @@
-import threading
 import time
-from datetime import datetime
 from enum import Enum, auto
 from typing import Callable
 
@@ -15,15 +13,11 @@ from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    check_for_reconnect,
     click_and_sleep,
     crop_image,
-    display_image,
     find,
     find_and_click,
-    find_floor_coordinates,
     press_key,
-    screenshot_testing,
 )
 from utilities.vision import Vision
 
@@ -187,6 +181,12 @@ class DailyFarmer(IFarmer):
         """We've complete a mission, go back to the tavern"""
         screenshot, window_location = capture_window()
 
+        # First, check if we have a wheel ad roulette from FS, and spin it if so
+        if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
+            # We don't want to do anything else until the ad wheel is complete
+            print("We've finished the mission but there's an ad wheel to spin!")
+            return
+
         # If we can already go to the quest menu, go right away!
         if find(vio.quests, screenshot):
             print("Going back to the Quests menu")
@@ -268,7 +268,7 @@ class DailyFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we have a monthly...
-        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+        if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
             # We don't want to do anything else until the ad wheel is complete
             return
 
@@ -302,7 +302,7 @@ class DailyFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we have a monthly...
-        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+        if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
             # We don't want to do anything else until the ad wheel is complete
             return
 
@@ -315,7 +315,7 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.daily_result, screenshot, window_location)
         find_and_click(vio.back, screenshot, window_location)
 
-    def ad_wheel(self, screenshot, window_location, threshold=0.7):
+    def check_ad_wheel(self, screenshot, window_location, threshold=0.7):
         """For when we have a monthly"""
         # To spin the wheel
         find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold)
@@ -349,7 +349,7 @@ class DailyFarmer(IFarmer):
             DailyFarmer.current_state = States.SPECIAL_EVENT_FS_STATE
             return
 
-        if in_ad_wheel := self.ad_wheel(screenshot, window_location):
+        if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
             # We don't want to do anything else until the ad wheel is complete
             return
 
