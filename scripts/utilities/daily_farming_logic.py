@@ -38,6 +38,7 @@ class States(Enum):
     MISSION_COMPLETE_STATE = auto()
     GOING_TO_BRAWL = auto()
     BRAWL_STATE = auto()
+    AD_WHEEL = auto()
 
 
 class DailyFarmer(IFarmer):
@@ -185,6 +186,7 @@ class DailyFarmer(IFarmer):
         if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
             # We don't want to do anything else until the ad wheel is complete
             print("We've finished the mission but there's an ad wheel to spin!")
+            DailyFarmer.current_state = States.AD_WHEEL
             return
 
         # If we can already go to the quest menu, go right away!
@@ -208,6 +210,12 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.daily_result, screenshot, window_location)
         # Go back
         find_and_click(vio.back, screenshot, window_location)
+
+    def ad_wheel_state(self):
+        """We have to play the ad wheel, until there's no more"""
+        screenshot, window_location = capture_window()
+        if not self.check_ad_wheel(screenshot, window_location):
+            DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
     def in_tavern_state(self):
         """We're in the tavern, go to the next task."""
@@ -403,7 +411,7 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.daily_quest_info, screenshot, window_location)
 
         # If we win, or lose:
-        if find(vio.ok_button, screenshot) or find(vio.ok_pvp_defeat, screenshot):
+        if (find(vio.ok_button, screenshot) or find(vio.ok_pvp_defeat, screenshot)) and DailyFarmer.pvp_auto:
             print("PVP fight finished! Ending mission")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
@@ -532,6 +540,9 @@ class DailyFarmer(IFarmer):
                 self.going_to_brawl_state()
             elif DailyFarmer.current_state == States.BRAWL_STATE:
                 self.brawl_state()
+
+            elif DailyFarmer.current_state == States.AD_WHEEL:
+                self.ad_wheel_state()
 
             elif DailyFarmer.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()
