@@ -215,6 +215,7 @@ class DailyFarmer(IFarmer):
         """We have to play the ad wheel, until there's no more"""
         screenshot, window_location = capture_window()
         if not self.check_ad_wheel(screenshot, window_location):
+            print("In the AD_WHEEL state, but no more ad wheel to play!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
     def in_tavern_state(self):
@@ -328,12 +329,14 @@ class DailyFarmer(IFarmer):
         # To spin the wheel
         if find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold):
             print("Spinning the wheel...")
+            return True
 
         # To skip the reward
         if find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=0.6):
             print("We're seeing ad_wheel_play, going to AD_WHEEL state...")
             return True
 
+        print("No more ad wheel left to play! Returning False.")
         return False
 
     def fort_solgress_state(self):
