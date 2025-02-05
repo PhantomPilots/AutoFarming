@@ -111,7 +111,8 @@ class IDemonFarmer(IFarmer):
             return
 
         # Click OK if we see it (?)
-        click_and_sleep(vio.ok_main_button, screenshot, window_location, threshold=0.7)
+        if find(vio.ok_main_button, screenshot) and not find(self.demon_to_farm, screenshot):
+            click_and_sleep(vio.ok_main_button, screenshot, window_location, threshold=0.7)
 
         # Go to battle menu
         click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
@@ -211,14 +212,9 @@ class IDemonFarmer(IFarmer):
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.ok_main_button, screenshot):
-            # Finished the fight!
-            if find(vio.demon_ok, screenshot):
-                print("DEMON DESTROYED!")
-                IDemonFarmer.demons_destroyed += 1
-            elif find(vio.bird_okay, screenshot):
-                print("Network instability!!")
-            else:
-                print("We lost :(")
+            # TODO Check whether we've won or lost the demon fight, to update the counter properly
+            IDemonFarmer.demons_destroyed += 1
+
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've destroyed {IDemonFarmer.demons_destroyed} demons.")

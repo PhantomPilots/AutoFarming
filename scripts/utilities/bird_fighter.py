@@ -23,6 +23,8 @@ class BirdFighter(IFighter):
             window_location,
             point_coordinates=Coordinates.get_coordinates("lazy_weekly_bird_mission"),
         )
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
         # To skip quickly to the rewards when the fight is done
         find_and_click(vio.creature_destroyed, screenshot, window_location, threshold=0.6)
 
@@ -139,6 +141,9 @@ class BirdFighter(IFighter):
         """We've lost the battle..."""
         screenshot, window_location = capture_window()
 
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
+        # Click on the OK button to end the fight
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
@@ -150,6 +155,8 @@ class BirdFighter(IFighter):
     def fight_complete_state(self):
 
         screenshot, window_location = capture_window()
+
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
 
         # Click on the OK button to end the fight
         find_and_click(vio.ok_main_button, screenshot, window_location)

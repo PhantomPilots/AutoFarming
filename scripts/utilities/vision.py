@@ -87,7 +87,7 @@ class OkVision(Vision):
 
     @property
     def image_name(self):
-        return "an OK button"
+        return "Ok button"
 
     def __eq__(self, other):
         """All OkVision instances will be equal to each other!"""

@@ -1,4 +1,4 @@
-from utilities.dogs_farming_logic_2 import DogsFarmer, States
+from utilities.dogs_farming_logic import DogsFarmer, States
 from utilities.dogs_fighting_strategies import DogsBattleStrategy
 from utilities.farming_factory import FarmingFactory
 
@@ -11,7 +11,7 @@ def main():
         starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_DOGS'
         reset_after_defeat=True,  # After we lose, should we reset the Demonic Beast team?
         max_stamina_pots="inf",  # How many stamina pots at most
-        max_floor_3_clears="inf",  # How many floor 3 clears at most
+        max_floor_3_clears=2,  # How many floor 3 clears at most
     )
 
 

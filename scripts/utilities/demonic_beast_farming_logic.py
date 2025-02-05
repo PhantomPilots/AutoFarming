@@ -77,7 +77,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
         self.max_floor_3_clears = float(max_floor_3_clears)
         if self.max_floor_3_clears < float("inf"):
-            print(f"We're gonna clear floor 3 at most {self.max_floor_3_clears} times.")
+            print(f"We're gonna clear floor 3 at most {int(self.max_floor_3_clears)} times.")
 
     def exit_message(self):
         self.logger.info(
