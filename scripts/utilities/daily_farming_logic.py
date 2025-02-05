@@ -323,14 +323,14 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.daily_result, screenshot, window_location)
         find_and_click(vio.back, screenshot, window_location)
 
-    def check_ad_wheel(self, screenshot, window_location, threshold=0.7):
+    def check_ad_wheel(self, screenshot, window_location, threshold=0.7) -> bool:
         """For when we have a monthly"""
         # To spin the wheel
         if find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold):
             print("Spinning the wheel...")
 
         # To skip the reward
-        if find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=threshold):
+        if find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=0.6):
             print("We're seeing ad_wheel_play, going to AD_WHEEL state...")
             return True
 
