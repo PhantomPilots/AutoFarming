@@ -6,7 +6,6 @@ from utilities.vision import OkVision, Vision
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")
-ok_button = Vision("ok_button.jpg")
 restore_stamina = Vision("stamuse.png")
 startbutton = Vision("start.png")
 skip = Vision("skip.png")
@@ -23,7 +22,6 @@ main_menu_exclamation = Vision("main_menu_exclamation.png")
 register_all = Vision("register_all.png")
 apply = Vision("apply.png")
 salvage = Vision("salvage.png")
-salvage_ok = Vision("salvage_ok.png")
 back = Vision("back.png")
 equipment = Vision("equipment.png")
 onslaught = Vision("onslaught.png")
@@ -77,11 +75,9 @@ demonic_beast = Vision("demonic_beasts\\demonic_beast.png")
 hraesvelgr = Vision("demonic_beasts\\hraesvelgr.png")
 empty_party = Vision("demonic_beasts\\empty_party.png")
 save_party = Vision("demonic_beasts\\save_party.png")
-ok_save_party = Vision("demonic_beasts\\OK_save_party.png")
 hraesvelgr_screen = Vision("demonic_beasts\\hraesvelgr_screen.png")
 skip_bird = Vision("demonic_beasts\\skip_masked.png")
 db_loading_screen = Vision("demonic_beasts\\loading_screen.png")
-bird_okay = Vision("demonic_beasts\\bird_okay.png")
 reset_demonic_beast = Vision("demonic_beasts\\reset_demonic_beast.png")
 my_turn = Vision("demonic_beasts\\my_turn.png")
 floor_3_cleard_bird = Vision("demonic_beasts\\floor_3_cleared_bird.png")
@@ -89,12 +85,9 @@ floor_3_cleard_2_bird = Vision("demonic_beasts\\floor_3_cleared_2_bird.png")
 available_floor = Vision("demonic_beasts\\available_floor.png")
 creature_destroyed = Vision("demonic_beasts\\creature_destroyed.png")
 defeat = Vision("demonic_beasts\\defeat.png")
-ok_bird_defeat = Vision("demonic_beasts\\ok_bird_defeat.png")
 three_empty_slots = Vision("demonic_beasts\\three_slots.png")
 two_empty_slots = Vision("demonic_beasts\\two_slots.png")
 weekly_mission = Vision("demonic_beasts\\lazy_weekly_mission.png")
-finished_fight_ok = Vision("demonic_beasts\\finished_fight_ok.png")
-forfeit_fight_ok = Vision("demonic_beasts\\forfeit_fight_ok.png")
 skollandhati = Vision("demonic_beasts\\skollandhati.png")
 guaranteed_reward = Vision("demonic_beasts\\guaranteed_reward.png")
 meli_aoe = Vision("demonic_beasts\\meli_aoe.png")
@@ -166,7 +159,6 @@ hell_difficulty = Vision("final_boss\\hell_difficulty.png")
 challenge_difficulty = Vision("final_boss\\challenge_difficulty.png")
 extreme_difficulty = Vision("final_boss\\extreme_difficulty.png")
 hard_difficulty = Vision("final_boss\\hard_difficulty.png")
-fb_ok_button = Vision("final_boss\\fb_ok_button.png")
 boss_destroyed = Vision("final_boss\\boss_destroyed.png")
 boss_results = Vision("final_boss\\boss_results.png")
 boss_mission = Vision("final_boss\\boss_mission.png")
@@ -191,9 +183,6 @@ join_request = Vision("demons\\join_request.png")
 preparation_incomplete = Vision("demons\\preparation_incomplete.png")
 demons_auto = Vision("demons\\auto.jpg")
 demons_destroyed = Vision("demons\\demons_destroyed.png")
-demon_ok = Vision("demons\\demon_ok.jpg")
-demon_defeat_ok = Vision("demons\\dead_ok.jpg")
-demon_kicked_ok = Vision("demons\\kicked_ok.png")
 
 
 # For dailies
@@ -253,15 +242,21 @@ view_pvp_results = Vision("dailies\\view_results.png")
 join_all = Vision("dailies\\join_all.png")
 # PVP
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
-ok_pvp_defeat = Vision("dailies\\ok_pvp_defeat.png")
 tier_up_failed = Vision("dailies\\tier_up_failed.png")
 
 
 # Create a single OkVision instance for all OK buttons
 ok_main_button = OkVision(
-    "ok_button.png",
+    "ok_button.jpg",
     "demonic_beasts\\OK_save_party.png",
     "demonic_beasts\\ok_bird_defeat.png",
     "final_boss\\fb_ok_button.png",
     "dailies\\ok_pvp_defeat.png",
+    "salvage_ok.png",
+    "demonic_beasts\\bird_okay.png",
+    "demonic_beasts\\finished_fight_ok.png",
+    "demonic_beasts\\forfeit_fight_ok.png",
+    "demons\\demon_ok.jpg",
+    "demons\\dead_ok.jpg",
+    "demons\\kicked_ok.png",
 )

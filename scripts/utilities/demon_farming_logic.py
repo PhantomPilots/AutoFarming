@@ -111,11 +111,7 @@ class IDemonFarmer(IFarmer):
             return
 
         # Click OK if we see it (?)
-        click_and_sleep(vio.demon_ok, screenshot, window_location)
-        click_and_sleep(vio.demon_defeat_ok, screenshot, window_location)
-        click_and_sleep(vio.demon_kicked_ok, screenshot, window_location)
-        # Regarding network instability:
-        click_and_sleep(vio.bird_okay, screenshot, window_location, threshold=0.7)
+        click_and_sleep(vio.ok_main_button, screenshot, window_location, threshold=0.7)
 
         # Go to battle menu
         click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
@@ -179,7 +175,7 @@ class IDemonFarmer(IFarmer):
         click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
         # We may have been kicked, move to initial state if so
-        if find(vio.demon_kicked_ok, screenshot):
+        if find(vio.ok_main_button, screenshot):
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've been kicked out... Moving to {self.current_state}.")
             return
@@ -198,7 +194,7 @@ class IDemonFarmer(IFarmer):
             IDemonFarmer.auto = True
 
         # # Click on network instability OK, then move to GOING_TO_DEMONS
-        # if find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.7):
+        # if find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7):
         #     print("Network instability, exiting fight...")
         # if find(vio.tavern_loading_screen, screenshot):
         #     print("Seeing a loading screen, moving to GOING_TO_DEMONS")
@@ -212,18 +208,14 @@ class IDemonFarmer(IFarmer):
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
         # For when we've ranked up
-        find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if (
-            find(vio.demon_ok, screenshot)
-            or find(vio.demon_defeat_ok, screenshot)
-            or find(vio.bird_okay, screenshot, threshold=0.7)
-        ):
+        if find(vio.ok_main_button, screenshot):
             # Finished the fight!
             if find(vio.demon_ok, screenshot):
                 print("DEMON DESTROYED!")
                 IDemonFarmer.demons_destroyed += 1
-            elif find(vio.bird_okay, screenshot, threshold=0.7):
+            elif find(vio.bird_okay, screenshot):
                 print("Network instability!!")
             else:
                 print("We lost :(")
@@ -236,7 +228,7 @@ class IDemonFarmer(IFarmer):
         """Open the fortune card"""
         screenshot, window_location = capture_window()
 
-        if find(vio.bird_okay, screenshot, threshold=0.6):
+        if find(vio.ok_main_button, screenshot, threshold=0.6):
             print("Got a good fortune? Going back to daily reset state")
             self.current_state = States.DAILY_RESET
             return
@@ -279,7 +271,7 @@ class IDemonFarmer(IFarmer):
             return
 
         # In case an OK pop-up shows up
-        find_and_click(vio.bird_okay, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
         # Go to tavern
         click_and_sleep(vio.tavern, screenshot, window_location)
@@ -325,38 +317,6 @@ class IDemonFarmer(IFarmer):
 
     def run(self):
         raise NotImplementedError("Virtual method. Need to implement this method in a derived class.")
-
-        # print(f"Farming demons, starting from {self.current_state}.")
-        # print(f"We'll be farming {self.demon_to_farm.image_name} demon.")
-
-        # while True:
-        #     # Try to reconnect first
-        #     check_for_reconnect()
-
-        #     if self.current_state == States.GOING_TO_DEMONS:
-        #         self.going_to_demons_state()
-
-        #     elif self.current_state == States.LOOKING_FOR_DEMON:
-        #         self.looking_for_demon_state()
-
-        #     elif self.current_state == States.READY_TO_FIGHT:
-        #         self.ready_to_fight_state()
-
-        #     elif self.current_state == States.DAILY_RESET:
-        #         self.daily_reset_state()
-
-        #     elif self.current_state == States.CHECK_IN:
-        #         self.check_in_state()
-
-        #     elif self.current_state == States.DAILIES_STATE:
-        #         self.dailies_state()
-
-        #     elif self.current_state == States.FIGHTING_DEMON:
-        #         self.fighting_demon_state()
-        #         time.sleep(1)
-
-        #     # We need the loop to run very fast
-        #     time.sleep(0.1)
 
 
 class DemonFarmer(IDemonFarmer):

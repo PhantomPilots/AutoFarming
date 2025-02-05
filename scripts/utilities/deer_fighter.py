@@ -50,7 +50,7 @@ class DeerFighter(IFighter):
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
-        elif find(vio.finished_fight_ok, screenshot):
+        elif find(vio.ok_main_button, screenshot):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
@@ -135,7 +135,7 @@ class DeerFighter(IFighter):
         screenshot, window_location = capture_window()
 
         # Click on the OK button to end the fight
-        find_and_click(vio.finished_fight_ok, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
@@ -146,7 +146,7 @@ class DeerFighter(IFighter):
         """We've lost the battle..."""
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.ok_bird_defeat, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread

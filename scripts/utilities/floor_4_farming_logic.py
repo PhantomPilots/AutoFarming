@@ -84,7 +84,7 @@ class Floor4Farmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # In case we need to unlock the floor
-        find_and_click(vio.fb_ok_button, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
         # Click on floor 4 if it's available
         find_and_click(vio.floor_3_cleard_bird, screenshot, window_location, threshold=0.7)

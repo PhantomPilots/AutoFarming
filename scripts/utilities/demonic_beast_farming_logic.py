@@ -116,7 +116,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
         screenshot, window_location = capture_window()
 
-        if find_and_click(vio.ok_save_party, screenshot, window_location):
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
             # We're ready to start fighting floor 1!
             print("Moving to state READY_TO_FIGHT")
             self.current_state = States.READY_TO_FIGHT
@@ -134,7 +134,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         screenshot, window_location = capture_window()
 
         # In case we didn't properly click it
-        find_and_click(vio.ok_save_party, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
         if floor_coordinates := find_floor_coordinates(screenshot, window_location):
@@ -240,7 +240,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         screenshot, window_location = capture_window()
 
         # Click on the confirmation window...
-        find_and_click(vio.bird_okay, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Click on the 'reset' button
         find_and_click(vio.reset_demonic_beast, screenshot, window_location, threshold=0.6)

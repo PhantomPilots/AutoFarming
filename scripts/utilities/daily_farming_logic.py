@@ -196,8 +196,7 @@ class DailyFarmer(IFarmer):
             return
 
         # If there's any OK button
-        find_and_click(vio.ok_button, screenshot, window_location)
-        find_and_click(vio.ok_pvp_defeat, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
         # In case we see a cross, exit
         find_and_click(vio.exit_cross, screenshot, window_location)
         # Patrol dispatched successfully
@@ -301,7 +300,7 @@ class DailyFarmer(IFarmer):
             press_key("esc")
 
         # Exit this state
-        if find(vio.ok_button, screenshot) and not find(vio.ad_wheel_play, screenshot, threshold=0.6):
+        if find(vio.ok_main_button, screenshot) and not find(vio.ad_wheel_play, screenshot, threshold=0.6):
             print("Finished special FS event...")
             DailyFarmer.event_special_dungeon_complete = True
             DailyFarmer.current_state = States.FINISHED_SPECIAL_EVENT_FS
@@ -320,7 +319,7 @@ class DailyFarmer(IFarmer):
             DailyFarmer.current_state = States.FORT_SOLGRESS_STATE
             return
 
-        find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
         find_and_click(vio.daily_result, screenshot, window_location)
         find_and_click(vio.back, screenshot, window_location)
 
@@ -404,9 +403,7 @@ class DailyFarmer(IFarmer):
         # For when Monday
         find_and_click(vio.view_pvp_results, screenshot, window_location)
         find_and_click(vio.join_all, screenshot, window_location)
-        find_and_click(vio.ok_button, screenshot, window_location)
-        # For when CHAOS BATTTLE, the only OK button that worked:
-        find_and_click(vio.ok_save_party, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Find a match...
         find_and_click(vio.search_pvp_match, screenshot, window_location)
@@ -419,7 +416,7 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.daily_quest_info, screenshot, window_location)
 
         # If we win, or lose:
-        if (find(vio.ok_button, screenshot) or find(vio.ok_pvp_defeat, screenshot)) and DailyFarmer.pvp_auto:
+        if find(vio.ok_main_button, screenshot) and DailyFarmer.pvp_auto:
             print("PVP fight finished! Ending mission")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 
@@ -479,9 +476,7 @@ class DailyFarmer(IFarmer):
         find_and_click(vio.brawl, screenshot, window_location)
         find_and_click(vio.view_pvp_results, screenshot, window_location)
         find_and_click(vio.join_all, screenshot, window_location)
-        find_and_click(vio.ok_button, screenshot, window_location)
-        # For when CHAOS BATTTLE, the only OK button that worked:
-        find_and_click(vio.ok_save_party, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # TODO Improve the logic in this function
         self.collect_brawl_reward(screenshot, window_location)

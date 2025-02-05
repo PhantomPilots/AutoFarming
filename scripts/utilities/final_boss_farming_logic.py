@@ -78,7 +78,7 @@ class FinalBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # We may see an OK button, if we come from a defeat screen
-        find_and_click(vio.ok_bird_defeat, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # After clicking, if we're on start, move to the battle!
         if find(vio.startbutton, screenshot):
@@ -116,7 +116,7 @@ class FinalBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we see an OK button bc of oath of combat not selected...
-        if find_and_click(vio.fb_ok_button, screenshot, window_location):
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
             return
 
         # We may need to restore stamina
@@ -169,7 +169,7 @@ class FinalBossFarmer(IFarmer):
         # Ensure AUTO is on
         find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.9)
 
-        if find(vio.ok_bird_defeat, screenshot):
+        if find(vio.ok_main_button, screenshot):
             print("Oh no, we have lost :( Retrying")
             self.current_state = States.IN_FINAL_BOSS_MENU
 

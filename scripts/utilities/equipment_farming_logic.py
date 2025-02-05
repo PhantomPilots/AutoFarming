@@ -60,7 +60,7 @@ class EquipmentFarmer(IFarmer):
             return
 
         # We may have found a daily reset
-        find_and_click(vio.bird_okay, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.new_tasks_unlocked, screenshot):
             print("Daily reset!")
             press_key("esc")
@@ -94,12 +94,12 @@ class EquipmentFarmer(IFarmer):
             # In case it didn't go away, press ESC again
             press_key("esc")
 
-        find_and_click(vio.ok_button, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find_and_click(vio.tavern, screenshot, window_location, threshold=0.7):
+        if find_and_click(vio.tavern, screenshot, window_location):
             # TODO: We should not have to capture the window twice in one state, make an additional state
             screenshot, _ = capture_window()
-            if find(vio.main_menu, screenshot, threshold=0.7):
+            if find(vio.main_menu, screenshot):
                 self.current_state = States.TAVERN_TO_SALVAGE
                 print("Moving to TAVERN_TO_SALVAGE")
 
@@ -164,7 +164,7 @@ class EquipmentFarmer(IFarmer):
         find_and_click(vio.back, screenshot, window_location)
 
         # Click on the OK button
-        find_and_click(vio.ok_button, screenshot, window_location)
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.main_menu, screenshot, threshold=0.7):
             # We're back in the tavern
