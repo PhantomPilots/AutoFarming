@@ -42,6 +42,8 @@ class DogsFighter(IFighter):
             window_location,
             point_coordinates=Coordinates.get_coordinates("lazy_weekly_bird_mission"),
         )
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
         # To skip quickly to the rewards when the fight is done
         find_and_click(vio.creature_destroyed, screenshot, window_location)
 
@@ -53,6 +55,7 @@ class DogsFighter(IFighter):
         elif find(vio.ok_main_button, screenshot):
             # Fight is complete
             self.current_state = FightingStates.FIGHTING_COMPLETE
+            print("Fighting complete!")
 
         elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
@@ -146,6 +149,8 @@ class DogsFighter(IFighter):
 
         screenshot, window_location = capture_window()
 
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
+
         if find(vio.guaranteed_reward, screenshot):
             DogsFighter.floor_defeated = 3
 
@@ -162,6 +167,8 @@ class DogsFighter(IFighter):
     def defeat_state(self):
         """We've lost the battle..."""
         screenshot, window_location = capture_window()
+
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
 
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
