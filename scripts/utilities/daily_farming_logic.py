@@ -326,10 +326,15 @@ class DailyFarmer(IFarmer):
     def check_ad_wheel(self, screenshot, window_location, threshold=0.7):
         """For when we have a monthly"""
         # To spin the wheel
-        find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold)
+        if find_and_click(vio.ad_wheel_free, screenshot, window_location, threshold=threshold):
+            print("Spinning the wheel...")
 
         # To skip the reward
-        return find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=threshold)
+        if find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=threshold):
+            print("We're seeing ad_wheel_play, going to AD_WHEEL state...")
+            return True
+
+        return False
 
     def fort_solgress_state(self):
         """Handle the Fort Solrgess state."""

@@ -1,7 +1,7 @@
 # 7DS Grand Cross scripts for auto-farming
 
 This repository contains several scripts for auto-farming specific events in the 7DS Grand Cross mobile game.
-For now it's built for Windows only, but it will change in the future.
+For now it's built for Windows only, but it could change in the future.
 
 **Disclaimer**: One downside of these scripts is that they cannot run in the background, i.e., you won't be able to use your PC while autofarming.
 Also, use this code at your own risk.
