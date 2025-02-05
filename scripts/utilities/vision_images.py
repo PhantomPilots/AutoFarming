@@ -1,4 +1,4 @@
-from utilities.vision import Vision
+from utilities.vision import OkVision, Vision
 
 # TODO:
 
@@ -255,3 +255,13 @@ join_all = Vision("dailies\\join_all.png")
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
 ok_pvp_defeat = Vision("dailies\\ok_pvp_defeat.png")
 tier_up_failed = Vision("dailies\\tier_up_failed.png")
+
+
+# Create a single OkVision instance for all OK buttons
+ok_main_button = OkVision(
+    "ok_button.png",
+    "demonic_beasts\\OK_save_party.png",
+    "demonic_beasts\\ok_bird_defeat.png",
+    "final_boss\\fb_ok_button.png",
+    "dailies\\ok_pvp_defeat.png",
+)
