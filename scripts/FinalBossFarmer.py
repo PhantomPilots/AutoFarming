@@ -7,7 +7,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=FinalBossFarmer,
         starting_state=States.GOING_TO_FB,  # Should be 'GOING_TO_FB'
-        difficulty="challenge",  # Can be "hard", "extreme", "hell", "challenge"
+        difficulty="hell",  # Can be "hard", "extreme", "hell", "challenge"
         num_runs="inf",  # How many runs we want. Set to "inf" for infinite runs.
     )
 

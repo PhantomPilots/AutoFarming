@@ -335,7 +335,6 @@ class DailyFarmer(IFarmer):
             print("We're seeing ad_wheel_play, going to AD_WHEEL state...")
             return True
 
-        print("No more ad wheel left to play! Returning False.")
         return False
 
     def fort_solgress_state(self):
