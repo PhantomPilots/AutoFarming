@@ -55,7 +55,7 @@ class DataCollector:
         """Logic to extract the cards and labels from the hand.
         `previous_labels` used if bookkeeping is desired, to facilitate data collection
         (meaning, always click the rightmost cards).
-        TODO:Implement by a subclass
+        Needs to be mplemented by a subclass.
         """
 
 

@@ -2,6 +2,7 @@ import threading
 import time
 from datetime import datetime
 from enum import Enum
+from enum import auto as auto_enum
 
 import numpy as np
 import pyautogui as pyautogui
@@ -34,7 +35,7 @@ logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
 
 class States(Enum):
-    GOING_TO_DEMONS = 0
+    GOING_TO_DEMONS = auto_enum()
     LOOKING_FOR_DEMON = 1
     READY_TO_FIGHT = 2
     FIGHTING_DEMON = 3
@@ -212,8 +213,10 @@ class IDemonFarmer(IFarmer):
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.ok_main_button, screenshot):
-            # TODO Check whether we've won or lost the demon fight, to update the counter properly
-            IDemonFarmer.demons_destroyed += 1
+            if find(vio.victory, screenshot):
+                IDemonFarmer.demons_destroyed += 1
+            else:
+                print("Couldn't defeat this demon :(")
 
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
