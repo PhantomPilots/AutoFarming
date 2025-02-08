@@ -36,7 +36,7 @@ class Vision:
     def __eq__(self, other):
         if not isinstance(other, Vision):
             raise NotImplementedError(f"Cannot compare Vision instance with {type(other)}")
-        return not isinstance(other, OkVision) and self._image_name == other.image_name
+        return self.image_name == other.image_name
 
     def find(self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED) -> np.ndarray:
         """Run the defined pattern matching strategy.
