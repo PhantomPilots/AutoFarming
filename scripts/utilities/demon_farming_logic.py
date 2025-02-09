@@ -30,7 +30,7 @@ from utilities.vision import Vision
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 CHECK_IN_HOUR = 4
-MINUTES_TO_WAIT_BEFORE_LOGIN = 60
+MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -117,7 +117,9 @@ class IDemonFarmer(IFarmer):
         if find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
             self.current_state = States.LOGIN_SCREEN
             IDemonFarmer.logged_out_time = time.time()
-            print("We've been logged out! Need to log in again...")
+            print(
+                f"We've been logged out! Need to log in again, waiting for the {MINUTES_TO_WAIT_BEFORE_LOGIN} min timeout..."
+            )
 
     def login_screen_state(self):
         """We're at the login screen, need to login!"""
