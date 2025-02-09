@@ -101,7 +101,6 @@ class IDemonFarmer(IFarmer):
         # If we see a 'CANCEL', change the state
         if find(vio.cancel_realtime, screenshot):
             self.current_state = States.LOOKING_FOR_DEMON
-            print("Hello????")
             print(f"Moving to {self.current_state}.")
             return
 
