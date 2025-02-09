@@ -2,7 +2,6 @@ import threading
 import time
 from datetime import datetime
 from enum import Enum
-from enum import auto as auto_enum
 
 import numpy as np
 import pyautogui as pyautogui
@@ -29,13 +28,13 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 3
+CHECK_IN_HOUR = 4
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
 
 class States(Enum):
-    GOING_TO_DEMONS = auto_enum()
+    GOING_TO_DEMONS = 0
     LOOKING_FOR_DEMON = 1
     READY_TO_FIGHT = 2
     FIGHTING_DEMON = 3
@@ -102,6 +101,7 @@ class IDemonFarmer(IFarmer):
         # If we see a 'CANCEL', change the state
         if find(vio.cancel_realtime, screenshot):
             self.current_state = States.LOOKING_FOR_DEMON
+            print("Hello????")
             print(f"Moving to {self.current_state}.")
             return
 
@@ -214,6 +214,7 @@ class IDemonFarmer(IFarmer):
 
         if find(vio.ok_main_button, screenshot):
             if find(vio.victory, screenshot):
+                print("Demon destroyed!")
                 IDemonFarmer.demons_destroyed += 1
             else:
                 print("Couldn't defeat this demon :(")
