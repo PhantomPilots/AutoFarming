@@ -30,6 +30,7 @@ from utilities.vision import Vision
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 CHECK_IN_HOUR = 4
+MINUTES_TO_WAIT_BEFORE_LOGIN = 60
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -77,6 +78,7 @@ class IDemonFarmer(IFarmer):
         if password:
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
+            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # Starting state
         self.current_state = starting_state
@@ -122,7 +124,7 @@ class IDemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Only try to log in if certain time has passed since we detected te login
-        if time.time() - IDemonFarmer.logged_out_time < 60 * 60:  # Wait X minutes
+        if time.time() - IDemonFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60:  # Wait X minutes
             time.sleep(1)
             return
 
