@@ -1,3 +1,4 @@
+import argparse
 import io
 import os
 import sys
@@ -18,11 +19,17 @@ class FarmingFactory:
     def main_loop(farmer: IFarmer, starting_state, battle_strategy: IBattleStrategy | None = None, **kwargs):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
 
+        # Extract the password if given
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--pwd", type=str, default=None, help="Account password")
+        args = parser.parse_args()
+
         while True:
             try:
                 farmer_instance: IFarmer = farmer(
                     battle_strategy=battle_strategy,
                     starting_state=starting_state,
+                    password=args.pwd,  # Send the given password to the farmer instance
                     **kwargs,  # To set farmer-specific options
                 )
                 farmer_instance.run()

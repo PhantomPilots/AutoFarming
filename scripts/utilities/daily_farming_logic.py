@@ -25,7 +25,7 @@ logger = LoggerWrapper(name="DailyLogger", log_file="daily_farmer_logger.log")
 
 
 class States(Enum):
-    IN_TAVERN_STATE = 0
+    IN_TAVERN_STATE = auto()
     BOSS_STATE = auto()
     VANYA_ALE_STATE = auto()
     FORT_SOLGRESS_STATE = auto()

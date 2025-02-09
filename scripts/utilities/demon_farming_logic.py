@@ -23,6 +23,7 @@ from utilities.utilities import (
     find,
     find_and_click,
     press_key,
+    type_word,
 )
 from utilities.vision import Vision
 
@@ -42,6 +43,7 @@ class States(Enum):
     CHECK_IN = 5
     DAILIES_STATE = 6
     FORTUNE_CARD = 7
+    LOGIN_SCREEN = 8
 
 
 class IDemonFarmer(IFarmer):
@@ -58,6 +60,9 @@ class IDemonFarmer(IFarmer):
     # The thread for doing dailies
     dailies_thread = None
 
+    # Keep track of when we've been logged out
+    logged_out_time = time.time()
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -66,7 +71,12 @@ class IDemonFarmer(IFarmer):
         time_to_sleep=9.3,
         do_dailies=False,
         do_daily_pvp=False,
+        password: str = None,
     ):
+        # Store the account password in this instance if given
+        if password:
+            IFarmer.password = password
+            print("Stored the account password locally in case we need to log in again.")
 
         # Starting state
         self.current_state = starting_state
@@ -93,6 +103,53 @@ class IDemonFarmer(IFarmer):
     def exit_message(self):
         """Final message!"""
         print(f"We destroyed {IDemonFarmer.demons_destroyed} demons.")
+
+    def check_for_login_state(self):
+        """Check whether we need to switch to the login state"""
+        if IFarmer.password is None:
+            # Skip the checks if we don't have a password
+            return
+
+        screenshot, _ = capture_window()
+
+        if find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
+            self.current_state = States.LOGIN_SCREEN
+            IDemonFarmer.logged_out_time = time.time()
+            print("We've been logged out! Need to log in again...")
+
+    def login_screen_state(self):
+        """We're at the login screen, need to login!"""
+        screenshot, window_location = capture_window()
+
+        # Only try to log in if certain time has passed since we detected te login
+        if time.time() - IDemonFarmer.logged_out_time < 60 * 60:  # Wait X minutes
+            time.sleep(1)
+            return
+
+        # In case we have an update
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+
+        if find(vio.tavern, screenshot):
+            print("Logged in successfully! Going back to farming demons...")
+            self.current_state = States.GOING_TO_DEMONS
+
+        # In case the game needs to update
+        elif find_and_click(vio.yes, screenshot, window_location):
+            print("Downloading update...")
+
+        elif find_and_click(
+            vio.global_server,
+            screenshot,
+            window_location,
+            point_coordinates=Coordinates.get_coordinates("center_screen"),
+        ):
+            print("Trying to log back in...")
+
+        # Click on the password field
+        elif find_and_click(vio.password, screenshot, window_location):
+            # Type the password, and press enter
+            type_word(IFarmer.password)
+            press_key("enter")
 
     def going_to_demons_state(self):
         """Go to the demons page"""
@@ -208,10 +265,7 @@ class IDemonFarmer(IFarmer):
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
-        # For when we've ranked up
-        find_and_click(vio.ok_main_button, screenshot, window_location)
-
-        if find(vio.ok_main_button, screenshot):
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
             if find(vio.victory, screenshot):
                 print("Demon destroyed!")
                 IDemonFarmer.demons_destroyed += 1
@@ -330,6 +384,7 @@ class DemonFarmer(IDemonFarmer):
         time_between_demons=2,
         do_dailies=False,  # Do we halt demon farming to do dailies?
         do_daily_pvp=False,  # If we do dailies, do we do PVP?
+        password: str = None,
     ):
         if demons_to_farm is None:
             demons_to_farm = [vio.og_demon]
@@ -342,6 +397,7 @@ class DemonFarmer(IDemonFarmer):
             time_to_sleep,
             do_dailies=do_dailies,
             do_daily_pvp=do_daily_pvp,
+            password=password,
         )
 
         # Every how many hours to switch between demons
@@ -381,6 +437,9 @@ class DemonFarmer(IDemonFarmer):
             # Check if to change the demon to farm
             self.rotate_demon()
 
+            # Check if we need to log in again!
+            self.check_for_login_state()
+
             if self.current_state == States.GOING_TO_DEMONS:
                 self.going_to_demons_state()
 
@@ -401,6 +460,9 @@ class DemonFarmer(IDemonFarmer):
 
             elif self.current_state == States.FORTUNE_CARD:
                 self.fortune_card_state()
+
+            elif self.current_state == States.LOGIN_SCREEN:
+                self.login_screen_state()
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

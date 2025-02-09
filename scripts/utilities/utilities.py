@@ -1,5 +1,6 @@
 import glob
 import os
+import random
 import time
 from enum import Enum
 from numbers import Integral
@@ -558,3 +559,10 @@ def save_model(model: KNeighborsClassifier | LogisticRegression, filename: str):
         pickle.dump(model, pfile)
 
     print(f"Model saved in '{model_path}'")
+
+
+def type_word(word: str):
+    """Types a word to the screen; useful to re-introduce the password if needed"""
+    # To simulate human typing, just for fun
+    interval = random.uniform(0.1, 0.2)
+    pyautogui.write(word, interval=interval)  # Simulates typing with a slight delay

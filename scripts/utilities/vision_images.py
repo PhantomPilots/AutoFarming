@@ -54,6 +54,9 @@ battle_menu = Vision("battle_menu.jpg")
 cancel = Vision("cancel.png")
 skill_locked = Vision("skill_locked.png")
 victory = Vision("victory.png")
+password = Vision("password.png")
+global_server = Vision("global_server.png")
+yes = Vision("yes.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

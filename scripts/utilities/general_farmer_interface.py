@@ -19,6 +19,9 @@ class IFarmer:
     # Keep track of the defeats in an organized manner
     dict_of_defeats = defaultdict(int)
 
+    # Store the account password in this instance
+    password: str = None
+
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
         if hasattr(self, "fighter") and isinstance(self.fighter, IFighter):
