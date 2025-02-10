@@ -1,6 +1,7 @@
 import logging
 import os
 import threading
+from datetime import datetime
 
 
 class LoggerWrapper:
@@ -17,33 +18,42 @@ class LoggerWrapper:
             file_handler.setLevel(level)
 
             # Create a formatter and set it to the handler
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
             file_handler.setFormatter(formatter)
 
             # Add the handler to the logger
             self.logger.addHandler(file_handler)
 
+    def _format_message(self, message: str) -> str:
+        timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
+        return f"{timestamp} {message}"
+
     def debug(self, message: str):
-        print(message)
+        formatted_message = self._format_message(message)
+        print(formatted_message)
         with LoggerWrapper._lock:
-            self.logger.debug(message)
+            self.logger.debug(formatted_message)
 
     def info(self, message: str):
-        print(message)
+        formatted_message = self._format_message(message)
+        print(formatted_message)
         with LoggerWrapper._lock:
-            self.logger.info(message)
+            self.logger.info(formatted_message)
 
     def warning(self, message: str):
-        print(message)
+        formatted_message = self._format_message(message)
+        print(formatted_message)
         with LoggerWrapper._lock:
-            self.logger.warning(message)
+            self.logger.warning(formatted_message)
 
     def error(self, message: str):
-        print(message)
+        formatted_message = self._format_message(message)
+        print(formatted_message)
         with LoggerWrapper._lock:
-            self.logger.error(message)
+            self.logger.error(formatted_message)
 
     def critical(self, message: str):
-        print(message)
+        formatted_message = self._format_message(message)
+        print(formatted_message)
         with LoggerWrapper._lock:
-            self.logger.critical(message)
+            self.logger.critical(formatted_message)

@@ -29,7 +29,7 @@ class FarmingFactory:
                 farmer_instance: IFarmer = farmer(
                     battle_strategy=battle_strategy,
                     starting_state=starting_state,
-                    password=args.pwd,  # Send the given password to the farmer instance
+                    password=args.password,  # Send the given password to the farmer instance
                     **kwargs,  # To set farmer-specific options
                 )
                 farmer_instance.run()
