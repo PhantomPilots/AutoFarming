@@ -21,7 +21,7 @@ class FarmingFactory:
 
         # Extract the password if given
         parser = argparse.ArgumentParser()
-        parser.add_argument("--pwd", type=str, default=None, help="Account password")
+        parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
         args = parser.parse_args()
 
         while True:
