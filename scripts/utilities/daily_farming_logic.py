@@ -60,6 +60,7 @@ class DailyFarmer(IFarmer):
         do_daily_pvp=False,
         logger=logger,
         complete_callback: Callable = None,
+        **kwargs,
     ):
 
         if DailyFarmer.current_state is None:
@@ -139,7 +140,6 @@ class DailyFarmer(IFarmer):
         # If there's no 'go now', means we're done with the missions
         if not find(vio.go_now, screenshot):
             print("No more missions, going to collect Brawl reward now.")
-            # return States.EXIT_FARMER
             find_and_click(vio.back, screenshot, window_location)
             return States.GOING_TO_BRAWL
 
@@ -462,11 +462,16 @@ class DailyFarmer(IFarmer):
         """Go get Brawl."""
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
-
         if find(vio.brawl, screenshot):
             print("Going to BRAWL")
             DailyFarmer.current_state = States.BRAWL_STATE
+            return
+
+        if find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6):
+            return
+
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8)
 
     def brawl_state(self):
         """Once we collect the reward, exit the farmer"""
