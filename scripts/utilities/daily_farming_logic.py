@@ -425,7 +425,7 @@ class DailyFarmer(IFarmer):
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            self.go_to_mission(vio.daily_patrol, screenshot, window_location)
+            self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.85)
 
         if find(vio.patrol_dispatched, screenshot):
             print("Finished Patrol mission")
