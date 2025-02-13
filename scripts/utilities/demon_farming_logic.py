@@ -327,11 +327,14 @@ class IDemonFarmer(IFarmer):
         ):
             return
 
+        # In case we have a "Start" mission
+        find_and_click(vio.start_quest, screenshot, window_location)
+
         # In case an OK pop-up shows up
         find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
         # Go to tavern
-        click_and_sleep(vio.tavern, screenshot, window_location)
+        find_and_click(vio.tavern, screenshot, window_location)
 
     def check_in_state(self):
         """Check in, and go back to"""

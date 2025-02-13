@@ -57,6 +57,7 @@ victory = Vision("victory.png")
 password = Vision("password.png")
 global_server = Vision("global_server.png")
 yes = Vision("yes.png")
+start_quest = Vision("start_quest.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
