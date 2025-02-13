@@ -146,6 +146,7 @@ class DailyFarmer(IFarmer):
         # If we're here, means we're done with all dailies.
         click_and_sleep(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
         screenshot, _ = capture_window()
+        find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.battle_menu, screenshot, threshold=0.6):
             print("No more missions, going to collect Brawl reward now.")
             # Only go to the EXIT state if we're in the tavern already.
@@ -222,11 +223,14 @@ class DailyFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        # TODO: Re-take 'daily_tasks' with the "green" background
         if find_and_click(vio.daily_tasks, screenshot, window_location):
             # Find the next mission and change the state accordingly
             print("Picking next daily to complete...")
             next_state = self.find_next_mission()
+            if next_state is not None:
+                print(f"Next state will be {next_state}")
+            else:
+                print("Finished all dailies!")
             DailyFarmer.current_state = next_state if next_state is not None else States.IN_TAVERN_STATE
 
         # Try to go to tasks
