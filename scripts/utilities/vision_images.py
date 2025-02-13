@@ -263,4 +263,5 @@ ok_main_button = OkVision(
     "demons\\demon_ok.jpg",
     "demons\\dead_ok.jpg",
     "demons\\kicked_ok.png",
+    "ok_buttons\\ok_maintenance.png",
 )
