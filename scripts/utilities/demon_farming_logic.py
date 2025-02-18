@@ -29,7 +29,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 3
+CHECK_IN_HOUR = 2
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
@@ -158,6 +158,12 @@ class IDemonFarmer(IFarmer):
     def going_to_demons_state(self):
         """Go to the demons page"""
         screenshot, window_location = capture_window()
+
+        if find(vio.preparation_incomplete, screenshot):
+            # We're waiting to click on preparation incomplete!
+            self.current_state = States.READY_TO_FIGHT
+            print(f"Moving to {self.current_state}.")
+            return
 
         # If we see a 'CANCEL', change the state
         if find(vio.cancel_realtime, screenshot):

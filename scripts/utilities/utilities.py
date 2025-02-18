@@ -228,14 +228,14 @@ def find_floor_coordinates(screenshot: np.ndarray, window_location):
 
 
 def click(x, y, sleep_after_click=0.01):
-    win32api.SetCursorPos((x, y))
+    pyautogui.moveTo(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
     time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
 
 def rclick(x, y, sleep_after_click=0.01):
-    win32api.SetCursorPos((x, y))
+    pyautogui.moveTo(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
     time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
@@ -243,7 +243,7 @@ def rclick(x, y, sleep_after_click=0.01):
 
 def click_and_drag(start_x, start_y, end_x, end_y, steps=100, sleep_after_click=0.01, drag_duration=0.5):
     """Move to the start position and press the left mouse button down"""
-    win32api.SetCursorPos((start_x, start_y))
+    pyautogui.moveTo(start_x, start_y)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
 
     # Optionally, you can sleep for a while before starting the drag
@@ -261,7 +261,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, steps=100, sleep_after_click=
         # Update cursor position by a small amount
         new_x = int(start_x + delta_x * step)
         new_y = int(start_y + delta_y * step)
-        win32api.SetCursorPos((new_x, new_y))
+        pyautogui.moveTo(new_x, new_y)
         time.sleep(step_duration)
 
     # Release the left mouse button
