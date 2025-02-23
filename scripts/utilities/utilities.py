@@ -79,7 +79,7 @@ def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0
         print("No rectangles found!")
 
     # Simply to stop the execution of the rest of the code
-    raise ValueError("This function should only be used for testing, killing program execution.")
+    # raise ValueError("This function should only be used for testing, killing program execution.")
 
 
 def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7):

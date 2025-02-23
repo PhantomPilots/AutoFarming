@@ -6,8 +6,6 @@ from enum import Enum
 import numpy as np
 import pyautogui as pyautogui
 import pytz
-
-# Import all images
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
@@ -23,6 +21,7 @@ from utilities.utilities import (
     find,
     find_and_click,
     press_key,
+    screenshot_testing,
     type_word,
 )
 from utilities.vision import Vision
@@ -230,14 +229,9 @@ class IDemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
             return
 
-        # We need a backup in case the matchmaking gets cancelled
-        if not find(vio.join_request, screenshot):
-            find_and_click(vio.real_time, screenshot, window_location, threshold=0.7)
-        if find(self.demon_to_farm, screenshot):
-            # The matchmaking got cancelled, change states
+        if not find(vio.cancel_realtime, screenshot):
+            # Maybe the matchmaking got cancelled, move back to the initial state
             self.current_state = States.GOING_TO_DEMONS
-            print("Seems the matchmaking got cancelled...")
-            print(f"Moving to {self.current_state}.")
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
