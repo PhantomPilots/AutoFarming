@@ -47,6 +47,9 @@ class Coordinates:
         # Daily fortune card
         "daily_fortune_bottom": (277, 651),
         "daily_fortune_top": (277, 215),
+        # Stamps
+        "stamp_box": (515, 662),
+        "first_stamp": (83, 762),
     }
 
     @staticmethod

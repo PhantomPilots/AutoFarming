@@ -64,6 +64,9 @@ class IDemonFarmer(IFarmer):
     # Keep track of when we've been logged out
     logged_out_time = time.time()
 
+    # For sending an emoji
+    sent_emoji = False
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -239,6 +242,22 @@ class IDemonFarmer(IFarmer):
         """We've accepted a raid!"""
         screenshot, window_location = capture_window()
 
+        # If we're ready to fight, send an emoji *only once*
+        if not IDemonFarmer.sent_emoji and find(vio.cancel_preparation, screenshot):
+            click_and_sleep(
+                vio.cancel_preparation,
+                screenshot,
+                window_location,
+                point_coordinates=Coordinates.get_coordinates("stamp_box"),
+            )
+            click_and_sleep(
+                vio.cancel_preparation,
+                screenshot,
+                window_location,
+                point_coordinates=Coordinates.get_coordinates("first_stamp"),
+            )
+            IDemonFarmer.sent_emoji = True
+
         # Click on the "preparation"
         click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
@@ -260,6 +279,7 @@ class IDemonFarmer(IFarmer):
 
         if not IDemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             IDemonFarmer.auto = True
+            IDemonFarmer.sent_emoji = False
 
         # # Click on network instability OK, then move to GOING_TO_DEMONS
         # if find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7):

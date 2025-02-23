@@ -186,6 +186,7 @@ cancel_realtime = Vision("demons\\cancel.png")
 demons_loading_screen = Vision("demons\\demons_loading_screen.png")
 join_request = Vision("demons\\join_request.png")
 preparation_incomplete = Vision("demons\\preparation_incomplete.png")
+cancel_preparation = Vision("demons\\cancel_preparation.png")
 demons_auto = Vision("demons\\auto.jpg")
 demons_destroyed = Vision("demons\\demons_destroyed.png")
 
