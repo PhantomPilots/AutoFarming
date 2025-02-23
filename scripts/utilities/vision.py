@@ -30,7 +30,7 @@ class Vision:
             return
 
     @property
-    def image_name(self):
+    def image_name(self) -> str:
         return self._image_name
 
     def __eq__(self, other):
