@@ -21,14 +21,13 @@ from utilities.utilities import (
     find,
     find_and_click,
     press_key,
-    screenshot_testing,
     type_word,
 )
 from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
@@ -497,4 +496,4 @@ class DemonFarmer(IDemonFarmer):
                 time.sleep(1)
 
             # We need the loop to run very fast
-            time.sleep(0.1)
+            time.sleep(0.01)

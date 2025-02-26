@@ -564,5 +564,7 @@ def save_model(model: KNeighborsClassifier | LogisticRegression, filename: str):
 def type_word(word: str):
     """Types a word to the screen; useful to re-introduce the password if needed"""
     # To simulate human typing, just for fun
-    interval = random.uniform(0.1, 0.2)
-    pyautogui.write(word, interval=interval)  # Simulates typing with a slight delay
+    delays = [random.uniform(0.1, 0.2) for _ in word]
+    for char, delay in zip(word, delays):
+        pyautogui.write(char)
+        pyautogui.sleep(delay)  # Sleep for the given delay before typing the next character
