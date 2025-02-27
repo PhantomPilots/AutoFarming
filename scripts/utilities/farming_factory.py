@@ -24,12 +24,15 @@ class FarmingFactory:
         parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
         args = parser.parse_args()
 
+        # Conditionally include password in kwargs if provided
+        if args.password is not None:
+            kwargs["password"] = args.password
+
         while True:
             try:
                 farmer_instance: IFarmer = farmer(
                     battle_strategy=battle_strategy,
                     starting_state=starting_state,
-                    password=args.password,  # Send the given password to the farmer instance
                     **kwargs,  # To set farmer-specific options
                 )
                 farmer_instance.run()

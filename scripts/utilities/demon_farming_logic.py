@@ -27,7 +27,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 3
+CHECK_IN_HOUR = 2
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
