@@ -183,8 +183,10 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # If first reward
         find_and_click(vio.first_reward, screenshot, window_location)
 
-        # Set the fight thread
-        if self.fight_thread is None or not self.fight_thread.is_alive():
+        # Set the fight thread ONLY if we haven't changed the current state (due to a callback, for instance!)
+        if (self.fight_thread is None or not self.fight_thread.is_alive()) and (
+            self.current_state == States.FIGHTING_FLOOR
+        ):
             self.fight_thread = threading.Thread(
                 target=self.fighter.run, daemon=True, args=(DemonicBeastFarmer.current_floor,)
             )
