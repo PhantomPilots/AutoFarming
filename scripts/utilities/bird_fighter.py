@@ -33,8 +33,9 @@ class BirdFighter(IFighter):
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
-        elif find(vio.ok_main_button, screenshot):
+        elif find(vio.ok_main_button, screenshot, threshold=0.8):
             # Fight is complete
+            print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
         elif (available_card_slots := BirdFighter.count_empty_card_slots(screenshot)) > 0:
@@ -137,7 +138,7 @@ class BirdFighter(IFighter):
         # Click in the 'pause' icon
         find_and_click(vio.pause, screenshot, window_location)
 
-    def defeat_state(self):
+    def defeat_state(self):  # sourcery skip: class-extract-method
         """We've lost the battle..."""
         screenshot, window_location = capture_window()
 
@@ -153,6 +154,7 @@ class BirdFighter(IFighter):
                 self.exit_thread = True
 
     def fight_complete_state(self):
+        """We've completed the battle successfully!"""
 
         screenshot, window_location = capture_window()
 
