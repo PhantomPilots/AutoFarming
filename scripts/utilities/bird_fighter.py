@@ -33,7 +33,7 @@ class BirdFighter(IFighter):
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
-        elif find(vio.ok_main_button, screenshot, threshold=0.8):
+        elif find(vio.db_victory, screenshot, threshold=0.7):
             # Fight is complete
             print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
