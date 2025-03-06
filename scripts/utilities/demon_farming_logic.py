@@ -27,7 +27,7 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
@@ -137,6 +137,10 @@ class IDemonFarmer(IFarmer):
         if find(vio.tavern, screenshot):
             print("Logged in successfully! Going back to farming demons...")
             self.current_state = States.GOING_TO_DEMONS
+
+        elif find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
+            print("We're seeing a daily reset!")
+            self.current_state = States.DAILY_RESET
 
         # In case the game needs to update
         elif find_and_click(vio.yes, screenshot, window_location):
