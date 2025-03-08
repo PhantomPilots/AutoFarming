@@ -27,8 +27,8 @@ from utilities.vision import Vision
 
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 3
-MINUTES_TO_WAIT_BEFORE_LOGIN = 30
+CHECK_IN_HOUR = 2
+MINUTES_TO_WAIT_BEFORE_LOGIN = 0.1
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -64,6 +64,10 @@ class IDemonFarmer(IFarmer):
 
     # For sending an emoji
     sent_emoji = False
+
+    # For checking if we've seen and missed an invite
+    not_seen_invite = False
+    start_time_without_invite = time.time()
 
     def __init__(
         self,
@@ -233,8 +237,13 @@ class IDemonFarmer(IFarmer):
             return
 
         if not find(vio.cancel_realtime, screenshot):
-            # Maybe the matchmaking got cancelled, move back to the initial state
-            self.current_state = States.GOING_TO_DEMONS
+            if not IDemonFarmer.not_seen_invite:
+                IDemonFarmer.start_time_without_invite = time.time()
+                IDemonFarmer.not_seen_invite = True
+
+            if time.time() - IDemonFarmer.start_time_without_invite > 2:  # Only wait 2 seconds
+                self.current_state = States.GOING_TO_DEMONS
+                IDemonFarmer.not_seen_invite = False
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
