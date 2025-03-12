@@ -395,18 +395,20 @@ class IDemonFarmer(IFarmer):
 
     def dailies_state(self):
         """Run the thread to do all dailies"""
-
-        if IDemonFarmer.dailies_thread is None or not IDemonFarmer.dailies_thread.is_alive():
-            IDemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
-            IDemonFarmer.dailies_thread.start()
-            print("Dailies farmer started!")
+        with IFarmer._lock:
+            if (
+                IDemonFarmer.dailies_thread is None or not IDemonFarmer.dailies_thread.is_alive()
+            ) and self.current_state == States.DAILIES_STATE:
+                IDemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
+                IDemonFarmer.dailies_thread.start()
+                print("Dailies farmer started!")
 
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to farming demons"""
-
-        print("All dailies complete! Going back to farming demons.")
-        IDemonFarmer.dailies_thread = None
-        self.current_state = States.GOING_TO_DEMONS
+        with IFarmer._lock:
+            print("All dailies complete! Going back to farming demons.")
+            IDemonFarmer.dailies_thread = None
+            self.current_state = States.GOING_TO_DEMONS
 
     def run(self):
         raise NotImplementedError("Virtual method. Need to implement this method in a derived class.")
