@@ -1,6 +1,3 @@
-import argparse
-import io
-import os
 import sys
 
 from utilities.fighting_strategies import IBattleStrategy
@@ -18,15 +15,6 @@ class FarmingFactory:
     @staticmethod
     def main_loop(farmer: IFarmer, starting_state, battle_strategy: IBattleStrategy | None = None, **kwargs):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
-
-        # Extract the password if given
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
-        args = parser.parse_args()
-
-        # Conditionally include password in kwargs if provided
-        if args.password is not None:
-            kwargs["password"] = args.password
 
         while True:
             try:

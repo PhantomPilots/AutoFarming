@@ -28,7 +28,7 @@ from utilities.vision import Vision
 # Some constants
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 CHECK_IN_HOUR = 2
-MINUTES_TO_WAIT_BEFORE_LOGIN = 0.1
+MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -68,6 +68,9 @@ class IDemonFarmer(IFarmer):
     # For checking if we've seen and missed an invite
     not_seen_invite = False
     start_time_without_invite = time.time()
+
+    # To avoid waiting to log in if it's the first time
+    first_login = True
 
     def __init__(
         self,
@@ -131,8 +134,12 @@ class IDemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Only try to log in if certain time has passed since we detected te login
-        if time.time() - IDemonFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60:  # Wait X minutes
+        if (
+            not IDemonFarmer.first_login
+            and time.time() - IDemonFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60
+        ):  # Wait X minutes
             time.sleep(1)
+            IDemonFarmer.first_login = False
             return
 
         # In case we have an update
@@ -220,6 +227,8 @@ class IDemonFarmer(IFarmer):
         if now.hour > CHECK_IN_HOUR and IDemonFarmer.daily_checkin:
             print("Resetting daily checkin")
             IDemonFarmer.daily_checkin = False
+            # Allow fast login the next time we're logged out
+            IDemonFarmer.first_login = True
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
