@@ -45,7 +45,7 @@ class FinalBossFarmer(IFarmer):
         # In case we have a limited amount of runs we want to make
         self.max_num_runs = float(kwargs.get("num_runs", "inf"))
         if self.max_num_runs < float("inf"):
-            print(f"We're gonna farm the Final Boss {self.max_num_runs} times.")
+            print(f"We're gonna farm the Final Boss {int(self.max_num_runs)} times.")
 
     def exit_message(self):
         super().exit_message()
@@ -142,10 +142,10 @@ class FinalBossFarmer(IFarmer):
         find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_results, screenshot, window_location)
-        find_and_click(
+        find_and_click(vio.boss_mission, screenshot, window_location)
+        if find_and_click(
             vio.showdown, screenshot, window_location, point_coordinates=Coordinates.get_coordinates("showdown")
-        )
-        if find_and_click(vio.boss_mission, screenshot, window_location):
+        ):
             FinalBossFarmer.num_fights += 1
             print(f"FB cleared! {FinalBossFarmer.num_fights} times so far.")
 
@@ -170,7 +170,7 @@ class FinalBossFarmer(IFarmer):
         # Ensure AUTO is on
         find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.9)
 
-        if find(vio.ok_main_button, screenshot):
+        if find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
             self.current_state = States.IN_FINAL_BOSS_MENU
 
