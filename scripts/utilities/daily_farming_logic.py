@@ -509,11 +509,18 @@ class DailyFarmer(IFarmer):
                 print("Assuming Brawl reward collected, exiting daily farmer.")
                 DailyFarmer.current_state = States.EXIT_FARMER
 
+    def check_for_essette_shop(self):
+        """Check if we have the Essette shop, and click on it if so to remove the popup"""
+        screenshot, window_location = capture_window()
+        find_and_click(vio.essette_shop, screenshot, window_location)
+
     def run(self):
 
         self.logger.info("Doing dailies!")
 
         while True:
+
+            self.check_for_essette_shop()
 
             if DailyFarmer.current_state == States.IN_TAVERN_STATE:
                 self.in_tavern_state()
