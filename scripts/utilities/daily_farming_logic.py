@@ -94,9 +94,6 @@ class DailyFarmer(IFarmer):
             # Reset the current state!
             DailyFarmer.current_state = States.IN_TAVERN_STATE
 
-            # Cleanup before exiting
-            super().exit_farmer_state()
-
     def find_next_mission(self) -> States | None:
         """Identify the next mission to do, by scrolling if we can't find any match.
         If we don't find a match by "Take all" is available, click on it.
@@ -564,5 +561,6 @@ class DailyFarmer(IFarmer):
 
             elif DailyFarmer.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()
+                return
 
             time.sleep(1)
