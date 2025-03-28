@@ -133,25 +133,29 @@ class IDemonFarmer(IFarmer):
         """We're at the login screen, need to login!"""
         screenshot, window_location = capture_window()
 
-        # Only try to log in if certain time has passed since we detected te login
+        # Only try to log in if enough time has passed since the last logout
         if (
             not IDemonFarmer.first_login
             and time.time() - IDemonFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60
-        ):  # Wait X minutes
+        ):
             time.sleep(1)
-            IDemonFarmer.first_login = False
             return
 
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
+        # Flag to indicate if a successful login branch was detected
+        login_attempted = False
+
         if find(vio.tavern, screenshot):
             print("Logged in successfully! Going back to farming demons...")
             self.current_state = States.GOING_TO_DEMONS
+            login_attempted = True
 
         elif find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             print("We're seeing a daily reset!")
             self.current_state = States.DAILY_RESET
+            login_attempted = True
 
         # In case the game needs to update
         elif find_and_click(vio.yes, screenshot, window_location):
@@ -167,9 +171,14 @@ class IDemonFarmer(IFarmer):
 
         # Click on the password field
         elif find_and_click(vio.password, screenshot, window_location):
-            # Type the password, and press enter
+            # Type the password and press enter
             type_word(IFarmer.password)
             press_key("enter")
+
+        # Update first_login flag only once if a successful login/reset was detected
+        if login_attempted and IDemonFarmer.first_login:
+            print("First login attempt was successful!")
+            IDemonFarmer.first_login = False
 
     def going_to_demons_state(self):
         """Go to the demons page"""

@@ -56,7 +56,7 @@ class DailyFarmer(IFarmer):
     def __init__(
         self,
         starting_state=States.IN_TAVERN_STATE,
-        battle_strategy=None,  # Find a way to remove this, not all farmers need a battle strategy
+        battle_strategy=None,  # TODO Find a way to remove this, not all farmers need a battle strategy
         do_daily_pvp=False,
         logger=logger,
         complete_callback: Callable = None,

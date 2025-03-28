@@ -25,7 +25,7 @@ To keep up-to-date with any updates, you'll need to install [Git](https://gitfor
 
 #### Python 
 
-Install Python 3.10 or higher from the Microsoft Store:<br>
+Install Python <b>3.10</b> or <b>3.11</b> from the Microsoft Store:<br>
 <img src="readme_images/python311.png" alt="IDLE app" width="200"/><br>
 
 #### Download the code
