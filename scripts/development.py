@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import pyautogui
 import utilities.vision_images as vio
+from utilities.bird_fighter import BirdFighter
 from utilities.card_data import CardTypes
 from utilities.coordinates import Coordinates
 from utilities.dogs_fighter import DogsFighter
@@ -31,8 +32,11 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # screenshot_testing(vision_image=vio.close, threshold=0.8)
+    # screenshot_testing(screenshot, vision_image=vio.global_server)
     # determine_relative_coordinates(screenshot)
+
+    # available_slots = BirdFighter.count_empty_card_slots(screenshot)
+    # print(f"These many empty slots: {available_slots}")
 
     # while True:
     #     screenshot, _ = capture_window()
@@ -51,8 +55,8 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    # hand_image = capture_hand_image()
-    # display_image(hand_image)
+    hand_image = capture_hand_image()
+    display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
