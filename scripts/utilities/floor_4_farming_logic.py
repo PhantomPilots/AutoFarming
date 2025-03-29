@@ -25,7 +25,7 @@ logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
 
 class States(Enum):
-    GOING_TO_FLOOR = 0
+    PROCEED_TO_FLOOR = 0
     FIGHTING = 1
     READY_TO_FIGHT = 2
     EXIT_FARMER = 3
@@ -44,12 +44,11 @@ class Floor4Farmer(IFarmer):
         battle_strategy: IBattleStrategy,
         starting_state: States,
         max_runs="inf",
-        logger: LoggerWrapper = logger,
         password: str | None = None,
     ):
 
-        if password:
-            IFarmer.password = password
+        # Set the password in case we need to log back in
+        IFarmer.password = password
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
@@ -69,6 +68,10 @@ class Floor4Farmer(IFarmer):
 
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
+
+        # For the login/dailies
+        IFarmer.daily_farmer.set_daily_pvp(False)
+        IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):
         super().exit_message()
@@ -105,11 +108,9 @@ class Floor4Farmer(IFarmer):
         find_and_click(vio.hraesvelgr, screenshot, window_location)
 
         # Double-check that floor 3 is not cleared
-        if find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
-            vio.floor_3_cleard_2_bird, screenshot, threshold=0.8
-        ):
+        if find(vio.floor_3_cleard_bird, screenshot) or find(vio.floor_3_cleard_2_bird, screenshot):
             print("Going to fight the bird!")
-            self.current_state = States.GOING_TO_FLOOR
+            self.current_state = States.PROCEED_TO_FLOOR
 
     def proceed_to_floor_state(self):
 
@@ -182,7 +183,14 @@ class Floor4Farmer(IFarmer):
         self.exit_message()
 
         # Go straight to the original states
-        self.current_state = States.GOING_TO_FLOOR
+        self.current_state = States.PROCEED_TO_FLOOR
+
+    def dailies_complete_callback(self):
+        """The dailies thread told us we're done with all the dailies, go back to farming demons"""
+        with IFarmer._lock:
+            print("All dailies complete! Going back to farming Floor 4 of Bird.")
+            IFarmer.dailies_thread = None
+            self.current_state = States.GOING_TO_BIRD
 
     def run(self):
 
@@ -198,7 +206,7 @@ class Floor4Farmer(IFarmer):
             if self.current_state == States.GOING_TO_BIRD:
                 self.going_to_bird_state()
 
-            elif self.current_state == States.GOING_TO_FLOOR:
+            elif self.current_state == States.PROCEED_TO_FLOOR:
                 self.proceed_to_floor_state()
 
             elif self.current_state == States.READY_TO_FIGHT:

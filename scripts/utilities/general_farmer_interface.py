@@ -224,12 +224,8 @@ class IFarmer:
 
         if find(vio.battle_menu, screenshot, threshold=0.6):
             IFarmer.daily_checkin = True
-            if self.do_dailies:
-                print("Going to do all dailies!")
-                self.current_state = States.DAILIES_STATE
-            else:
-                print("Back to GOING_TO_DEMONS!")
-                self.current_state = initial_state
+            print("Going to do all dailies!")
+            self.current_state = States.DAILIES_STATE
 
     def dailies_state(self):
         """Run the thread to do all dailies"""

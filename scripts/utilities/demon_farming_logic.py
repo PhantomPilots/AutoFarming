@@ -80,13 +80,11 @@ class IDemonFarmer(IFarmer):
         # How much time to sleep before accepting the invitation -- May need to me hand-tuned
         self.sleep_before_accept = time_to_sleep
 
-        # Thread that will do the dailies
-        self.do_dailies = do_dailies
         # Set specific properties of our DailyFarmer
-        self.daily_farmer.set_daily_pvp(do_daily_pvp)
-        self.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+        IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
+        IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
-        if self.do_dailies:
+        if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
     def exit_message(self):
