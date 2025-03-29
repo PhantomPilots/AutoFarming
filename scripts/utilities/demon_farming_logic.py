@@ -60,7 +60,7 @@ class IDemonFarmer(IFarmer):
         time_to_sleep=9.3,
         do_dailies=False,
         do_daily_pvp=False,
-        password: str = None,
+        password: str | None = None,
     ):
         # Store the account password in this instance if given
         if password:
@@ -337,7 +337,7 @@ class DemonFarmer(IDemonFarmer):
                 self.daily_reset_state()
 
             elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state(States.GOING_TO_DEMONS)
+                self.check_in_state(initial_state=States.GOING_TO_DEMONS)
 
             elif self.current_state == GlobalStates.DAILIES_STATE:
                 self.dailies_state()
@@ -346,7 +346,7 @@ class DemonFarmer(IDemonFarmer):
                 self.fortune_card_state()
 
             elif self.current_state == GlobalStates.LOGIN_SCREEN:
-                self.login_screen_state(States.GOING_TO_DEMONS)
+                self.login_screen_state(initial_state=States.GOING_TO_DEMONS)
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

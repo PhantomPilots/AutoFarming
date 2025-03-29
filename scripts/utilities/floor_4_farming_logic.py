@@ -9,8 +9,10 @@ import pyautogui as pyautogui
 # Import all images
 import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
+from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -27,6 +29,7 @@ class States(Enum):
     FIGHTING = 1
     READY_TO_FIGHT = 2
     EXIT_FARMER = 3
+    GOING_TO_BIRD = 4
 
 
 class Floor4Farmer(IFarmer):
@@ -42,7 +45,11 @@ class Floor4Farmer(IFarmer):
         starting_state: States,
         max_runs="inf",
         logger: LoggerWrapper = logger,
+        password: str | None = None,
     ):
+
+        if password:
+            IFarmer.password = password
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
@@ -79,7 +86,32 @@ class Floor4Farmer(IFarmer):
 
         return str_msg
 
-    def going_to_floor_state(self):
+    def going_to_bird_state(self):
+        """This should be the original state. Let's go to the bird menu"""
+        screenshot, window_location = capture_window()
+
+        # If we're back in the tavern, click on the battle menu.
+        find_and_click(
+            vio.main_menu,
+            screenshot,
+            window_location,
+            point_coordinates=Coordinates.get_coordinates("battle_menu"),
+        )
+
+        # If we're in the battle menu, click on Demonic Beast
+        find_and_click(vio.demonic_beast, screenshot, window_location)
+
+        # Go into the 'Bird' section
+        find_and_click(vio.hraesvelgr, screenshot, window_location)
+
+        # Double-check that floor 3 is not cleared
+        if find(vio.floor_3_cleard_bird, screenshot, threshold=0.8) or find(
+            vio.floor_3_cleard_2_bird, screenshot, threshold=0.8
+        ):
+            print("Going to fight the bird!")
+            self.current_state = States.GOING_TO_FLOOR
+
+    def proceed_to_floor_state(self):
 
         screenshot, window_location = capture_window()
 
@@ -160,14 +192,35 @@ class Floor4Farmer(IFarmer):
 
             check_for_reconnect()
 
-            if self.current_state == States.GOING_TO_FLOOR:
-                self.going_to_floor_state()
+            # Check if we need to log in again!
+            self.check_for_login_state()
+
+            if self.current_state == States.GOING_TO_BIRD:
+                self.going_to_bird_state()
+
+            elif self.current_state == States.GOING_TO_FLOOR:
+                self.proceed_to_floor_state()
 
             elif self.current_state == States.READY_TO_FIGHT:
                 self.ready_to_fight_state()
 
             elif self.current_state == States.FIGHTING:
                 self.fighting_state()
+
+            elif self.current_state == GlobalStates.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == GlobalStates.CHECK_IN:
+                self.check_in_state(initial_state=States.GOING_TO_BIRD)
+
+            elif self.current_state == GlobalStates.DAILIES_STATE:
+                self.dailies_state()
+
+            elif self.current_state == GlobalStates.FORTUNE_CARD:
+                self.fortune_card_state()
+
+            elif self.current_state == GlobalStates.LOGIN_SCREEN:
+                self.login_screen_state(initial_state=States.GOING_TO_BIRD)
 
             elif self.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()

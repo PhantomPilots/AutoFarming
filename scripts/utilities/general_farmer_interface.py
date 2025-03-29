@@ -6,7 +6,12 @@ from enum import Enum
 
 import pytz
 import utilities.vision_images as vio
-from utilities import (
+from utilities.capture_window import capture_window
+from utilities.coordinates import Coordinates
+from utilities.daily_farming_logic import DailyFarmer
+from utilities.daily_farming_logic import States as DailyFarmerStates
+from utilities.general_fighter_interface import IFighter
+from utilities.utilities import (
     click_and_sleep,
     drag_im,
     find,
@@ -14,11 +19,6 @@ from utilities import (
     press_key,
     type_word,
 )
-from utilities.capture_window import capture_window
-from utilities.coordinates import Coordinates
-from utilities.daily_farming_logic import DailyFarmer
-from utilities.daily_farming_logic import States as DailyFarmerStates
-from utilities.general_fighter_interface import IFighter
 
 # Some constants
 # For dailies and logging back in after being logged out
@@ -50,7 +50,7 @@ class IFarmer:
     dict_of_defeats = defaultdict(int)
 
     # Store the account password in this instance
-    password: str = None
+    password: str | None = None
 
     # The thread for doing dailies
     dailies_thread: threading.Thread | None = None

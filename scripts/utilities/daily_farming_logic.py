@@ -8,7 +8,6 @@ import pyautogui as pyautogui
 # Import all images
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
-from utilities.general_farmer_interface import IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
@@ -41,7 +40,7 @@ class States(Enum):
     AD_WHEEL = auto()
 
 
-class DailyFarmer(IFarmer):
+class DailyFarmer:
 
     current_state = None
 

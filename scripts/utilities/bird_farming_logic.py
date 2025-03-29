@@ -78,7 +78,6 @@ class BirdFarmer(IFarmer):
             screenshot,
             window_location,
             point_coordinates=Coordinates.get_coordinates("battle_menu"),
-            threshold=0.7,
         )
 
         # If we're in the battle menu, click on Demonic Beast
@@ -106,10 +105,6 @@ class BirdFarmer(IFarmer):
             print("Floor 3 is cleared, we need to reset the bird!")
             self.current_state = States.RESETTING_BIRD
             return
-
-        # # In case we're not in the "path to the bird", but we see the tavern location
-        # if find_and_click(vio.tavern, screenshot, window_location):
-        #     print("We're not in the tavern yet, let's first go there...")
 
     def set_party_state(self):
 
