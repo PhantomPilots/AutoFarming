@@ -1,34 +1,28 @@
-import threading
 import time
 from datetime import datetime
 from enum import Enum
 
 import numpy as np
 import pyautogui as pyautogui
-import pytz
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
-from utilities.daily_farming_logic import DailyFarmer
-from utilities.daily_farming_logic import States as DailyFarmerStates
-from utilities.general_farmer_interface import IFarmer
+from utilities.general_farmer_interface import (
+    CHECK_IN_HOUR,
+    MINUTES_TO_WAIT_BEFORE_LOGIN,
+    PACIFIC_TIMEZONE,
+    IFarmer,
+)
+from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
-    drag_im,
     find,
     find_and_click,
-    press_key,
-    type_word,
 )
 from utilities.vision import Vision
-
-# Some constants
-PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2
-MINUTES_TO_WAIT_BEFORE_LOGIN = 30
 
 logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
 
@@ -38,11 +32,6 @@ class States(Enum):
     LOOKING_FOR_DEMON = 1
     READY_TO_FIGHT = 2
     FIGHTING_DEMON = 3
-    DAILY_RESET = 4
-    CHECK_IN = 5
-    DAILIES_STATE = 6
-    FORTUNE_CARD = 7
-    LOGIN_SCREEN = 8
 
 
 class IDemonFarmer(IFarmer):
@@ -56,21 +45,12 @@ class IDemonFarmer(IFarmer):
     # Keep track if we've done the daily check in
     daily_checkin = False
 
-    # The thread for doing dailies
-    dailies_thread = None
-
-    # Keep track of when we've been logged out
-    logged_out_time = time.time()
-
     # For sending an emoji
     sent_emoji = False
 
     # For checking if we've seen and missed an invite
     not_seen_invite = False
     start_time_without_invite = time.time()
-
-    # To avoid waiting to log in if it's the first time
-    first_login = True
 
     def __init__(
         self,
@@ -102,83 +82,16 @@ class IDemonFarmer(IFarmer):
 
         # Thread that will do the dailies
         self.do_dailies = do_dailies
-        self.daily_farmer = DailyFarmer(
-            starting_state=DailyFarmerStates.IN_TAVERN_STATE,
-            do_daily_pvp=do_daily_pvp,
-            complete_callback=self.dailies_complete_callback,
-        )
+        # Set specific properties of our DailyFarmer
+        self.daily_farmer.set_daily_pvp(do_daily_pvp)
+        self.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+
         if self.do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
     def exit_message(self):
         """Final message!"""
         print(f"We destroyed {IDemonFarmer.demons_destroyed} demons.")
-
-    def check_for_login_state(self):
-        """Check whether we need to switch to the login state"""
-        if IFarmer.password is None:
-            # Skip the checks if we don't have a password
-            return
-
-        screenshot, _ = capture_window()
-
-        if find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
-            self.current_state = States.LOGIN_SCREEN
-            IDemonFarmer.logged_out_time = time.time()
-            print(
-                f"We've been logged out! Need to log in again, waiting for the {MINUTES_TO_WAIT_BEFORE_LOGIN} min timeout..."
-            )
-
-    def login_screen_state(self):
-        """We're at the login screen, need to login!"""
-        screenshot, window_location = capture_window()
-
-        # Only try to log in if enough time has passed since the last logout
-        if (
-            not IDemonFarmer.first_login
-            and time.time() - IDemonFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60
-        ):
-            time.sleep(1)
-            return
-
-        # In case we have an update
-        find_and_click(vio.ok_main_button, screenshot, window_location)
-
-        # Flag to indicate if a successful login branch was detected
-        login_attempted = False
-
-        if find(vio.tavern, screenshot):
-            print("Logged in successfully! Going back to farming demons...")
-            self.current_state = States.GOING_TO_DEMONS
-            login_attempted = True
-
-        elif find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
-            print("We're seeing a daily reset!")
-            self.current_state = States.DAILY_RESET
-            login_attempted = True
-
-        # In case the game needs to update
-        elif find_and_click(vio.yes, screenshot, window_location):
-            print("Downloading update...")
-
-        elif find_and_click(
-            vio.global_server,
-            screenshot,
-            window_location,
-            point_coordinates=Coordinates.get_coordinates("center_screen"),
-        ):
-            print("Trying to log back in...")
-
-        # Click on the password field
-        elif find_and_click(vio.password, screenshot, window_location):
-            # Type the password and press enter
-            type_word(IFarmer.password)
-            press_key("enter")
-
-        # Update first_login flag only once if a successful login/reset was detected
-        if login_attempted and IDemonFarmer.first_login:
-            print("First login attempt was successful!")
-            IDemonFarmer.first_login = False
 
     def going_to_demons_state(self):
         """Go to the demons page"""
@@ -199,7 +112,7 @@ class IDemonFarmer(IFarmer):
         # We may be in the 'daily reset' state!
         if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             logger.info("We entered the daily reset state!")
-            self.current_state = States.DAILY_RESET
+            self.current_state = GlobalStates.DAILY_RESET
             return
 
         # Click OK if we see it (?)
@@ -230,14 +143,14 @@ class IDemonFarmer(IFarmer):
         now = datetime.now(PACIFIC_TIMEZONE)
         if not IDemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
-            self.current_state = States.DAILY_RESET
+            self.current_state = GlobalStates.DAILY_RESET
             return
         # Reset the daily check in flag
         if now.hour > CHECK_IN_HOUR and IDemonFarmer.daily_checkin:
             print("Resetting daily checkin")
             IDemonFarmer.daily_checkin = False
             # Allow fast login the next time we're logged out
-            IDemonFarmer.first_login = True
+            IFarmer.first_login = True
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
             # We've found an invitation, gotta wait before clicking on it!
@@ -332,100 +245,11 @@ class IDemonFarmer(IFarmer):
             print(f"We've destroyed {IDemonFarmer.demons_destroyed} demons.")
             print(f"Moving to {self.current_state}.")
 
-    def fortune_card_state(self):
-        """Open the fortune card"""
-        screenshot, window_location = capture_window()
-
-        if find(vio.ok_main_button, screenshot, threshold=0.6):
-            print("Got a good fortune? Going back to daily reset state")
-            self.current_state = States.DAILY_RESET
-            return
-
-        drag_im(
-            Coordinates.get_coordinates("daily_fortune_bottom"),
-            Coordinates.get_coordinates("daily_fortune_top"),
-            window_location,
-        )
-
-    def daily_reset_state(self):
-        """Click on skip as much as needed, check in, then go back to GOING_TO_DEMONS"""
-        screenshot, window_location = capture_window()
-
-        if find(vio.fortune_card, screenshot, threshold=0.8):
-            print("We're seeing a fortune card!")
-            self.current_state = States.FORTUNE_CARD
-            return
-
-        # Cancel the demon search
-        click_and_sleep(vio.cancel_realtime, screenshot, window_location)
-
-        # We may be receiving the daily rewards now
-        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
-
-        # Go to CHECK IN state
-        if find(vio.knighthood, screenshot):
-            print("Going to CHECK IN state")
-            self.current_state = States.CHECK_IN
-            return
-
-        # Click on "Knighthood"
-        if click_and_sleep(
-            vio.battle_menu,
-            screenshot,
-            window_location,
-            threshold=0.6,
-            point_coordinates=Coordinates.get_coordinates("knighthood"),
-        ):
-            return
-
-        # In case we have a "Start" mission
-        find_and_click(vio.start_quest, screenshot, window_location)
-
-        # In case an OK pop-up shows up
-        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
-
-        # Go to tavern
-        find_and_click(vio.tavern, screenshot, window_location)
-
-    def check_in_state(self):
-        """Check in, and go back to"""
-        screenshot, window_location = capture_window()
-
-        # Check in
-        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
-            logger.info("Checked in successfully!")
-
-        # Click on the reward
-        click_and_sleep(vio.check_in_reward, screenshot, window_location)
-
-        # Exit the knighthood after checking in...
-        if find(vio.check_in_complete, screenshot):
-            press_key("esc")
-
-        if find(vio.battle_menu, screenshot, threshold=0.6):
-            IDemonFarmer.daily_checkin = True
-            if self.do_dailies:
-                print("Going to do all dailies!")
-                self.current_state = States.DAILIES_STATE
-            else:
-                print("Back to GOING_TO_DEMONS!")
-                self.current_state = States.GOING_TO_DEMONS
-
-    def dailies_state(self):
-        """Run the thread to do all dailies"""
-        with IFarmer._lock:
-            if (
-                IDemonFarmer.dailies_thread is None or not IDemonFarmer.dailies_thread.is_alive()
-            ) and self.current_state == States.DAILIES_STATE:
-                IDemonFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
-                IDemonFarmer.dailies_thread.start()
-                print("Dailies farmer started!")
-
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to farming demons"""
         with IFarmer._lock:
             print("All dailies complete! Going back to farming demons.")
-            IDemonFarmer.dailies_thread = None
+            IFarmer.dailies_thread = None
             self.current_state = States.GOING_TO_DEMONS
 
     def run(self):
@@ -509,20 +333,20 @@ class DemonFarmer(IDemonFarmer):
             elif self.current_state == States.READY_TO_FIGHT:
                 self.ready_to_fight_state()
 
-            elif self.current_state == States.DAILY_RESET:
+            elif self.current_state == GlobalStates.DAILY_RESET:
                 self.daily_reset_state()
 
-            elif self.current_state == States.CHECK_IN:
-                self.check_in_state()
+            elif self.current_state == GlobalStates.CHECK_IN:
+                self.check_in_state(States.GOING_TO_DEMONS)
 
-            elif self.current_state == States.DAILIES_STATE:
+            elif self.current_state == GlobalStates.DAILIES_STATE:
                 self.dailies_state()
 
-            elif self.current_state == States.FORTUNE_CARD:
+            elif self.current_state == GlobalStates.FORTUNE_CARD:
                 self.fortune_card_state()
 
-            elif self.current_state == States.LOGIN_SCREEN:
-                self.login_screen_state()
+            elif self.current_state == GlobalStates.LOGIN_SCREEN:
+                self.login_screen_state(States.GOING_TO_DEMONS)
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()

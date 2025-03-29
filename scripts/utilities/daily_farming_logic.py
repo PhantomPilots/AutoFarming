@@ -69,10 +69,18 @@ class DailyFarmer(IFarmer):
         self.logger = logger
 
         # Do we do daily PVP?
-        self.do_daily_pvp = do_daily_pvp
+        self.set_daily_pvp(do_daily_pvp)
 
         # In case we're given a callback, call it upon exit
+        self.add_complete_callback(complete_callback)
+
+    def add_complete_callback(self, complete_callback):
+        """Callback to call after Dailies are done"""
         self.complete_callback = complete_callback
+
+    def set_daily_pvp(self, do_daily_pvp: bool):
+        """Set the daily PVP"""
+        self.do_daily_pvp = do_daily_pvp
 
     def exit_farmer_state(self):
         screenshot, window_location = capture_window()
