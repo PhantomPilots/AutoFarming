@@ -89,7 +89,14 @@ class DeerBattleStrategy(IBattleStrategy):
     def default_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Default strategy: Picked a card whose type has the most number of cards"""
 
+        card_types = np.array([card.card_type.value for card in hand_of_cards])
+        picked_card_types = np.array([card.card_type.value for card in picked_cards])
         card_ranks = self._get_card_ranks(hand_of_cards)
+
+        # Play a buff card first, if we have it and haven't played it yet
+        buff_ids = sorted(np.where(card_types == CardTypes.BUFF.value)[0], key=lambda idx: card_ranks[idx])
+        if len(buff_ids) and not np.where(picked_card_types == CardTypes.BUFF.value)[0].size:
+            return buff_ids[-1]
 
         red_card_ids = sorted(
             np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
