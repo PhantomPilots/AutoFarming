@@ -267,7 +267,7 @@ class DailyFarmer(IFarmer):
             # Go to the mission
             self.go_to_mission(vio.daily_vanya_ale, screenshot, window_location)
 
-        if find(vio.meli_affection, screenshot):
+        if find(vio.meli_affection, screenshot) or find(vio.perci_affection, screenshot):
             # Consider the mission done already, since it's all automatic!
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
 

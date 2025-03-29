@@ -244,6 +244,7 @@ claim_all = Vision("dailies\\claim_all.png")
 exit_cross = Vision("dailies\\exit_cross.png")
 # Vanya ale
 meli_affection = Vision("dailies\\meli_affection.png")
+perci_affection = Vision("dailies\\perci_affection.png")
 # Brawl
 brawl = Vision("dailies\\brawl.png")
 receive_brawl = Vision("dailies\\receive_brawl.png")
