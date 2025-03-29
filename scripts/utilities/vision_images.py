@@ -125,6 +125,17 @@ roxy_ult = Vision("deer\\roxy_ult.png")
 escanor_st = Vision("deer\\escanor_st.png")
 escanor_aoe = Vision("deer\\escanor_aoe.png")
 escanor_ult = Vision("deer\\escanor_ult.png")
+# For the new Deer F4 team
+thor_1 = Vision("deer\\thor_1.png")
+thor_2 = Vision("demonic_beasts\\thor_thunderstorm.png")
+thor_ult = Vision("deer\\thor_ult.png")
+freyr_1 = Vision("deer\\freyr_1.png")
+freyr_2 = Vision("deer\\freyr_2.png")
+freyr_ult = Vision("deer\\freyr_ult.png")
+meg_1 = Vision("deer\\meg_1.png")
+meg_2 = Vision("deer\\meg_2.png")
+meg_ult = Vision("deer\\meg_ult.png")
+# TODO Add Hel cards
 
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")
