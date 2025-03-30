@@ -142,7 +142,9 @@ freyr_ult = Vision("deer\\freyr_ult.png")
 meg_1 = Vision("deer\\meg_1.png")
 meg_2 = Vision("deer\\meg_2.png")
 meg_ult = Vision("deer\\meg_ult.png")
-# TODO Add Hel cards
+hel_1 = Vision("deer\\hel_1.png")
+hel_2 = Vision("deer\\hel_2.png")
+hel_ult = Vision("deer\\hel_ult.png")
 
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")

@@ -46,7 +46,7 @@ Required team:
 * Green Jorm
 * Freyr
 * Thor Whale-mode 
-* Red Megelda (green Hel TBD)
+* Red Megelda / Green Hel (recommended)
 
 Other requirements:
 1. Start the script from within the Deer floor selection screen.

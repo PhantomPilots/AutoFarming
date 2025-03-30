@@ -29,7 +29,9 @@ def is_green_card(card: Card) -> bool:
         or find(vio.escanor_st, card.card_image)
         or find(vio.escanor_aoe, card.card_image)
         or find(vio.escanor_ult, card.card_image)
-        # TODO Add Hel cards here
+        or find(vio.hel_1, card.card_image)
+        or find(vio.hel_2, card.card_image)
+        or find(vio.hel_ult, card.card_image)
     )
 
 
