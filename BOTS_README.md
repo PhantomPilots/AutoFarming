@@ -29,9 +29,8 @@ The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Fl
 
 Requirements:
 1. **Important**: If you use Diane, place her on the rightmost position in the team.
-2. Always start from within the floor 4 bird fight already.
-3. 13M+ box CC (preferably).
-4. Constellation 6 (preferably).
+2. 13M+ box CC (preferably).
+3. Constellation 6 (preferably).
 
 ## Eikthyrnir (Deer) farming script
 
@@ -43,15 +42,37 @@ Required team:
 * Blue crazy Roxy
 * UR Escanor
 
-<b>Update</b> With the new Deer Floor 4, the bot has been updated to the new team:
+<b>Update</b>: With the new Deer Floor 4, the bot has been updated to the new team:
 * Green Jorm
 * Freyr
-* Thor
+* Thor Whale-mode 
 * Red Megelda (green Hel TBD)
 
 Other requirements:
 1. Start the script from within the Deer floor selection screen.
 2. Have the team ready with proper gear.
+
+## Whale-mode Eikthyrnir (Deer) farming script
+
+The script is named `scripts/DeerFarmerWhale.py`. It uses a very fast but risky strategy.
+
+Team order in this EXACT positioning (left to right): 
+* Green Jorm (left) 1st slot
+* Loli Merlin (center left) 2nd slot
+* Freyr (center right) 3rd slot
+* Albedo (right) 4th slot
+
+Minimum Requirements:
+* 16M Box CC
+* 5TH Constellation Complete
+* ALL units with UR Atk-Crit Damage Gear Sets Rolled at 14.5% (Atk Pieces. Def and HP can be whatever roll % but enough to survive in case it doesn't one turn a phase in Floor 3)
+* Loli Merlin LR + Relic
+* Freyr built decently + Relic
+* Albedo + Relic
+* Green Jormungandr + Relic
+* Sabunak 3/6 Minimum Link under Albedo
+* OG Red Sariel 6/6 Link under Loli Merlin LR
+* OG Light Mael 4/6 Minimum Link under Jorm
 
 ## Skoll and Hati (Dogs) farming script
 
