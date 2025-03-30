@@ -9,7 +9,8 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import IFarmer
+from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
+from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -42,7 +43,19 @@ class BirdFarmer(IFarmer):
     # How many floor 3 clears we want
     num_floor_3_clears = "inf"
 
-    def __init__(self, battle_strategy: IBattleStrategy, starting_state=States.GOING_TO_BIRD, num_floor_3_clears="inf"):
+    def __init__(
+        self,
+        battle_strategy: IBattleStrategy,
+        starting_state=States.GOING_TO_BIRD,
+        num_floor_3_clears="inf",
+        password: str | None = None,
+    ):
+
+        # Store the account password in this instance if given
+        if password:
+            IFarmer.password = password
+            print("Stored the account password locally in case we need to log in again.")
+            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # Initialize the current state
         self.current_state = starting_state
@@ -61,6 +74,10 @@ class BirdFarmer(IFarmer):
 
         # Placeholder for the fight thread
         self.fight_thread = None
+
+        # For the login/dailies
+        IFarmer.daily_farmer.set_daily_pvp(False)
+        IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):
         # super().exit_message() # Not needed anymore due to the logger below
@@ -226,6 +243,13 @@ class BirdFarmer(IFarmer):
             print("Moving to the original state, GOING_TO_BIRD")
             self.current_state = States.GOING_TO_BIRD
 
+    def dailies_complete_callback(self):
+        """The dailies thread told us we're done with all the dailies, go back to regular farming"""
+        with IFarmer._lock:
+            print("All dailies complete! Going back to farming F1-3 of Bird.")
+            IFarmer.dailies_thread = None
+            self.current_state = States.GOING_TO_BIRD
+
     def run(self):
 
         print(f"Farming floors 1-3 of Bird, starting in state {self.current_state}.")
@@ -233,6 +257,9 @@ class BirdFarmer(IFarmer):
         while True:
 
             check_for_reconnect()
+
+            # Check if we need to log in again!
+            self.check_for_login_state()
 
             if self.current_state == States.GOING_TO_BIRD:
                 self.going_to_bird_state()
@@ -248,6 +275,21 @@ class BirdFarmer(IFarmer):
 
             elif self.current_state == States.RESETTING_BIRD:
                 self.resetting_bird_state()
+
+            elif self.current_state == GlobalStates.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == GlobalStates.CHECK_IN:
+                self.check_in_state(initial_state=States.GOING_TO_BIRD)
+
+            elif self.current_state == GlobalStates.DAILIES_STATE:
+                self.dailies_state()
+
+            elif self.current_state == GlobalStates.FORTUNE_CARD:
+                self.fortune_card_state()
+
+            elif self.current_state == GlobalStates.LOGIN_SCREEN:
+                self.login_screen_state(initial_state=States.GOING_TO_BIRD)
 
             elif self.current_floor == States.EXIT_FARMER:
                 self.exit_farmer_state()

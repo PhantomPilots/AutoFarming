@@ -11,7 +11,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import IFarmer
+from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
@@ -47,8 +47,11 @@ class Floor4Farmer(IFarmer):
         password: str | None = None,
     ):
 
-        # Set the password in case we need to log back in
-        IFarmer.password = password
+        # Store the account password in this instance if given
+        if password:
+            IFarmer.password = password
+            print("Stored the account password locally in case we need to log in again.")
+            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
@@ -186,7 +189,7 @@ class Floor4Farmer(IFarmer):
         self.current_state = States.PROCEED_TO_FLOOR
 
     def dailies_complete_callback(self):
-        """The dailies thread told us we're done with all the dailies, go back to farming demons"""
+        """The dailies thread told us we're done with all the dailies, go back to regular farming"""
         with IFarmer._lock:
             print("All dailies complete! Going back to farming Floor 4 of Bird.")
             IFarmer.dailies_thread = None
