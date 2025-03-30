@@ -32,7 +32,7 @@ Requirements:
 2. 13M+ box CC (preferably).
 3. Constellation 6 (preferably).
 
-## Eikthyrnir (Deer) farming script
+## Eikthyrnir (Deer) Floors 1-3 farming script
 
 The script is named `scripts/DeerFarmer.py`. 
 
@@ -52,7 +52,7 @@ Other requirements:
 1. Start the script from within the Deer floor selection screen.
 2. Have the team ready with proper gear.
 
-## Whale-mode Eikthyrnir (Deer) farming script
+## Whale-mode Eikthyrnir (Deer) Floors 1-3 farming script
 
 The script is named `scripts/DeerFarmerWhale.py`. It uses a very fast but risky strategy.
 
