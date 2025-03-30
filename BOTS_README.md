@@ -43,6 +43,12 @@ Required team:
 * Blue crazy Roxy
 * UR Escanor
 
+<b>Update</b> With the new Deer Floor 4, the bot has been updated to the new team:
+* Green Jorm
+* Freyr
+* Thor
+* Red Megelda (green Hel TBD)
+
 Other requirements:
 1. Start the script from within the Deer floor selection screen.
 2. Have the team ready with proper gear.
