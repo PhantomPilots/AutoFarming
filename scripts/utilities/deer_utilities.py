@@ -20,7 +20,10 @@ def is_red_card(card: Card) -> bool:
 
 def is_green_card(card: Card) -> bool:
     return card.card_type != CardTypes.DISABLED and (
-        find(vio.jorm_1, card.card_image)
+        find(vio.lolimerl_st, card.card_image)
+        or find(vio.lolimerl_aoe, card.card_image)
+        or find(vio.lolimerl_ult, card.card_image)
+        or find(vio.jorm_1, card.card_image)
         or find(vio.jorm_2, card.card_image)
         or find(vio.jorm_ult, card.card_image)
         or find(vio.escanor_st, card.card_image)
@@ -32,10 +35,18 @@ def is_green_card(card: Card) -> bool:
 
 def is_blue_card(card: Card) -> bool:
     return card.card_type != CardTypes.DISABLED and (
-        find(vio.roxy_st, card.card_image)
+        find(vio.albedo_1, card.card_image)
+        or find(vio.albedo_ult, card.card_image)
+        or find(vio.roxy_st, card.card_image)
         or find(vio.roxy_aoe, card.card_image)
         or find(vio.roxy_ult, card.card_image)
         or find(vio.thor_1, card.card_image)
         or find(vio.thor_2, card.card_image)
         or find(vio.thor_ult, card.card_image)
     )
+
+
+# Helper to check for multiple cards of a type
+def count_cards(hand_of_cards: list[Card], check_func) -> int:
+    """Expects `check_func` to return a `bool`"""
+    return sum(bool(check_func(card)) for card in hand_of_cards)

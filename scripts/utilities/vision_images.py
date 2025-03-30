@@ -125,6 +125,13 @@ roxy_ult = Vision("deer\\roxy_ult.png")
 escanor_st = Vision("deer\\escanor_st.png")
 escanor_aoe = Vision("deer\\escanor_aoe.png")
 escanor_ult = Vision("deer\\escanor_ult.png")
+# Whale Deer strat additions
+albedo_1 = Vision("deer\\albedo_1.png")
+albedo_taunt = Vision("deer\\albedo_taunt.png")
+albedo_ult = Vision("deer\\albedo_ult.png")
+lolimerl_st = Vision("deer\\lolimerl_st.png")
+lolimerl_aoe = Vision("deer\\lolimerl_aoe.png")
+lolimerl_ult = Vision("deer\\lolimerl_ult.png")
 # For the new Deer F4 team
 thor_1 = Vision("deer\\thor_1.png")
 thor_2 = Vision("demonic_beasts\\thor_thunderstorm.png")
