@@ -1,4 +1,4 @@
-from utilities.vision import OkVision, Vision
+from utilities.vision import MultiVision, Vision
 
 # TODO:
 
@@ -88,8 +88,12 @@ skip_bird = Vision("demonic_beasts\\skip_masked.png")
 db_loading_screen = Vision("demonic_beasts\\loading_screen.png")
 reset_demonic_beast = Vision("demonic_beasts\\reset_demonic_beast.png")
 my_turn = Vision("demonic_beasts\\my_turn.png")
-floor_3_cleard_bird = Vision("demonic_beasts\\floor_3_cleared_bird.png")
-floor_3_cleard_2_bird = Vision("demonic_beasts\\floor_3_cleared_2_bird.png")
+floor_3_cleared_db = MultiVision(
+    "demonic_beasts\\floor_3_cleared_bird.png",
+    "demonic_beasts\\floor_3_cleared_2_bird.png",
+    # TODO Add Deer floor 3 cleared images
+    image_name="floor_3_cleared_db",
+)
 available_floor = Vision("demonic_beasts\\available_floor.png")
 creature_destroyed = Vision("demonic_beasts\\creature_destroyed.png")
 defeat = Vision("demonic_beasts\\defeat.png")
@@ -277,7 +281,7 @@ tier_up_failed = Vision("dailies\\tier_up_failed.png")
 
 
 # Create a single OkVision instance for all OK buttons
-ok_main_button = OkVision(
+ok_main_button = MultiVision(
     "ok_button.jpg",
     "demonic_beasts\\OK_save_party.png",
     "demonic_beasts\\ok_bird_defeat.png",
@@ -291,4 +295,5 @@ ok_main_button = OkVision(
     "demons\\dead_ok.jpg",
     "demons\\kicked_ok.png",
     "ok_buttons\\ok_maintenance.png",
+    image_name="Ok button",
 )

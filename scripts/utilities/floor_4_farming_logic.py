@@ -8,11 +8,11 @@ import pyautogui as pyautogui
 
 # Import all images
 import utilities.vision_images as vio
-from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
+from utilities.general_fighter_interface import IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -29,10 +29,10 @@ class States(Enum):
     FIGHTING = 1
     READY_TO_FIGHT = 2
     EXIT_FARMER = 3
-    GOING_TO_BIRD = 4
+    GOING_TO_DB = 4
 
 
-class Floor4Farmer(IFarmer):
+class IFloor4Farmer(IFarmer):
 
     # Need to be static across instances
     success_count = 0
@@ -44,6 +44,7 @@ class Floor4Farmer(IFarmer):
         battle_strategy: IBattleStrategy,
         starting_state: States,
         max_runs="inf",
+        demonic_beast_image: vio.Vision | None = None,
         password: str | None = None,
     ):
 
@@ -55,19 +56,15 @@ class Floor4Farmer(IFarmer):
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
-            print(f"We're gonna clear the bird {int(self.max_runs)} times.")
+            print(f"We're gonna clear Floor4 {int(self.max_runs)} times.")
+
+        # Store internally the image of the DemonicBeast we want to fight (Bird/Deer for now)
+        self.db_image = demonic_beast_image
 
         # For type helping
         self.current_state = starting_state
         # We will need to develop a specific battle strategy for it
         self.battle_strategy = battle_strategy
-
-        # Using composition to decouple the main farmer logic from the actual fight.
-        # Pass in the callback to call after the fight is complete
-        self.fighter: IFighter = BirdFighter(
-            battle_strategy=battle_strategy,
-            callback=self.fight_complete_callback,
-        )
 
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
@@ -78,22 +75,22 @@ class Floor4Farmer(IFarmer):
 
     def exit_message(self):
         super().exit_message()
-        print(f"We beat Floor 4 of Bird {Floor4Farmer.success_count} out of {Floor4Farmer.total_count} times.")
+        print(f"We beat Floor4 a total of {IFloor4Farmer.success_count} out of {IFloor4Farmer.total_count} times.")
         # Log the defeats
-        if len(Floor4Farmer.dict_of_defeats):
+        if len(IFloor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
             logger.info(defeat_msg)
 
     def _print_defeats(self):
         """Generate a string message to log"""
         str_msg = "Defeats:\n"
-        for phase, count in Floor4Farmer.dict_of_defeats.items():
+        for phase, count in IFloor4Farmer.dict_of_defeats.items():
             str_msg += f"* Phase {phase} -> Lost {count} times.\n"
 
         return str_msg
 
-    def going_to_bird_state(self):
-        """This should be the original state. Let's go to the bird menu"""
+    def going_to_db_state(self):
+        """This should be the original state. Let's go to the DemonicBeast menu"""
         screenshot, window_location = capture_window()
 
         # If we're back in the tavern, click on the battle menu.
@@ -107,12 +104,12 @@ class Floor4Farmer(IFarmer):
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
-        # Go into the 'Bird' section
-        find_and_click(vio.hraesvelgr, screenshot, window_location)
+        # Go into the 'db' section
+        find_and_click(self.db_image, screenshot, window_location)
 
         # Double-check that floor 3 is not cleared
-        if find(vio.floor_3_cleard_bird, screenshot) or find(vio.floor_3_cleard_2_bird, screenshot):
-            print("Going to fight the bird!")
+        if find(vio.floor_3_cleared_db, screenshot):
+            print("Going to fight the DemonicBeast!")
             self.current_state = States.PROCEED_TO_FLOOR
 
     def proceed_to_floor_state(self):
@@ -123,8 +120,7 @@ class Floor4Farmer(IFarmer):
         find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
         # Click on floor 4 if it's available
-        find_and_click(vio.floor_3_cleard_bird, screenshot, window_location, threshold=0.7)
-        find_and_click(vio.floor_3_cleard_2_bird, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7)
 
         if find(vio.startbutton, screenshot):
             # We can move to the next state
@@ -156,28 +152,30 @@ class Floor4Farmer(IFarmer):
 
         # Set the fighter thread
         if self.fight_thread is None or not self.fight_thread.is_alive():
-            print("Bird fight started!")
+            print("Floor4 fight started!")
             self.fight_thread = threading.Thread(target=self.fighter.run, name="Floor4FighterThread", daemon=True)
             self.fight_thread.start()
 
     def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
-        Floor4Farmer.total_count += 1
+        IFloor4Farmer.total_count += 1
         if victory:
             # Transition to another state or perform clean-up actions
-            Floor4Farmer.success_count += 1
+            IFloor4Farmer.success_count += 1
             print("FLOOR 4 COMPLETE, WOOO!")
         else:
             phase = kwargs.get("phase", None)
-            print(f"The bird fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
+            print(f"The fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
             # Increment the defeat count of the corresponding phase
             if phase is not None:
-                Floor4Farmer.dict_of_defeats[phase] += 1
+                IFloor4Farmer.dict_of_defeats[phase] += 1
 
-        fight_complete_msg = f"We beat the bird {Floor4Farmer.success_count}/{Floor4Farmer.total_count} times."
+        fight_complete_msg = (
+            f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times."
+        )
         logger.info(fight_complete_msg)
-        if Floor4Farmer.success_count >= self.max_runs:
+        if IFloor4Farmer.success_count >= self.max_runs:
             print("Reached maximum number of clears, exiting farmer.")
             self.current_state = States.EXIT_FARMER
             return
@@ -191,9 +189,9 @@ class Floor4Farmer(IFarmer):
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to regular farming"""
         with IFarmer._lock:
-            print("All dailies complete! Going back to farming Floor 4 of Bird.")
+            print("All dailies complete! Going back to farming Floor 4.")
             IFarmer.dailies_thread = None
-            self.current_state = States.GOING_TO_BIRD
+            self.current_state = States.GOING_TO_DB
 
     def run(self):
 
@@ -206,8 +204,8 @@ class Floor4Farmer(IFarmer):
             # Check if we need to log in again!
             self.check_for_login_state()
 
-            if self.current_state == States.GOING_TO_BIRD:
-                self.going_to_bird_state()
+            if self.current_state == States.GOING_TO_DB:
+                self.going_to_db_state()
 
             elif self.current_state == States.PROCEED_TO_FLOOR:
                 self.proceed_to_floor_state()
@@ -222,7 +220,7 @@ class Floor4Farmer(IFarmer):
                 self.daily_reset_state()
 
             elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state(initial_state=States.GOING_TO_BIRD)
+                self.check_in_state(initial_state=States.GOING_TO_DB)
 
             elif self.current_state == GlobalStates.DAILIES_STATE:
                 self.dailies_state()
@@ -231,7 +229,7 @@ class Floor4Farmer(IFarmer):
                 self.fortune_card_state()
 
             elif self.current_state == GlobalStates.LOGIN_SCREEN:
-                self.login_screen_state(initial_state=States.GOING_TO_BIRD)
+                self.login_screen_state(initial_state=States.GOING_TO_DB)
 
             elif self.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()

@@ -62,10 +62,15 @@ class Vision:
         )
 
 
-class OkVision(Vision):
+class MultiVision(Vision):
     """A class that will contain all OK buttons to be searched for in the screenshot"""
 
-    def __init__(self, *needle_basenames: str, matching_strategy: IMatchingStrategy = TemplateMatchingStrategy):
+    def __init__(
+        self,
+        *needle_basenames: str,
+        image_name: str = None,
+        matching_strategy: IMatchingStrategy = TemplateMatchingStrategy,
+    ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
 
         needle_paths = [os.path.join("images", needle_basename) for needle_basename in needle_basenames]
@@ -75,6 +80,9 @@ class OkVision(Vision):
             os.path.basename(needle_basename).split(".")[0] for needle_basename in needle_basenames
         ]
 
+        # Save a single image name internally
+        self._image_name = image_name
+
         # Save the pattern matching strategy as an attribute
         self.matching_strategy = matching_strategy
 
@@ -83,15 +91,7 @@ class OkVision(Vision):
             cv2.imread(needle_path) for needle_path in needle_paths if cv2.imread(needle_path) is not None
         ]
         if not len(self.needle_imgs):
-            raise ValueError("No image can be found for to create an OkVision instance", "yellow")
-
-    @property
-    def image_name(self):
-        return "Ok button"
-
-    def __eq__(self, other):
-        """All OkVision instances will be equal to each other!"""
-        return isinstance(other, OkVision)
+            raise ValueError("No image can be found for to create an MultiVision instance", "yellow")
 
     def find(self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED) -> np.ndarray:
         """Run the defined pattern matching strategy.

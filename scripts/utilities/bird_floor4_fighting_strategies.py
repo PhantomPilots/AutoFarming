@@ -30,7 +30,7 @@ from utilities.utilities import (
 logger = LoggerWrapper("BirdFloor4FightingStrategies", log_file="bird_floor4_AI.log")
 
 
-class Floor4BattleStrategy(IBattleStrategy):
+class BirdFloor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for Floor 4"""
 
     # Static attribute that keeps track of whether we've enabled a shield on phase 2
@@ -222,14 +222,14 @@ class Floor4BattleStrategy(IBattleStrategy):
             return recovery_ids[-1]
 
         ### WITH/WITHOUT SHIELD DEFAULT STRATEGIES
-        if Floor4BattleStrategy.with_shield:
+        if BirdFloor4BattleStrategy.with_shield:
             # If we have a shield, go HAM
             next_idx = self._with_shield_phase2(hand_of_cards)
 
             # Evaluate if we have to remove the shield
             if IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
                 print("REMOVING SHIELD!")
-                Floor4BattleStrategy.with_shield = False
+                BirdFloor4BattleStrategy.with_shield = False
         else:
             # If we don't have a shield, try to get it
             next_idx = self._without_shield_phase2(hand_of_cards, silver_ids, picked_silver_cards)
@@ -239,7 +239,7 @@ class Floor4BattleStrategy(IBattleStrategy):
                 picked_silver_cards.append(next_idx)
             if len(picked_silver_cards) == 3 and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
                 print("SETTING SHIELD!")
-                Floor4BattleStrategy.with_shield = True
+                BirdFloor4BattleStrategy.with_shield = True
 
         if next_idx is not None:
             # If we've found a card to play for the specific strategy...
@@ -307,9 +307,9 @@ class Floor4BattleStrategy(IBattleStrategy):
         """
 
         # The first thing of all, remove the shield from floor 2, in case it comes from a previous run!
-        if Floor4BattleStrategy.with_shield:
+        if BirdFloor4BattleStrategy.with_shield:
             logger.info("We have a shield ON from a previous run, disabling it!")
-            Floor4BattleStrategy.with_shield = False
+            BirdFloor4BattleStrategy.with_shield = False
 
         # Extract the card types and ranks, and reverse the list to give higher priority to rightmost cards (to maximize card rotation)
         card_types = np.array([card.card_type.value for card in hand_of_cards])

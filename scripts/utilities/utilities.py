@@ -167,7 +167,6 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
     """Simply return if a match is found"""
     if screenshot is None:
         return False
-
     rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
     return bool(rectangle.size)
 
@@ -182,7 +181,6 @@ def find_and_click(
     """Tries to find the given `vision_image` on the screenshot; if it is found, clicks on it.
     `point_coordinates` can be a tuple with the hardcoded coordinates to click on. TODO: This should be improved
     """
-
     rectangle = vision_image.find(screenshot, threshold=threshold)
     if rectangle.size:
         if point_coordinates:
