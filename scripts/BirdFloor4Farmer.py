@@ -1,8 +1,8 @@
 import argparse
 
 from utilities.bird_floor4_fighting_strategies import BirdFloor4BattleStrategy
-from utilities.bird_floor_4_farming_logic import BirdFloor4Farmer, States
 from utilities.farming_factory import FarmingFactory
+from utilities.floor_4_farmers import BirdFloor4Farmer, States
 
 
 def main():
