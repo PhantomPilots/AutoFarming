@@ -5,10 +5,9 @@ from enum import Enum
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from utilities.general_farmer_interface import IFarmer
 
 # Import all images
-from utilities.general_fighter_interface import IFighter
+from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -48,8 +47,15 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         demonic_beast_image: vio.Vision | None = None,
         reset_after_defeat=False,
         logger=logger,
+        password: str | None = None,
     ):
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
+
+        # Store the account password in this instance if given
+        if password:
+            IFarmer.password = password
+            print("Stored the account password locally in case we need to log in again.")
+            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # Save the image we want
         self.db_image = demonic_beast_image

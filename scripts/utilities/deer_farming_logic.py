@@ -23,6 +23,7 @@ class DeerFarmer(DemonicBeastFarmer):
         max_floor_3_clears="inf",
         reset_after_defeat=False,
         logger=logger,
+        password: str | None = None,
     ):
 
         super().__init__(
@@ -32,6 +33,7 @@ class DeerFarmer(DemonicBeastFarmer):
             reset_after_defeat=reset_after_defeat,
             demonic_beast_image=vio.eikthyrnir,
             logger=logger,
+            password=password,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.
