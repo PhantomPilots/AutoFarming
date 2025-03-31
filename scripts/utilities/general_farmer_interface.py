@@ -145,7 +145,12 @@ class IFarmer:
             # Skip the checks if we don't have a password
             return
 
-        screenshot, _ = capture_window()
+        screenshot, window_location = capture_window()
+
+        # Check if duplicate connection, if so click on 'ok_main_button'
+        if find(vio.duplicate_connection, screenshot):
+            print("Duplicate connection detected!")
+            find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
             self.current_state = States.LOGIN_SCREEN
