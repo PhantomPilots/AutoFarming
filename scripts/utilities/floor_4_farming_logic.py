@@ -153,7 +153,7 @@ class IFloor4Farmer(IFarmer):
         find_and_click(vio.skip_bird, screenshot, window_location)
 
         # Set the fighter thread
-        if self.fight_thread is None or not self.fight_thread.is_alive():
+        if (self.fight_thread is None or not self.fight_thread.is_alive()) and self.current_state == States.FIGHTING:
             print("Floor4 fight started!")
             self.fight_thread = threading.Thread(target=self.fighter.run, name="Floor4FighterThread", daemon=True)
             self.fight_thread.start()
@@ -161,32 +161,33 @@ class IFloor4Farmer(IFarmer):
     def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
 
-        IFloor4Farmer.total_count += 1
-        if victory:
-            # Transition to another state or perform clean-up actions
-            IFloor4Farmer.success_count += 1
-            print("FLOOR 4 COMPLETE, WOOO!")
-        else:
-            phase = kwargs.get("phase", None)
-            print(f"The fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
-            # Increment the defeat count of the corresponding phase
-            if phase is not None:
-                IFloor4Farmer.dict_of_defeats[phase] += 1
+        with IFarmer._lock:
+            IFloor4Farmer.total_count += 1
+            if victory:
+                # Transition to another state or perform clean-up actions
+                IFloor4Farmer.success_count += 1
+                print("FLOOR 4 COMPLETE, WOOO!")
+            else:
+                phase = kwargs.get("phase", None)
+                print(f"The fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
+                # Increment the defeat count of the corresponding phase
+                if phase is not None:
+                    IFloor4Farmer.dict_of_defeats[phase] += 1
 
-        fight_complete_msg = (
-            f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times."
-        )
-        logger.info(fight_complete_msg)
-        if IFloor4Farmer.success_count >= self.max_runs:
-            print("Reached maximum number of clears, exiting farmer.")
-            self.current_state = States.EXIT_FARMER
-            return
+            fight_complete_msg = (
+                f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times."
+            )
+            logger.info(fight_complete_msg)
+            if IFloor4Farmer.success_count >= self.max_runs:
+                print("Reached maximum number of clears, exiting farmer.")
+                self.current_state = States.EXIT_FARMER
+                return
 
-        # Don't log the defeats here, only on `exit_message()`
-        self.exit_message()
+            # Don't log the defeats here, only on `exit_message()`
+            self.exit_message()
 
-        # Go straight to the original states
-        self.current_state = States.PROCEED_TO_FLOOR
+            # Go straight to the original states
+            self.current_state = States.PROCEED_TO_FLOOR
 
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to regular farming"""
