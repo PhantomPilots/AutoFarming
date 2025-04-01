@@ -19,6 +19,7 @@ from utilities.utilities import (
     get_click_point_from_rectangle,
     get_hand_cards,
     is_ground_card,
+    is_ground_region,
 )
 
 logger = LoggerWrapper("FighterLogger", "fighter.log", level=logging.DEBUG)
@@ -95,18 +96,39 @@ class IFighter(abc.ABC):
                 print("slot index:", slot_index, "len indices:", len(selected_cards[1]))
                 raise e
 
-            self._play_card(selected_cards[0], index=index_to_play, window_location=window_location)
+            self._play_card(
+                selected_cards[0], index=index_to_play, window_location=window_location, screenshot=screenshot
+            )
 
         elif empty_card_slots == 0:
             print("Finished my turn!")
             return 1
 
-    def _play_card(self, list_of_cards: list[Card], index: int | tuple[int, int], window_location: np.ndarray):
+    def _play_card(
+        self,
+        list_of_cards: list[Card],
+        index: int | tuple[int, int],
+        window_location: np.ndarray,
+        screenshot: np.ndarray = None,
+    ):
         """Decide whether we're clicking or moving a card"""
         if isinstance(index, Integral):
+            print(f"Trying to click on the card with index: {index}...")
+
+            card_to_play = list_of_cards[index]
+            if screenshot is not None:
+                # If we're provided a screenshot, try to determine if we're clicking on a ground slot
+                while is_ground_region(screenshot, card_to_play.rectangle):
+                    print("We're clicking on a ground region, we should click on the next card!")
+                    index += 1
+                    card_to_play = list_of_cards[index]
+                    if index >= len(list_of_cards):
+                        print("Gotta play the rightmost card")
+                        card_to_play = list_of_cards[-1]
+                        break
+
             # Just click on the card
-            print("Clicking card with index:", index)
-            self._click_card(list_of_cards[index], window_location)
+            self._click_card(card_to_play, window_location)
 
         else:
             # We have to MOVE the card!

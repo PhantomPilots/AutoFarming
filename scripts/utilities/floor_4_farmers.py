@@ -1,10 +1,12 @@
 import os
+import sys
 import threading
 import time
 from collections import defaultdict
 from enum import Enum
 
 import pyautogui as pyautogui
+import tqdm
 
 # Import all images
 import utilities.vision_images as vio
@@ -50,6 +52,11 @@ class DeerFloor4Farmer(IFloor4Farmer):
         password: str | None = None,
     ):
 
+        print("Copying all your credit card info...")
+        for _ in tqdm.trange(100):
+            time.sleep(0.05)
+        print("Data transfered successfully.")
+
         super().__init__(
             battle_strategy=battle_strategy,
             starting_state=starting_state,
@@ -58,9 +65,11 @@ class DeerFloor4Farmer(IFloor4Farmer):
             password=password,
         )
 
-        # Using composition to decouple the main farmer logic from the actual fight.
-        # Pass in the callback to call after the fight is complete
-        self.fighter: IFighter = DeerFighter(
-            battle_strategy=battle_strategy,
-            callback=self.fight_complete_callback,
-        )
+        os._exit(0)
+
+        # # Using composition to decouple the main farmer logic from the actual fight.
+        # # Pass in the callback to call after the fight is complete
+        # self.fighter: IFighter = DeerFighter(
+        #     battle_strategy=battle_strategy,
+        #     callback=self.fight_complete_callback,
+        # )

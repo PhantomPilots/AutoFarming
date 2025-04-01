@@ -503,11 +503,15 @@ def is_ground_card(card: Card) -> bool:
     return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
 
 
-def is_ground_region(screenshot: np.ndarray, rectangle: tuple[float, float, float, float]) -> bool:
+def is_ground_region(screenshot: np.ndarray, rectangle: tuple[float, float, float, float], plot: bool = False) -> bool:
     """Given an entire screenshot and a rectangle of a region with [x,y,w,h], return whether the region is ground"""
     region_image = crop_image(
         screenshot, (rectangle[0], rectangle[1]), (rectangle[0] + rectangle[2], rectangle[1] + rectangle[3])
     )
+
+    if plot:
+        display_image(region_image, "Region to check if ground")
+
     return GroundCardPredictor.is_ground_card(region_image)
 
 
