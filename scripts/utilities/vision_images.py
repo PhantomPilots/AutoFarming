@@ -91,7 +91,8 @@ my_turn = Vision("demonic_beasts\\my_turn.png")
 floor_3_cleared_db = MultiVision(
     "demonic_beasts\\floor_3_cleared_bird.png",
     "demonic_beasts\\floor_3_cleared_2_bird.png",
-    # TODO Add Deer floor 3 cleared images
+    # Add Deer floor 3 cleared images
+    "demonic_beasts\\floor_3_cleared_deer.png",
     image_name="floor_3_cleared_db",
 )
 available_floor = Vision("demonic_beasts\\available_floor.png")

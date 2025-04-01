@@ -19,6 +19,7 @@ from utilities.utilities import (
     check_for_reconnect,
     find,
     find_and_click,
+    screenshot_testing,
 )
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
@@ -131,14 +132,15 @@ class IFloor4Farmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Restore stamina if we need to
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
             IFarmer.stamina_pots += 1
+            # screenshot_testing(screenshot, vio.restore_stamina)
             return
 
         # Try to start the fight
         find_and_click(vio.startbutton, screenshot, window_location)
 
-        if find(vio.db_loading_screen, screenshot):
+        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We can move to the next state
             print("Moving to FIGHTING!")
             self.current_state = States.FIGHTING
