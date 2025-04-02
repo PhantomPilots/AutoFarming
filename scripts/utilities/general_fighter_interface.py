@@ -121,11 +121,11 @@ class IFighter(abc.ABC):
                 while is_ground_region(screenshot, card_to_play.rectangle):
                     print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
-                    card_to_play = list_of_cards[index]
                     if index >= len(list_of_cards) - 1:
                         print("Gotta play the rightmost card")
                         card_to_play = list_of_cards[-1]
                         break
+                    card_to_play = list_of_cards[index]
 
             # Just click on the card
             self._click_card(card_to_play, window_location)
