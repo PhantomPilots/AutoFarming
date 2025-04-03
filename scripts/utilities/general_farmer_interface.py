@@ -24,7 +24,7 @@ from utilities.utilities import (
 # For dailies and logging back in after being logged out
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 4
 
 
 class States(Enum):
@@ -54,7 +54,9 @@ class IFarmer:
 
     # The thread for doing dailies
     dailies_thread: threading.Thread | None = None
-    # For dailies stuff
+    # Keep track if we've done the daily check in
+    daily_checkin = False
+    # More dailies stuff
     logged_out_time: float = time.time()
     first_login: bool = True
 
@@ -152,7 +154,7 @@ class IFarmer:
             print("Duplicate connection detected!")
             find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
+        elif find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
             self.current_state = States.LOGIN_SCREEN
             IFarmer.logged_out_time = time.time()
             print(f"We've been logged out! Waiting {MINUTES_TO_WAIT_BEFORE_LOGIN} mins to log back in...")

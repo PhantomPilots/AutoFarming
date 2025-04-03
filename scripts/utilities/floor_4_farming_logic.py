@@ -12,14 +12,12 @@ from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
-from utilities.general_fighter_interface import IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     find,
     find_and_click,
-    screenshot_testing,
 )
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")

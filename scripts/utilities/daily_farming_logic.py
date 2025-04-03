@@ -81,7 +81,7 @@ class DailyFarmer:
         """Set the daily PVP"""
         self.do_daily_pvp = do_daily_pvp
 
-    def exit_farmer_state(self):
+    def exit_farmer_state(self) -> bool:  # sourcery skip: extract-method
         screenshot, window_location = capture_window()
 
         # First, ensure we're back on the tavern
@@ -91,7 +91,6 @@ class DailyFarmer:
         if find(vio.tavern, screenshot):
             if self.complete_callback is not None:
                 self.complete_callback()
-
             # Let's reset the number of dungeon keys for tomorrow
             DailyFarmer.num_dungeon_keys = 3
             # Reset the PVP auto
@@ -100,6 +99,9 @@ class DailyFarmer:
             DailyFarmer.event_special_dungeon_complete = False
             # Reset the current state!
             DailyFarmer.current_state = States.IN_TAVERN_STATE
+            return True
+
+        return False
 
     def find_next_mission(self) -> States | None:
         """Identify the next mission to do, by scrolling if we can't find any match.
@@ -567,7 +569,7 @@ class DailyFarmer:
                 self.ad_wheel_state()
 
             elif DailyFarmer.current_state == States.EXIT_FARMER:
-                self.exit_farmer_state()
-                return
+                if self.exit_farmer_state():
+                    return
 
             time.sleep(1)

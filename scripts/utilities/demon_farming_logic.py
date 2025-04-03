@@ -42,9 +42,6 @@ class IDemonFarmer(IFarmer):
     # We need to keep track if 'auto' is clicked or not...
     auto = False
 
-    # Keep track if we've done the daily check in
-    daily_checkin = False
-
     # For sending an emoji
     sent_emoji = False
 
@@ -139,14 +136,14 @@ class IDemonFarmer(IFarmer):
 
         # First, if it's time to check in, do it
         now = datetime.now(PACIFIC_TIMEZONE)
-        if not IDemonFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
+        if not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
             print("Going to CHECK IN!")
             self.current_state = GlobalStates.DAILY_RESET
             return
         # Reset the daily check in flag
-        if now.hour > CHECK_IN_HOUR and IDemonFarmer.daily_checkin:
+        if now.hour > CHECK_IN_HOUR and IFarmer.daily_checkin:
             print("Resetting daily checkin")
-            IDemonFarmer.daily_checkin = False
+            IFarmer.daily_checkin = False
             # Allow fast login the next time we're logged out
             IFarmer.first_login = True
 
