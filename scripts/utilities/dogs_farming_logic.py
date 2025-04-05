@@ -20,6 +20,7 @@ class DogsFarmer(DemonicBeastFarmer):
         max_floor_3_clears="inf",
         reset_after_defeat=True,
         logger=logger,
+        password: str | None = None,
     ):
 
         super().__init__(
@@ -29,11 +30,11 @@ class DogsFarmer(DemonicBeastFarmer):
             reset_after_defeat=reset_after_defeat,
             demonic_beast_image=vio.skollandhati,
             logger=logger,
+            password=password,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete.
-        # Using the previous BirdFighter!
         self.fighter: IFighter = DogsFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,

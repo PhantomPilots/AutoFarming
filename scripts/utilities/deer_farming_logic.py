@@ -42,8 +42,3 @@ class DeerFarmer(DemonicBeastFarmer):
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
-
-        # print("Copying all your credit cards...")
-        # for _ in tqdm.trange(100):
-        #     time.sleep(0.1)
-        # print("Credit cards copied successfully!")

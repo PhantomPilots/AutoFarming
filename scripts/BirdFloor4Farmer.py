@@ -10,13 +10,14 @@ def main():
     # Extract the password if given
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
+    parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
         farmer=BirdFloor4Farmer,
         battle_strategy=BirdFloor4BattleStrategy,  # The AI. Floor 4 requires a very specific logic
         starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_FLOOR' or 'FIGHTING', to start the script from outside or within the fight
-        max_runs="inf",  # Can be a number or "inf"
+        max_runs=args.clears,  # Can be a number or "inf"
         password=args.password,  # Account password
     )
 
