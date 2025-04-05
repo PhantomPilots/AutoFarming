@@ -1,5 +1,6 @@
 import time
 from enum import Enum, auto
+from threading import Lock
 from typing import Callable
 
 import numpy as np
@@ -52,6 +53,11 @@ class DailyFarmer:
     # For event-special dungeon
     event_special_dungeon_complete = False
 
+    _lock = Lock()
+
+    # To check if we should kill the farmer
+    farmer_killed = False
+
     def __init__(
         self,
         starting_state=States.IN_TAVERN_STATE,
@@ -80,6 +86,20 @@ class DailyFarmer:
     def set_daily_pvp(self, do_daily_pvp: bool):
         """Set the daily PVP"""
         self.do_daily_pvp = do_daily_pvp
+
+    def kill_farmer(self):
+        """Kill the daily farmer from a different thread"""
+        with DailyFarmer._lock:
+            self.logger.info("Manually trying to kill the dailies thread...")
+            DailyFarmer.farmer_killed = True
+
+    def check_if_farmer_killed(self):
+        """Check if the farmer was killed"""
+        with DailyFarmer._lock:
+            if DailyFarmer.farmer_killed:
+                DailyFarmer.current_state = States.EXIT_FARMER
+                self.logger.info("Successfully killing the farmer thread!")
+                DailyFarmer.farmer_killed = False
 
     def exit_farmer_state(self) -> bool:  # sourcery skip: extract-method
         screenshot, window_location = capture_window()
@@ -527,6 +547,9 @@ class DailyFarmer:
         while True:
 
             self.check_for_essette_shop()
+
+            # In case we manually press the "kill switch"
+            self.check_if_farmer_killed()
 
             if DailyFarmer.current_state == States.IN_TAVERN_STATE:
                 self.in_tavern_state()

@@ -109,7 +109,7 @@ class IFarmer:
         login_attempted = False
 
         if find(vio.tavern, screenshot):
-            print("Logged in successfully! Going back to farming demons...")
+            print("Logged in successfully! Going back to the previous state...")
             self.current_state = initial_state
             login_attempted = True
 
@@ -159,6 +159,10 @@ class IFarmer:
             IFarmer.logged_out_time = time.time()
             print(f"We've been logged out! Waiting {MINUTES_TO_WAIT_BEFORE_LOGIN} mins to log back in...")
 
+            # Kill the dailies thread if it's running!
+            if IFarmer.dailies_thread is not None and IFarmer.dailies_thread.is_alive():
+                IFarmer.daily_farmer.kill_farmer()
+
     def fortune_card_state(self):
         """Open the fortune card"""
         screenshot, window_location = capture_window()
@@ -175,7 +179,7 @@ class IFarmer:
         )
 
     def daily_reset_state(self):
-        """Click on skip as much as needed, check in, then go back to GOING_TO_DEMONS"""
+        """Click on skip as much as needed, check in, then go back to doing whatever we were doing"""
         screenshot, window_location = capture_window()
 
         if find(vio.fortune_card, screenshot, threshold=0.8):
@@ -214,7 +218,7 @@ class IFarmer:
         # Go to tavern
         find_and_click(vio.tavern, screenshot, window_location)
 
-    def check_in_state(self, initial_state: States):
+    def check_in_state(self, *args, **kwargs):
         """Check in, and go back to"""
         screenshot, window_location = capture_window()
 
