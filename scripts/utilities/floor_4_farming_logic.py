@@ -221,7 +221,7 @@ class IFloor4Farmer(IFarmer):
                 self.daily_reset_state()
 
             elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state(initial_state=States.GOING_TO_DB)
+                self.check_in_state()
 
             elif self.current_state == GlobalStates.DAILIES_STATE:
                 self.dailies_state()

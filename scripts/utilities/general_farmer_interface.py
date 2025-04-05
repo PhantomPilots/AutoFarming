@@ -218,7 +218,7 @@ class IFarmer:
         # Go to tavern
         find_and_click(vio.tavern, screenshot, window_location)
 
-    def check_in_state(self, *args, **kwargs):
+    def check_in_state(self):
         """Check in, and go back to"""
         screenshot, window_location = capture_window()
 
