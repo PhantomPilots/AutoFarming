@@ -43,6 +43,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     # Keep track of the turn within a phase
     turn = 0
 
+    # To keep track of what phases have been initialized
+    _phase_initialized = set()
+
     def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
         """Extract the indices based on the list of cards and the current phase"""
         if phase == 1:
@@ -55,6 +58,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards)
 
         return card_index
+
+    def _maybe_reset(self, phase_id: str):
+        """Reset the turn counter if we're in a new phase"""
+        if phase_id not in DeerFloor4BattleStrategy._phase_initialized:
+            print("Resetting turn counter for phase", phase_id)
+            DeerFloor4BattleStrategy.turn = 0
+            DeerFloor4BattleStrategy._phase_initialized.add(phase_id)
 
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         # sourcery skip: merge-duplicate-blocks
@@ -70,6 +80,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         Turn 3 - (With extra thor card) - move thor once and use her card to kill, then move hel or freyr card 2 times (u want hel and freyr to be close to their ults. ideally u want Hel to have 3 ult points)
         """
+        self._maybe_reset("phase_1")  # Not needed, but whatever
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         # All unit cards sorted
@@ -77,9 +88,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             np.where([is_Thor_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
         hel_cards = sorted(np.where([is_Hel_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx])
-        freyr_cards = sorted(
-            np.where([is_Freyr_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
-        )
 
         if DeerFloor4BattleStrategy.turn == 0:
             return self._phase1_turn0(hand_of_cards)
@@ -113,7 +121,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 elif IBattleStrategy.card_turn <= 2:
                     return [hel_cards[0], hel_cards[0] + 1]
                 else:
-                    DeerFloor4BattleStrategy.turn = 0  # Let's reset it, since we're guaranteed to kill with Thor!
                     return thor_cards[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -142,6 +149,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
     def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Extract the indices based on the list of cards and the current phase"""
+        self._maybe_reset("phase_2")
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         # All unit cards sorted
@@ -196,8 +204,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Extract the indices based on the list of cards and the current phase"""
+        self._maybe_reset("phase_3")
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Extract the indices based on the list of cards and the current phase"""
+        self._maybe_reset("phase_4")
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
