@@ -89,10 +89,12 @@ db_loading_screen = Vision("demonic_beasts\\loading_screen.png")
 reset_demonic_beast = Vision("demonic_beasts\\reset_demonic_beast.png")
 my_turn = Vision("demonic_beasts\\my_turn.png")
 floor_3_cleared_db = MultiVision(
+    # Bird floor 3 cleared images
     "demonic_beasts\\floor_3_cleared_bird.png",
     "demonic_beasts\\floor_3_cleared_2_bird.png",
-    # Add Deer floor 3 cleared images
+    # Deer floor 3 cleared images
     "demonic_beasts\\floor_3_cleared_deer.png",
+    "demonic_beasts\\floor_3_cleared_2_deer.png",
     image_name="floor_3_cleared_db",
 )
 available_floor = Vision("demonic_beasts\\available_floor.png")
