@@ -1,3 +1,5 @@
+from typing import Callable
+
 import utilities.vision_images as vio
 from utilities.card_data import Card, CardTypes
 from utilities.utilities import find
@@ -49,6 +51,24 @@ def is_blue_card(card: Card) -> bool:
 
 
 # Helper to check for multiple cards of a type
-def count_cards(hand_of_cards: list[Card], check_func) -> int:
+def count_cards(hand_of_cards: list[Card], check_func: Callable[[Card], bool]) -> int:
     """Expects `check_func` to return a `bool`"""
-    return sum(bool(check_func(card)) for card in hand_of_cards)
+    return sum(check_func(card) for card in hand_of_cards)
+
+
+def is_Hel_card(card: Card) -> bool:
+    return find(vio.hel_1, card.card_image) or find(vio.hel_2, card.card_image) or find(vio.hel_ult, card.card_image)
+
+
+def is_Freyr_card(card: Card) -> bool:
+    return (
+        find(vio.freyr_1, card.card_image) or find(vio.freyr_2, card.card_image) or find(vio.freyr_ult, card.card_image)
+    )
+
+
+def is_Jorm_card(card: Card) -> bool:
+    return find(vio.jorm_1, card.card_image) or find(vio.jorm_2, card.card_image) or find(vio.jorm_ult, card.card_image)
+
+
+def is_Thor_card(card: Card) -> bool:
+    return find(vio.thor_1, card.card_image) or find(vio.thor_2, card.card_image) or find(vio.thor_ult, card.card_image)

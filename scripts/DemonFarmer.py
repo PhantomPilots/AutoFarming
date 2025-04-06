@@ -19,8 +19,8 @@ def main():
             # vio.red_demon,
             # vio.gray_demon,
             # vio.crimson_demon,
-            # vio.bell_demon,
-            vio.og_demon,
+            vio.bell_demon,
+            # vio.og_demon,
         ],
         time_to_sleep=9.25,  # How many seconds to sleep before accepting an invitation
         time_between_demons=2,  # How many hours between each type of demon

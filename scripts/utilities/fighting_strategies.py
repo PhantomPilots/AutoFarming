@@ -64,6 +64,8 @@ class IBattleStrategy(abc.ABC):
                 IBattleStrategy.picked_cards.append(hand_of_cards[next_index])
 
             elif isinstance(next_index, (tuple, list)):
+                # Make sure both numbers are part of a circular buffer
+                next_index = [next_index[0] % 8, next_index[1] % 8]
                 print(f"Moving cards: {next_index}")
 
             # Update the indices and cards lists

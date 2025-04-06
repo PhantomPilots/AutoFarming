@@ -109,7 +109,6 @@ class DeerFighter(IFighter):
         # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
         if self.current_hand is None:
             self.current_hand = self.battle_strategy.pick_cards(
-                floor=DeerFighter.current_floor,
                 phase=DeerFighter.current_phase,
             )
 

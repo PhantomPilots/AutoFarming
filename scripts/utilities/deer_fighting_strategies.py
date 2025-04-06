@@ -9,7 +9,7 @@ from utilities.utilities import capture_window, find, is_ground_card
 class DeerBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Deer"""
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int) -> int:
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
         """

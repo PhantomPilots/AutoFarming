@@ -320,10 +320,10 @@ def main():
     # train_HAM_cards_classifier()
 
     ### Train model to identify Thor cards
-    # train_thor_cards_classifier()
+    train_thor_cards_classifier()
 
     ### Train a model that identifies GROUND cards
-    train_ground_cards_classifier()
+    # train_ground_cards_classifier()
 
     return
 

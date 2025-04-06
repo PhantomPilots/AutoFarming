@@ -315,9 +315,9 @@ def main():
 
     # collect_data(HAMCardsCollector, filename="ham_cards_data")
 
-    # collect_data(ThorCardCollector, filename="thor_cards_data")
+    collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    collect_data(GroundDataCollector, filename="ground_data")
+    # collect_data(GroundDataCollector, filename="ground_data")
 
 
 if __name__ == "__main__":
