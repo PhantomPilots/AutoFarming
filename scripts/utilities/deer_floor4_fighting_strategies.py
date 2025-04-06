@@ -311,15 +311,16 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         green_card_ids: list[int] = sorted(
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        # Place buff removal card at the beginning of the list, to save it if necessary
-        green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
 
         # Let's disable Hel's ultimate until we're in round turn  3
-        if DeerFloor4BattleStrategy.turn % 3 != 0:
+        if DeerFloor4BattleStrategy.turn % 3 != 0 or DeerFloor4BattleStrategy.turn == 0:
             # Let's set the ults to be the last cards to use
             blue_card_ids = blue_card_ids[::-1]
             red_card_ids = red_card_ids[::-1]
             green_card_ids = green_card_ids[::-1]
+
+        # Place buff removal card at the beginning of the list, to save it if necessary
+        green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
 
         # --- Regular Deer roulette ---
 
