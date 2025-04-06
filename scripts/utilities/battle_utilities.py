@@ -25,7 +25,7 @@ def process_card_move(house_of_cards: list[Card], origin_idx: int, target_idx: i
         house_of_cards.insert(target_idx, card)
 
     # Handle card merges due to the deletion of `idx`
-    handle_card_merges(house_of_cards, origin_idx, origin_idx + 1)
+    handle_card_merges(house_of_cards, origin_idx - 1, origin_idx)
 
     # Handle  card merges on the target side. NOTE: The masks here change, they depend on the target index instead!
     handle_card_merges(house_of_cards, target_idx - 1, target_idx)
