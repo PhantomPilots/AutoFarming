@@ -433,7 +433,11 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
     if find(vio.silver_card, card, threshold=0.7):
         return CardRanks.SILVER
 
-    return CardRanks.GOLD if find(vio.gold_card, card, threshold=0.7) else CardRanks.NONE
+    return (
+        CardRanks.GOLD
+        if find(vio.gold_card, card, threshold=0.7)
+        else CardRanks.ULTIMATE if determine_card_type(card) == CardTypes.ULTIMATE else CardRanks.NONE
+    )
 
 
 def determine_db_floor(screenshot: np.ndarray, threshold=0.9) -> int:

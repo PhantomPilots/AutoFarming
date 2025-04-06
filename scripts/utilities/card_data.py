@@ -22,6 +22,7 @@ class CardRanks(Enum):
     SILVER = 1
     GOLD = 2
     NONE = -100
+    ULTIMATE = 100
 
 
 @dataclass
