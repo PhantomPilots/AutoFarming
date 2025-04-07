@@ -10,7 +10,15 @@ Requirements for it to work properly:
 3. Ensure the salvaging options on tavern-Diane are the desired ones.
 4. Start the script already from within fighting an equipment farming free stage.
 
-## Hraesvelgr (Bird) farming script
+## Hraesvelgr (Bird) Floor 4 farming script
+
+The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/BirdFloor4Farmer.py`. It assumes the following team (with all the relics):
+* Traitor Meli (recommended) / Freyr
+* Thor
+* Blue Megellda
+* Shion (recommended) / Green Diane
+
+## Hraesvelgr (Bird) Floors 1-3 farming script
 
 It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
 
@@ -19,18 +27,34 @@ Requirements:
 2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
 3. **Important**: If using green/red Diane, place her in the rightmost position.
 
-## Floor 4 of Bird
-
-The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
-* Traitor Meli (recommended) / Freyr
-* Thor
-* Blue Megellda
-* Shion (recommended) / Green Diane
-
 Requirements:
 1. **Important**: If you use Diane, place her on the rightmost position in the team.
-2. 13M+ box CC (preferably).
-3. Constellation 6 (preferably).
+2. 13M+ box CC (preferrably).
+3. 6TH Constellation (preferrably).
+
+## Eikthyrnir (Deer) Floor 4 farming script
+
+The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/DeerFloor4Farmer.py`. It assumes the following team (with all the relics):
+* Green Jorm - Red Tarmiel 6/6 link
+* Freyr
+* Thor UR Whale-mode 
+* Red Megelda / Green Hel (recommended)
+
+Artifact set/s:
+* Use Set №37 (preferred) or №29 (Both Maxed). 
+
+Minimum Requirements:
+* 15M-16M+ Box CC
+* 6TH Constellation
+* ALL units with proper Gearsets and not low rolled ones.
+* Red Megelda + Relic or Green Hel built good
+* Freyr built good + Relic 
+* Thor UR Whale-mode (as high duped and as built as possible)
+* Green Jormungandr built good + Relic
+* Red Tarmiel 6/6 Link
+
+Requirements:
+1. Start the script from within the Deer floor selection screen.
 
 ## Eikthyrnir (Deer) Floors 1-3 farming script
 
@@ -42,12 +66,6 @@ Required team:
 * Blue crazy Roxy
 * UR Escanor
 
-<b>Update</b>: With the new Deer Floor 4, the bot has been updated to the new team:
-* Green Jorm
-* Freyr
-* Thor Whale-mode 
-* Red Megelda / Green Hel (recommended)
-
 Other requirements:
 1. Start the script from within the Deer floor selection screen.
 2. Have the team ready with proper gear.
@@ -57,22 +75,28 @@ Other requirements:
 The script is named `scripts/DeerFarmerWhale.py`. It uses a very fast but risky strategy.
 
 Team order in this EXACT positioning (left to right): 
-* Green Jorm (left) 1st slot
-* Loli Merlin (center left) 2nd slot
-* Freyr (center right) 3rd slot
-* Albedo (right) 4th slot
+* Green Jorm (left) 1st slot - OG Light Mael 6/6 link
+* Loli Merlin LR (center left) 2nd slot - OG Red Sariel 6/6 link
+* Freyr (center right) 3rd slot - Any good Link
+* Albedo (right) 4th slot - Sabunak 3/6+ link
+
+Artifact set/s:
+* Use Set №37 (preferred) or №29 (Both Maxed). 
 
 Minimum Requirements:
-* 16M Box CC
-* 5TH Constellation Complete
-* ALL units with UR Atk-Crit Damage Gear Sets Rolled at 14.5% (Atk Pieces. Def and HP can be whatever roll % but enough to survive in case it doesn't one turn a phase in Floor 3)
+* 14M-15M+ Box CC
+* 6TH Constellation (5TH is also fine)
+* ALL units with UR Atk-Crit Damage Gear Sets with the Atk Pieces (Top Row) Rolled at 14.5%+. The rest can be whatever but enough to survive just in case the Deer survives and attacks you.
 * Loli Merlin LR + Relic
 * Freyr built decently + Relic
 * Albedo + Relic
 * Green Jormungandr + Relic
-* Sabunak 3/6 Minimum Link under Albedo
-* OG Red Sariel 6/6 Link under Loli Merlin LR
-* OG Light Mael 4/6 Minimum Link under Jorm
+* Sabunak 3/6 Minimum Link
+* OG Red Sariel 6/6 Link
+* OG Light Mael 6/6 Minimum Link
+
+Requirements:
+1. Start the script from within the Deer floor selection screen.
 
 ## Skoll and Hati (Dogs) farming script
 
@@ -86,6 +110,34 @@ Recommended team (in this order):
 
 Requirements:
 1. Start the script from within the Dogs floor selection screen.
+
+## Whale-mode Skoll and Hati (Dogs) Floors 1-3 farming script
+
+The script is named `scripts/DogsFarmerWhale.py`. It uses a very fast but more risky strategy (can lose with a Freeze debuff at the wrong time). 
+
+Required team:
+* Milim LR - !!!IMPORTANT Green or Blue Ludociel of Flash 6/6 link
+* Loli Merlin LR - OG Red Sariel 6/6 link
+* Thor UR - Sabunak 4/6+ link
+* Green Hel - OG Light Mael 4/6+ link
+
+Artifact set/s:
+* Use Set №37 (preferred) or №29 (Both Maxed). 
+
+Minimum Unit Requirements:
+* 14M-16M+ Box CC (14M+ you lose more runs, from 16M+ you're going to be fine most of the times)
+* 6TH Constellation (5TH in also fine)
+* ALL units with UR Atk-Crit Damage Gear Sets with the Atk Pieces (Top Row) Rolled at 14.5%+. The rest can be whatever but enough to survive just in case the Dog/s survive and attack you.
+* Loli Merlin LR + Relic
+* Milim LR + Relic
+* Thor UR built good
+* Green Hel built decently 
+* Sabunak 4/6 Minimum Link
+* OG Red Sariel 6/6 Link
+* OG Light Mael 4/6 Minimum Link
+
+Requirements:
+1. Start the script from within the Deer floor selection screen.
 
 ## Nidhogrr (Snake) farming script
 
