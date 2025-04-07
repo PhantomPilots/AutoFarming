@@ -190,8 +190,14 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         freyr_cards = sorted(
             np.where([is_Freyr_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        green_cards = sorted(
+        green_card_ids = sorted(
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+        )
+        red_card_ids = sorted(
+            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+        )
+        blue_card_ids = sorted(
+            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
 
         if DeerFloor4BattleStrategy.turn == 0:
@@ -216,7 +222,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if IBattleStrategy.card_turn <= 1:
                 # Play a green card, but prioritize the ult if we have it
                 hel_ult_id = np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]
-                return hel_ult_id[0] if len(hel_ult_id) > 0 else green_cards[-1]
+                return hel_ult_id[0] if len(hel_ult_id) > 0 else green_card_ids[-1]
             else:
                 if IBattleStrategy.card_turn == 3:
                     # Go to next turn after this one
@@ -247,6 +253,21 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 elif DeerFloor4BattleStrategy.turn == 2 and len(thor_cards) > 0:
                     return thor_cards[-1]  # Use Thor's ult, we should have it?
 
+        else:
+            # We haven't killed in 3 turns... let's keep abiding by the gimmick
+            card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
+            if IBattleStrategy.card_turn == 0:
+                # Pick what color to play this round
+                card_colors = ["red", "green", "blue"]  # or whatever order you want
+                DeerFloor4BattleStrategy._color_cards_picked_p3 = max(card_colors, key=lambda k: len(card_groups[k]))
+
+            picked_card_ids = card_groups[DeerFloor4BattleStrategy._color_cards_picked_p3]
+            if IBattleStrategy.card_turn < 2 and len(picked_card_ids):
+                return picked_card_ids[-1]
+            # Move arbitrary cards
+            return [-2, -1]
+
+        # To have a default, although this'll never happen
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
