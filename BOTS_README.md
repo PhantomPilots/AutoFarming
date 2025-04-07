@@ -10,7 +10,7 @@ Requirements for it to work properly:
 3. Ensure the salvaging options on tavern-Diane are the desired ones.
 4. Start the script already from within fighting an equipment farming free stage.
 
-## Floor 4 of Bird
+## Hraesvelgr (Bird) Floor 4 farming script
 
 The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/BirdFloor4Farmer.py`. It assumes the following team (with all the relics):
 * Traitor Meli (recommended) / Freyr
