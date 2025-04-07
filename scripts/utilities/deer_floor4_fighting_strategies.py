@@ -33,6 +33,7 @@ from utilities.utilities import (
     get_hand_cards,
     is_amplify_card,
     is_ground_card,
+    screenshot_testing,
 )
 
 logger = LoggerWrapper("BirdFloor4FightingStrategies", log_file="deer_floor4_AI.log")
@@ -42,7 +43,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for Floor 4"""
 
     # Keep track of the turn within a phase
-    turn = 0
+    turn = 1
 
     # To keep track of what phases have been initialized
     _phase_initialized = set()
@@ -261,6 +262,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 card_colors = ["red", "green", "blue"]  # or whatever order you want
                 DeerFloor4BattleStrategy._color_cards_picked_p3 = max(card_colors, key=lambda k: len(card_groups[k]))
 
+            print(f"Setting '{DeerFloor4BattleStrategy._color_cards_picked_p3}' as the color type for this round!")
             picked_card_ids = card_groups[DeerFloor4BattleStrategy._color_cards_picked_p3]
             if IBattleStrategy.card_turn < 2 and len(picked_card_ids):
                 return picked_card_ids[-1]
@@ -268,6 +270,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return [-2, -1]
 
         # To have a default, although this'll never happen
+        print("[WARN] WE SHOULD HAVE NEVER REACHED HERE!")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
@@ -312,14 +315,17 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return picked_card_ids[-1]
 
         if IBattleStrategy.card_turn > 2:
-            # Just move cards to maybe get an ult?
-            return [-2, -1]
+            # Spam a card
+            sorted_card_ids = sorted(np.arange(8), key=lambda idx: card_ranks[idx])
+            return sorted_card_ids[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Extract the indices based on the list of cards and the current phase"""
-        self._maybe_reset("phase_4")
+        # self._maybe_reset("phase_4")
+
+        screenshot, _ = capture_window()
 
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         # Get all card types
@@ -349,7 +355,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         if IBattleStrategy.card_turn == 3:
             DeerFloor4BattleStrategy.turn += 1
 
-        if IBattleStrategy.card_turn == 0:
+        if IBattleStrategy.card_turn == 0 and DeerFloor4BattleStrategy.turn == 0:
             # Select the starting card
             if DeerFloor4BattleStrategy.turn % 3 == 0 and len(green_card_ids) > 1:
                 print("1st turn, starting with green card")
@@ -360,6 +366,18 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if DeerFloor4BattleStrategy.turn % 3 == 2 and len(red_card_ids) > 1:
                 print("3rd turn, starting with red card")
                 return red_card_ids[-1]
+        elif IBattleStrategy.card_turn == 0:
+            if find(vio.blue_buff, screenshot) and len(blue_card_ids):
+                # Pick blue card
+                print("We're starting the round with a BLUE card!")
+                return blue_card_ids[-1]
+            if find(vio.red_buff, screenshot) and len(red_card_ids):
+                # Pick red card
+                print("We're starting the round with a RED card!")
+                return red_card_ids[-1]
+            if find(vio.green_buff, screenshot) and len(green_card_ids):
+                print("We're starting the round with a GREEN card!")
+                return green_card_ids[-1]
 
         # Keep track of last picked card
         last_card = picked_cards[-1] if len(picked_cards) else Card()
