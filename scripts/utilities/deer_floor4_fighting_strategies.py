@@ -143,10 +143,10 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         elif DeerFloor4BattleStrategy.turn == 2:
             if len(thor_cards) > 0:
-                if IBattleStrategy.card_turn == 0:
+                if IBattleStrategy.card_turn <= 1:
                     # Move Thor card first to remove freeze
                     return [thor_cards[0], thor_cards[0] + 1]
-                elif IBattleStrategy.card_turn <= 2:
+                elif IBattleStrategy.card_turn == 2:
                     if len(hel_cards):
                         return [hel_cards[0], hel_cards[0] + 1]
                     if len(freyr_cards):
