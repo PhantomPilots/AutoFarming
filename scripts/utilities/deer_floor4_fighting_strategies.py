@@ -383,7 +383,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         # If the above doesn't happen...
         print("Couldn't find the right card, defaulting while avoiding ultimates...")
         # But let's disable the ults, just in case
-        ult_ids: list[int] = np.where([card.card_type.value == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        ult_ids: list[int] = np.where([card.card_type.value == CardTypes.ULTIMATE.value for card in hand_of_cards])[0]
         for id in ult_ids:
             hand_of_cards[id].card_type = CardTypes.DISABLED
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
