@@ -273,7 +273,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         if IBattleStrategy.card_turn > 2:
             # Let's pick a card from the color that has the most
-            picked_color_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=lambda k: len(card_groups[k]))
+            picked_color_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=len)
             idx = -1
             while find(vio.freyr_ult, hand_of_cards[picked_color_ids[idx]].card_image):
                 print(f"We found Freyr's ult on the picked id {picked_color_ids[idx]}! Saving it for phase 4")
