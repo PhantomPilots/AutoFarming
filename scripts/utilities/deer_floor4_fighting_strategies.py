@@ -272,13 +272,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return picked_card_ids[-1]
 
         if IBattleStrategy.card_turn > 2:
-            # Spam a card -- Except Freyr's ult!
-            sorted_card_ids: list[int] = sorted(np.arange(8), key=lambda idx: card_ranks[idx])
+            # Let's pick a card from the color that has the most
+            picked_color_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=lambda k: len(card_groups[k]))
             idx = -1
-            while find(vio.freyr_ult, hand_of_cards[sorted_card_ids[idx]].card_image):
-                print(f"We found Freyr's ult on the picked id {sorted_card_ids[idx]}! Saving it for phase 4")
+            while find(vio.freyr_ult, hand_of_cards[picked_color_ids[idx]].card_image):
+                print(f"We found Freyr's ult on the picked id {picked_color_ids[idx]}! Saving it for phase 4")
                 idx -= 1
-            return sorted_card_ids[idx]
+            return picked_color_ids[idx]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 

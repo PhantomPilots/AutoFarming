@@ -75,7 +75,7 @@ def is_Thor_card(card: Card) -> bool:
     return find(vio.thor_1, card.card_image) or find(vio.thor_2, card.card_image) or find(vio.thor_ult, card.card_image)
 
 
-def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[int]) -> list[Card]:
+def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[int]) -> list[int]:
     """Place the buff removal card at the beginning of the list"""
 
     # Add the buff removal ID to the beginning of the list
