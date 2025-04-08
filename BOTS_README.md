@@ -12,7 +12,7 @@ Requirements for it to work properly:
 
 ## Floor 4 of Bird
 
-The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
+The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/BirdFloor4Farmer.py`. It assumes the following team (with all the relics):
 * Traitor Meli (recommended) / Freyr
 * Thor
 * Blue Megellda
