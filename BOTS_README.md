@@ -10,15 +10,6 @@ Requirements for it to work properly:
 3. Ensure the salvaging options on tavern-Diane are the desired ones.
 4. Start the script already from within fighting an equipment farming free stage.
 
-## Hraesvelgr (Bird) farming script
-
-It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
-
-Requirements:
-1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
-2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
-3. **Important**: If using green/red Diane, place her in the rightmost position.
-
 ## Floor 4 of Bird
 
 The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/Floor4Farmer.py`. It assumes the following team (with all the relics):
@@ -31,6 +22,25 @@ Requirements:
 1. **Important**: If you use Diane, place her on the rightmost position in the team.
 2. 13M+ box CC (preferably).
 3. Constellation 6 (preferably).
+
+## Floor 4 of Deer
+
+In `scripts/DeerFloor4Farmer.py`. It needs the following team:
+* Thor
+* Green Jorm
+* Freyr
+* Green Hel (1/6 is fine, 2+/6 preferable)
+
+Start the script from within the Deer floor selection screen.
+
+## Hraesvelgr (Bird) farming script
+
+It's named `scripts/BirdFarmer.py`, and it does what its name says: It farms floors 1-3 of the Bird uninterruptedly, even when stamina is depleted or a fight is lost.
+
+Requirements:
+1. Start by being in a screen that's in the path of going to the bird (i.e.: tavern, battle menu, or bird menu).
+2. Have the team ready with the proper gear. This doesn't mean "saved" (this will be handled by the script automatically), but rather just set up before clicking the "Save" button.
+3. **Important**: If using green/red Diane, place her in the rightmost position.
 
 ## Eikthyrnir (Deer) Floors 1-3 farming script
 

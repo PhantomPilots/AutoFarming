@@ -173,11 +173,10 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         )
         # Reorder heal cards
         green_card_ids = reorder_jorms_heal(hand_of_cards, green_card_ids)
-        # Picked Freyr cards
-        picked_red_cards = np.where([is_red_card(card) for card in picked_cards])[0].tolist()
 
         # Turn 1, use 2 Freyr cards
-        if DeerFloor4BattleStrategy.turn == 0 and len(red_card_ids + picked_red_cards) > 1:
+        num_red_cards = count_cards(hand_of_cards + picked_cards, is_red_card)
+        if DeerFloor4BattleStrategy.turn == 0 and num_red_cards > 1:
             if IBattleStrategy.card_turn == 0:
                 # First play one card to avoid accidentally merging
                 return red_card_ids[0]
@@ -187,16 +186,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 return [red_card_ids[0], red_card_ids[0] + 1]
 
             return red_card_ids[0]
-
-        # # If we have Freyr's ult and can pick red cards, use those!
-        # if has_ult("freyr", hand_of_cards + picked_cards) and len(red_card_ids + picked_red_cards) >= 2:
-        #     if IBattleStrategy.card_turn <= 2 and len(red_card_ids):
-        #         return red_card_ids[-1]
-
-        #     # Move arbitrary cards
-        #     if IBattleStrategy.card_turn == 3:
-        #
-        #     return [-2, -1]
 
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
         if IBattleStrategy.card_turn == 0:
@@ -269,7 +258,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         #     hand_of_cards[hel_ult_ids[0]].card_type = CardTypes.DISABLED
 
         # On turn 0, use green cards to try to heal with Jorm
-        num_green_cards = count_cards(hand_of_cards, is_green_card) + count_cards(picked_cards, is_green_card)
+        num_green_cards = count_cards(hand_of_cards + picked_cards, is_green_card)
         if DeerFloor4BattleStrategy.turn == 0 and IBattleStrategy.card_turn <= 2 and num_green_cards >= 3:
             DeerFloor4BattleStrategy._color_cards_picked_p3 = "green"
             return green_card_ids[-1]
