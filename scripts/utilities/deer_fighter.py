@@ -141,7 +141,7 @@ class DeerFighter(IFighter):
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
-        if find(vio.db_loading_screen, screenshot):
+        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             self.complete_callback(victory=True)
             self.exit_thread = True
 
@@ -153,7 +153,7 @@ class DeerFighter(IFighter):
 
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find(vio.db_loading_screen, screenshot):
+        if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=DeerFighter.current_phase)
             self.exit_thread = True

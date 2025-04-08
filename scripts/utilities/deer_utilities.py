@@ -2,7 +2,7 @@ from typing import Callable
 
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardTypes
+from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.utilities import find
 
 # TODO Add cards from new team
@@ -87,3 +87,24 @@ def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[in
         )
 
     return green_card_ids
+
+
+def reorder_jorms_heal(hand_of_cards: list[Card], green_card_ids: list[int]) -> list[Card]:
+    """Place the buff removal card at the beginning of the list, so that we pick it."""
+
+    # Add the buff removal ID to the beginning of the list
+    card_ranks = [card.card_rank.value for card in hand_of_cards]
+    heal_ids = sorted(
+        np.where([find(vio.jorm_1, hand_of_cards[idx].card_image) for idx in green_card_ids])[0],
+        key=lambda idx: card_ranks[idx],
+    )
+    if len(heal_ids):
+        green_card_ids = np.concatenate(([green_card_ids[heal_ids[-1]]], np.delete(green_card_ids, heal_ids[-1])))
+
+    return green_card_ids
+
+
+def has_ult(unit: str, hand_of_cards: list[Card]) -> bool:
+    """Returns if said unit has the ult enabled"""
+    ult_img = getattr(vio, f"{unit}_ult")
+    return next((True for card in hand_of_cards if find(ult_img, card.card_image)), False)

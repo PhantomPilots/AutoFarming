@@ -117,9 +117,21 @@ first_reward = Vision("demonic_beasts\\first_reward.png")
 
 # For Deer
 eikthyrnir = Vision("deer\\Eikthyrnir.png")
-red_buff = Vision("deer\\red_buff.png")
-blue_buff = Vision("deer\\blue_buff.png")
-green_buff = Vision("deer\\green_buff.png")
+red_buff = MultiVision(
+    "deer\\red_buff.png",
+    "deer\\red_buff_tiny.png",
+    image_name="red_buff",
+)
+blue_buff = MultiVision(
+    "deer\\blue_buff.png",
+    "deer\\blue_buff_tiny.png",
+    image_name="blue_buff",
+)
+green_buff = MultiVision(
+    "deer\\green_buff.png",
+    "deer\\green_buff_tiny.png",
+    image_name="green_buff",
+)
 lv_st = Vision("deer\\lv_st.png")
 lv_aoe = Vision("deer\\lv_aoe.png")
 lv_ult = Vision("deer\\lv_ult.png")
