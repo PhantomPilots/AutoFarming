@@ -26,12 +26,13 @@ Requirements:
 ## Floor 4 of Deer
 
 In `scripts/DeerFloor4Farmer.py`. It needs the following team:
-* Thor
-* Green Jorm
-* Freyr
-* Green Hel (1/6 is fine, 2+/6 preferable)
+* Thor (att/crit damage)
+* Green Jorm (HP/crit defense)
+* Freyr (HP/crit defense)
+* Green Hel (att/crit damage). 1/6 is fine, 2+/6 preferable
 
 Start the script from within the Deer floor selection screen.
+**Important**: Currently the win rate of the bot on a 15.5m CC and Const 6 account is of 25%, mostly because of RNG.
 
 ## Hraesvelgr (Bird) farming script
 
