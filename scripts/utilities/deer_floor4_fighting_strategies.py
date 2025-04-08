@@ -250,12 +250,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         )
         # Reorder green card IDs, so the buff removal is the last one we pick
         green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
+
         # Group them by their name
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
-
-        # hel_ult_ids = np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]
-        # if len(hel_ult_ids):
-        #     hand_of_cards[hel_ult_ids[0]].card_type = CardTypes.DISABLED
 
         # On turn 0, use green cards to try to heal with Jorm
         num_green_cards = count_cards(hand_of_cards + picked_cards, is_green_card)
@@ -279,8 +276,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             sorted_card_ids: list[int] = sorted(np.arange(8), key=lambda idx: card_ranks[idx])
             idx = -1
             while find(vio.freyr_ult, hand_of_cards[sorted_card_ids[idx]].card_image):
+                print(f"We found Freyr's ult on the picked id {sorted_card_ids[idx]}! Saving it for phase 4")
                 idx -= 1
-            return sorted_card_ids[-1]
+            return sorted_card_ids[idx]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
