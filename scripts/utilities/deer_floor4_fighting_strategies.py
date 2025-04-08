@@ -252,8 +252,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         green_card_ids = sorted(
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        red_card_ids = sorted(
-            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+        red_card_ids = sorted(  # Disable Freyr's ult, to have it for phase 4!
+            np.where([is_red_card(card) and not find(vio.freyr_ult, card.card_image) for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
         )
         blue_card_ids = sorted(
             np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
@@ -263,10 +264,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         # Group them by their name
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
 
-        # If we have Hel ult, let's disable it!
-        hel_ult_ids = np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]
-        if len(hel_ult_ids):
-            hand_of_cards[hel_ult_ids[0]].card_type = CardTypes.DISABLED
+        # hel_ult_ids = np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]
+        # if len(hel_ult_ids):
+        #     hand_of_cards[hel_ult_ids[0]].card_type = CardTypes.DISABLED
 
         # On turn 0, use green cards to try to heal with Jorm
         num_green_cards = count_cards(hand_of_cards, is_green_card) + count_cards(picked_cards, is_green_card)
