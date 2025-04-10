@@ -168,7 +168,7 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
     if screenshot is None:
         return False
     rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
-    return bool(rectangle.size)
+    return bool(rectangle.size) if rectangle is not None else False
 
 
 def find_and_click(

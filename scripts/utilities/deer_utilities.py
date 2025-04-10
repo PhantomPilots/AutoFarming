@@ -35,6 +35,9 @@ def is_green_card(card: Card) -> bool:
         or find(vio.hel_1, card.card_image)
         or find(vio.hel_2, card.card_image)
         or find(vio.hel_ult, card.card_image)
+        or find(vio.tyr_1, card.card_image)
+        or find(vio.tyr_2, card.card_image)
+        or find(vio.tyr_ult, card.card_image),
     )
 
 
