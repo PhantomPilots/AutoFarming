@@ -68,6 +68,10 @@ def is_Jorm_card(card: Card) -> bool:
     return find(vio.jorm_1, card.card_image) or find(vio.jorm_2, card.card_image) or find(vio.jorm_ult, card.card_image)
 
 
+def is_Tyr_card(card: Card) -> bool:
+    return find(vio.tyr_1, card.card_image) or find(vio.tyr_2, card.card_image) or find(vio.tyr_ult, card.card_image)
+
+
 # Helper to check for multiple cards of a type
 def count_cards(hand_of_cards: list[Card], check_func: Callable[[Card], bool]) -> int:
     """Expects `check_func` to return a `bool`"""
