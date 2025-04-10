@@ -3,6 +3,7 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardTypes
 from utilities.deer_utilities import (
     is_blue_card,
+    is_buff_removal_card,
     is_green_card,
     is_red_card,
     reorder_buff_removal_card,
@@ -46,7 +47,7 @@ class DeerBattleStrategy(IBattleStrategy):
         green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
 
         # First of all, if the beast has an evasion and we haven't played one yet:
-        buff_removal_ids = np.where([find(vio.jorm_2, card.card_image) for card in hand_of_cards])[0]
+        buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
         if find(vio.evasion, screenshot, threshold=0.7) and (
             len(buff_removal_ids) and not np.any([find(vio.jorm_2, card.card_image) for card in picked_cards])
         ):
