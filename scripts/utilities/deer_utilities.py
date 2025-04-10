@@ -77,7 +77,7 @@ def is_Thor_card(card: Card) -> bool:
 
 def is_buff_removal_card(card: Card):
     """Whether this is Jorm's or Tyr's buff removal card"""
-    return find(vio.jorm_2, card.card_image) or find(vio.tyr_1, card.card_image) or find(vio.tyr_ult, card.card_image)
+    return find(vio.jorm_2, card.card_image) or find(vio.tyr_1, card.card_image) or find(vio.tyr_2, card.card_image)
 
 
 def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[int]) -> list[int]:
