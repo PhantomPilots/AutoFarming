@@ -75,11 +75,16 @@ def is_Thor_card(card: Card) -> bool:
     return find(vio.thor_1, card.card_image) or find(vio.thor_2, card.card_image) or find(vio.thor_ult, card.card_image)
 
 
+def is_buff_removal_card(card: Card):
+    """Whether this is Jorm's or Tyr's buff removal card"""
+    return find(vio.jorm_2, card.card_image) or find(vio.tyr_1, card.card_image) or find(vio.tyr_ult, card.card_image)
+
+
 def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[int]) -> list[int]:
     """Place the buff removal card at the beginning of the list"""
 
     # Add the buff removal ID to the beginning of the list
-    buff_removal_ids = np.where([find(vio.jorm_2, hand_of_cards[idx].card_image) for idx in green_card_ids])[0]
+    buff_removal_ids = np.where([is_buff_removal_card(hand_of_cards[idx]) for idx in green_card_ids])[0]
     if len(buff_removal_ids):
         print("Setting lowest priority to buff removal card")
         green_card_ids = np.concatenate(

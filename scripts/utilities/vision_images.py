@@ -164,6 +164,9 @@ meg_ult = Vision("deer\\meg_ult.png")
 hel_1 = Vision("deer\\hel_1.png")
 hel_2 = Vision("deer\\hel_2.png")
 hel_ult = Vision("deer\\hel_ult.png")
+tyr_1 = Vision("deer\\tyr_1.png")
+tyr_2 = Vision("deer\\tyr_2.png")
+tyr_ult = Vision("deer\\tyr_ult.png")
 
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")

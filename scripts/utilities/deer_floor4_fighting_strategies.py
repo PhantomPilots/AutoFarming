@@ -5,6 +5,7 @@ from utilities.deer_utilities import (
     count_cards,
     has_ult,
     is_blue_card,
+    is_buff_removal_card,
     is_Freyr_card,
     is_green_card,
     is_Hel_card,
@@ -277,7 +278,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             idx = -1
             if not len(picked_color_ids):
                 return idx
-            while find(vio.freyr_ult, hand_of_cards[picked_color_ids[idx]].card_image):
+            if find(vio.freyr_ult, hand_of_cards[picked_color_ids[idx]].card_image):
                 print(f"We found Freyr's ult on the picked id {picked_color_ids[idx]}! Saving it for phase 4")
                 idx -= 1
             return picked_color_ids[idx]
@@ -371,7 +372,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             # First, if it's turn 2, use Jorm's buff card if it exists
             if DeerFloor4BattleStrategy.turn == 2:
                 print("Can we use a Jorm buff removal??")
-            buff_removal_ids = np.where([find(vio.jorm_2, card.card_image) for card in hand_of_cards])[0]
+            buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
             return (
                 buff_removal_ids[-1]
                 if len(buff_removal_ids) and DeerFloor4BattleStrategy.turn == 2
