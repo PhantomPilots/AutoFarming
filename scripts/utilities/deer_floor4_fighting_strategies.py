@@ -8,6 +8,7 @@ from utilities.deer_utilities import (
     is_buff_removal_card,
     is_Freyr_card,
     is_green_card,
+    is_Hel_card,
     is_Jorm_card,
     is_red_card,
     is_Thor_card,
@@ -117,20 +118,23 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         thor_cards = sorted(
             np.where([is_Thor_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        tyr_cards = sorted(np.where([is_Tyr_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx])
+        tyr_hel_cards = sorted(
+            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
         jorm_cards = sorted(
             np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
 
         if DeerFloor4BattleStrategy.turn == 0:
             if IBattleStrategy.card_turn == 0:
-                return tyr_cards[-1]  # tyr debuf
+                return tyr_hel_cards[-1]  # tyr debuf
             elif IBattleStrategy.card_turn == 1:
                 return jorm_cards[0]  # Jorm heal
             elif IBattleStrategy.card_turn == 2:
                 return thor_cards[0]  # Thor crit chance
 
-            return tyr_cards[-1]  # tyr attack
+            return tyr_hel_cards[-1]  # tyr attack
 
         elif DeerFloor4BattleStrategy.turn == 1:
             if IBattleStrategy.card_turn <= 2:
@@ -139,7 +143,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return thor_cards[-1]
 
         elif DeerFloor4BattleStrategy.turn == 2:
-            cards_to_move = tyr_cards if len(tyr_cards) else jorm_cards
+            cards_to_move = tyr_hel_cards if len(tyr_hel_cards) else jorm_cards
             if IBattleStrategy.card_turn <= 2:
                 return [cards_to_move[0], cards_to_move[0] + 1]
 
@@ -159,7 +163,10 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         # All unit cards sorted
-        tyr_cards = sorted(np.where([is_Tyr_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx])
+        tyr_hel_cards = sorted(
+            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
         jorm_cards = sorted(
             np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
@@ -224,7 +231,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         # Move a card of someone that doesn't have an ult
         return self._move_card_for_ult(
             hand_of_cards + picked_cards,
-            tyr_cards=tyr_cards,
+            tyr_hel_cards=tyr_hel_cards,
             freyr_cards=red_card_ids,
             jorm_cards=jorm_cards,
             thor_cards=blue_card_ids,
@@ -306,7 +313,10 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         green_card_ids: list[int] = sorted(
             np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
-        tyr_cards = sorted(np.where([is_Tyr_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx])
+        tyr_hel_cards = sorted(
+            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
         jorm_cards = sorted(
             np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
@@ -328,7 +338,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             # Move a card of someone that doesn't have an ult
             return self._move_card_for_ult(
                 hand_of_cards + picked_cards,
-                tyr_cards=tyr_cards,
+                tyr_hel_cards=tyr_hel_cards,
                 freyr_cards=red_card_ids,
                 jorm_cards=jorm_cards,
                 thor_cards=blue_card_ids,
@@ -394,23 +404,23 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     def _move_card_for_ult(
         self,
         list_of_cards: list[Card],
-        tyr_cards: list[Card],
+        tyr_hel_cards: list[Card],
         freyr_cards: list[Card],
         jorm_cards: list[Card],
         thor_cards: list[Card],
     ):
         """Move a card of someone that doesn't have an ult"""
         unit_to_cards = {
-            "tyr": tyr_cards,
+            "tyr_hel": tyr_hel_cards,
             "freyr": freyr_cards,
             "jorm": jorm_cards,
             "thor": thor_cards,
         }
-        for unit in ["tyr", "freyr", "jorm", "thor"]:
+        for unit in ["tyr_hel", "freyr", "jorm", "thor"]:
             if not has_ult(unit, list_of_cards):
-                print(f"Unit {unit} doesn't have an ult yet!")
                 cards = unit_to_cards[unit]
                 if len(cards):
+                    print(f"Unit {unit} doesn't have an ult yet!")
                     return [cards[0], cards[0] + 1]
 
         return [-2, -1]
