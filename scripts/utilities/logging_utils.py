@@ -7,23 +7,25 @@ from datetime import datetime
 class LoggerWrapper:
     _lock = threading.Lock()  # Static lock shared among all instances
 
-    def __init__(self, name: str, log_file: str, level: int = logging.DEBUG):
+    def __init__(self, name: str, log_file: str = "", level: int = logging.DEBUG, log_to_file: bool = False):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
 
-        # Create a file handler specific to this log file
-        if not self.logger.hasHandlers():  # Avoid adding multiple handlers
-            os.makedirs("logs", exist_ok=True)
-            # file_handler = logging.FileHandler(os.path.join("logs", log_file))
-            file_handler = logging.StreamHandler()  # Stop writing to log files
-            file_handler.setLevel(level)
-
-            # Create a formatter and set it to the handler
+        if not self.logger.hasHandlers():
             formatter = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-            file_handler.setFormatter(formatter)
 
-            # Add the handler to the logger
-            self.logger.addHandler(file_handler)
+            if log_to_file and log_file:
+                os.makedirs("logs", exist_ok=True)
+                file_handler = logging.FileHandler(os.path.join("logs", log_file))
+                file_handler.setLevel(level)
+                file_handler.setFormatter(formatter)
+                self.logger.addHandler(file_handler)
+
+            # Always add a StreamHandler to see logs in the console
+            stream_handler = logging.StreamHandler()
+            stream_handler.setLevel(level)
+            stream_handler.setFormatter(formatter)
+            self.logger.addHandler(stream_handler)
 
     def _format_message(self, message: str) -> str:
         timestamp = datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
