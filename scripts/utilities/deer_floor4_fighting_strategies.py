@@ -148,7 +148,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 return [cards_to_move[0], cards_to_move[0] + 1]
             if IBattleStrategy.card_turn == 2:
                 if len(thor_cards) > 1:
-                    return thor_cards[-1]
+                    # Play a Thor card to be safe
+                    return thor_cards[0]
                 else:
                     # Just move a card...
                     return [cards_to_move[0], cards_to_move[0] + 1]
