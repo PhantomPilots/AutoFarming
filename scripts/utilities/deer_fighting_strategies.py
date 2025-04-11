@@ -49,7 +49,7 @@ class DeerBattleStrategy(IBattleStrategy):
         # First of all, if the beast has an evasion and we haven't played one yet:
         buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
         if find(vio.evasion, screenshot, threshold=0.7) and (
-            len(buff_removal_ids) and not np.any([find(vio.jorm_2, card.card_image) for card in picked_cards])
+            len(buff_removal_ids) and not np.any([is_buff_removal_card(card) for card in picked_cards])
         ):
             print("Deer has an evasion, let's remove it")
             return buff_removal_ids[-1]
