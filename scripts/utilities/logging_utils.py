@@ -14,7 +14,8 @@ class LoggerWrapper:
         # Create a file handler specific to this log file
         if not self.logger.hasHandlers():  # Avoid adding multiple handlers
             os.makedirs("logs", exist_ok=True)
-            file_handler = logging.FileHandler(os.path.join("logs", log_file))
+            # file_handler = logging.FileHandler(os.path.join("logs", log_file))
+            file_handler = logging.StreamHandler()  # Stop writing to log files
             file_handler.setLevel(level)
 
             # Create a formatter and set it to the handler
@@ -30,30 +31,30 @@ class LoggerWrapper:
 
     def debug(self, message: str):
         formatted_message = self._format_message(message)
-        print(formatted_message)
+        # print(formatted_message)
         with LoggerWrapper._lock:
             self.logger.debug(formatted_message)
 
     def info(self, message: str):
         formatted_message = self._format_message(message)
-        print(formatted_message)
+        # print(formatted_message)
         with LoggerWrapper._lock:
             self.logger.info(formatted_message)
 
     def warning(self, message: str):
         formatted_message = self._format_message(message)
-        print(formatted_message)
+        # print(formatted_message)
         with LoggerWrapper._lock:
             self.logger.warning(formatted_message)
 
     def error(self, message: str):
         formatted_message = self._format_message(message)
-        print(formatted_message)
+        # print(formatted_message)
         with LoggerWrapper._lock:
             self.logger.error(formatted_message)
 
     def critical(self, message: str):
         formatted_message = self._format_message(message)
-        print(formatted_message)
+        # print(formatted_message)
         with LoggerWrapper._lock:
             self.logger.critical(formatted_message)
