@@ -144,9 +144,15 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         elif DeerFloor4BattleStrategy.turn == 2:
             cards_to_move = tyr_hel_cards if len(tyr_hel_cards) else jorm_cards
-            if IBattleStrategy.card_turn <= 2:
+            if IBattleStrategy.card_turn < 2:
                 return [cards_to_move[0], cards_to_move[0] + 1]
-
+            if IBattleStrategy.card_turn == 2:
+                if len(thor_cards) > 1:
+                    return thor_cards[-1]
+                else:
+                    # Just move a card...
+                    return [cards_to_move[0], cards_to_move[0] + 1]
+            # In the last turn, use Thor's card
             return thor_cards[0]  # Better to NOT play the ult, in case we can do the double hit
 
         print("[WARN] We couldn't finish in 3 turns...")
@@ -411,12 +417,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     ):
         """Move a card of someone that doesn't have an ult"""
         unit_to_cards = {
-            "tyr_hel": tyr_hel_cards,
+            "tyr": tyr_hel_cards,
+            "hel": tyr_hel_cards,
             "freyr": freyr_cards,
             "jorm": jorm_cards,
             "thor": thor_cards,
         }
-        for unit in ["tyr_hel", "freyr", "jorm", "thor"]:
+        for unit in ["tyr", "hel", "freyr", "jorm", "thor"]:
             if not has_ult(unit, list_of_cards):
                 cards = unit_to_cards[unit]
                 if len(cards):
