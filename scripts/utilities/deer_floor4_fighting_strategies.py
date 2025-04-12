@@ -154,7 +154,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                     # Just move a card...
                     return [cards_to_move[0], cards_to_move[0] + 1]
             # In the last turn, use Thor's card
-            return thor_cards[0]  # Better to NOT play the ult, in case we can do the double hit
+            if len(thor_cards):
+                return thor_cards[0]  # Better to NOT play the ult, in case we can do the double hit
 
         print("[WARN] We couldn't finish in 3 turns...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

@@ -51,6 +51,7 @@ class IFloor4Farmer(IFarmer):
         starting_state: States,
         max_runs="inf",
         demonic_beast_image: vio.Vision | None = None,
+        do_dailies=False,
         password: str | None = None,
     ):
 
@@ -59,6 +60,9 @@ class IFloor4Farmer(IFarmer):
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+
+        # In case we want to do dailies at the specified hour
+        self.do_dailies = do_dailies
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
@@ -76,7 +80,7 @@ class IFloor4Farmer(IFarmer):
         self.fight_thread = None
 
         # For the login/dailies
-        IFarmer.daily_farmer.set_daily_pvp(False)
+        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):
@@ -214,7 +218,7 @@ class IFloor4Farmer(IFarmer):
     def check_for_dailies(self) -> bool:
         """Return whether we have to do our dailies"""
         now = datetime.now(PACIFIC_TIMEZONE)
-        if not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR:
+        if self.do_dailies and (not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR):
             print("Going to CHECK IN!")
             self.current_state = GlobalStates.DAILY_RESET
             return True
