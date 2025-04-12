@@ -16,6 +16,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    drag_im,
     find,
     find_and_click,
 )
@@ -102,6 +103,19 @@ class IFloor4Farmer(IFarmer):
 
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
+
+        # TODO: If we see we're inside the DB selection screen but don't see our DemonicBeast,
+        # swipe right and return
+        if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
+            # Swipe to the right!
+            print("Wrong demonic beast, searching the right one...")
+            drag_im(
+                Coordinates.get_coordinates("right_swipe"),
+                Coordinates.get_coordinates("left_swipe"),
+                window_location,
+                drag_duration=0.2,
+            )
+            return
 
         # Go into the 'db' section
         find_and_click(self.db_image, screenshot, window_location)

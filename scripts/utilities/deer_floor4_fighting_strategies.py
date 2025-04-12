@@ -128,9 +128,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         if DeerFloor4BattleStrategy.turn == 0:
             if IBattleStrategy.card_turn == 0:
-                return tyr_hel_cards[-1]  # tyr debuf
+                return tyr_hel_cards[0]  # tyr first card, or hel debuf
             elif IBattleStrategy.card_turn == 1:
-                return jorm_cards[0]  # Jorm heal
+                return jorm_cards[-1]  # Jorm buff removal, save heal for p2
             elif IBattleStrategy.card_turn == 2:
                 return thor_cards[0]  # Thor crit chance
 

@@ -18,6 +18,8 @@ class Coordinates:
         # General demonic beasts
         "floor_top_left": (344, 122),
         "floor_bottom_right": (459, 165),
+        "right_swipe": (361, 466),
+        "left_swipe": (177, 463),
         # For bird
         "4_cards_top_left": (61, 822),  # Top-left corner of the hand when we can use 4 cards
         "4_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 4 cards
