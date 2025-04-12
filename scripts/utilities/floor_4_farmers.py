@@ -23,6 +23,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
         battle_strategy: IBattleStrategy,
         starting_state: States,
         max_runs="inf",
+        do_dailies=False,
         password: str | None = None,
     ):
 
@@ -31,6 +32,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
             starting_state=starting_state,
             max_runs=max_runs,
             demonic_beast_image=vio.hraesvelgr,
+            do_dailies=do_dailies,
             password=password,
         )
 
@@ -49,6 +51,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
         battle_strategy: IBattleStrategy,
         starting_state: States,
         max_runs="inf",
+        do_dailies=False,
         password: str | None = None,
     ):
 
@@ -57,6 +60,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
             starting_state=starting_state,
             max_runs=max_runs,
             demonic_beast_image=vio.eikthyrnir,
+            do_dailies=do_dailies,
             password=password,
         )
 
