@@ -216,7 +216,9 @@ class IFarmer:
         find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
         # Go to tavern
-        find_and_click(vio.tavern, screenshot, window_location)
+        if not find_and_click(vio.tavern, screenshot, window_location):
+            # If we don't see the tavern button, just click on "back" till we get there
+            find_and_click(vio.back, screenshot, window_location)
 
     def check_in_state(self):
         """Check in, and go back to"""

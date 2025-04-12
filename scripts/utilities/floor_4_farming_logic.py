@@ -2,6 +2,7 @@ import os
 import threading
 import time
 from collections import defaultdict
+from datetime import datetime
 from enum import Enum
 
 import pyautogui as pyautogui
@@ -10,7 +11,12 @@ import pyautogui as pyautogui
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
+from utilities.general_farmer_interface import (
+    CHECK_IN_HOUR,
+    MINUTES_TO_WAIT_BEFORE_LOGIN,
+    PACIFIC_TIMEZONE,
+    IFarmer,
+)
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
@@ -104,7 +110,7 @@ class IFloor4Farmer(IFarmer):
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
-        # TODO: If we see we're inside the DB selection screen but don't see our DemonicBeast,
+        # If we see we're inside the DB selection screen but don't see our DemonicBeast,
         # swipe right and return
         if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
             # Swipe to the right!
@@ -128,6 +134,10 @@ class IFloor4Farmer(IFarmer):
     def proceed_to_floor_state(self):
 
         screenshot, window_location = capture_window()
+
+        # First of all, check if we have to do our dailies. If not, go straight to the original states
+        if self.check_for_dailies():
+            return
 
         # In case we need to unlock the floor
         find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
@@ -198,8 +208,17 @@ class IFloor4Farmer(IFarmer):
             # Don't log the defeats here, only on `exit_message()`
             self.exit_message()
 
-            # Go straight to the original states
+            # Go straight to proceed to floor
             self.current_state = States.PROCEED_TO_FLOOR
+
+    def check_for_dailies(self) -> bool:
+        """Return whether we have to do our dailies"""
+        now = datetime.now(PACIFIC_TIMEZONE)
+        if not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR:
+            print("Going to CHECK IN!")
+            self.current_state = GlobalStates.DAILY_RESET
+            return True
+        return False
 
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to regular farming"""
