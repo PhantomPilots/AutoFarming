@@ -58,7 +58,7 @@ class IFarmer:
     daily_checkin = False
     # More dailies stuff
     logged_out_time: float = time.time()
-    first_login: bool = False
+    first_login: bool = True
 
     # To allow every farmer instance to do dailies
     daily_farmer = DailyFarmer(

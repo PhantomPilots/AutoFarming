@@ -63,6 +63,8 @@ class IFloor4Farmer(IFarmer):
 
         # In case we want to do dailies at the specified hour
         self.do_dailies = do_dailies
+        if do_dailies:
+            print(f"We'll stop farming Floor4 at {CHECK_IN_HOUR} PT to do our dailies!")
 
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
