@@ -329,8 +329,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
 
-        # Let's disable tyr's ultimate until we're in round turn  3
-        if DeerFloor4BattleStrategy.turn % 3 != 0 or DeerFloor4BattleStrategy.turn == 0:
+        if DeerFloor4BattleStrategy.turn < 3:
             # Let's set the ults to be the last cards to use
             print("DISABLING ULTS!")
             blue_card_ids = blue_card_ids[::-1]
@@ -339,18 +338,18 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 # Only disable red up to turn 2
                 red_card_ids = red_card_ids[::-1]
 
+            if IBattleStrategy.card_turn == 3:
+                # Move a card of someone that doesn't have an ult
+                return self._move_card_for_ult(
+                    hand_of_cards + picked_cards,
+                    tyr_hel_cards=tyr_hel_cards,
+                    freyr_cards=red_card_ids,
+                    jorm_cards=jorm_cards,
+                    thor_cards=blue_card_ids,
+                )
+
         # Place buff removal card at the beginning of the list, to save it if necessary
         green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
-
-        if DeerFloor4BattleStrategy.turn < 3 and IBattleStrategy.card_turn == 3:
-            # Move a card of someone that doesn't have an ult
-            return self._move_card_for_ult(
-                hand_of_cards + picked_cards,
-                tyr_hel_cards=tyr_hel_cards,
-                freyr_cards=red_card_ids,
-                jorm_cards=jorm_cards,
-                thor_cards=blue_card_ids,
-            )
 
         # --- Regular Deer roulette ---
 
@@ -389,7 +388,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             print("Last card red! Picking green")
             # First, if it's turn 2, use Jorm's buff card if it exists
             if DeerFloor4BattleStrategy.turn == 2:
-                print("Can we use a Jorm buff removal??")
+                print("Can we use a buff removal??")
             buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
             return (
                 buff_removal_ids[-1]
