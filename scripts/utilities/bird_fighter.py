@@ -12,6 +12,8 @@ class BirdFighter(IFighter):
 
     phase = 1
 
+    current_floor = -1
+
     def fighting_state(self):
 
         screenshot, window_location = capture_window()
@@ -170,9 +172,12 @@ class BirdFighter(IFighter):
                 self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self):
+    def run(self, floor_num=1):
 
-        print("Fighting very hard...")
+        # First, set the floor number
+        BirdFighter.current_floor = floor_num
+
+        print(f"Fighting very hard on floor {BirdFighter.current_floor}...")
 
         while True:
 

@@ -66,7 +66,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # In case we want to do dailies at the specified hour
         self.do_dailies = do_dailies
         if do_dailies:
-            print(f"We'll stop farming Floor4 at {CHECK_IN_HOUR} PT to do our dailies!")
+            print(f"We'll stop farming DemonicBeast at {CHECK_IN_HOUR} PT to do our dailies!")
 
         # Save the image we want
         self.db_image = demonic_beast_image

@@ -1,9 +1,4 @@
-import time
-
 import pyautogui as pyautogui
-import tqdm
-
-# Import all images
 import utilities.vision_images as vio
 from utilities.deer_fighter import DeerFighter, IFighter
 from utilities.demonic_beast_farming_logic import DemonicBeastFarmer, States
