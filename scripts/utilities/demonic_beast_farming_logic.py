@@ -5,6 +5,7 @@ from enum import Enum
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
+from coordinates import Coordinates
 
 # Import all images
 from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
@@ -13,6 +14,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     determine_db_floor,
+    drag_im,
     find,
     find_and_click,
     find_floor_coordinates,
@@ -97,16 +99,32 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         """This should be the original state. Let's go to the Demonic Beast menu"""
         screenshot, window_location = capture_window()
 
-        # TODO: Implement, currently not working
-        # # First of all, if we have a dead unit, reset the demonic beast!
-        # if find(vio.dead_unit, screenshot, threshold=0.6):
-        #     self.logger.info("We have a dead unit! Resetting the demonic beast.")
-        #     self.current_state = States.RESETTING_DB
-        #     return
+        # If we're back in the tavern, click on the battle menu.
+        find_and_click(
+            vio.main_menu,
+            screenshot,
+            window_location,
+            point_coordinates=Coordinates.get_coordinates("battle_menu"),
+        )
+
+        # If we're in the battle menu, click on Demonic Beast
+        find_and_click(vio.demonic_beast, screenshot, window_location)
+
+        # If we see we're inside the DB selection screen but don't see our DemonicBeast,
+        # swipe right and return
+        if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
+            # Swipe to the right!
+            print("Wrong demonic beast, searching the right one...")
+            drag_im(
+                Coordinates.get_coordinates("right_swipe"),
+                Coordinates.get_coordinates("left_swipe"),
+                window_location,
+                drag_duration=0.2,
+            )
+            return
 
         # Go into the 'Demonic Beast' section
-        if find_and_click(self.db_image, screenshot, window_location):
-            return
+        find_and_click(self.db_image, screenshot, window_location)
 
         if find(vio.empty_party, screenshot):
             # We have to set the party.

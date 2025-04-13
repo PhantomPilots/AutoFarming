@@ -19,6 +19,7 @@ class SnakeFarmer(DemonicBeastFarmer):
         max_stamina_pots="inf",
         max_floor_3_clears="inf",
         reset_after_defeat=False,
+        password=None,
         logger=logger,
     ):
 
@@ -28,6 +29,7 @@ class SnakeFarmer(DemonicBeastFarmer):
             max_floor_3_clears=max_floor_3_clears,
             reset_after_defeat=reset_after_defeat,
             demonic_beast_image=vio.nidhoggr,
+            password=password,
             logger=logger,
         )
 
