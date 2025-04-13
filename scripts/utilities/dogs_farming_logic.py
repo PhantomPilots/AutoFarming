@@ -21,6 +21,7 @@ class DogsFarmer(DemonicBeastFarmer):
         reset_after_defeat=True,
         logger=logger,
         password: str | None = None,
+        do_dailies=False,
     ):
 
         super().__init__(
@@ -31,6 +32,7 @@ class DogsFarmer(DemonicBeastFarmer):
             demonic_beast_image=vio.skollandhati,
             logger=logger,
             password=password,
+            do_dailies=do_dailies,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.

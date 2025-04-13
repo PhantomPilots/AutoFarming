@@ -19,6 +19,7 @@ def main():
         starting_state=States.GOING_TO_BIRD,  # Should be 'GOING_TO_BIRD'
         num_floor_3_clears=args.clears,  # A number or "inf"
         password=args.password,  # Account password
+        do_dailies=True,  # Should we do our dailies?
     )
 
 

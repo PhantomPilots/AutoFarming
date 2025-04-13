@@ -9,7 +9,11 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
+from utilities.general_farmer_interface import (
+    CHECK_IN_HOUR,
+    MINUTES_TO_WAIT_BEFORE_LOGIN,
+    IFarmer,
+)
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
@@ -49,6 +53,7 @@ class BirdFarmer(IFarmer):
         starting_state=States.GOING_TO_BIRD,
         num_floor_3_clears="inf",
         password: str | None = None,
+        do_dailies=False,
     ):
 
         # Store the account password in this instance if given
@@ -56,6 +61,11 @@ class BirdFarmer(IFarmer):
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+
+        # In case we want to do dailies at the specified hour
+        self.do_dailies = do_dailies
+        if do_dailies:
+            print(f"We'll stop farming Floor4 at {CHECK_IN_HOUR} PT to do our dailies!")
 
         # Initialize the current state
         self.current_state = starting_state

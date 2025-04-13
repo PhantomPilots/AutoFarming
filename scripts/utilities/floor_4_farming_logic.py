@@ -222,15 +222,6 @@ class IFloor4Farmer(IFarmer):
             # Go straight to proceed to floor
             self.current_state = States.PROCEED_TO_FLOOR
 
-    def check_for_dailies(self) -> bool:
-        """Return whether we have to do our dailies"""
-        now = datetime.now(PACIFIC_TIMEZONE)
-        if self.do_dailies and (not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR):
-            print("Going to CHECK IN!")
-            self.current_state = GlobalStates.DAILY_RESET
-            return True
-        return False
-
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to regular farming"""
         with IFarmer._lock:

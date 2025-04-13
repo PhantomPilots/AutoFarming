@@ -5,10 +5,13 @@ from enum import Enum
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from coordinates import Coordinates
-
-# Import all images
-from utilities.general_farmer_interface import MINUTES_TO_WAIT_BEFORE_LOGIN, IFarmer
+from utilities.coordinates import Coordinates
+from utilities.general_farmer_interface import (
+    CHECK_IN_HOUR,
+    MINUTES_TO_WAIT_BEFORE_LOGIN,
+    IFarmer,
+)
+from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -48,8 +51,9 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         max_floor_3_clears="inf",
         demonic_beast_image: vio.Vision | None = None,
         reset_after_defeat=False,
-        logger=logger,
         password: str | None = None,
+        do_dailies=False,
+        logger=logger,
     ):
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
 
@@ -58,6 +62,11 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+
+        # In case we want to do dailies at the specified hour
+        self.do_dailies = do_dailies
+        if do_dailies:
+            print(f"We'll stop farming Floor4 at {CHECK_IN_HOUR} PT to do our dailies!")
 
         # Save the image we want
         self.db_image = demonic_beast_image
@@ -99,6 +108,10 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         """This should be the original state. Let's go to the Demonic Beast menu"""
         screenshot, window_location = capture_window()
 
+        # First of all, check whether it's time to do our dailies!
+        if self.check_for_dailies():
+            return
+
         # If we're back in the tavern, click on the battle menu.
         find_and_click(
             vio.main_menu,
@@ -111,7 +124,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
         # If we see we're inside the DB selection screen but don't see our DemonicBeast,
-        # swipe right and return
+        # swipe right and try again
         if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
             # Swipe to the right!
             print("Wrong demonic beast, searching the right one...")
@@ -282,6 +295,9 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
             check_for_reconnect()
 
+            # Check if we need to log in again!
+            self.check_for_login_state()
+
             if self.current_state == States.GOING_TO_DB:
                 self.going_to_db_state()
 
@@ -296,6 +312,21 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
             elif self.current_state == States.RESETTING_DB:
                 self.resetting_db_state()
+
+            elif self.current_state == GlobalStates.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == GlobalStates.CHECK_IN:
+                self.check_in_state()
+
+            elif self.current_state == GlobalStates.DAILIES_STATE:
+                self.dailies_state()
+
+            elif self.current_state == GlobalStates.FORTUNE_CARD:
+                self.fortune_card_state()
+
+            elif self.current_state == GlobalStates.LOGIN_SCREEN:
+                self.login_screen_state(initial_state=States.GOING_TO_DB)
 
             elif self.current_floor == States.EXIT_FARMER:
                 self.exit_farmer_state()

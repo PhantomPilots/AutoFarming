@@ -2,6 +2,7 @@ import abc
 import threading
 import time
 from collections import defaultdict
+from datetime import datetime
 from enum import Enum
 
 import pytz
@@ -67,6 +68,9 @@ class IFarmer:
         complete_callback=None,
     )
 
+    # Whether we want to do dailies
+    do_dailies: bool = False
+
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
         if hasattr(self, "fighter") and isinstance(self.fighter, IFighter):
@@ -92,6 +96,15 @@ class IFarmer:
     def exit_farmer_state(self):
         """Exit the farming!"""
         raise KeyboardInterrupt("Terminating process: farming cycle completed.")
+
+    def check_for_dailies(self) -> bool:
+        """Return whether we have to do our dailies"""
+        now = datetime.now(PACIFIC_TIMEZONE)
+        if self.do_dailies and (not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR):
+            print("Going to CHECK IN!")
+            self.current_state = States.DAILY_RESET
+            return True
+        return False
 
     def login_screen_state(self, initial_state: States):
         """We're at the login screen, need to login!"""
