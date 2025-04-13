@@ -111,12 +111,7 @@ class IFloor4Farmer(IFarmer):
             print("We were in the middle of a fight, but let's start it over :(")
 
         # If we're back in the tavern, click on the battle menu.
-        find_and_click(
-            vio.main_menu,
-            screenshot,
-            window_location,
-            point_coordinates=Coordinates.get_coordinates("battle_menu"),
-        )
+        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
