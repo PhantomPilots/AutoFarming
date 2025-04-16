@@ -118,14 +118,14 @@ class IDemonFarmer(IFarmer):
         click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
         # Go to demons
-        click_and_sleep(vio.boss_menu, screenshot, window_location)
+        click_and_sleep(vio.boss_menu, screenshot, window_location, sleep_time=1)
 
         # Click on real-time menu
-        click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6)
+        click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6, sleep_time=0.2)
 
         # Click on the demon to farm (if it's not Red, since Red is by default)
         if "red" not in self.demon_to_farm.image_name.lower():
-            click_and_sleep(self.demon_to_farm, screenshot, window_location)
+            click_and_sleep(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
 
         # Click on the difficuly -- ONLY HELL
         find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
