@@ -96,6 +96,10 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if self.max_floor_3_clears < float("inf"):
             print(f"We're gonna clear floor 3 at most {int(self.max_floor_3_clears)} times.")
 
+        # For the login/dailies
+        IFarmer.daily_farmer.set_daily_pvp(True)
+        IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+
     def exit_message(self):
         self.logger.info(
             f"We beat {DemonicBeastFarmer.num_victories} floors, {DemonicBeastFarmer.num_floor_3_victories} times floor 3, and lost {DemonicBeastFarmer.num_losses} times."
@@ -282,6 +286,13 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # Once we see the main Demonic Beast screen again, we can move the the original state
         if find(vio.empty_party, screenshot):
             print("Moving to the original state, GOING_TO_DB")
+            self.current_state = States.GOING_TO_DB
+
+    def dailies_complete_callback(self):
+        """The dailies thread told us we're done with all the dailies, go back to regular farming"""
+        with IFarmer._lock:
+            print("All dailies complete! Going back to farming DemoncBeast.")
+            IFarmer.dailies_thread = None
             self.current_state = States.GOING_TO_DB
 
     def run(self):
