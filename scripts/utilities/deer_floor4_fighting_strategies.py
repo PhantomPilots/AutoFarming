@@ -136,10 +136,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
             return tyr_hel_cards[-1]  # tyr attack
 
-        elif DeerFloor4BattleStrategy.turn == 1:
+        elif DeerFloor4BattleStrategy.turn == 1 and len(thor_cards):
             if IBattleStrategy.card_turn <= 2:
                 return [thor_cards[0], thor_cards[0] + 1]
-
             return thor_cards[-1]
 
         elif DeerFloor4BattleStrategy.turn == 2:
