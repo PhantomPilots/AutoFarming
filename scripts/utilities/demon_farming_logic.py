@@ -127,6 +127,13 @@ class IDemonFarmer(IFarmer):
         if "red" not in self.demon_to_farm.image_name.lower():
             click_and_sleep(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
 
+        if "indura" in self.demon_to_farm.image_name.lower():
+            if find(vio.demon_normal_diff, screenshot):
+                find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
+            else:
+                find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+            return
+
         # Click on the difficuly -- ONLY HELL
         find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
 
