@@ -229,6 +229,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             self.fight_thread.start()
             print("DemonicBeast fighter started!")
 
+    @IFarmer.fight_complete_wrapper
     def fight_complete_callback(self, victory=True, phase="unknown"):
         """Called when the fight logic completes."""
 

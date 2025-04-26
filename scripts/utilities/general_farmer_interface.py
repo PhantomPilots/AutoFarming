@@ -4,6 +4,7 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
+from typing import Callable
 
 import pytz
 import utilities.vision_images as vio
@@ -262,6 +263,25 @@ class IFarmer:
                 IFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
                 IFarmer.dailies_thread.start()
                 print("Dailies farmer started!")
+
+    @staticmethod
+    def fight_complete_wrapper(func: Callable):
+        """Decorator to stop the fighter after the fight is complete."""
+
+        def wrapper(self: IFarmer, *args, **kwargs):
+            func(self, *args, **kwargs)
+
+            # Stop the fighter thread afterwards
+            if (
+                hasattr(self, "fight_thread")
+                and isinstance(self.fight_thread, threading.Thread)
+                and self.fight_thread.is_alive()
+            ):
+                print("Stopping the fighter thread...")
+                self.stop_fighter_thread()
+                self.fight_thread.join()
+
+        return wrapper
 
     @abc.abstractmethod
     def run(self):
