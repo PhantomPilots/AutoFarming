@@ -87,7 +87,9 @@ class IFloor4Farmer(IFarmer):
 
     def exit_message(self):
         super().exit_message()
-        percent = (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100
+        percent = (
+            (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100 if IFloor4Farmer.total_count > 0 else 0
+        )
         print(f"We beat Floor4 {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f} %).")
         # Log the defeats
         if len(IFloor4Farmer.dict_of_defeats):
