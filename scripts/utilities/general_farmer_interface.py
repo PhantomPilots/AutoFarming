@@ -279,7 +279,6 @@ class IFarmer:
             ):
                 print("Stopping the fighter thread...")
                 self.stop_fighter_thread()
-                self.fight_thread.join()
 
         return wrapper
 
