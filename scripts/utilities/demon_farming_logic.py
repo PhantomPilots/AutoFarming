@@ -241,7 +241,7 @@ class IDemonFarmer(IFarmer):
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
             percent = IDemonFarmer.demons_destroyed / IDemonFarmer.num_tries * 100
-            print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons ({percent:.2f}%).")
+            print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons ({percent:.2f} %).")
             print(f"Moving to {self.current_state}.")
 
     def dailies_complete_callback(self):

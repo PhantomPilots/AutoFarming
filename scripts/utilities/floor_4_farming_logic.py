@@ -87,7 +87,8 @@ class IFloor4Farmer(IFarmer):
 
     def exit_message(self):
         super().exit_message()
-        print(f"We beat Floor4 a total of {IFloor4Farmer.success_count} out of {IFloor4Farmer.total_count} times.")
+        percent = (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100
+        print(f"We beat Floor4 {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f} %).")
         # Log the defeats
         if len(IFloor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
@@ -208,10 +209,9 @@ class IFloor4Farmer(IFarmer):
                 if phase is not None:
                     IFloor4Farmer.dict_of_defeats[phase] += 1
 
-            fight_complete_msg = (
-                f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times."
-            )
-            logger.info(fight_complete_msg)
+            percent = (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100
+            fight_complete_msg = f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f} %)."
+            # logger.info(fight_complete_msg)
             if IFloor4Farmer.success_count >= self.max_runs:
                 print("Reached maximum number of clears, exiting farmer.")
                 self.current_state = States.EXIT_FARMER
