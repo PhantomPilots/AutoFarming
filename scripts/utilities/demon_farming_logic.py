@@ -202,7 +202,7 @@ class IDemonFarmer(IFarmer):
         click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
 
         # We may have been kicked, move to initial state if so
-        if find(vio.ok_main_button, screenshot):
+        if find(vio.ok_main_button, screenshot) or find(vio.battle_menu, screenshot, threshold=0.6):
             self.current_state = States.GOING_TO_DEMONS
             print(f"We've been kicked out... Moving to {self.current_state}.")
             return
