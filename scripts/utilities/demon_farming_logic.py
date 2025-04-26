@@ -49,6 +49,9 @@ class IDemonFarmer(IFarmer):
     not_seen_invite = False
     start_time_without_invite = time.time()
 
+    # Keep track how many demons we've tried to beat
+    num_tries = 0
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -213,21 +216,13 @@ class IDemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
 
     def fighting_demon_state(self):
-        # sourcery skip: extract-duplicate-method, split-or-ifs
+        # sourcery skip: extract-duplicate-method, extract-method, split-or-ifs
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
         if not IDemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             IDemonFarmer.auto = True
             IDemonFarmer.sent_emoji = False
-
-        # # Click on network instability OK, then move to GOING_TO_DEMONS
-        # if find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7):
-        #     print("Network instability, exiting fight...")
-        # if find(vio.tavern_loading_screen, screenshot):
-        #     print("Seeing a loading screen, moving to GOING_TO_DEMONS")
-        #     self.current_state = States.GOING_TO_DEMONS
-        #     return
 
         # If we see a skip
         find_and_click(vio.skip_bird, screenshot, window_location)
@@ -236,6 +231,7 @@ class IDemonFarmer(IFarmer):
         find_and_click(vio.demons_destroyed, screenshot, window_location)
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
+            IDemonFarmer.num_tries += 1
             if find(vio.victory, screenshot):
                 print("Demon destroyed!")
                 IDemonFarmer.demons_destroyed += 1
@@ -244,7 +240,7 @@ class IDemonFarmer(IFarmer):
 
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
-            print(f"We've destroyed {IDemonFarmer.demons_destroyed} demons.")
+            print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons.")
             print(f"Moving to {self.current_state}.")
 
     def dailies_complete_callback(self):
