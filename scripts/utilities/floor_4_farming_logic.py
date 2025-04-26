@@ -186,7 +186,13 @@ class IFloor4Farmer(IFarmer):
             self.fight_thread = threading.Thread(target=self.fighter.run, name="Floor4FighterThread", daemon=True)
             self.fight_thread.start()
 
-    @IFarmer.fight_complete_wrapper
+        # We may have finished the fight already, let's check if we need to go back to the main screen
+        if find(vio.floor_3_cleared_db, screenshot):
+            # We finished the fight, let's go back to the main screen
+            print("We finished the fight but are still fighting? Get outa here!")
+            self.stop_fighter_thread()
+            self.current_state = States.PROCEED_TO_FLOOR
+
     def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
         with IFarmer._lock:

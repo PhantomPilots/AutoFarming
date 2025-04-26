@@ -26,7 +26,7 @@ from utilities.utilities import (
 # For dailies and logging back in after being logged out
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 
 
 class States(Enum):
@@ -263,24 +263,6 @@ class IFarmer:
                 IFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
                 IFarmer.dailies_thread.start()
                 print("Dailies farmer started!")
-
-    @staticmethod
-    def fight_complete_wrapper(func: Callable):
-        """Decorator to stop the fighter after the fight is complete."""
-
-        def wrapper(self: IFarmer, *args, **kwargs):
-            func(self, *args, **kwargs)
-
-            # Stop the fighter thread afterwards
-            if (
-                hasattr(self, "fight_thread")
-                and isinstance(self.fight_thread, threading.Thread)
-                and self.fight_thread.is_alive()
-            ):
-                print("Stopping the fighter thread...")
-                self.stop_fighter_thread()
-
-        return wrapper
 
     @abc.abstractmethod
     def run(self):
