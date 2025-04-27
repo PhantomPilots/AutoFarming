@@ -361,9 +361,8 @@ def get_card_type_image(card: np.ndarray) -> np.ndarray:
 
 def get_card_type_image_3_cards(card: np.ndarray) -> np.ndarray:
     """Extract the card type image from the card, when we can only use 3 cards"""
-    # TODO Implement for 3 cards
     w = card.shape[-2]
-    return crop_image(card, (40, 0), (w, 20))
+    return crop_image(card, (50, 0), (w, 18))
 
 
 def get_card_interior_image(card_image: np.ndarray) -> np.ndarray:
@@ -387,8 +386,7 @@ def get_hand_cards() -> list[Card]:
 
     # Determine the width of each column
     height, width = hand_cards.shape[:2]
-    column_width = width / 8  # Calculate the width of each column
-    column_width = int(column_width)
+    column_width = int(width / 8)  # Calculate the width of each column
 
     # Split the image into 8 equal columns -- TODO: Not the best way to do it, doesn't work well
     house_of_cards = [
@@ -411,13 +409,12 @@ def get_hand_cards_3_cards() -> list[Card]:
 
     # Determine the width of each column
     height, width = hand_cards.shape[:2]
-    column_width = width / 8  # Calculate the width of each column
-    column_width = int(column_width)
+    column_width = int(width / 7)  # Calculate the width of each column
 
     # Split the image into 8 equal columns -- TODO: Not the best way to do it, doesn't work well
     house_of_cards = [
-        ([61 + i * column_width, 822, column_width, height], hand_cards[:, i * column_width : (i + 1) * column_width])
-        for i in range(8)
+        ([52 + i * column_width, 822, column_width, height], hand_cards[:, i * column_width : (i + 1) * column_width])
+        for i in range(7)
     ]
 
     return [

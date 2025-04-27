@@ -25,7 +25,7 @@ class Coordinates:
         "4_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 4 cards
         "lazy_weekly_bird_mission": (283, 631),  # Weekly mission popup for demonic beast
         # For 3-team fights
-        "3_cards_top_left": (61, 822),  # Top-left corner of the hand when we can use 3 cards
+        "3_cards_top_left": (52, 822),  # Top-left corner of the hand when we can use 3 cards
         "3_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 3 cards
         # For equipment farming
         "equipment_menu": (167, 842),
