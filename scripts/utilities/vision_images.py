@@ -239,6 +239,8 @@ preparation_incomplete = Vision("demons\\preparation_incomplete.png")
 cancel_preparation = Vision("demons\\cancel_preparation.png")
 demons_auto = Vision("demons\\auto.jpg")
 demons_destroyed = Vision("demons\\demons_destroyed.png")
+# For Indura
+king_att = Vision("indura\\king_att.png")
 
 
 # For dailies
