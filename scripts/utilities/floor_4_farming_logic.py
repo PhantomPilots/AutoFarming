@@ -90,7 +90,7 @@ class IFloor4Farmer(IFarmer):
         percent = (
             (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100 if IFloor4Farmer.total_count > 0 else 0
         )
-        print(f"We beat Floor4 {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f} %).")
+        print(f"We beat Floor4 {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f}%).")
         # Log the defeats
         if len(IFloor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
@@ -212,7 +212,7 @@ class IFloor4Farmer(IFarmer):
                     IFloor4Farmer.dict_of_defeats[phase] += 1
 
             percent = (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100
-            fight_complete_msg = f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f} %)."
+            fight_complete_msg = f"We beat Floor4 a total of {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f}%)."
             # logger.info(fight_complete_msg)
             if IFloor4Farmer.success_count >= self.max_runs:
                 print("Reached maximum number of clears, exiting farmer.")
