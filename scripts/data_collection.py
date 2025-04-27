@@ -25,7 +25,7 @@ from utilities.utilities import (
 )
 
 
-class DataCollector:
+class DataCollector(abc.ABC):
     def collect_data(self):
 
         dataset_list = []

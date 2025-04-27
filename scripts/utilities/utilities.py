@@ -359,9 +359,15 @@ def get_card_type_image(card: np.ndarray) -> np.ndarray:
     return crop_image(card, (40, 0), (w, 20))
 
 
+def get_card_type_image_3_cards(card: np.ndarray) -> np.ndarray:
+    """Extract the card type image from the card, when we can only use 3 cards"""
+    # TODO Implement for 3 cards
+    w = card.shape[-2]
+    return crop_image(card, (40, 0), (w, 20))
+
+
 def get_card_interior_image(card_image: np.ndarray) -> np.ndarray:
-    """Get the inside of the card, without the border.
-    TODO: Very hardcoded, fix in the future for other resolution."""
+    """Get the inside of the card, without the border."""
     border = 8
     return crop_image(
         card_image,
@@ -414,7 +420,10 @@ def get_hand_cards_3_cards() -> list[Card]:
         for i in range(8)
     ]
 
-    return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
+    return [
+        Card(determine_card_type(card[-1], three_cards=True), *card, determine_card_rank(card[-1], three_cards=True))
+        for card in house_of_cards
+    ]
 
 
 def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
@@ -426,7 +435,7 @@ def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
     )
 
 
-def determine_card_type(card: np.ndarray | None) -> CardTypes:
+def determine_card_type(card: np.ndarray | None, three_cards: bool = False) -> CardTypes:
     """Predict the card type"""
 
     # First, use the ground predictor. If it returns GROUND, no need to explore further
@@ -434,7 +443,7 @@ def determine_card_type(card: np.ndarray | None) -> CardTypes:
         return CardTypes.GROUND
 
     # If the above didn't return GROUND, explore it further. This logic allows for backwards compatibility (with Bird, for instance)
-    card_type_image = get_card_type_image(card)
+    card_type_image = get_card_type_image_3_cards(card) if three_cards else get_card_type_image(card)
     card_type = CardTypePredictor.predict_card_type(card_type_image)
     # If we predict GROUND, assume it's an ULTIMATE, therefore relying entirely on the GroundCardPredictor
     if card_type == CardTypes.GROUND:
@@ -459,7 +468,7 @@ def determine_card_merge(card_1: Card | None, card_2: Card | None) -> bool:
     )
 
 
-def determine_card_rank(card: np.ndarray) -> CardRanks:
+def determine_card_rank(card: np.ndarray, three_cards: bool = False) -> CardRanks:
     """Predict the card rank"""
     if find(vio.bronze_card, card, threshold=0.7):
         return CardRanks.BRONZE
@@ -470,7 +479,11 @@ def determine_card_rank(card: np.ndarray) -> CardRanks:
     return (
         CardRanks.GOLD
         if find(vio.gold_card, card, threshold=0.7)
-        else CardRanks.ULTIMATE if determine_card_type(card) == CardTypes.ULTIMATE else CardRanks.NONE
+        else (
+            CardRanks.ULTIMATE
+            if determine_card_type(card, three_cards=three_cards) == CardTypes.ULTIMATE
+            else CardRanks.NONE
+        )
     )
 
 
