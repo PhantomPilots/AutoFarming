@@ -26,7 +26,7 @@ from utilities.utilities import (
 # For dailies and logging back in after being logged out
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 3
 
 
 class States(Enum):

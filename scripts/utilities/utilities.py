@@ -342,6 +342,17 @@ def capture_hand_image() -> np.ndarray:
     )
 
 
+def capture_hand_image_3_cards() -> np.ndarray:
+    """Capture the hand image"""
+    screenshot, _ = capture_window()
+
+    return crop_image(
+        screenshot,
+        Coordinates.get_coordinates("3_cards_top_left"),
+        Coordinates.get_coordinates("3_cards_bottom_right"),
+    )
+
+
 def get_card_type_image(card: np.ndarray) -> np.ndarray:
     """Extract the card type image from the card"""
     w = card.shape[-2]
@@ -364,10 +375,33 @@ def get_hand_cards() -> list[Card]:
 
     Returns:
         list[Card]:   The hand of cards. It's a list of tuples; each tuple contains the card type,
-                                            the `np.ndarray` card, as an image, and a tuple with the top-left coordinates of the card.
+                      the `np.ndarray` card, as an image, and a tuple with the top-left coordinates of the card.
     """
     hand_cards = capture_hand_image()
-    # display_image(hand_cards)
+
+    # Determine the width of each column
+    height, width = hand_cards.shape[:2]
+    column_width = width / 8  # Calculate the width of each column
+    column_width = int(column_width)
+
+    # Split the image into 8 equal columns -- TODO: Not the best way to do it, doesn't work well
+    house_of_cards = [
+        ([61 + i * column_width, 822, column_width, height], hand_cards[:, i * column_width : (i + 1) * column_width])
+        for i in range(8)
+    ]
+
+    return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
+
+
+def get_hand_cards_3_cards() -> list[Card]:
+    """Retrieve the current cards in the hand, when we can only use 3 cards.
+    TODO: Implement specific pixel coordinates/values.
+
+    Returns:
+        list[Card]:   The hand of cards. It's a list of tuples; each tuple contains the card type,
+                      the `np.ndarray` card, as an image, and a tuple with the top-left coordinates of the card.
+    """
+    hand_cards = capture_hand_image_3_cards()
 
     # Determine the width of each column
     height, width = hand_cards.shape[:2]
