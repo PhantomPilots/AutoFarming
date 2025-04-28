@@ -15,17 +15,31 @@ class InduraBattleStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
-        king_debuff_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
+        king_debuff_card_ids: list[int] = np.where(
+            [
+                find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
+                for card in hand_of_cards
+            ]
+        )[0]
+        king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
 
-        # Check if stance is present
-        if find(vio.stance_active, screenshot):
-            # TODO play King's debuff card
-            pass
+        played_king_att_cards: list[int] = np.where(
+            [
+                find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
+                for card in picked_cards
+            ]
+        )[0]
 
-        # Else, disable King's debuff card
-        elif len(king_debuff_card_ids):
-            print("Disabling King's debuff card")
-            hand_of_cards[king_debuff_card_ids[0]].card_type = CardTypes.DISABLED
+        # Check if stance is present, and play a debuff card if present
+        if find(vio.snake_f3p2_counter, screenshot) and len(king_debuff_card_ids) and not len(played_king_att_cards):
+            # Play King's debuff card if we haven't played it already
+            print("Playing King's debuff card!")
+            return king_debuff_card_ids[-1]
+
+        # Else, disable all King's attack card
+        elif len(king_att_card_ids):
+            for idx in king_att_card_ids:
+                hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         # Default
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

@@ -15,6 +15,7 @@ from utilities.utilities import (
     determine_card_merge,
     find,
     get_hand_cards,
+    get_hand_cards_3_cards,
     is_ground_card,
 )
 
@@ -34,7 +35,7 @@ class IBattleStrategy(abc.ABC):
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         # Extract the cards
-        hand_of_cards: list[Card] = get_hand_cards()
+        hand_of_cards: list[Card] = get_hand_cards() if cards_to_play == 4 else get_hand_cards_3_cards()
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])

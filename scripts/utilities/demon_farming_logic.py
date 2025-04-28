@@ -1,3 +1,4 @@
+import threading
 import time
 from datetime import datetime
 from enum import Enum
@@ -13,7 +14,9 @@ from utilities.general_farmer_interface import (
     IFarmer,
 )
 from utilities.general_farmer_interface import States as GlobalStates
-from utilities.general_fighter_interface import IBattleStrategy
+from utilities.general_fighter_interface import IBattleStrategy, IFighter
+from utilities.indura_fighter import InduraFighter
+from utilities.indura_fighting_strategies import InduraBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -83,6 +86,15 @@ class IDemonFarmer(IFarmer):
         # Set specific properties of our DailyFarmer
         IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+
+        # For the Indura fight!
+        self.fighter: IFighter = InduraFighter(
+            battle_strategy=InduraBattleStrategy,
+            callback=None,  # No need to use a fight complete callback for this
+        )
+        self.indura_fight_thread: threading.Thread = None
+        if self.demon_to_farm == vio.indura_demon:
+            print("We'll be using the new Indura Fighter!")
 
         if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
@@ -220,7 +232,18 @@ class IDemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        if not IDemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
+        if self.demon_to_farm == vio.indura_demon and (
+            (self.indura_fight_thread is None) or not self.indura_fight_thread.is_alive()
+        ):
+            self.indura_fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
+            self.indura_fight_thread.start()
+            print("Indura demon fighter started!")
+            # And disable the auto button
+            IDemonFarmer.auto = True
+            IDemonFarmer.sent_emoji = False
+
+        # Below, only for non-Indura demons
+        elif not IDemonFarmer.auto and find_and_click(vio.demons_auto, screenshot, window_location, threshold=0.7):
             IDemonFarmer.auto = True
             IDemonFarmer.sent_emoji = False
 

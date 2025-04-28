@@ -113,8 +113,7 @@ class BirdFighter(IFighter):
     def _update_current_hand(self, screenshot):
         """Update the current hand of cards based on the phase."""
         current_phase = self._identify_phase(screenshot)
-        cards_to_play = BirdFighter.count_empty_card_slots(screenshot)
-        self.current_hand = self.battle_strategy.pick_cards(cards_to_play=cards_to_play, phase=current_phase)
+        self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
 
     def _attempt_to_play_cards(self) -> bool:
         """Attempt to play the cards, returning True if successful, False otherwise."""

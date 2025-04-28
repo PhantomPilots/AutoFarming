@@ -9,6 +9,7 @@ from utilities.utilities import (
     capture_window,
     find,
     find_and_click,
+    get_card_slot_region_image,
     get_hand_cards_3_cards,
 )
 
@@ -16,24 +17,71 @@ from utilities.utilities import (
 class InduraFighter(IFighter):
     """The Indura fighter!"""
 
-    # TODO Implement
-
     def fighting_state(self):
-        screenshot, window_location = capture_window()
+        screenshot, _ = capture_window()
 
-        # In case we've been lazy and it's the first time we're doing Demonic Beast this week...
-        find_and_click(
-            vio.weekly_mission,
-            screenshot,
-            window_location,
-            point_coordinates=Coordinates.get_coordinates("lazy_weekly_bird_mission"),
-        )
-        find_and_click(vio.daily_quest_info, screenshot, window_location)
+        if find(vio.ok_main_button, screenshot):
+            # Finished the fight, just exit the Indura Fighter
+            self.current_state = FightingStates.EXIT_FIGHT
 
-        # To skip quickly to the rewards when the fight is done
-        find_and_click(vio.creature_destroyed, screenshot, window_location, threshold=0.6)
+        elif (available_card_slots := InduraFighter.count_empty_card_slots(screenshot)) > 0:
+            # We see empty card slots, it means its our turn
+            self.available_card_slots = available_card_slots
+            # Finally, time to play the cards
+            print(f"MY TURN, selecting {available_card_slots} cards...")
+            self.current_state = FightingStates.MY_TURN
 
-        if find(vio.defeat, screenshot):
-            # I may have lost though...
-            print("I lost! :(")
-            self.current_state = FightingStates.DEFEAT
+    def my_turn_state(self):
+        """Select and play the cards"""
+
+        # Ensure we have the current hand
+        if self.current_hand is None:
+            self.current_hand = self.battle_strategy.pick_cards(cards_to_play=3)
+
+        if finished_turn := self.play_cards(self.current_hand):
+            print("Finished my turn, going back to FIGHTING")
+            self.current_state = FightingStates.FIGHTING
+            # Reset the hand
+            self.current_hand = None
+
+    def exit_fight_state(self):
+        """Very simple state, just exit the fight"""
+
+        with self._lock:
+            self.exit_thread = True
+
+    @staticmethod
+    def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
+        """Count how many empty card slots are there for DEER"""
+        # TODO Make sure this actually works for Indura
+        card_slots_image = get_card_slot_region_image(screenshot)
+        rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
+        rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.7)
+        rectangles_3, _ = vio.indura_empty_slot.find_all_rectangles(screenshot, threshold=0.7)
+
+        # Pick what type of rectangles to keep
+        rectangles = rectangles_3 if rectangles_3.size else rectangles_2 if rectangles_2.size else rectangles
+
+        return 3 if find(vio.skill_locked, screenshot, threshold=0.6) else min(3, len(rectangles))
+
+    @IFighter.run_wrapper
+    def run(self):
+
+        print("Fighting very hard on Indura...")
+
+        while True:
+
+            if self.current_state == FightingStates.FIGHTING:
+                self.fighting_state()
+
+            elif self.current_state == FightingStates.MY_TURN:
+                self.my_turn_state()
+
+            elif self.current_state == FightingStates.EXIT_FIGHT:
+                self.exit_fight_state()
+
+            if self.exit_thread:
+                print("Closing Indura fighter thread!")
+                return
+
+            time.sleep(0.7)

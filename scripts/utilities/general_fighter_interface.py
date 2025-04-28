@@ -45,18 +45,21 @@ class IFighter(abc.ABC):
         """
 
         self._lock = threading.Lock()
-        self.exit_thread = False
+        with self._lock:
+            self.exit_thread = False
+
         self.battle_strategy: IBattleStrategy = battle_strategy()
         self.complete_callback = callback or (lambda: None)
 
         self._reset_instance_variables()
 
     def _reset_instance_variables(self):
-        self.exit_thread = False
-        self.current_state = FightingStates.FIGHTING
-        self.available_card_slots = 0
-        # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
-        self.current_hand: tuple[list[Card], list[int]] = None
+        with self._lock:
+            self.exit_thread = False
+            self.current_state = FightingStates.FIGHTING
+            self.available_card_slots = 0
+            # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
+            self.current_hand: tuple[list[Card], list[int]] = None
 
     def stop_fighter(self):
         with self._lock:
