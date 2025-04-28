@@ -14,7 +14,7 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=DemonFarmer,
-        starting_state=States.FIGHTING_DEMON,  # Should be 'GOING_TO_DEMONS'
+        starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
         demons_to_farm=[
             # vio.red_demon,
             # vio.gray_demon,
