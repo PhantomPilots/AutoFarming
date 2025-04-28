@@ -6,7 +6,10 @@ from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.utilities import (
+    capture_hand_image,
+    capture_hand_image_3_cards,
     capture_window,
+    display_image,
     find,
     find_and_click,
     get_card_slot_region_image,
@@ -16,6 +19,8 @@ from utilities.utilities import (
 
 class InduraFighter(IFighter):
     """The Indura fighter!"""
+
+    card_turn = 0
 
     def fighting_state(self):
         screenshot, _ = capture_window()
@@ -50,11 +55,46 @@ class InduraFighter(IFighter):
         with self._lock:
             self.exit_thread = True
 
+    def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):
+        """We need to overrde this method!"""
+
+        screenshot, window_location = capture_window()
+        empty_card_slots = self.count_empty_card_slots(screenshot)
+
+        if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
+            slot_index = InduraFighter.card_turn
+            print(
+                f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
+            )
+            # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
+            index_to_play = selected_cards[1][slot_index]
+
+            # Count how many GROUND before and after playing a card
+            hand_cards = get_hand_cards_3_cards()
+            before_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
+            # Play/move the selected card
+            self._play_card(
+                selected_cards[0], index=index_to_play, window_location=window_location, screenshot=screenshot
+            )
+            time.sleep(1)
+            # Count GROUND cards after
+            hand_cards = get_hand_cards_3_cards()
+            after_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
+
+            if after_num_ground_cards > before_num_ground_cards:
+                InduraFighter.card_turn += 1
+
+        elif empty_card_slots == 0:
+            print("Finished my turn!")
+            InduraFighter.card_turn = 0
+            return 1
+
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
         """Count how many empty card slots are there for DEER"""
-        # TODO Make sure this actually works for Indura
+
         card_slots_image = get_card_slot_region_image(screenshot)
+
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.7)
         rectangles_3, _ = vio.indura_empty_slot.find_all_rectangles(screenshot, threshold=0.7)
@@ -84,4 +124,4 @@ class InduraFighter(IFighter):
                 print("Closing Indura fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(1)
