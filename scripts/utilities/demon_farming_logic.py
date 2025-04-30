@@ -96,6 +96,7 @@ class IDemonFarmer(IFarmer):
         if self.demon_to_farm == vio.indura_demon:
             print("We'll be using the new Indura Fighter!")
 
+        self.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
@@ -158,7 +159,9 @@ class IDemonFarmer(IFarmer):
 
         # First, if it's time to check in, do it
         now = datetime.now(PACIFIC_TIMEZONE)
-        if not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot):
+        if self.do_dailies and (
+            not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot)
+        ):
             print("Going to CHECK IN!")
             self.current_state = GlobalStates.DAILY_RESET
             return
