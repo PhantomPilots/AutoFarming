@@ -365,14 +365,24 @@ def get_card_type_image_3_cards(card: np.ndarray) -> np.ndarray:
     return crop_image(card, (50, 0), (w, 18))
 
 
-def get_card_interior_image(card_image: np.ndarray) -> np.ndarray:
+def get_card_interior_image(card_image: np.ndarray, num_units=4) -> np.ndarray:
     """Get the inside of the card, without the border."""
-    border = 8
-    return crop_image(
-        card_image,
-        (border, border + 4),
-        (card_image.shape[1] - border, card_image.shape[0] - border - 12),
-    )
+    if num_units == 4:
+        border = 8
+        return crop_image(
+            card_image,
+            (border, border + 4),
+            (card_image.shape[1] - border, card_image.shape[0] - border - 12),
+        )
+    elif num_units == 3:
+        border = 8
+        return crop_image(
+            card_image,
+            (border, border + 4),
+            (card_image.shape[1] - border - 9, card_image.shape[0] - border - 12),
+        )
+    else:
+        raise ValueError(f"Invalid number of units: {num_units}. Expected 3 or 4.")
 
 
 def get_hand_cards() -> list[Card]:
@@ -598,10 +608,6 @@ def load_dataset(glob_pattern: str) -> list[np.ndarray]:
         print(f"Loading {filepath}...")
         local_data = pickle.load(open(filepath, "rb"))
         data, labels = local_data["data"], local_data["labels"]
-
-        # if "14" in filepath:
-        #     for image in data:
-        #         display_image(image)
 
         dataset.append(data)
         all_labels.append(labels)

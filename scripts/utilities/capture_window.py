@@ -20,36 +20,45 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     w = w - (border_pixels * 2)
     h = h - 20
 
-    # Whatever this is?
-    hdesktop = win32gui.GetDesktopWindow()
-    hwndDC = win32gui.GetWindowDC(hdesktop)
-    mfcDC = win32ui.CreateDCFromHandle(hwndDC)
-    saveDC = mfcDC.CreateCompatibleDC()
+    succeed = False
+    while not succeed:
+        try:
+            # Whatever these lines are?
+            hdesktop = win32gui.GetDesktopWindow()
+            hwndDC = win32gui.GetWindowDC(hdesktop)
+            mfcDC = win32ui.CreateDCFromHandle(hwndDC)
+            saveDC = mfcDC.CreateCompatibleDC()
 
-    saveBitMap = win32ui.CreateBitmap()
-    saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
+            saveBitMap = win32ui.CreateBitmap()
+            saveBitMap.CreateCompatibleBitmap(mfcDC, w, h)
 
-    saveDC.SelectObject(saveBitMap)
-    saveDC.BitBlt((0, 0), (w, h), mfcDC, (window_rect[0], window_rect[1]), win32con.SRCCOPY)
+            saveDC.SelectObject(saveBitMap)
+            saveDC.BitBlt((0, 0), (w, h), mfcDC, (window_rect[0], window_rect[1]), win32con.SRCCOPY)
 
-    # bmpinfo = saveBitMap.GetInfo()
-    bmpstr = saveBitMap.GetBitmapBits(True)
+            # bmpinfo = saveBitMap.GetInfo()
+            bmpstr = saveBitMap.GetBitmapBits(True)
 
-    # convert the raw data into a format opencv can read
-    img = np.frombuffer(bmpstr, dtype="uint8")
-    # Reshape the array
-    img = img.reshape(h, w, 4)
+            # convert the raw data into a format opencv can read
+            img = np.frombuffer(bmpstr, dtype="uint8")
+            # Reshape the array
+            img = img.reshape(h, w, 4)
 
-    # free resources
-    win32gui.DeleteObject(saveBitMap.GetHandle())
-    saveDC.DeleteDC()
-    mfcDC.DeleteDC()
-    win32gui.ReleaseDC(hdesktop, hwndDC)
-    img = img[..., :3]
+            # free resources
+            win32gui.DeleteObject(saveBitMap.GetHandle())
+            saveDC.DeleteDC()
+            mfcDC.DeleteDC()
+            win32gui.ReleaseDC(hdesktop, hwndDC)
+            img = img[..., :3]
 
-    img = np.ascontiguousarray(img)
-    # get updated window location
-    window_rect = win32gui.GetWindowRect(hwnd_target)
-    window_location = [window_rect[0], window_rect[1]]
+            img = np.ascontiguousarray(img)
+            # get updated window location
+            window_rect = win32gui.GetWindowRect(hwnd_target)
+            window_location = [window_rect[0], window_rect[1]]
+
+            succeed = True
+
+        except Exception:
+            print("[WARN] CompatibleDC failed, but we caught it successfully!")
+            continue
 
     return img, window_location

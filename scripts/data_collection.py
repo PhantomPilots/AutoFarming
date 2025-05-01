@@ -1,4 +1,5 @@
 import abc
+import argparse
 import os
 
 import cv2
@@ -22,11 +23,12 @@ from utilities.utilities import (
     get_card_interior_image,
     get_card_type_image,
     get_hand_cards,
+    get_hand_cards_3_cards,
 )
 
 
 class DataCollector(abc.ABC):
-    def collect_data(self):
+    def collect_data(self, num_units=4):
 
         dataset_list = []
         labels_list = []
@@ -39,7 +41,7 @@ class DataCollector(abc.ABC):
                 print("Quitting data collection")
                 break
 
-            hand, labels = self.collect_hand_data(previous_labels=labels)
+            hand, labels = self.collect_hand_data(previous_labels=labels, num_units=num_units)
 
             dataset_list.append(hand)
             labels_list.append(labels)
@@ -51,7 +53,7 @@ class DataCollector(abc.ABC):
         return dataset, all_labels
 
     @abc.abstractmethod
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         """Logic to extract the cards and labels from the hand.
         `previous_labels` used if bookkeeping is desired, to facilitate data collection
         (meaning, always click the rightmost cards).
@@ -60,7 +62,7 @@ class DataCollector(abc.ABC):
 
 
 class CardTypeCollector(DataCollector):
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         """From the current screenshot, extract and return all the card types"""
 
         cards = get_hand_cards()
@@ -98,7 +100,7 @@ class CardTypeCollector(DataCollector):
 class MergeCardsCollector(DataCollector):
     """Collects data to identify when two cards are going to merge when clicked on a third one"""
 
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         """Collect data to identify if clicking on a card will result in a merge"""
 
         cards = get_hand_cards()
@@ -109,8 +111,8 @@ class MergeCardsCollector(DataCollector):
         for i, card in enumerate(cards[1:-1], start=1):
 
             # Extract the left and right cards
-            card_image_left = get_card_interior_image(cards[i + 1].card_image)
-            card_image_right = get_card_interior_image(cards[i - 1].card_image)
+            card_image_left = get_card_interior_image(cards[i + 1].card_image, num_units=num_units)
+            card_image_right = get_card_interior_image(cards[i - 1].card_image, num_units=num_units)
 
             # Convert to grayscale
             # card_image_left = cv2.cvtColor(card_image_left, cv2.COLOR_BGR2GRAY)
@@ -146,7 +148,7 @@ class MergeCardsCollector(DataCollector):
 class AmplifyCardsCollector(DataCollector):
     """Collects data to train a model that identifies the cards required for phase 3"""
 
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
 
         cards = get_hand_cards()
 
@@ -164,7 +166,7 @@ class AmplifyCardsCollector(DataCollector):
                 card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
 
             # Extract the inside of the card, effectively removing its border/rank information
-            card_interior = get_card_interior_image(card.card_image)
+            card_interior = get_card_interior_image(card.card_image, num_units=num_units)
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -181,7 +183,7 @@ class AmplifyCardsCollector(DataCollector):
 class HAMCardsCollector(DataCollector):
     """Collect that corresponding to high-hitting cards (excluding ultimates)"""
 
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         cards = get_hand_cards()
 
         data = []
@@ -197,7 +199,7 @@ class HAMCardsCollector(DataCollector):
                 card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
 
             # Extract the inside of the card, effectively removing its border/rank information
-            card_interior = get_card_interior_image(card.card_image)
+            card_interior = get_card_interior_image(card.card_image, num_units=num_units)
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -214,7 +216,7 @@ class HAMCardsCollector(DataCollector):
 class ThorCardCollector(DataCollector):
     """Identify Thor cards only"""
 
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         cards = get_hand_cards()
 
         data = []
@@ -230,7 +232,7 @@ class ThorCardCollector(DataCollector):
                 card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
 
             # Extract the inside of the card, effectively removing its border/rank information
-            card_interior = get_card_interior_image(card.card_image)
+            card_interior = get_card_interior_image(card.card_image, num_units=num_units)
 
             # Let's plot the image for debugging
             # display_image(card_interior)
@@ -247,15 +249,15 @@ class ThorCardCollector(DataCollector):
 class GroundDataCollector(DataCollector):
     """Identify if a card is ground or not. Use the whole interior of the card as data"""
 
-    def collect_hand_data(self, previous_labels: np.ndarray | None = None) -> list[np.ndarray]:
-        cards = get_hand_cards()
+    def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
+        cards = get_hand_cards() if num_units == 4 else get_hand_cards_3_cards()
 
         data = []
         labels = []
 
         for card in cards:
             # Extract the inside of the card, effectively removing its border/rank information
-            card_interior = get_card_interior_image(card.card_image)
+            card_interior = get_card_interior_image(card.card_image, num_units=num_units)
 
             # # Let's plot the image for debugging
             # display_image(card_interior)
@@ -296,16 +298,20 @@ def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
         print("Not saving dataset!")
 
 
-def collect_data(CollectorClass: DataCollector, filename: str):
+def collect_data(CollectorClass: DataCollector, filename: str, num_units=4):
     print(f"Collecting data for {CollectorClass.__name__}")
 
     data_collector: DataCollector = CollectorClass()
-    dataset, all_labels = data_collector.collect_data()
+    dataset, all_labels = data_collector.collect_data(num_units=num_units)
     print("All labels:\n", all_labels)
     save_data(dataset, all_labels, filename=filename)
 
 
 def main():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num-units", type=int, default=4, help="How many units in the front")
+    args = parser.parse_args()
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
@@ -315,9 +321,9 @@ def main():
 
     # collect_data(HAMCardsCollector, filename="ham_cards_data")
 
-    collect_data(ThorCardCollector, filename="thor_cards_data")
+    # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    # collect_data(GroundDataCollector, filename="ground_data")
+    collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
 
 
 if __name__ == "__main__":

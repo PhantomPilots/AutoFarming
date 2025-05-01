@@ -137,8 +137,8 @@ FarmingFactory.main_loop(
 )
 ```
 
-* To select the demon, inside `DemonFarmer.py` change the demon type in this line:<br>
-```demon_to_farm=vio.bell_demon,  # Accepts: vio.og_demon, vio.bell_demon, vio.red_demon, vio.gray_demon, vio.crimson_demon```
+* To select the demon, inside `DemonFarmer.py` uncomment (removing the `#` symbol) the lines for the demons you want to farm.<br>
+**NOTE:** The latest update allows farming Indura extreme. 
 
 * You may need to play with the timing in the line:<br>
 ```time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation```<br>
