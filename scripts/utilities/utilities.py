@@ -446,7 +446,9 @@ def determine_card_type(card: np.ndarray | None, three_cards: bool = False) -> C
     """Predict the card type"""
 
     # First, use the ground predictor. If it returns GROUND, no need to explore further
-    if card is None or GroundCardPredictor.is_ground_card(get_card_interior_image(card)):
+    if card is None or GroundCardPredictor.is_ground_card(
+        get_card_interior_image(card, num_units=3 if three_cards else 4)
+    ):
         return CardTypes.GROUND
 
     # If the above didn't return GROUND, explore it further. This logic allows for backwards compatibility (with Bird, for instance)
