@@ -38,7 +38,12 @@ class InduraBattleStrategy(IBattleStrategy):
 
         # Disable all King's attack card if we don't have a melee evasion.
         # If we have the evasion, we have to be able to play them (since they are ranged)
-        if not find(vio.melee_evasion, screenshot, threshold=0.8) and len(king_att_card_ids):
+        picked_ult_ids = np.where([card.card_type.value == CardTypes.ULTIMATE.value for card in picked_cards])[0]
+        if (
+            not find(vio.melee_evasion, screenshot, threshold=0.8)
+            and len(king_att_card_ids)
+            and not len(picked_ult_ids)
+        ):
             for idx in king_att_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
 
