@@ -242,6 +242,7 @@ demons_destroyed = Vision("demons\\demons_destroyed.png")
 # For Indura
 king_att = Vision("demons\\king_att.png")
 indura_empty_slot = Vision("demons\\indura_empty_slot.png")
+melee_evasion = Vision("demons\\melee_evasion.png")
 
 
 # For dailies

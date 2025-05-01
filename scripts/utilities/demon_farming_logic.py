@@ -270,6 +270,9 @@ class IDemonFarmer(IFarmer):
             print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons ({percent:.2f}%).")
             print(f"Moving to {self.current_state}.")
 
+            # And kill the fighter in case we have it
+            self.stop_fighter_thread()
+
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to farming demons"""
         with IFarmer._lock:
