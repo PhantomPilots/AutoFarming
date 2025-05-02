@@ -22,6 +22,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
+    display_image,
     find,
     find_and_click,
 )
@@ -173,6 +174,13 @@ class IDemonFarmer(IFarmer):
             IFarmer.first_login = True
 
         if find(vio.accept_invitation, screenshot, threshold=0.6):
+            # First, check if the inviting team is good enough
+            if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
+                print("The inviting team is not good enough for Indura! Canceling invitation...")
+                time.sleep(1)
+                find_and_click(vio.cancel_realtime, screenshot, window_location)
+                return
+
             # We've found an invitation, gotta wait before clicking on it!
             print("Found a raid! Waiting before clicking...")
             time.sleep(self.sleep_before_accept)
@@ -195,6 +203,10 @@ class IDemonFarmer(IFarmer):
             if time.time() - IDemonFarmer.start_time_without_invite > 2:  # Only wait 2 seconds
                 self.current_state = States.GOING_TO_DEMONS
                 IDemonFarmer.not_seen_invite = False
+
+    def _valid_indura_team(self, screenshot: np.ndarray) -> bool:
+        """Evaluate if the inviting team is good enough for Indura"""
+        return find(vio.lancelot_unit, screenshot)  # and find(vio.king_unit, screenshot)
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
