@@ -102,11 +102,15 @@ For detailed information on all the bots available, go to the [bots README file]
 
 
 ## Shorter-term features
-- [X] Farmer for Floor 4 of Bird.
+- [X] Farmer for Bird Floor 4.
+- [X] Farmer for Deer Floor 4.
 - [X] Farmer for floors 1-3 of Deer.
 - [X] Farmer for floors 1-3 of Dogs.
 - [X] Farmer for floors 1-3 of Snake.
 - [X] Bot for all daily missions.
+- [X] Farmer for Indura Extreme.
+- [ ] Farmer for Indura Hell.
+- [ ] Farmer for Indura Chaos.
 - [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
 ## Longer-term features
