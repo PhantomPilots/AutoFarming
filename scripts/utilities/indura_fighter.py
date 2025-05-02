@@ -85,8 +85,6 @@ class InduraFighter(IFighter):
                 InduraFighter.card_turn += 1
 
         elif empty_card_slots == 0 or slot_index >= len(selected_cards[1]):
-            if slot_index >= len(selected_cards[1]):
-                print(f"Something's weird: {slot_index} >= {len(selected_cards[1])}")
             print("Finished my turn!")
             InduraFighter.card_turn = 0
             return 1
