@@ -61,12 +61,12 @@ class InduraFighter(IFighter):
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
-            slot_index = InduraFighter.card_turn
+        slot_index = InduraFighter.card_turn
+        if slot_index < len(selected_cards[1]) and empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
             print(
                 f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
             )
-            # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
+            # What is the index in the hand we have to play? It can be an `int` or a `tuple[int, int]`
             index_to_play = selected_cards[1][slot_index]
 
             # Count how many GROUND before and after playing a card
@@ -84,7 +84,9 @@ class InduraFighter(IFighter):
             if after_num_ground_cards > before_num_ground_cards:
                 InduraFighter.card_turn += 1
 
-        elif empty_card_slots == 0:
+        elif empty_card_slots == 0 or slot_index >= len(selected_cards[1]):
+            if slot_index >= len(selected_cards[1]):
+                print(f"Something's weird: {slot_index} >= {len(selected_cards[1])}")
             print("Finished my turn!")
             InduraFighter.card_turn = 0
             return 1
