@@ -30,8 +30,16 @@ class InduraBattleStrategy(IBattleStrategy):
             ]
         )[0]
 
-        # Check if stance is present, and play a debuff card if present
-        if find(vio.snake_f3p2_counter, screenshot) and len(king_debuf_card_ids) and not len(played_king_debuf_cards):
+        # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
+        if (
+            (
+                find(vio.snake_f3p2_counter, screenshot)
+                or find(vio.melee_evasion, screenshot)
+                or find(vio.ranged_evasion, screenshot)
+            )
+            and len(king_debuf_card_ids)
+            and not len(played_king_debuf_cards)
+        ):
             # Play King's debuff card if we haven't played it already
             print("Playing King's debuff card!")
             return king_debuf_card_ids[-1]
@@ -40,9 +48,11 @@ class InduraBattleStrategy(IBattleStrategy):
         # - We have a counter (must disable), OR
         # - We don't have melee evasion AND we haven't picked an ultimate
         picked_ult_ids = np.where([card.card_type.value == CardTypes.ULTIMATE.value for card in picked_cards])[0]
-        if find(vio.snake_f3p2_counter, screenshot) or (
-            not find(vio.melee_evasion, screenshot, threshold=0.8) and not len(picked_ult_ids)
-        ):
+        if (
+            find(vio.snake_f3p2_counter, screenshot)
+            or find(vio.melee_evasion, screenshot)
+            or find(vio.ranged_evasion, screenshot)
+        ) or (not find(vio.melee_evasion, screenshot, threshold=0.8) and not len(picked_ult_ids)):
             for idx in king_att_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
 

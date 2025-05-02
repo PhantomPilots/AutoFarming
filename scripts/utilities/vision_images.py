@@ -243,6 +243,7 @@ demons_destroyed = Vision("demons\\demons_destroyed.png")
 king_att = Vision("demons\\king_att.png")
 indura_empty_slot = Vision("demons\\indura_empty_slot.png")
 melee_evasion = Vision("demons\\melee_evasion.png")
+ranged_evasion = Vision("demons\\ranged_evasion.png")
 king_unit = Vision("demons\\king_unit.png")
 lancelot_unit = Vision("demons\\lancelot_unit.png")
 
