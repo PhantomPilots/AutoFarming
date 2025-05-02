@@ -47,7 +47,7 @@ class IBattleStrategy(abc.ABC):
         card_indices = []
 
         # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
-        for _ in range(4):
+        for _ in range(cards_to_play):
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, IBattleStrategy.picked_cards, **kwargs)
