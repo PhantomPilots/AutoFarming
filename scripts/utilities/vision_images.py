@@ -246,6 +246,7 @@ melee_evasion = Vision("demons\\melee_evasion.png")
 ranged_evasion = Vision("demons\\ranged_evasion.png")
 king_unit = Vision("demons\\king_unit.png")
 lancelot_unit = Vision("demons\\lancelot_unit.png")
+alpha_unit = Vision("demons\\alpha_unit.png")
 
 
 # For dailies

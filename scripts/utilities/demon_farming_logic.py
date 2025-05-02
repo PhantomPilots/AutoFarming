@@ -206,7 +206,13 @@ class IDemonFarmer(IFarmer):
 
     def _valid_indura_team(self, screenshot: np.ndarray) -> bool:
         """Evaluate if the inviting team is good enough for Indura"""
-        return find(vio.lancelot_unit, screenshot)  # and find(vio.king_unit, screenshot)
+        find_lance = find(vio.lancelot_unit, screenshot)
+        find_alpha = find(vio.alpha_unit, screenshot)
+        if find_lance:
+            print("We see Lance!")
+        if find_alpha:
+            print("We see Alpha!")
+        return find_lance or find_alpha
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
