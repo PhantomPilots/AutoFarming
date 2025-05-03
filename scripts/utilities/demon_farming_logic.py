@@ -173,7 +173,7 @@ class IDemonFarmer(IFarmer):
             # Allow fast login the next time we're logged out
             IFarmer.first_login = True
 
-        if find(vio.accept_invitation, screenshot, threshold=0.8):
+        if find(vio.accept_invitation, screenshot, threshold=0.7):
             # First, check if the inviting team is good enough
             if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
                 print("The inviting team is not good enough for Indura! Canceling invitation...")
@@ -187,7 +187,7 @@ class IDemonFarmer(IFarmer):
             time.sleep(self.sleep_before_accept)
             # Need to re-check if 'accept invitation' is there
             screenshot, window_location = capture_window()
-            click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.8, sleep_time=4)
+            click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.7, sleep_time=4)
             return
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
@@ -209,10 +209,6 @@ class IDemonFarmer(IFarmer):
         """Evaluate if the inviting team is good enough for Indura"""
         find_lance = find(vio.lancelot_unit, screenshot, threshold=0.6)
         find_alpha = find(vio.alpha_unit, screenshot, threshold=0.6)
-        # if find_lance:
-        #     print("We see Lance!")
-        # if find_alpha:
-        #     print("We see Alpha!")
         return find_lance or find_alpha
 
     def ready_to_fight_state(self):
