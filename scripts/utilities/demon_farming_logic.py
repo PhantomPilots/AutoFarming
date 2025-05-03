@@ -58,6 +58,9 @@ class IDemonFarmer(IFarmer):
     # Keep track how many demons we've tried to beat
     num_tries = 0
 
+    # Keep track how many missed invites we've had
+    missed_invites = 0
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -105,7 +108,7 @@ class IDemonFarmer(IFarmer):
 
     def exit_message(self):
         """Final message!"""
-        print(f"We destroyed {IDemonFarmer.demons_destroyed} demons.")
+        print(f"We destroyed {IDemonFarmer.demons_destroyed} demons and missed {IDemonFarmer.missed_invites} invites.")
 
     def going_to_demons_state(self):
         """Go to the demons page"""
@@ -190,6 +193,13 @@ class IDemonFarmer(IFarmer):
             # Need to re-check if 'accept invitation' is there
             screenshot, window_location = capture_window()
             click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.7, sleep_time=4)
+
+            # Evaluate if the invite was successsful
+            screenshot, _ = capture_window()
+            if find(vio.real_time, screenshot):
+                IDemonFarmer.missed_invites += 1
+                print(f"We missed the invite :( {IDemonFarmer.missed_invites} invites so far.")
+
             return
 
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
@@ -291,6 +301,7 @@ class IDemonFarmer(IFarmer):
             self.current_state = States.GOING_TO_DEMONS
             percent = IDemonFarmer.demons_destroyed / IDemonFarmer.num_tries * 100 if IDemonFarmer.num_tries > 0 else 0
             print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons ({percent:.2f}%).")
+            print(f"We've missed {IDemonFarmer.missed_invites} invites.")
             print(f"Moving to {self.current_state}.")
 
             # And kill the fighter in case we have it
