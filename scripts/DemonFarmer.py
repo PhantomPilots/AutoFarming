@@ -23,7 +23,7 @@ def main():
             # vio.og_demon,
             vio.indura_demon,
         ],
-        time_to_sleep=9.1,  # How many seconds to sleep before accepting an invitation
+        time_to_sleep=9.15,  # How many seconds to sleep before accepting an invitation
         time_between_demons=2,  # How many hours between each type of demon
         do_dailies=True,  # Do we halt demon farming to do dailies?
         do_daily_pvp=True,  # If we do dailies, do we do PVP?

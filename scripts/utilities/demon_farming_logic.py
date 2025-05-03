@@ -22,6 +22,8 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
+    crop_image,
+    determine_relative_coordinates,
     display_image,
     find,
     find_and_click,
@@ -207,7 +209,15 @@ class IDemonFarmer(IFarmer):
 
     def _valid_indura_team(self, screenshot: np.ndarray) -> bool:
         """Evaluate if the inviting team is good enough for Indura"""
-        return find(vio.lancelot_unit, screenshot, threshold=0.6) or find(vio.alpha_unit, screenshot, threshold=0.6)
+        # Crop the image to the region of the team invite
+        team_invite_region = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("team_invite_top_left"),
+            Coordinates.get_coordinates("team_invite_bottom_right"),
+        )
+        return find(vio.lancelot_unit, team_invite_region, threshold=0.6) or find(
+            vio.alpha_unit, team_invite_region, threshold=0.6
+        )
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
