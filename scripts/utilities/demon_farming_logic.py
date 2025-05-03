@@ -108,7 +108,9 @@ class IDemonFarmer(IFarmer):
 
     def exit_message(self):
         """Final message!"""
-        print(f"We destroyed {IDemonFarmer.demons_destroyed} demons and missed {IDemonFarmer.missed_invites} invites.")
+        print(
+            f"We destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons and missed {IDemonFarmer.missed_invites} invites."
+        )
 
     def going_to_demons_state(self):
         """Go to the demons page"""
