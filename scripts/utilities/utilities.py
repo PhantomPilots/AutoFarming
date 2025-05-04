@@ -467,7 +467,7 @@ def determine_card_merge(card_1: Card | None, card_2: Card | None) -> bool:
     if card_1.card_type in [CardTypes.NONE, CardTypes.GROUND] or card_2.card_type in [CardTypes.NONE, CardTypes.GROUND]:
         return 0
 
-    card_1_interior = get_card_interior_image(card_1.card_imagem)
+    card_1_interior = get_card_interior_image(card_1.card_image)
     card_2_interior = get_card_interior_image(card_2.card_image)
 
     return (
