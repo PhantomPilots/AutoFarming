@@ -67,7 +67,7 @@ def handle_card_merges_new(house_of_cards: list[Card]):
             if determine_card_merge(card, right_card):
                 print(f"Card at idx {i} will merge with idx {i+1}!")
                 # Increase the rank of the current card
-                if card.card_rank.value in [0, 1]:
+                if card.card_rank.value in {0, 1}:
                     card.card_rank = CardRanks(card.card_rank.value + 1)
                 # And remove the right card
                 house_of_cards.pop(i + 1)
@@ -104,7 +104,7 @@ def handle_card_merges(house_of_cards: list[Card], left_card_idx: int, right_car
     if determine_card_merge(left_card, right_card):
         print(f"Card at idx {left_card_idx} will merge with idx {right_card_idx}!")
         # Increase the rank of the right card
-        if right_card.card_rank.value != 2:
+        if right_card.card_rank.value in {0, 1}:
             right_card.card_rank = CardRanks(right_card.card_rank.value + 1)
 
         # Remove the left card

@@ -467,13 +467,13 @@ def determine_card_merge(card_1: Card | None, card_2: Card | None) -> bool:
     if card_1.card_type in [CardTypes.NONE, CardTypes.GROUND] or card_2.card_type in [CardTypes.NONE, CardTypes.GROUND]:
         return 0
 
-    card_1_interior = get_card_interior_image(card_1.card_image)
+    card_1_interior = get_card_interior_image(card_1.card_imagem)
     card_2_interior = get_card_interior_image(card_2.card_image)
 
     return (
         CardMergePredictor.predict_card_merge(card_1_interior, card_2_interior)
         and card_1.card_rank == card_2.card_rank
-        and card_1.card_rank != CardRanks.GOLD
+        and card_1.card_rank.value in {0, 1}  # Only merge if both cards are BRONZE or SILVER
     )
 
 
