@@ -208,7 +208,7 @@ class IFarmer:
         click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
 
         # Go to CHECK IN state
-        if find(vio.knighthood, screenshot):
+        if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
             print("Going to CHECK IN state")
             self.current_state = States.CHECK_IN
             return
@@ -237,6 +237,12 @@ class IFarmer:
     def check_in_state(self):
         """Check in, and go back to"""
         screenshot, window_location = capture_window()
+
+        if find(vio.search_for_a_kh, screenshot):
+            print("We're not in any KH, we cannot check in...")
+            press_key("esc")
+            self.current_state = States.DAILIES_STATE
+            return
 
         # Check in
         if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):

@@ -180,7 +180,7 @@ class IDemonFarmer(IFarmer):
             # Allow fast login the next time we're logged out
             IFarmer.first_login = True
 
-        if find(vio.accept_invitation, screenshot, threshold=0.7):
+        if find(vio.accept_invitation, screenshot, threshold=0.8):
             # First, check if the inviting team is good enough
             if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
                 print("The inviting team is not good enough for Indura! Canceling invitation...")
@@ -289,11 +289,11 @@ class IDemonFarmer(IFarmer):
         find_and_click(vio.skip_bird, screenshot, window_location)
 
         # When we've destroyed the demon
-        find_and_click(vio.demons_destroyed, screenshot, window_location)
+        find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5)
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
             IDemonFarmer.num_tries += 1
-            if find(vio.victory, screenshot):
+            if find(vio.victory, screenshot, threshold=0.6):
                 print("Demon destroyed!")
                 IDemonFarmer.demons_destroyed += 1
             else:
