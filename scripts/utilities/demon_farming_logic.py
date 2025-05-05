@@ -160,12 +160,12 @@ class IDemonFarmer(IFarmer):
                 else:
                     find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "hell":
-                if find(vio.demon_hard_diff, screenshot):
+                if find(vio.demon_normal_diff, screenshot):
                     find_and_click(vio.demon_hard_diff, screenshot, window_location, threshold=0.6)
                 else:
                     find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "chaos":
-                if find(vio.demon_extreme_diff, screenshot):
+                if find(vio.demon_normal_diff, screenshot):
                     find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
                 else:
                     find_and_click(vio.demon_chaos_diff, screenshot, window_location, threshold=0.6)
