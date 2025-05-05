@@ -36,6 +36,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 find(vio.snake_f3p2_counter, screenshot)
                 or find(vio.melee_evasion, screenshot)
                 or find(vio.ranged_evasion, screenshot)
+                or find(vio.oxidize_indura, screenshot)
             )
             and len(king_debuf_card_ids)
             and not len(played_king_debuf_cards)
@@ -52,6 +53,7 @@ class InduraBattleStrategy(IBattleStrategy):
             find(vio.snake_f3p2_counter, screenshot)
             or find(vio.melee_evasion, screenshot)
             or find(vio.ranged_evasion, screenshot)
+            or find(vio.oxidize_indura, screenshot)
         ) or (not find(vio.melee_evasion, screenshot, threshold=0.8) and not len(picked_ult_ids)):
             for idx in king_att_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
