@@ -70,6 +70,7 @@ class IDemonFarmer(IFarmer):
         do_dailies=False,
         do_daily_pvp=False,
         password: str | None = None,
+        indura_difficulty: str = "extreme",  # Difficulty of Indura demon
     ):
         # Store the account password in this instance if given
         if password:
@@ -94,13 +95,14 @@ class IDemonFarmer(IFarmer):
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
         # For the Indura fight!
+        self.indura_difficulty = indura_difficulty
         self.fighter: IFighter = InduraFighter(
             battle_strategy=InduraBattleStrategy,
             callback=None,  # No need to use a fight complete callback for this
         )
         self.indura_fight_thread: threading.Thread = None
         if self.demon_to_farm == vio.indura_demon:
-            print("We'll be using the new Indura Fighter!")
+            print(f"We'll farm {self.indura_difficulty} Indura!")
 
         self.do_dailies = do_dailies
         if do_dailies:
@@ -152,14 +154,23 @@ class IDemonFarmer(IFarmer):
             click_and_sleep(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
 
         if "indura" in self.demon_to_farm.image_name.lower():
-            # if find(vio.demon_extreme_diff, screenshot):
-            #     find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
-            # else:
-            #     find_and_click(vio.demon_chaos_diff, screenshot, window_location, threshold=0.6)
-            if find(vio.demon_normal_diff, screenshot):
-                find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
+            if self.indura_difficulty == "extreme":
+                if find(vio.demon_normal_diff, screenshot):
+                    find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
+                else:
+                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+            elif self.indura_difficulty == "hell":
+                if find(vio.demon_hard_diff, screenshot):
+                    find_and_click(vio.demon_hard_diff, screenshot, window_location, threshold=0.6)
+                else:
+                    find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
+            elif self.indura_difficulty == "chaos":
+                if find(vio.demon_extreme_diff, screenshot):
+                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                else:
+                    find_and_click(vio.demon_chaos_diff, screenshot, window_location, threshold=0.6)
             else:
-                find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                raise RuntimeError(f"Unknown Indura difficulty: {self.indura_difficulty}")
             return
 
         # Click on the difficuly -- ONLY HELL
@@ -337,6 +348,7 @@ class DemonFarmer(IDemonFarmer):
         do_dailies=False,  # Do we halt demon farming to do dailies?
         do_daily_pvp=False,  # If we do dailies, do we do PVP?
         password: str = None,
+        indura_difficulty: str = "extreme",  # Difficulty of Indura demon
     ):
         if demons_to_farm is None:
             demons_to_farm = [vio.og_demon]
@@ -350,6 +362,7 @@ class DemonFarmer(IDemonFarmer):
             do_dailies=do_dailies,
             do_daily_pvp=do_daily_pvp,
             password=password,
+            indura_difficulty=indura_difficulty,
         )
 
         # Every how many hours to switch between demons
