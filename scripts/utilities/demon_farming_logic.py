@@ -188,6 +188,7 @@ class IDemonFarmer(IFarmer):
             print("Going to CHECK IN!")
             self.current_state = GlobalStates.DAILY_RESET
             return
+
         # Reset the daily check in flag
         if now.hour > CHECK_IN_HOUR and IFarmer.daily_checkin:
             print("Resetting daily checkin")

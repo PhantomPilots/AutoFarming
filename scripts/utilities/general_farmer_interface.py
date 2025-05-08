@@ -26,7 +26,7 @@ from utilities.utilities import (
 # For dailies and logging back in after being logged out
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
 MINUTES_TO_WAIT_BEFORE_LOGIN = 30
-CHECK_IN_HOUR = 2
+CHECK_IN_HOUR = 2  # Pacific Time
 
 
 class States(Enum):
@@ -246,6 +246,8 @@ class IFarmer:
             print("We're not in any KH, we cannot check in...")
             press_key("esc")
             self.current_state = States.DAILIES_STATE
+            # And reset daily checking
+            IFarmer.daily_checkin = True
             return
 
         # Check in
