@@ -57,6 +57,8 @@ class Coordinates:
         "first_stamp": (83, 762),
         "team_invite_top_left": (233, 615),
         "team_invite_bottom_right": (449, 669),
+        "6_cards_top_left": (75, 693),  # Top-left corner of the 6 empty slots
+        "6_cards_bottom_right": (471, 793),  # Bottom-right corner of the 6 empty slots
     }
 
     @staticmethod

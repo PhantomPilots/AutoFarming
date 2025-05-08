@@ -250,6 +250,7 @@ oxidize_indura = Vision("demons\\oxidize_indura.png")
 king_unit = Vision("demons\\king_unit.png")
 lancelot_unit = Vision("demons\\lancelot_unit.png")
 alpha_unit = Vision("demons\\alpha_unit.png")
+mini_king = Vision("demons\\mini_king.png")
 
 
 # For dailies
