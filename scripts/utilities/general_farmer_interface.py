@@ -111,14 +111,6 @@ class IFarmer:
         """We're at the login screen, need to login!"""
         screenshot, window_location = capture_window()
 
-        # Only try to log in if enough time has passed since the last logout
-        if not IFarmer.first_login and time.time() - IFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60:
-            time.sleep(1)
-            return
-
-        # In case we have an update
-        find_and_click(vio.ok_main_button, screenshot, window_location)
-
         # Flag to indicate if a successful login branch was detected
         login_attempted = False
 
@@ -127,7 +119,19 @@ class IFarmer:
             self.current_state = initial_state
             login_attempted = True
 
-        elif find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
+        # Only try to log in if enough time has passed since the last logout
+        if (
+            not login_attempted
+            and not IFarmer.first_login
+            and time.time() - IFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60
+        ):
+            time.sleep(1)
+            return
+
+        # In case we have an update
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+
+        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             print("We're seeing a daily reset!")
             self.current_state = States.DAILY_RESET
             login_attempted = True
