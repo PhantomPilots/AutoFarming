@@ -3,6 +3,7 @@ from utilities.vision import MultiVision, Vision
 # TODO:
 
 # General images
+run_game = Vision("run_game.png")
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")

@@ -174,7 +174,7 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
 def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
-    window_location: list[float],
+    window_location: list[float] = (0,0),   
     threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
 ) -> bool:

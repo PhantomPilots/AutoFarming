@@ -21,7 +21,7 @@ def main():
         max_stamina_pots="inf",  # How many stamina pots at most
         max_floor_3_clears=args.clears,  # How many floor 3 clears at most
         password=args.password,  # Account password
-        do_dailies=False,  # Should we do our dailies?
+        do_dailies=True,  # Should we do our dailies?
     )
 
 
