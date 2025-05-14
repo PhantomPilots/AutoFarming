@@ -4,6 +4,16 @@ import win32gui
 import win32ui
 
 
+def get_window_size():
+    """Get the size of the 7DS window"""
+    hwnd_target = win32gui.FindWindow(None, r"7DS")
+    window_rect = win32gui.GetWindowRect(hwnd_target)
+    w = window_rect[2] - window_rect[0]
+    h = window_rect[3] - window_rect[1]
+
+    return w, h
+
+
 def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     """Make a screenshot of the 7DS window.
     Returns:
@@ -63,6 +73,7 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
 
     return img, window_location
 
+
 def capture_screen() -> np.ndarray:
     """Make a screenshot of the entire screen.
     Returns:
@@ -109,3 +120,12 @@ def capture_screen() -> np.ndarray:
             continue
 
     return img
+
+
+def is_7ds_window_open() -> bool:
+    """Check if the 7DS window is open and visible.
+    Returns:
+        bool: True if the window exists and is visible, False otherwise
+    """
+    hwnd = win32gui.FindWindow(None, r"7DS")
+    return hwnd != 0

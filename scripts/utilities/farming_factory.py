@@ -2,6 +2,7 @@ import sys
 
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.utilities import re_open_7ds_window
 
 
 class FarmingFactory:
@@ -33,6 +34,8 @@ class FarmingFactory:
                 print(f"An error occurred:\n{e}")
                 # Recover the current state the bird farmer was in, and restart from there
                 starting_state = farmer_instance.current_state
+                # Re-open the 7DS window if it has been closed
+                re_open_7ds_window()
 
             finally:
                 print("FINALLY:")

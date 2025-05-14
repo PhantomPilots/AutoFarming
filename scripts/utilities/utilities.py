@@ -17,7 +17,12 @@ import win32gui
 import win32ui
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from utilities.capture_window import capture_window
+from utilities.capture_window import (
+    capture_screen,
+    capture_window,
+    get_window_size,
+    is_7ds_window_open,
+)
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.models import (
@@ -29,16 +34,6 @@ from utilities.models import (
     ThorCardPredictor,
 )
 from utilities.vision import Vision
-
-
-def get_window_size():
-    """Get the size of the 7DS window"""
-    hwnd_target = win32gui.FindWindow(None, r"7DS")
-    window_rect = win32gui.GetWindowRect(hwnd_target)
-    w = window_rect[2] - window_rect[0]
-    h = window_rect[3] - window_rect[1]
-
-    return w, h
 
 
 def draw_rectangles(
@@ -174,7 +169,7 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
 def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
-    window_location: list[float] = (0,0),   
+    window_location: list[float] = (0, 0),
     threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
 ) -> bool:
@@ -636,3 +631,15 @@ def type_word(word: str):
     for char, delay in zip(word, delays):
         pyautogui.write(char)
         pyautogui.sleep(delay)  # Sleep for the given delay before typing the next character
+
+
+def re_open_7ds_window():
+    """Re-open the 7DS window"""
+    # Maybe the 7DS window is closed, so we need to re-open it
+    if not is_7ds_window_open():
+        print("7DS window has been closed!")
+        time.sleep(5)  # Let's sleep to allow the game to be closed properly...
+        entire_screen = capture_screen()
+        if find_and_click(vio.run_game, entire_screen):
+            print("Trying to re-open the game...")
+            time.sleep(10)  # Let's wait for a while
