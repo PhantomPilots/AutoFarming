@@ -205,6 +205,10 @@ class IFarmer:
             self.current_state = States.FORTUNE_CARD
             return
 
+        # If we see a "cross", click it before clicking the OK button
+        if find_and_click(vio.cross, screenshot, window_location):
+            screenshot, window_location = capture_window()
+
         # Cancel the demon search
         click_and_sleep(vio.cancel_realtime, screenshot, window_location)
 

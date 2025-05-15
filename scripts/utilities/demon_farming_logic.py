@@ -131,7 +131,11 @@ class IDemonFarmer(IFarmer):
             return
 
         # We may be in the 'daily reset' state!
-        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
+        if (
+            find(vio.skip, screenshot, threshold=0.6)
+            or find(vio.fortune_card, screenshot, threshold=0.8)
+            or find(vio.cross, screenshot)
+        ):
             logger.info("We entered the daily reset state!")
             self.current_state = GlobalStates.DAILY_RESET
             return

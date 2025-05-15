@@ -61,6 +61,7 @@ yes = Vision("yes.png")
 start_quest = Vision("start_quest.png")
 essette_shop = Vision("essette_shop.png")
 duplicate_connection = Vision("duplicate_connection.png")
+cross = Vision("cross.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
