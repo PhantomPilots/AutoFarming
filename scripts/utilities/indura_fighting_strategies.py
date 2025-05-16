@@ -29,15 +29,23 @@ class InduraBattleStrategy(IBattleStrategy):
             ]
         )[0]
 
-        # Evaluate if the other party has played a King's debuff card
         six_empty_slots_image = crop_image(
             screenshot,
             Coordinates.get_coordinates("6_cards_top_left"),
             Coordinates.get_coordinates("6_cards_bottom_right"),
         )
+        # Evaluate if the other party has played a King's debuff card
         b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
         if b_played_mini_king:
             print("The other party has played a King's debuff card!")
+
+        # Disable all heal cards if someone has played one already
+        b_played_mini_heal = find(vio.mini_heal, six_empty_slots_image)
+        if b_played_mini_heal:
+            # Disabled all heal cards
+            heal_card_ids: list[int] = np.where([find(vio.king_heal, card.card_image) for card in hand_of_cards])[0]
+            for idx in heal_card_ids:
+                hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         if (
@@ -58,6 +66,13 @@ class InduraBattleStrategy(IBattleStrategy):
         # Disable all King's attack cards
         king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
         for idx in king_att_card_ids:
+            hand_of_cards[idx].card_type = CardTypes.DISABLED
+
+        # Disable all debuff cards (since we don't want to play Alpha's debuff)
+        debuff_card_ids: list[int] = np.where(
+            [card.card_type.value == CardTypes.ATTACK_DEBUFF.value for card in hand_of_cards]
+        )[0]
+        for idx in debuff_card_ids:
             hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         # Default

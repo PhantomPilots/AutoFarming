@@ -245,6 +245,7 @@ demons_auto = Vision("demons\\auto.jpg")
 demons_destroyed = Vision("demons\\demons_destroyed.png")
 # For Indura
 king_att = Vision("demons\\king_att.png")
+king_heal = Vision("demons\\king_heal.png")
 indura_empty_slot = Vision("demons\\indura_empty_slot.png")
 melee_evasion = Vision("demons\\melee_evasion.png")
 ranged_evasion = Vision("demons\\ranged_evasion.png")
@@ -253,6 +254,7 @@ king_unit = Vision("demons\\king_unit.png")
 lancelot_unit = Vision("demons\\lancelot_unit.png")
 alpha_unit = Vision("demons\\alpha_unit.png")
 mini_king = Vision("demons\\mini_king.png")
+mini_heal = Vision("demons\\mini_heal.png")
 
 
 # For dailies
