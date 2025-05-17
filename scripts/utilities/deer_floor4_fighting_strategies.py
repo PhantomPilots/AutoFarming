@@ -61,7 +61,9 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         DeerFloor4BattleStrategy._color_cards_used_p2t0 = None
         DeerFloor4BattleStrategy._color_cards_picked_p3 = None
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
+    def get_next_card_index(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, floor: int = 4
+    ) -> int:
         """Extract the indices based on the list of cards and the current phase"""
 
         # If we're entering phase 1 after being in any other phase, reset

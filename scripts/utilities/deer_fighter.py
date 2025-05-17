@@ -111,6 +111,7 @@ class DeerFighter(IFighter):
         if self.current_hand is None:
             self.current_hand = self.battle_strategy.pick_cards(
                 phase=DeerFighter.current_phase,
+                floor=DeerFighter.current_floor,
             )
 
         if finished_turn := self.play_cards(self.current_hand):
