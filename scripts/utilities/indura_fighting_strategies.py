@@ -48,10 +48,9 @@ class InduraBattleStrategy(IBattleStrategy):
                 or find(vio.ranged_evasion, screenshot)
                 or find(vio.oxidize_indura, screenshot)
             )
-            and not b_played_mini_king
-            and not len(played_king_debuf_cards)
+            and not b_played_mini_king  # No friend has played a King's debuff card
+            and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
         ):
-            # Play King's debuff card if we haven't played it already
             print("Playing King's debuff card!")
             return king_debuf_card_ids[-1]
 

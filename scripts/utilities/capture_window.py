@@ -67,8 +67,9 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
 
             succeed = True
 
-        except Exception:
-            print("[WARN] CompatibleDC failed, but we caught it successfully!")
+        except Exception as e:
+            # print("[WARN] CompatibleDC failed, but we caught it successfully!")
+            raise e
             continue
 
     return img, window_location
