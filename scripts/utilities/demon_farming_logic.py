@@ -311,7 +311,9 @@ class IDemonFarmer(IFarmer):
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5)
 
-        if find_and_click(vio.ok_main_button, screenshot, window_location):
+        if find_and_click(vio.ok_main_button, screenshot, window_location) or find(
+            vio.battle_menu, screenshot, threshold=0.6
+        ):
             IDemonFarmer.num_tries += 1
             if find(vio.victory, screenshot, threshold=0.6):
                 print("Demon destroyed!")

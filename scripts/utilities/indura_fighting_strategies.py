@@ -16,6 +16,8 @@ class InduraBattleStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
+        card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
+
         king_debuf_card_ids: list[int] = np.where(
             [
                 find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
@@ -55,11 +57,24 @@ class InduraBattleStrategy(IBattleStrategy):
             return king_debuf_card_ids[-1]
 
         # Disable all heal cards if someone has played one already
+        heal_card_ids: list[int] = sorted(
+            np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
         if find(vio.mini_heal, six_empty_slots_image):
             # Disabled all heal cards
-            heal_card_ids: list[int] = np.where([find(vio.king_heal, card.card_image) for card in hand_of_cards])[0]
             for idx in heal_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
+
+        # But if we haven't disabled a heal, use one by default
+        picked_heal_ids = np.where([card.card_type.value == CardTypes.RECOVERY.value for card in picked_cards])[0]
+        # We need to re-access the heal card IDs, since we may have disabled some
+        heal_card_ids = sorted(
+            np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
+        if len(heal_card_ids) and not picked_heal_ids.size:
+            return heal_card_ids[-1]
 
         # Disable all King's attack cards
         king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
@@ -72,6 +87,16 @@ class InduraBattleStrategy(IBattleStrategy):
         )[0]
         for idx in debuff_card_ids:
             hand_of_cards[idx].card_type = CardTypes.DISABLED
+
+        # But if EVERYTHING is disabled... re-enable everything again as a Debuff
+        if np.all(
+            [card.card_type == CardTypes.DISABLED or card.card_type == CardTypes.GROUND for card in hand_of_cards]
+        ):
+            print("All cards are DISABLED! Let's re-enable them as attack-debuffs...")
+            for idx in range(len(hand_of_cards)):
+                if hand_of_cards[idx].card_type == CardTypes.DISABLED:
+                    # Re=enable it as a Debuff
+                    hand_of_cards[idx].card_type = CardTypes.ATTACK_DEBUFF
 
         # Default
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

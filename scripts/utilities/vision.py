@@ -68,10 +68,13 @@ class MultiVision(Vision):
     def __init__(
         self,
         *needle_basenames: str,
-        image_name: str = None,
+        image_name: str | None = None,
         matching_strategy: IMatchingStrategy = TemplateMatchingStrategy,
     ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
+
+        if image_name is None:
+            raise ValueError("For a MultiVision instance, the 'image_name' argument must be provided")
 
         needle_paths = [os.path.join("images", needle_basename) for needle_basename in needle_basenames]
 
