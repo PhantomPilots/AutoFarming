@@ -75,6 +75,8 @@ class InduraBattleStrategy(IBattleStrategy):
         )
         if len(heal_card_ids) and not picked_heal_ids.size:
             return heal_card_ids[-1]
+        elif picked_heal_ids.size:
+            print("We have an additional heal card but we've played one already")
 
         # Disable all King's attack cards
         king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
