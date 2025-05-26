@@ -61,6 +61,9 @@ class IDemonFarmer(IFarmer):
     # Keep track how many missed invites we've had
     missed_invites = 0
 
+    # To control the sleeping time
+    sleeper = threading.Event()
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -180,6 +183,11 @@ class IDemonFarmer(IFarmer):
         # Click on the difficuly -- ONLY HELL
         find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
 
+    def wait_for_accepting_invite(self):
+        """Wait for 9 seconds before accepting the invite. This should be a threading event!"""
+        print("Found a raid! Waiting before clicking...")
+        IDemonFarmer.sleeper.wait(timeout=self.sleep_before_accept)
+
     def looking_for_demon_state(self):
         """Waiting for someone to send us a demon"""
         screenshot, window_location = capture_window()
@@ -200,19 +208,27 @@ class IDemonFarmer(IFarmer):
             # Allow fast login the next time we're logged out
             IFarmer.first_login = True
 
-        if find(vio.accept_invitation, screenshot, threshold=0.8):
-            # First, check if the inviting team is good enough
-            # screenshot, _ = capture_window()  # Careful: This may add additional lag
-            if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
-                print("The inviting team is not good enough for Indura! Canceling invitation...")
-                # display_image(screenshot, "valid team?")
-                time.sleep(1)
-                find_and_click(vio.cancel_realtime, screenshot, window_location)
-                return
+        if find(vio.accept_invitation, screenshot, threshold=0.7):
+            # First of all, start the sleeping thread
+            sleep_thread = threading.Thread(target=self.wait_for_accepting_invite)
+            sleep_thread.start()
 
-            # We've found an invitation, gotta wait before clicking on it!
-            print("Found a raid! Waiting before clicking...")
-            time.sleep(self.sleep_before_accept)
+            # Now, verify if this is a valid invite
+            if self.demon_to_farm == vio.indura_demon:
+                time.sleep(1)
+                screenshot, window_location = capture_window()
+                if not self._valid_indura_team(screenshot, debug=True):
+                    print("The inviting team is not good enough for Indura! Canceling invitation...")
+                    # display_image(screenshot, "valid team?")
+                    time.sleep(1)
+                    find_and_click(vio.cancel_realtime, screenshot, window_location)
+                    # Stop the sleeping thread!
+                    IDemonFarmer.sleeper.set()
+                    sleep_thread.join()
+                    return
+
+            sleep_thread.join()  # Wait for the sleeping thread to finish
+
             # Need to re-check if 'accept invitation' is there
             screenshot, window_location = capture_window()
             click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.7, sleep_time=4)
@@ -248,8 +264,8 @@ class IDemonFarmer(IFarmer):
             Coordinates.get_coordinates("team_invite_top_left"),
             Coordinates.get_coordinates("team_invite_bottom_right"),
         )
-        valid = find(vio.lancelot_unit, team_invite_region, threshold=0.6) or find(
-            vio.alpha_unit, team_invite_region, threshold=0.6
+        valid = find(vio.lancelot_unit, team_invite_region, threshold=0.7) or find(
+            vio.alpha_unit, team_invite_region, threshold=0.7
         )
         if debug and not valid:
             display_image(screenshot, title="Inviting team is not good enough")
