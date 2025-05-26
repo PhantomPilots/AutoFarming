@@ -229,6 +229,11 @@ def click(x, y, sleep_after_click=0.01):
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
 
+# def click(x, y, sleep_after_click=0.01):
+#     pyautogui.click(x, y)
+#     time.sleep(sleep_after_click)
+
+
 def rclick(x, y, sleep_after_click=0.01):
     pyautogui.moveTo(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
