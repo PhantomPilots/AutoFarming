@@ -39,15 +39,8 @@ class InduraFighter(IFighter):
     def my_turn_state(self):
         """Select and play the cards"""
 
-        # Ensure we have the current hand
-        if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards(cards_to_play=3)
-
-        if finished_turn := self.play_cards(self.current_hand):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+        # Just play the cards
+        self.play_cards()
 
     def exit_fight_state(self):
         """Very simple state, just exit the fight"""
@@ -55,38 +48,50 @@ class InduraFighter(IFighter):
         with self._lock:
             self.exit_thread = True
 
-    def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):
-        """We need to overrde this method!"""
+    def play_cards(self):
+        """Read the current hand of cards, and play them based on the available card slots.
+        We had to overrde this method!"""
 
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
+        # KEY: Read the hand of cards
+        current_hand = self.battle_strategy.pick_cards(
+            picked_cards=self.picked_cards,
+            cards_to_play=3,
+            phase=IFighter.current_phase,
+            floor=IFighter.current_floor,
+        )
+
         slot_index = InduraFighter.card_turn
-        if slot_index < len(selected_cards[1]) and empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
+        if slot_index < len(current_hand[1]) and empty_card_slots > 0 and len(current_hand[1]) >= empty_card_slots:
             print(
                 f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
             )
             # What is the index in the hand we have to play? It can be an `int` or a `tuple[int, int]`
-            index_to_play = selected_cards[1][slot_index]
+            index_to_play = current_hand[1][0]
 
             # Count how many GROUND before and after playing a card
             hand_cards = get_hand_cards_3_cards()
             before_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
             # Play/move the selected card
-            self._play_card(
-                selected_cards[0], index=index_to_play, window_location=window_location, screenshot=screenshot
+            card_played = self._play_card(
+                current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
             )
-            time.sleep(0.5)
+            time.sleep(0.25)
             # Count GROUND cards after
             hand_cards = get_hand_cards_3_cards()
             after_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
 
             if after_num_ground_cards > before_num_ground_cards:
+                # Increment the card turn, and add the picked card to the list of picked cards
                 InduraFighter.card_turn += 1
+                self.picked_cards[slot_index] = card_played
 
-        elif empty_card_slots == 0 or slot_index >= len(selected_cards[1]):
+        elif empty_card_slots == 0 or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
+            self._reset_instance_variables()
             return 1
 
     @staticmethod

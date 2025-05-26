@@ -20,8 +20,6 @@ from utilities.vision import Vision
 
 
 class SnakeFighter(IFighter):
-    # Start by assuming we're on phase 1... but then make sure to read it every time the turn starts
-    current_phase = None
     # Keep track of what floor has been defeated
     floor_defeated = None
 
@@ -64,12 +62,12 @@ class SnakeFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            if (phase := self._identify_phase(screenshot)) != SnakeFighter.current_phase:
+            if (phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"Moving to phase {phase}!")
-                SnakeFighter.current_phase = phase
+                IFighter.current_phase = phase
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
+    def count_empty_card_slots(screenshot, threshold=0.6, debug=False):
         """Count how many empty card slots are there for SNAKE"""
         card_slots_image = get_card_slot_region_image(screenshot)
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
@@ -78,7 +76,7 @@ class SnakeFighter(IFighter):
         # Pick what type of rectangles to keep
         rectangles = rectangles_2 if rectangles_2.size else rectangles
 
-        if plot and len(rectangles):
+        if debug and len(rectangles):
             print(f"We have {len(rectangles)} empty slots.")
             # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
             translated_rectangles = np.array(
@@ -107,18 +105,7 @@ class SnakeFighter(IFighter):
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
         # empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
-        if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards(
-                floor=SnakeFighter.current_floor,
-                phase=SnakeFighter.current_phase,
-            )
-
-        if finished_turn := self.play_cards(self.current_hand):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+        self.play_cards()
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -157,16 +144,16 @@ class SnakeFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=SnakeFighter.current_phase)
+            self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
     def run(self, floor_num=1):
 
         # First, set the floor number
-        SnakeFighter.current_floor = floor_num
+        IFighter.current_floor = floor_num
 
-        print(f"Fighting very hard on floor {SnakeFighter.current_floor}...")
+        print(f"Fighting very hard on floor {IFighter.current_floor}...")
 
         while True:
 
@@ -186,4 +173,4 @@ class SnakeFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(0.5)

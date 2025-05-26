@@ -62,7 +62,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         DeerFloor4BattleStrategy._color_cards_picked_p3 = None
 
     def get_next_card_index(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, floor: int = 4
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn=0, **kwargs
     ) -> int:
         """Extract the indices based on the list of cards and the current phase"""
 
@@ -80,7 +80,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         elif phase == 3:
             card_index = self.get_next_card_index_phase3(hand_of_cards, picked_cards)
         elif phase == 4:
-            card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards)
+            card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards, card_turn=card_turn)
 
         if IBattleStrategy.card_turn == 3:
             # Increment the next round!
@@ -301,7 +301,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn=0) -> int:
         """Extract the indices based on the list of cards and the current phase"""
 
         self._maybe_reset("phase_4")
@@ -379,7 +379,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 return green_card_ids[-1]
 
         # Keep track of last picked card
-        last_card = picked_cards[-1] if len(picked_cards) else Card()
+        last_card = picked_cards[card_turn - 1] if card_turn > 0 else Card()
 
         if is_green_card(last_card) and len(blue_card_ids):
             print("Last card green! Picking blue")

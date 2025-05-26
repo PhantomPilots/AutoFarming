@@ -16,18 +16,18 @@ class DeerBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Deer"""
 
     def get_next_card_index(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, floor: int = 1
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn=0, **kwargs
     ) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
         """
 
         if phase in {2, 4}:
-            return self.phase_2_4(hand_of_cards, picked_cards)
+            return self.phase_2_4(hand_of_cards, picked_cards, card_turn=card_turn)
 
         return self.default_strategy(hand_of_cards, picked_cards)
 
-    def phase_2_4(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def phase_2_4(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int = 0) -> int:
         """Take into account the roulette"""
 
         screenshot, _ = capture_window()
@@ -53,45 +53,45 @@ class DeerBattleStrategy(IBattleStrategy):
         if find(vio.evasion, screenshot, threshold=0.7) and (
             len(buff_removal_ids) and not np.any([is_buff_removal_card(card) for card in picked_cards])
         ):
-            print("Deer has an evasion, let's remove it")
+            # print("Deer has an evasion, let's remove it")
             return buff_removal_ids[-1]
 
         # Keep track of last picked card
-        last_card = picked_cards[-1] if len(picked_cards) else Card()
+        last_card = picked_cards[card_turn - 1] if card_turn > 0 else Card()
 
         if is_green_card(last_card) and len(blue_card_ids):
-            print("Last card green! Picking blue")
+            # print("Last card green! Picking blue")
             # Gotta pick a blue card
             return blue_card_ids[-1]
         if is_red_card(last_card) and len(green_card_ids):
-            print("Last card red! Picking green")
+            # print("Last card red! Picking green")
             # Gotta pick a green card
             return green_card_ids[-1]
         if is_blue_card(last_card) and len(red_card_ids):
-            print("Last card blue! Picking red")
+            # print("Last card blue! Picking red")
             # Gotta pick a red card
             return red_card_ids[-1]
 
         # If the above doesn't happen, meaning it's the first card to pick...
         if last_card.card_image is None:
             if find(vio.red_buff, screenshot) and len(red_card_ids):
-                print("There's a red buff on! Picking red card")
+                # print("There's a red buff on! Picking red card")
                 return red_card_ids[-1]
             if find(vio.blue_buff, screenshot) and len(blue_card_ids):
-                print("There's a blue buff on! Picking blue card")
+                # print("There's a blue buff on! Picking blue card")
                 return blue_card_ids[-1]
             if find(vio.green_buff, screenshot) and len(green_card_ids):
-                print("There's a green buff on! Picking green card")
+                # print("There's a green buff on! Picking green card")
                 return green_card_ids[-1]
 
             # If none of the above, picked the card that has the most types
             max_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=len)
             if len(max_ids):
-                print("Roulette hasn't started, picking the type that has the most cards.")
+                # print("Roulette hasn't started, picking the type that has the most cards.")
                 return max_ids[-1]
 
         # If the above doesn't happen...
-        print("Couldn't find the right card, defaulting...")
+        # print("Couldn't find the right card, defaulting...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def default_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
@@ -121,8 +121,8 @@ class DeerBattleStrategy(IBattleStrategy):
 
         max_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=len)
         if len(max_ids):
-            print("Defaulting to picking the type that has the most cards.")
+            # print("Defaulting to picking the type that has the most cards.")
             return max_ids[-1]
 
-        print("Defaulting...")
+        # print("Defaulting...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

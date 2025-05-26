@@ -37,7 +37,7 @@ class States(Enum):
 
 class DemonicBeastFarmer(IFarmer, abc.ABC):
 
-    current_floor = 3
+    current_floor = 1
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
@@ -230,11 +230,11 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             print("DemonicBeast fighter started!")
 
         # We may have finished the fight already, let's check if we need to go back to the main screen
-        if find(vio.floor_3_cleared_db, screenshot):
+        if find(vio.available_floor, screenshot, threshold=0.8):
             # We finished the fight, let's go back to the main screen
-            print("We finished the fight but are still fighting? Get outa here!")
+            print("We finished the fight but are still fighting? Get outta here!")
             self.stop_fighter_thread()
-            self.current_state = States.PROCEED_TO_FLOOR
+            self.current_state = States.READY_TO_FIGHT
 
     def fight_complete_callback(self, victory=True, phase="unknown"):
         """Called when the fight logic completes."""

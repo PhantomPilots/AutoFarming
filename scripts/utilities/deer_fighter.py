@@ -20,8 +20,6 @@ from utilities.vision import Vision
 
 
 class DeerFighter(IFighter):
-    # Start by assuming we're on phase 1... but then make sure to read it every time the turn starts
-    current_phase = None
     # Keep track of what floor has been defeated
     floor_defeated = None
 
@@ -64,9 +62,9 @@ class DeerFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            if (phase := self._identify_phase(screenshot)) != DeerFighter.current_phase:
+            if (phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"Moving to phase {phase}!")
-                DeerFighter.current_phase = phase
+                IFighter.current_phase = phase
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -102,23 +100,8 @@ class DeerFighter(IFighter):
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
 
-        # Before playing cards, first:
-        # 1. Read the phase we're in
-        # 2. Make sure to click on the correct dog (right/left) depending on the phase
-        # empty_card_slots = self.count_empty_card_slots(screenshot)
-
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
-        if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards(
-                phase=DeerFighter.current_phase,
-                floor=DeerFighter.current_floor,
-            )
-
-        if finished_turn := self.play_cards(self.current_hand):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+        # This function alone will take care of updating the current hand and state if necessary
+        self.play_cards()
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -157,16 +140,16 @@ class DeerFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=DeerFighter.current_phase)
+            self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
     def run(self, floor_num=1):
 
         # First, set the floor number
-        DeerFighter.current_floor = floor_num
+        IFighter.current_floor = floor_num
 
-        print(f"Fighting very hard on floor {DeerFighter.current_floor}...")
+        print(f"Fighting very hard on floor {IFighter.current_floor}...")
 
         while True:
 
@@ -186,4 +169,4 @@ class DeerFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(0.5)

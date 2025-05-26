@@ -1,4 +1,5 @@
 import abc
+import copy
 import logging
 import threading
 import time
@@ -37,6 +38,10 @@ class FightingStates(Enum):
 class IFighter(abc.ABC):
     """Interface that will encompass all different types of fights (Demonic beasts, KH boss, FB boss...)"""
 
+    # Every battle has a floor and a phase, so this should be generalized here
+    current_phase = 1
+    current_floor = 1
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         """Initialize the fighter instance with a (optional) callback to call when the fight has finished,
         and a battle strategy.
@@ -60,19 +65,16 @@ class IFighter(abc.ABC):
             self.available_card_slots = 0
             # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
             self.current_hand: tuple[list[Card], list[int]] = None
+            # Reset the list of picked cards
+            self.picked_cards: list[Card] = [Card() for _ in range(4)]  # 4 empty cards by default
 
     def stop_fighter(self):
         with self._lock:
             print("Manually stopping the fighter thread.")
             self.exit_thread = True
 
-    def play_cards(self, selected_cards: tuple[list[Card], list[int | tuple[int, int]]]):
-        """Click on the cards from the picked cards to play.
-
-        Args:
-            selected_cards (tuple[list[Card], list[int]]): A tuple of two elements: The first is the original list of cards,
-                                                           the second one is the list of indices to click on.
-        """
+    def play_cards(self):
+        """Read the current hand of cards, and play them based on the available card slots."""
 
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
@@ -85,26 +87,42 @@ class IFighter(abc.ABC):
             # A patch in case we read the available card slots wrongly earlier
             self.available_card_slots = empty_card_slots
 
-        if empty_card_slots > 0 and len(selected_cards[1]) >= empty_card_slots:
+        slot_index = max(0, self.available_card_slots - empty_card_slots)
+
+        # KEY: Read the hand of cards
+        current_hand = self.battle_strategy.pick_cards(
+            picked_cards=self.picked_cards,
+            card_turn=slot_index,
+            phase=IFighter.current_phase,
+            floor=IFighter.current_floor,
+        )
+
+        if empty_card_slots > 0 and len(current_hand[1]) >= empty_card_slots:
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
-            slot_index = max(0, self.available_card_slots - empty_card_slots)
             print(
-                f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
+                f"Selecting card for slot index {slot_index}, with {empty_card_slots} empty slots.",
             )
-            # What is the index in the hand we have to play? I can be an `int` or a `tuple[int, int]`
+            # What is the index in the hand we have to play? It can be an `int` or a `tuple[int, int]`
             try:
-                index_to_play = selected_cards[1][slot_index]
+                # Always play the first card, since we update the hand after each card play!
+                index_to_play = current_hand[1][0]
             except IndexError as e:
-                print("slot index:", slot_index, "len indices:", len(selected_cards[1]))
+                print("slot index:", slot_index, "len indices:", len(current_hand[1]))
                 raise e
 
-            self._play_card(
-                selected_cards[0], index=index_to_play, window_location=window_location, screenshot=screenshot
+            # Return the card played to use this in the corresponding fighting strategy
+            card_played = self._play_card(
+                current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
             )
+
+            # Add this played card to the corresponding slot in picked cards
+            self.picked_cards[slot_index] = card_played
 
         elif empty_card_slots == 0:
             print("Finished my turn!")
+            # Reset variables
+            self._reset_instance_variables()
             return 1
 
     def _play_card(
@@ -116,26 +134,29 @@ class IFighter(abc.ABC):
     ):
         """Decide whether we're clicking or moving a card"""
         if isinstance(index, Integral):
-            print(f"Trying to click on the card with index: {index}...")
+            # print(f"Trying to click on the card with index: {index}...")
 
             card_to_play = list_of_cards[index]
             if screenshot is not None:
                 # If we're provided a screenshot, try to determine if we're clicking on a ground slot
                 while index != -1 and is_ground_region(screenshot, card_to_play.rectangle):
-                    print("We're clicking on a ground region! We should click on the next card.")
+                    # print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
                     if index >= len(list_of_cards) - 1:
-                        print("Gotta play the rightmost card")
+                        # print("Gotta play the rightmost card")
                         card_to_play = list_of_cards[-1]
                         break
                     card_to_play = list_of_cards[index]
 
             # Just click on the card
             self._click_card(card_to_play, window_location)
+            return copy.deepcopy(card_to_play)  # Return the played card, to keep track of it
 
         else:
             # We have to MOVE the card!
             self._move_card(list_of_cards[index[0]], list_of_cards[index[1]], window_location)
+            # Return empty Card
+            return Card()
 
     def _click_card(self, card_to_play: Card, window_location: np.ndarray):
         """Picks the corresponding card from the list, and EATS IT!"""

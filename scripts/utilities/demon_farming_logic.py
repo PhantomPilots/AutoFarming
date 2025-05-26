@@ -202,7 +202,7 @@ class IDemonFarmer(IFarmer):
 
         if find(vio.accept_invitation, screenshot, threshold=0.8):
             # First, check if the inviting team is good enough
-            # screenshot, _ = capture_window()  # Careful: This may add additional lag
+            screenshot, _ = capture_window()  # Careful: This may add additional lag
             if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
                 print("The inviting team is not good enough for Indura! Canceling invitation...")
                 # display_image(screenshot, "valid team?")

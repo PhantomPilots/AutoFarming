@@ -14,7 +14,9 @@ from utilities.utilities import (
 class SnakeBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Snake"""
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int) -> int:
+    def get_next_card_index(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int, **kwargs
+    ) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
         """

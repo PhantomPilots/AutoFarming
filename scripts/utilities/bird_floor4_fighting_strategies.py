@@ -36,7 +36,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
     # Static attribute that keeps track of whether we've enabled a shield on phase 2
     with_shield = False
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, **kwargs) -> int:
         """Extract the indices based on the list of cards and the current bird phase"""
         if phase == 1:
             card_index = self.get_next_card_index_phase1(hand_of_cards, picked_cards)

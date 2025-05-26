@@ -9,7 +9,7 @@ from utilities.utilities import capture_window, crop_image, find
 class InduraBattleStrategy(IBattleStrategy):
     """The logic that should pick King's debuff card only if there's a stance present"""
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
         """
@@ -38,8 +38,8 @@ class InduraBattleStrategy(IBattleStrategy):
         )
         # Evaluate if the other party has played a King's debuff card
         b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
-        if b_played_mini_king:
-            print("The other party has played a King's debuff card!")
+        # if b_played_mini_king:
+        #     print("The other party has played a King's debuff card!")
 
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         if (
@@ -53,7 +53,7 @@ class InduraBattleStrategy(IBattleStrategy):
             and not b_played_mini_king  # No friend has played a King's debuff card
             and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
         ):
-            print("Playing King's debuff card!")
+            # print("Playing King's debuff card!")
             return king_debuf_card_ids[-1]
 
         # Disable all heal cards if someone has played one already
@@ -76,7 +76,8 @@ class InduraBattleStrategy(IBattleStrategy):
         if len(heal_card_ids) and not picked_heal_ids.size:
             return heal_card_ids[-1]
         elif picked_heal_ids.size:
-            print("We have an additional heal card but we've played one already")
+            pass
+            # print("We have an additional heal card but we've played one already")
 
         # Disable all King's attack cards
         king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
@@ -94,7 +95,7 @@ class InduraBattleStrategy(IBattleStrategy):
         if np.all(
             [card.card_type == CardTypes.DISABLED or card.card_type == CardTypes.GROUND for card in hand_of_cards]
         ):
-            print("All cards are DISABLED! Let's re-enable them as attack-debuffs...")
+            # print("All cards are DISABLED! Let's re-enable them as attack-debuffs...")
             for idx in range(len(hand_of_cards)):
                 if hand_of_cards[idx].card_type == CardTypes.DISABLED:
                     # Re=enable it as a Debuff

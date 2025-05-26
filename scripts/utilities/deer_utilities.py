@@ -93,7 +93,7 @@ def reorder_buff_removal_card(hand_of_cards: list[Card], green_card_ids: list[in
     # Add the buff removal ID to the beginning of the list
     buff_removal_ids = np.where([is_buff_removal_card(hand_of_cards[idx]) for idx in green_card_ids])[0]
     if len(buff_removal_ids):
-        print("Setting lowest priority to buff removal card")
+        # print("Setting lowest priority to buff removal card")
         green_card_ids = np.concatenate(
             ([green_card_ids[buff_removal_ids[0]]], np.delete(green_card_ids, buff_removal_ids[0]))
         )

@@ -20,8 +20,6 @@ from utilities.vision import Vision
 
 
 class DogsFighter(IFighter):
-    # Start by assuming we're on phase 1... but then make sure to read it every time the turn starts
-    current_phase = None
     # Keep track of what floor has been defeated
     floor_defeated = None
 
@@ -30,6 +28,9 @@ class DogsFighter(IFighter):
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
+
+        # Reset the current phase to -1
+        IFighter.current_phase = -1
 
     def fighting_state(self):
 
@@ -57,7 +58,7 @@ class DogsFighter(IFighter):
             print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
+        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8, debug=True)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -67,7 +68,7 @@ class DogsFighter(IFighter):
             # self.count_empty_card_slots(screenshot, plot=True)
 
     @staticmethod
-    def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
+    def count_empty_card_slots(screenshot, threshold=0.6, debug=False):
         """Count how many empty card slots are there for DOGS"""
         card_slot_image = get_card_slot_region_image(screenshot)
         rectangles = []
@@ -77,12 +78,13 @@ class DogsFighter(IFighter):
                 temp_rectangles, _ = vio_image.find_all_rectangles(
                     card_slot_image, threshold=threshold, method=cv2.TM_CCOEFF_NORMED
                 )
+                # Why twice??
                 rectangles.extend(temp_rectangles)
                 rectangles.extend(temp_rectangles)
 
         # Group all rectangles
         grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
-        if plot and len(grouped_rectangles):
+        if debug and len(grouped_rectangles):
             print(f"We have {len(grouped_rectangles)} empty slots.")
             # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
             translated_rectangles = np.array(
@@ -100,7 +102,8 @@ class DogsFighter(IFighter):
             cv2.imshow("rectangles", rectangles_fig)
             cv2.waitKey(0)
             cv2.destroyAllWindows()
-
+        if len(grouped_rectangles) > 0:
+            print(f"Found {len(grouped_rectangles)} empty card slots.")
         return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else len(grouped_rectangles)
 
     def my_turn_state(self):
@@ -110,39 +113,28 @@ class DogsFighter(IFighter):
         # 1. Read the phase we're in
         # 2. Make sure to click on the correct dog (right/left) depending on the phase
         # empty_card_slots = self.count_empty_card_slots(screenshot)
-
         self._identify_current_phase()
 
-        # 'pick_cards' will take a screenshot and extract the required features specific to that fighting strategy
-        if self.current_hand is None:
-            self.current_hand = self.battle_strategy.pick_cards(
-                floor=DogsFighter.current_floor,
-                phase=DogsFighter.current_phase,
-            )
-
-        if finished_turn := self.play_cards(self.current_hand):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+        # Then play the cards
+        self.play_cards()
 
     def _identify_current_phase(self):
         """Identify DB phase"""
         screenshot, window_location = capture_window()
-        if find(vio.phase_1, screenshot, threshold=0.8) and DogsFighter.current_phase != 1:
+        if find(vio.phase_1, screenshot, threshold=0.8) and IFighter.current_phase != 1:
             # Click on light dog
-            DogsFighter.current_phase = 1
-            print("Clicking on light dog, because current phase:", DogsFighter.current_phase)
+            IFighter.current_phase = 1
+            print("Clicking on light dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("light_dog"), window_location)
-        elif find(vio.phase_2, screenshot, threshold=0.8) and DogsFighter.current_phase != 2:
+        elif find(vio.phase_2, screenshot, threshold=0.8) and IFighter.current_phase != 2:
             # Click on dark dog
-            DogsFighter.current_phase = 2
-            print("Clicking on dark dog, because current phase:", DogsFighter.current_phase)
+            IFighter.current_phase = 2
+            print("Clicking on dark dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-        elif find(vio.phase_3_dogs, screenshot, threshold=0.8) and DogsFighter.current_phase != 3:
+        elif find(vio.phase_3_dogs, screenshot, threshold=0.8) and IFighter.current_phase != 3:
             # Click on dark dog
-            DogsFighter.current_phase = 3
-            print("Clicking on dark dog, because current phase:", DogsFighter.current_phase)
+            IFighter.current_phase = 3
+            print("Clicking on dark dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
 
     def fight_complete_state(self):
@@ -159,7 +151,7 @@ class DogsFighter(IFighter):
 
         # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot):
-            self.complete_callback(victory=True, phase=DogsFighter.current_phase)
+            self.complete_callback(victory=True, phase=IFighter.current_phase)
             self.exit_thread = True
             # Reset the defeated floor
             DogsFighter.floor_defeated = None
@@ -174,16 +166,16 @@ class DogsFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=DogsFighter.current_phase)
+            self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
             # Reset the current phase
-            DogsFighter.current_phase = None
+            IFighter.current_phase = None
 
     @IFighter.run_wrapper
     def run(self, floor=1):
 
         print(f"Fighting very hard on floor {floor}...")
-        DogsFighter.current_floor = floor
+        IFighter.current_floor = floor
 
         while True:
 
@@ -203,4 +195,4 @@ class DogsFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(0.5)

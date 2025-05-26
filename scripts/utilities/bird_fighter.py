@@ -10,9 +10,7 @@ from utilities.utilities import capture_window, find, find_and_click, get_hand_c
 
 class BirdFighter(IFighter):
 
-    phase = 1
-
-    current_floor = -1
+    current_floor = 1
 
     def fighting_state(self):
 
@@ -76,21 +74,11 @@ class BirdFighter(IFighter):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
         screenshot, _ = capture_window()
 
-        # Ensure we have the current hand
-        if self.current_hand is None:
-            self._update_current_hand(screenshot)
+        # First, update the current phase
+        IFighter.current_phase = self._identify_phase(screenshot)
 
-        # Attempt to play the cards
-        if not self._attempt_to_play_cards():
-            print("We're trying to play a GROUND card, we need to re-capture the hand...")
-            self._update_current_hand(screenshot)
-            return
-
-        if not find(vio.empty_card_slot, screenshot):
-            print("Finished my turn, going back to FIGHTING")
-            self.current_state = FightingStates.FIGHTING
-            # Reset the hand
-            self.current_hand = None
+        # Then, play the cards
+        self.play_cards()
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""
@@ -109,19 +97,6 @@ class BirdFighter(IFighter):
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
 
         return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else rectangles.shape[0] + rectangles_2.shape[0]
-
-    def _update_current_hand(self, screenshot):
-        """Update the current hand of cards based on the phase."""
-        current_phase = self._identify_phase(screenshot)
-        self.current_hand = self.battle_strategy.pick_cards(phase=current_phase)
-
-    def _attempt_to_play_cards(self) -> bool:
-        """Attempt to play the cards, returning True if successful, False otherwise."""
-        try:
-            self.play_cards(self.current_hand)
-            return True
-        except ValueError:
-            return False
 
     def exit_fight_state(self):
         """We have to manually finish the fight because we've been fully disabled..."""
@@ -174,9 +149,9 @@ class BirdFighter(IFighter):
     def run(self, floor_num=1):
 
         # First, set the floor number
-        BirdFighter.current_floor = floor_num
+        IFighter.current_floor = floor_num
 
-        print(f"Fighting very hard on floor {BirdFighter.current_floor}...")
+        print(f"Fighting very hard on floor {IFighter.current_floor}...")
 
         while True:
 
@@ -199,4 +174,4 @@ class BirdFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(0.5)

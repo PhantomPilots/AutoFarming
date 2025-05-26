@@ -29,28 +29,37 @@ class IBattleStrategy(abc.ABC):
     cards_to_play = 0
 
     # In case the fighter dies!
-    picked_cards = []
+    picked_cards: list[Card] = []
 
-    def pick_cards(self, cards_to_play=4, **kwargs) -> tuple[list[Card], list[int]]:
+    def pick_cards(
+        self, picked_cards: list[Card] = None, cards_to_play=4, card_turn=0, **kwargs
+    ) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
-        # Extract the cards
+        if picked_cards is None:
+            picked_cards: list[Card] = []
+        # Assign the given picked cards to the class variable
+        IBattleStrategy.picked_cards = deepcopy(picked_cards)
+
+        # Extract the hand cards for this specific click
         hand_of_cards: list[Card] = get_hand_cards() if cards_to_play == 4 else get_hand_cards_3_cards()
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])
         print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
+        print("Picked cards:", [card.card_type.name for card in IBattleStrategy.picked_cards])
 
         # Extract how many cards we have to play
         IBattleStrategy.cards_to_play = cards_to_play
 
         card_indices = []
 
-        # TODO: For now we need to hardcode the '4', otherwise code may break on line 82 of general_figher_interface.py...
         for _ in range(cards_to_play):
 
             # Extract the next index to click on
-            next_index = self.get_next_card_index(hand_of_cards, IBattleStrategy.picked_cards, **kwargs)
+            next_index = self.get_next_card_index(
+                hand_of_cards, IBattleStrategy.picked_cards, card_turn=card_turn, **kwargs
+            )
             if isinstance(next_index, Integral):
                 # Ensure we don't pick a GROUND card
                 while (
@@ -61,13 +70,13 @@ class IBattleStrategy(abc.ABC):
                     print(f"We can't pick card with index {next_index}, it's GROUND.")
                     next_index += 1
 
-                print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-                IBattleStrategy.picked_cards.append(hand_of_cards[next_index])
+                # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
+                IBattleStrategy.picked_cards[IBattleStrategy.card_turn] = hand_of_cards[next_index]
 
             elif isinstance(next_index, (tuple, list)):
                 # Make sure both numbers are part of a circular buffer
                 next_index = [next_index[0] % 8, next_index[1] % 8]
-                print(f"Moving cards: {next_index}")
+                # print(f"Moving cards: {next_index}")
 
             # Update the indices and cards lists
             card_indices.append(next_index)
@@ -80,7 +89,7 @@ class IBattleStrategy(abc.ABC):
 
         # Reset the static variables
         IBattleStrategy.card_turn = 0
-        IBattleStrategy.picked_cards = []
+        IBattleStrategy.picked_cards: list[Card] = []  # Not needed anymore?
 
         # Return the result afterwards
         return original_hand_of_cards, card_indices
@@ -180,7 +189,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
-        print("We don't meet any of the previous criteria, defaulting to the rightmost index")
+        # print("We don't meet any of the previous criteria, defaulting to the rightmost index")
         return -1
 
 

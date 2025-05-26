@@ -192,7 +192,7 @@ class IFloor4Farmer(IFarmer):
         # We may have finished the fight already, let's check if we need to go back to the main screen
         if find(vio.floor_3_cleared_db, screenshot):
             # We finished the fight, let's go back to the main screen
-            print("We finished the fight but are still fighting? Get outa here!")
+            print("We finished the fight but are still fighting? Get outta here!")
             self.stop_fighter_thread()
             self.current_state = States.PROCEED_TO_FLOOR
 
