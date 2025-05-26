@@ -18,20 +18,21 @@ class DeerBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Deer based on custom strategy"""
 
     def get_next_card_index(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, floor: int
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, floor: int, card_turn=0, **kwargs
     ) -> int | list[int]:
         """Extract the next card index or movement based on floor and phase"""
         if floor == 1:
-            return self.floor_1_strategy(hand_of_cards, picked_cards, phase)
+            return self.floor_1_strategy(hand_of_cards, picked_cards, phase, card_turn=card_turn)
         elif floor == 2:
-            return self.floor_2_strategy(hand_of_cards, picked_cards, phase)
+            return self.floor_2_strategy(hand_of_cards, picked_cards, phase, card_turn=card_turn)
         elif floor == 3:
-            return self._floor_3_strategy(hand_of_cards, picked_cards, phase)
+            return self._floor_3_strategy(hand_of_cards, picked_cards, phase, card_turn=card_turn)
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)  # Fallback
 
-    def floor_1_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int | list[int]:
+    def floor_1_strategy(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int
+    ) -> int | list[int]:
         """Strategy for Floor 1"""
-        card_turn = IBattleStrategy.card_turn
 
         if phase == 1:
             if card_turn == 0:
@@ -78,9 +79,8 @@ class DeerBattleStrategy(IBattleStrategy):
 
         return -1
 
-    def floor_2_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int:
+    def floor_2_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int) -> int:
         """Strategy for Floor 2"""
-        card_turn = IBattleStrategy.card_turn
 
         if phase == 1:
             if card_turn == 0:
@@ -166,9 +166,10 @@ class DeerBattleStrategy(IBattleStrategy):
 
         return -1
 
-    def _floor_3_strategy(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int) -> int | list[int]:
+    def _floor_3_strategy(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int
+    ) -> int | list[int]:
         """Strategy for Floor 3"""
-        card_turn = IBattleStrategy.card_turn
 
         if phase == 1:
             if card_turn == 0:

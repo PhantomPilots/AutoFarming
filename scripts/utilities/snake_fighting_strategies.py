@@ -15,7 +15,7 @@ class SnakeBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Snake"""
 
     def get_next_card_index(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int, **kwargs
+        self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int, card_turn=0, **kwargs
     ) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
@@ -26,7 +26,7 @@ class SnakeBattleStrategy(IBattleStrategy):
 
         elif floor == 2:
             if phase == 1:
-                return self.floor_2_phase_1(hand_of_cards, picked_cards)
+                return self.floor_2_phase_1(hand_of_cards, picked_cards, card_turn=card_turn)
 
         elif floor == 3:
             if phase == 2:
@@ -46,12 +46,12 @@ class SnakeBattleStrategy(IBattleStrategy):
         # Default to Smarter strategy
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def floor_2_phase_1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
+    def floor_2_phase_1(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
         """Strategy for Phase 1 of Floor 2: We cannot use Liz's AOE card until the very end"""
 
         # If it's the last card to play, use Liz's AOE:
-        if IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
-            print("Can we use Liz's AOE card?")
+        if card_turn == 3:
+            # print("Can we use Liz's AOE card?")
             liz_aoe_ids = np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]
             if len(liz_aoe_ids):
                 return liz_aoe_ids[-1]
@@ -111,7 +111,7 @@ class SnakeBattleStrategy(IBattleStrategy):
             and not np.any([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards])
         ):
             if len(liz_aoe_ids := np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]):
-                print("We need to remove the extort!")
+                # print("We need to remove the extort!")
                 return liz_aoe_ids[-1]
 
         mael_ult_id: list[int] = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
@@ -120,12 +120,12 @@ class SnakeBattleStrategy(IBattleStrategy):
             vio.damage_increase, screenshot, threshold=0.8
         ):
             if len(mael_ult_id):
-                print("Removing counter/damage increase with Mael's ultimate!")
+                # print("Removing counter/damage increase with Mael's ultimate!")
                 return mael_ult_id[-1]
             elif len(
                 freyja_st_ids := np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
             ) and not len(played_stance_cancel_ids):
-                print("Playing a Freyja ST to remove damage increase or counter.")
+                # print("Playing a Freyja ST to remove damage increase or counter.")
                 return freyja_st_ids[-1]
             # If we don't have Freyja ST cards or Mael's ult, use a Margaret ST ONLY if damage increase is on!
             elif (
@@ -135,12 +135,12 @@ class SnakeBattleStrategy(IBattleStrategy):
                 )
                 and not len(played_stance_cancel_ids)
             ):
-                print("Playing a Margaret ST to remove damage increase.")
+                # print("Playing a Margaret ST to remove damage increase.")
                 return margaret_st_ids[-1]
 
         elif len(mael_ult_id):
             # Disable Mael's ultimate, to save it for later
-            print("Saving Mael's ultimate for the future...")
+            # print("Saving Mael's ultimate for the future...")
             hand_of_cards[mael_ult_id[-1]].card_type = CardTypes.DISABLED
 
         # Play a Freyja card to avoid getting darkness!
@@ -188,7 +188,7 @@ class SnakeBattleStrategy(IBattleStrategy):
         for i in range(len(hand_of_cards) - 2, 0, -1):
             if determine_card_merge(hand_of_cards[i - 1], hand_of_cards[i + 1]):
                 # We can generate a merge, play that card
-                print("Generating a merge, even if it's a stance cancel...")
+                # print("Generating a merge, even if it's a stance cancel...")
                 return i
 
         # Default to moving cards
@@ -200,7 +200,7 @@ class SnakeBattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         if find(vio.snake_stance, screenshot, threshold=0.8):
-            print("The snake has a stance! Can we cancel it?")
+            # print("The snake has a stance! Can we cancel it?")
 
             # Cancel the stance and also play a buff if possible
             buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]

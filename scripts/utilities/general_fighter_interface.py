@@ -66,7 +66,7 @@ class IFighter(abc.ABC):
             # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
             self.current_hand: tuple[list[Card], list[int]] = None
             # Reset the list of picked cards
-            self.picked_cards: list[Card] = [Card() for _ in range(4)]  # 4 empty cards by default
+            self.picked_cards: list[Card] = [Card() for _ in range(6)]  # 6 as a buffer, should be at most 4
 
     def stop_fighter(self):
         with self._lock:
@@ -97,7 +97,7 @@ class IFighter(abc.ABC):
             floor=IFighter.current_floor,
         )
 
-        if empty_card_slots > 0 and len(current_hand[1]) >= empty_card_slots:
+        if empty_card_slots > 0:
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
             print(

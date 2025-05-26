@@ -64,7 +64,7 @@ class InduraFighter(IFighter):
         )
 
         slot_index = InduraFighter.card_turn
-        if slot_index < len(current_hand[1]) and empty_card_slots > 0 and len(current_hand[1]) >= empty_card_slots:
+        if empty_card_slots > 0:
             print(
                 f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
             )

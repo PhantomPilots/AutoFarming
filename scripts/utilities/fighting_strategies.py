@@ -26,7 +26,6 @@ class IBattleStrategy(abc.ABC):
     """Interface that groups all battle fighting strategies"""
 
     card_turn = 0
-    cards_to_play = 0
 
     # In case the fighter dies!
     picked_cards: list[Card] = []
@@ -40,6 +39,7 @@ class IBattleStrategy(abc.ABC):
             picked_cards: list[Card] = []
         # Assign the given picked cards to the class variable
         IBattleStrategy.picked_cards = deepcopy(picked_cards)
+        IBattleStrategy.card_turn = card_turn
 
         # Extract the hand cards for this specific click
         hand_of_cards: list[Card] = get_hand_cards() if cards_to_play == 4 else get_hand_cards_3_cards()
@@ -49,12 +49,9 @@ class IBattleStrategy(abc.ABC):
         print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
         print("Picked cards:", [card.card_type.name for card in IBattleStrategy.picked_cards])
 
-        # Extract how many cards we have to play
-        IBattleStrategy.cards_to_play = cards_to_play
-
         card_indices = []
 
-        for _ in range(cards_to_play):
+        for _ in range(1):  # Now we only have to pick one card at a time! Will make it much faster
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(
@@ -87,9 +84,9 @@ class IBattleStrategy(abc.ABC):
             # Increment the card turn
             IBattleStrategy.card_turn += 1
 
-        # Reset the static variables
+        # Reset the static variables -- Not needed anymore?
         IBattleStrategy.card_turn = 0
-        IBattleStrategy.picked_cards: list[Card] = []  # Not needed anymore?
+        IBattleStrategy.picked_cards: list[Card] = []
 
         # Return the result afterwards
         return original_hand_of_cards, card_indices

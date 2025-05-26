@@ -36,8 +36,16 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
     # Static attribute that keeps track of whether we've enabled a shield on phase 2
     with_shield = False
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, **kwargs) -> int:
+    card_turn = 0
+
+    def get_next_card_index(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, **kwargs
+    ) -> int:
         """Extract the indices based on the list of cards and the current bird phase"""
+
+        # Update the current card turn
+        BirdFloor4BattleStrategy.card_turn = card_turn
+
         if phase == 1:
             card_index = self.get_next_card_index_phase1(hand_of_cards, picked_cards)
         elif phase == 2:
@@ -79,7 +87,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         else:
             # If we don't cure block-skill debuff, check if we can do a card merge
             silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
-            if len(silver_cards) < 3 and IBattleStrategy.card_turn == 0:
+            if len(silver_cards) < 3 and BirdFloor4BattleStrategy.card_turn == 0:
                 # Only do a manual card merge if it's the first card of the turn
                 if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                     return potential_idx
@@ -187,7 +195,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
                 return potential_idx
 
         # Play level 2 cards or higher only if we can get the shield
-        empty_slots = IBattleStrategy.cards_to_play - IBattleStrategy.card_turn
+        empty_slots = 4 - BirdFloor4BattleStrategy.card_turn
         # We need to recompute the "total number of silver cards", since we may have moved cards and those take up slot space
         total_num_silver_cards = min(len(silver_ids), empty_slots) + len(picked_silver_cards)
         if total_num_silver_cards >= 3 and len(silver_ids) > 0 and len(picked_silver_cards) < 3:
@@ -227,7 +235,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
             next_idx = self._with_shield_phase2(hand_of_cards)
 
             # Evaluate if we have to remove the shield
-            if IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
+            if BirdFloor4BattleStrategy.card_turn == 3:
                 print("REMOVING SHIELD!")
                 BirdFloor4BattleStrategy.with_shield = False
         else:
@@ -237,7 +245,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
             # Evaluate here if we need to set the shield
             if isinstance(next_idx, Integral):
                 picked_silver_cards.append(next_idx)
-            if len(picked_silver_cards) == 3 and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1:
+            if len(picked_silver_cards) == 3 and BirdFloor4BattleStrategy.card_turn == 3:
                 print("SETTING SHIELD!")
                 BirdFloor4BattleStrategy.with_shield = True
 
@@ -400,7 +408,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
 
         # # If we don't have Meli's ult ready, play/move a card if we can generate a Meli merge
-        # if IBattleStrategy.card_turn == 0 and not np.any(
+        # if BirFloor4BattleStrategy.card_turn == 0 and not np.any(
         #     [find(vio.meli_ult, card.card_image, threshold=0.6) for card in hand_of_cards]
         # ):
         #     print("We don't have Meli's ult, let's force merging a Meli card")
@@ -491,7 +499,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
         return (
             thor_ids[0]  # So we use the thunderstorm if we have it
-            if len(thor_ids) and IBattleStrategy.cards_to_play - IBattleStrategy.card_turn == 1
+            if len(thor_ids) and BirdFloor4BattleStrategy.card_turn == 3
             else ham_card_ids[-1]
         )
 

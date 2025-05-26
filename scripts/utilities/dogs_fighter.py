@@ -58,7 +58,7 @@ class DogsFighter(IFighter):
             print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8, debug=True)) > 0:
+        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -122,10 +122,11 @@ class DogsFighter(IFighter):
         """Identify DB phase"""
         screenshot, window_location = capture_window()
         if find(vio.phase_1, screenshot, threshold=0.8) and IFighter.current_phase != 1:
-            # Click on light dog
-            IFighter.current_phase = 1
-            print("Clicking on light dog, because current phase:", IFighter.current_phase)
-            click_im(Coordinates.get_coordinates("light_dog"), window_location)
+            if (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 1:
+                # Click on light dog -- This is a hack!
+                IFighter.current_phase = 1
+                print("Clicking on light dog, because current phase:", IFighter.current_phase)
+                click_im(Coordinates.get_coordinates("light_dog"), window_location)
         elif find(vio.phase_2, screenshot, threshold=0.8) and IFighter.current_phase != 2:
             # Click on dark dog
             IFighter.current_phase = 2
@@ -195,4 +196,4 @@ class DogsFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.5)
+            time.sleep(0.7)
