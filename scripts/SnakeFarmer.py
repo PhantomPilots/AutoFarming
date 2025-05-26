@@ -16,7 +16,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=SnakeFarmer,
         battle_strategy=SnakeBattleStrategy,  # The AI that will pick the cards
-        starting_state=States.FIGHTING_FLOOR,  # It should be 'GOING_TO_DB'
+        starting_state=States.GOING_TO_DB,  # It should be 'GOING_TO_DB'
         reset_after_defeat=True,  # After we lose, should we reset the Demonic Beast team?
         max_stamina_pots="inf",  # How many stamina pots at most
         max_floor_3_clears=args.clears,  # How many floor 3 clears at most
