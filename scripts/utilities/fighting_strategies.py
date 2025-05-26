@@ -68,7 +68,8 @@ class IBattleStrategy(abc.ABC):
                     next_index += 1
 
                 # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
-                IBattleStrategy.picked_cards[IBattleStrategy.card_turn] = hand_of_cards[next_index]
+                if IBattleStrategy.card_turn < len(IBattleStrategy.picked_cards):
+                    IBattleStrategy.picked_cards[IBattleStrategy.card_turn] = hand_of_cards[next_index]
 
             elif isinstance(next_index, (tuple, list)):
                 # Make sure both numbers are part of a circular buffer
