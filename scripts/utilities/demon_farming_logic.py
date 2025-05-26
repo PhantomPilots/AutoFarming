@@ -217,7 +217,7 @@ class IDemonFarmer(IFarmer):
             if self.demon_to_farm == vio.indura_demon:
                 time.sleep(1)
                 screenshot, window_location = capture_window()
-                if not self._valid_indura_team(screenshot, debug=True):
+                if not self._valid_indura_team(screenshot, debug=False):
                     print("The inviting team is not good enough for Indura! Canceling invitation...")
                     # display_image(screenshot, "valid team?")
                     time.sleep(1)
