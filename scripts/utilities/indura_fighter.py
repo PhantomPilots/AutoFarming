@@ -78,7 +78,7 @@ class InduraFighter(IFighter):
             card_played = self._play_card(
                 current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
             )
-            time.sleep(0.25)
+            time.sleep(0.5)
             # Count GROUND cards after
             hand_cards = get_hand_cards_3_cards()
             after_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])

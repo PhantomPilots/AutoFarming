@@ -188,7 +188,7 @@ class IDemonFarmer(IFarmer):
         print("Found a raid! Waiting before clicking...")
         IDemonFarmer.sleeper.wait(timeout=self.sleep_before_accept)
 
-    def looking_for_demon_state(self):
+    def looking_for_demon_state(self):  # sourcery skip: extract-method
         """Waiting for someone to send us a demon"""
         screenshot, window_location = capture_window()
 
