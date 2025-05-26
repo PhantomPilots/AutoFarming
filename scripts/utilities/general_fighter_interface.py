@@ -161,7 +161,7 @@ class IFighter(abc.ABC):
     def _click_card(self, card_to_play: Card, window_location: np.ndarray):
         """Picks the corresponding card from the list, and EATS IT!"""
         rectangle = card_to_play.rectangle
-        click_im(rectangle, window_location, sleep_after_click=0.05)
+        click_im(rectangle, window_location, sleep_after_click=0.1)
 
     def _move_card(self, origin_card: Card, target_card: Card, window_location: np.ndarray):
         """Move one card to the other"""

@@ -58,6 +58,7 @@ class InduraFighter(IFighter):
         # KEY: Read the hand of cards
         current_hand = self.battle_strategy.pick_cards(
             picked_cards=self.picked_cards,
+            card_turn=InduraFighter.card_turn,
             cards_to_play=3,
             phase=IFighter.current_phase,
             floor=IFighter.current_floor,

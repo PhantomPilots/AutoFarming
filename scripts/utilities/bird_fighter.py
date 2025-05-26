@@ -49,9 +49,9 @@ class BirdFighter(IFighter):
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != BirdFighter.phase:
+            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"MOVING TO PHASE {new_phase}!")
-                BirdFighter.phase = new_phase
+                IFighter.current_phase = new_phase
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -125,7 +125,7 @@ class BirdFighter(IFighter):
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
-            self.complete_callback(victory=False, phase=BirdFighter.phase)
+            self.complete_callback(victory=False, phase=IFighter.current_phase)
             with self._lock:
                 self.exit_thread = True
 
