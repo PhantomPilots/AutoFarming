@@ -255,8 +255,16 @@ melee_evasion = Vision("demons\\melee_evasion.png")
 ranged_evasion = Vision("demons\\ranged_evasion.png")
 oxidize_indura = Vision("demons\\oxidize_indura.png")
 king_unit = Vision("demons\\king_unit.png")
-lancelot_unit = Vision("demons\\lancelot_unit.png")
-alpha_unit = Vision("demons\\alpha_unit.png")
+lancelot_unit = MultiVision(
+    "demons\\lancelot_unit.png",
+    "demons\\lance_unit_2.png",
+    image_name="Lancelot unit",
+)
+alpha_unit = MultiVision(
+    "demons\\alpha_unit.png",
+    "demons\\alpha_unit_2.png",
+    image_name="Alpha unit",
+)
 mini_king = Vision("demons\\mini_king.png")
 mini_heal = Vision("demons\\mini_heal.png")
 

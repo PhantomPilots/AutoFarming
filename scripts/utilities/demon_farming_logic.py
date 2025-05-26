@@ -202,7 +202,7 @@ class IDemonFarmer(IFarmer):
 
         if find(vio.accept_invitation, screenshot, threshold=0.8):
             # First, check if the inviting team is good enough
-            screenshot, _ = capture_window()  # Careful: This may add additional lag
+            # screenshot, _ = capture_window()  # Careful: This may add additional lag
             if self.demon_to_farm == vio.indura_demon and not self._valid_indura_team(screenshot):
                 print("The inviting team is not good enough for Indura! Canceling invitation...")
                 # display_image(screenshot, "valid team?")
@@ -240,7 +240,7 @@ class IDemonFarmer(IFarmer):
                 self.current_state = States.GOING_TO_DEMONS
                 IDemonFarmer.not_seen_invite = False
 
-    def _valid_indura_team(self, screenshot: np.ndarray) -> bool:
+    def _valid_indura_team(self, screenshot: np.ndarray, debug=False) -> bool:
         """Evaluate if the inviting team is good enough for Indura"""
         # Crop the image to the region of the team invite
         team_invite_region = crop_image(
@@ -248,9 +248,12 @@ class IDemonFarmer(IFarmer):
             Coordinates.get_coordinates("team_invite_top_left"),
             Coordinates.get_coordinates("team_invite_bottom_right"),
         )
-        return find(vio.lancelot_unit, team_invite_region, threshold=0.6) or find(
+        valid = find(vio.lancelot_unit, team_invite_region, threshold=0.6) or find(
             vio.alpha_unit, team_invite_region, threshold=0.6
         )
+        if debug and not valid:
+            display_image(screenshot, title="Inviting team is not good enough")
+        return valid
 
     def ready_to_fight_state(self):
         """We've accepted a raid!"""
