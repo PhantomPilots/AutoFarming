@@ -1,5 +1,20 @@
 # AVAILABLE BOTS
 
+All bots can be run from within the `Autofarming\scripts\` directory with a command that looks like:<br>
+```python <SCRIPT_NAME> -p <PASSWORD>```
+* `<SCRIPT_NAME>` will be the name of the file, for instance `BirdFarmer.py`.
+* `<PASSWORD>` is optional, and it is your account password. If provided, the bot will automatically log back into the game if a duplicate connection is detected.
+
+When farming the Indura demon, you can specify the fight difficulty like this:
+* `python DemonFarmer.py -d chaos`<br>
+It accepts `chaos`, `hell` and `extreme`.
+
+You can combine multiple options, such as:
+* `python DemonFarmer.py -d chaos -p myPassword42`
+
+To see all available options for a specific bot, you can do:
+* `python <SCRIPT_NAME> --help`
+
 ## Equipment farming script
 
 A script that probably no one needs but me, `scripts/EquipmentFarmer.py` farms gear to extract blue stones while auto-salvaging whenever the equipment inventory becomes full. Then it goes back to farming. 
@@ -119,7 +134,7 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 ## Demon farming script
 
-In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Bellmoth and OG.
+In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Indura.
 So far, it only accepts the "Hell" difficulty.
 
 **An important feature** is that the bot will stop farming demons **at 2am PT time** to **check in and do all the daily missions** except PVP (unless the option is enabled, see below).
@@ -130,18 +145,27 @@ You can find all the setup options inside the file:
 FarmingFactory.main_loop(
     farmer=DemonFarmer,
     starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
-    demon_to_farm=vio.og_demon,  # Accepts: 'vio.og_demon', 'vio.bell_demon', 'vio.red_demon', 'vio.gray_demon', 'vio.crimson_demon'
-    time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation
+    demons_to_farm=[
+        # vio.red_demon,
+        # vio.gray_demon,
+        # vio.crimson_demon,
+        # vio.bell_demon,
+        # vio.og_demon,
+        vio.indura_demon,
+    ],
+    indura_difficulty=args.indura_diff,  # Difficulty of Indura demon
+    time_to_sleep=9.15,  # How many seconds to sleep before accepting an invitation
+    time_between_demons=2,  # How many hours between each type of demon
     do_dailies=True,  # Do we halt demon farming to do dailies?
-    do_daily_pvp=False,  # If we do dailies, do we do PVP?
+    do_daily_pvp=True,  # If we do dailies, do we do PVP?
+    password=args.password,  # Account password
 )
 ```
 
-* To select the demon, inside `DemonFarmer.py` uncomment (removing the `#` symbol) the lines for the demons you want to farm.<br>
-**NOTE:** The latest update allows farming Indura extreme. 
+* To select the demons you want to farm, inside `DemonFarmer.py` uncomment (removing the `#` symbol) the lines for the demons you want to farm.
 
 * You may need to play with the timing in the line:<br>
-```time_to_sleep=9.3,  # How many seconds to sleep before accepting an invitation```<br>
-⚠ Lower than `9.2`, you'll risk wasting all your 3 daily demon invites.
+```time_to_sleep=9.15,  # How many seconds to sleep before accepting an invitation```<br>
+⚠ Lower than `9`, you'll risk wasting all your 3 daily demon invites.
 
-* Doing the automatic dailies can be disabled by setting its option to `False`. PVP daily mission can be enabled by setting its option to `True`.
+* Doing the automatic dailies can be disabled by setting its option to `False`. PVP daily mission can be enabled/disabled accordingly as well.

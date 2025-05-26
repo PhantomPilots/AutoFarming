@@ -64,7 +64,7 @@ Updating the code is done using Git. The process is simple:
 
 ### How to run the scripts
 
-#### Python IDLE
+<!-- #### Python IDLE
 
 All scripts require being run as administrator. One way to do so is the following:
 1. Press the Windows key and type "IDLE". If Python is installed properly, you should see the IDLE app: <br>
@@ -72,19 +72,20 @@ All scripts require being run as administrator. One way to do so is the followin
 Right-click on it and run it as an administrator.
 2. Click on `File -> Open...` and load the script you want to run.
 3. To run the script, press the `F5` key while the 7DS window is **fully visible** on the screen.
-4. To stop the script, close the new window that appeared after the previous point (where blue text is being written down).
+4. To stop the script, close the new window that appeared after the previous point (where blue text is being written down). -->
 
 #### PowerShell
 
-Using the Python IDLE is easier, but it doesn't allow for `CTRL+C` to kill some scripts (like the `BirdFarmer.py`). Using PowerShell is a better alternative:
+<!-- Using the Python IDLE is easier, but it doesn't allow for `CTRL+C` to kill some scripts (like the `BirdFarmer.py`). Using PowerShell is a better alternative: -->
 1. Open PowerShell with administrator privileges.
 2. Navigate to the folder where you host the scripts. To do so, copy the path location:<br>
 <img src="readme_images/copy_location.png" alt="copy_location" width="200"/><br>
 
-3. Paste the location in PowerShell, preceded by `cd `, and press `Enter`:<br>
+3. Paste the location in PowerShell, preceded by `cd ` (note the space), and press `Enter`:<br>
 <img src="readme_images/location_in_powershell.png" width="250"/><br>
 
-4. Finally, type into PowerShell: `python BirdFarmer.py` (or whatever script you're trying to run).
+4. Finally, type into PowerShell: `python BirdFarmer.py` (or whatever script you're trying to run).<br>
+**NOTE**: See the first section in [bots README file](BOTS_README.md) for a more detailed explanation about additional options.
 5. Now, to stop any script you can simply press `CTRL+C`.
 
 Happy farming!
@@ -109,8 +110,8 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for floors 1-3 of Snake.
 - [X] Bot for all daily missions.
 - [X] Farmer for Indura Extreme.
-- [ ] Farmer for Indura Hell.
-- [ ] Farmer for Indura Chaos.
+- [X] Farmer for Indura Hell.
+- [X] Farmer for Indura Chaos.
 - [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
 ## Longer-term features
