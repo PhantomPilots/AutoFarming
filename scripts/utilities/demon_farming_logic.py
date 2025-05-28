@@ -185,7 +185,8 @@ class IDemonFarmer(IFarmer):
 
     def wait_for_accepting_invite(self):
         """Wait for 9 seconds before accepting the invite. This should be a threading event!"""
-        print("Found a raid! Waiting before clicking...")
+        print(f"Found a raid! Sleeping for {self.sleep_before_accept} s before clicking...")
+        IDemonFarmer.sleeper.clear()  # We have to reset the sleeper event
         IDemonFarmer.sleeper.wait(timeout=self.sleep_before_accept)
 
     def looking_for_demon_state(self):  # sourcery skip: extract-method
