@@ -205,7 +205,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return red_card_ids[0]
 
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
-        if card_turn == 0:
+        if card_turn == 0 or DeerFloor4BattleStrategy._color_cards_picked_p3 is None:
             # Pick what color to play this round
             card_colors = ["green", "blue"]  # Priority order
             # Roll the colors to change the priority
