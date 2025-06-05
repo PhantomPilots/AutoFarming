@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import win32con
 import win32gui
@@ -30,8 +32,9 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     w = w - (border_pixels * 2)
     h = h - 20
 
-    succeed = False
-    while not succeed:
+    i = 0
+    num_attempts = 5
+    while True:
         try:
             # Whatever these lines are?
             hdesktop = win32gui.GetDesktopWindow()
@@ -65,12 +68,16 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
             window_rect = win32gui.GetWindowRect(hwnd_target)
             window_location = [window_rect[0], window_rect[1]]
 
-            succeed = True
+            break
 
         except Exception as e:
-            # print("[WARN] CompatibleDC failed, but we caught it successfully!")
-            raise e
-            continue
+            if i >= num_attempts:
+                print(f"[ERROR] Failed to capture window after {num_attempts} attempts.")
+                raise e
+            print("[WARN] CompatibleDC failed, retrying...")
+            time.sleep(0.02)  # Wait a bit before retrying
+
+        i += 1
 
     return img, window_location
 
