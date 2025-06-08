@@ -33,7 +33,7 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     h = h - 20
 
     i = 0
-    num_attempts = 5
+    num_attempts = 1
     while True:
         try:
             # Whatever these lines are?
