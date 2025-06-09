@@ -513,6 +513,7 @@ class DailyFarmer:
         find_and_click(vio.view_pvp_results, screenshot, window_location)
         find_and_click(vio.join_all, screenshot, window_location)
         find_and_click(vio.ok_main_button, screenshot, window_location)
+        find_and_click(vio.participate, screenshot, window_location)
 
         # TODO Improve the logic in this function
         self.collect_brawl_reward(screenshot, window_location)

@@ -285,6 +285,7 @@ daily_complete = Vision("dailies\\complete.png")
 fortune_card = Vision("dailies\\fortune_card.png")
 blue_stone = Vision("dailies\\blue_stone.png")
 search_for_a_kh = Vision("dailies\\search_for_a_kh.png")
+participate = Vision("dailies\\participate.png")
 # Daily boss fight
 boss_battle = Vision("dailies\\boss_battle.png")
 normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
