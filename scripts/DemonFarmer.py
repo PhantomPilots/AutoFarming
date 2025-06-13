@@ -15,7 +15,7 @@ def main():
         "-d",
         type=str,
         choices=["extreme", "hell", "chaos"],
-        default="extreme",
+        default="chaos",
         help="Difficulty for Indura demon (choices: extreme, hell, chaos)",
     )
 
