@@ -65,14 +65,16 @@ class CardTypeCollector(DataCollector):
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         """From the current screenshot, extract and return all the card types"""
 
-        cards = get_hand_cards()
+        cards = get_hand_cards(num_units=num_units)
 
         data = []
         labels = []
 
         for i, card in enumerate(cards):
             # Extract card type image
-            card_type_image = get_card_type_image(card.card_image)
+            card_type_image = get_card_type_image(card.card_image, num_units=num_units)
+
+            display_image(card_type_image)
 
             if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
@@ -103,7 +105,7 @@ class MergeCardsCollector(DataCollector):
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
         """Collect data to identify if clicking on a card will result in a merge"""
 
-        cards = get_hand_cards()
+        cards = get_hand_cards(num_units)
 
         data = []
         labels = []
@@ -150,7 +152,7 @@ class AmplifyCardsCollector(DataCollector):
 
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
 
-        cards = get_hand_cards()
+        cards = get_hand_cards(num_units)
 
         data = []
         labels = []
@@ -184,7 +186,7 @@ class HAMCardsCollector(DataCollector):
     """Collect that corresponding to high-hitting cards (excluding ultimates)"""
 
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
-        cards = get_hand_cards()
+        cards = get_hand_cards(num_units)
 
         data = []
         labels = []
@@ -217,7 +219,7 @@ class ThorCardCollector(DataCollector):
     """Identify Thor cards only"""
 
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
-        cards = get_hand_cards()
+        cards = get_hand_cards(num_units)
 
         data = []
         labels = []
@@ -250,7 +252,7 @@ class GroundDataCollector(DataCollector):
     """Identify if a card is ground or not. Use the whole interior of the card as data"""
 
     def collect_hand_data(self, previous_labels: np.ndarray | None = None, num_units=4) -> list[np.ndarray]:
-        cards = get_hand_cards() if num_units == 4 else get_hand_cards_3_cards()
+        cards = get_hand_cards(num_units)
 
         data = []
         labels = []
@@ -315,7 +317,7 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    # collect_data(CardTypeCollector, filename="card_types_data")
+    collect_data(CardTypeCollector, filename="card_types_data", num_units=args.num_units)
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
@@ -323,7 +325,7 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
+    # collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
 
 
 if __name__ == "__main__":

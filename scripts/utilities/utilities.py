@@ -353,8 +353,10 @@ def capture_hand_image_3_cards() -> np.ndarray:
     )
 
 
-def get_card_type_image(card: np.ndarray) -> np.ndarray:
+def get_card_type_image(card: np.ndarray, num_units=4) -> np.ndarray:
     """Extract the card type image from the card"""
+    if num_units == 3:
+        return get_card_type_image_3_cards(card)
     w = card.shape[-2]
     return crop_image(card, (40, 0), (w, 20))
 
@@ -385,13 +387,16 @@ def get_card_interior_image(card_image: np.ndarray, num_units=4) -> np.ndarray:
         raise ValueError(f"Invalid number of units: {num_units}. Expected 3 or 4.")
 
 
-def get_hand_cards() -> list[Card]:
+def get_hand_cards(num_units=4) -> list[Card]:
     """Retrieve the current cards in the hand.
 
     Returns:
         list[Card]:   The hand of cards. It's a list of tuples; each tuple contains the card type,
                       the `np.ndarray` card, as an image, and a tuple with the top-left coordinates of the card.
     """
+    if num_units == 3:
+        return get_hand_cards_3_cards()
+
     hand_cards = capture_hand_image()
 
     # Determine the width of each column
