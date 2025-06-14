@@ -35,6 +35,8 @@ class TowerTrialsFarmer(IFarmer):
         # TODO: Unused, bad coding -- Make this default somehow?
         self.fighter = battle_strategy
 
+        print("Initializing Tower Trials Farmer!")
+
     def ready_to_fight_state(self):
         screenshot, window_location = capture_window()
 
@@ -66,6 +68,8 @@ class TowerTrialsFarmer(IFarmer):
             print("Moving to FIGHTING")
             self.current_state = States.FIGHTING
             return
+
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
     def fighting_state(self):
 
