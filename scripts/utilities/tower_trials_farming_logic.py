@@ -25,6 +25,8 @@ class States(Enum):
 
 class TowerTrialsFarmer(IFarmer):
 
+    num_fights = 0
+
     def __init__(self, battle_strategy: IBattleStrategy | None = None, starting_state=States.READY_TO_FIGHT, **kwargs):
 
         # Initialize the current state
@@ -76,16 +78,12 @@ class TowerTrialsFarmer(IFarmer):
 
         # Click on "again"
         if find_and_click(vio.continue_fight, screenshot, window_location):
+            TowerTrialsFarmer.num_fights += 1
+            print(f"Fighting again! Total fights so far: {TowerTrialsFarmer.num_fights}")
             return
 
         # For when we've cleared an episode
         find_and_click(vio.episode_clear, screenshot, window_location)
-
-        # # If there's an OK button, click it
-        # if find_and_click(vio.ok_main_button, screenshot, window_location):
-        #     print("It seems we've finished the Tower of Trials! Exiting the farmer.")
-        #     self.current_state = States.EXIT_FARMER
-        #     return
 
         # Skip to the fight
         find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
