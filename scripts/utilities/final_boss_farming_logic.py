@@ -55,15 +55,8 @@ class FinalBossFarmer(IFarmer):
         """This should be the original state. Let's go to the bird menu"""
         screenshot, window_location = capture_window()
 
-        # If we're back in the tavern, click on the battle menu.
-        # TODO: Remove the hardcoded coordinates, or at least make them dynamic with respect to the window size
-        find_and_click(
-            vio.main_menu,
-            screenshot,
-            window_location,
-            point_coordinates=Coordinates.get_coordinates("battle_menu"),
-            threshold=0.7,
-        )
+        # Click on the battle menu if we see it
+        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
         # If we're in the battle menu, click on Final Boss
         find_and_click(vio.final_boss_menu, screenshot, window_location, threshold=0.8)

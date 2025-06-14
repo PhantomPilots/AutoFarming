@@ -11,7 +11,7 @@ def main():
         "--difficulty",
         "-d",
         type=str,
-        choices=["hard", "hell", "challenge"],
+        choices=["hard", "extreme", "hell", "challenge"],
         default="hell",
         help="FinalBoss difficulty (default: hell)",
     )
