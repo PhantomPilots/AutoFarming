@@ -459,7 +459,7 @@ class DemonFarmer(IDemonFarmer):
 
             elif self.current_state == States.FIGHTING_DEMON:
                 self.fighting_demon_state()
-                time.sleep(1)
+                time.sleep(0.2)
 
             # We need the loop to run very fast
             time.sleep(0.01)
