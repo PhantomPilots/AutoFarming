@@ -1,4 +1,4 @@
-"""This script contains standalone strategies to extract features from images, 
+"""This script contains standalone strategies to extract features from images,
 to be used in pattern matching algorithms.
 
 NOTE: ORB doesn't work with small images (e.g., single cards)!
@@ -114,20 +114,18 @@ def extract_difference_of_histograms_features(images: np.ndarray) -> np.ndarray:
     return np.array(features)[..., np.newaxis]
 
 
-def extract_color_features(images: np.ndarray, type="median") -> np.ndarray:
-    """Computes the feature color of each channel. This should work well with K-NN classification models.
+def extract_color_features(images: np.ndarray | list[np.ndarray], type="median") -> np.ndarray:
+    """Computes the feature color of each channel. Works well with K-NN classification models.
 
     Args:
-        images (np.ndarray): A set of colored images, of shape (batch, width, height, channel).
-        type (str): Can be "mean" or "median" for now.
+        images (np.ndarray | list[np.ndarray]): Either:
+            - a 4D array of shape (N, H, W, 3), or
+            - a list of 4D arrays of shape (N_i, H_i, W_i, 3) each.
+        type (str): "mean" or "median".
 
     Returns:
-        np.ndarray: The output feature vector.
+        np.ndarray: An array of shape (total_N, 3), with one RGB feature vector per image.
     """
-
-    if images.ndim == 3:
-        # Add the batch dimension
-        images = images[np.newaxis, ...]
 
     if type == "median":
         feature_func = np.median
@@ -136,13 +134,23 @@ def extract_color_features(images: np.ndarray, type="median") -> np.ndarray:
     else:
         raise ValueError(f"Feature type '{type}' not understood. Pick between 'median' and 'mean'.")
 
-    # cv2 uses BGR color channel order!
-    feat_b = feature_func(images[..., 0], axis=(1, 2))  # Shape (batch,)
-    feat_g = feature_func(images[..., 1], axis=(1, 2))
-    feat_r = feature_func(images[..., 2], axis=(1, 2))
+    def process_batch(batch: np.ndarray) -> np.ndarray:
+        if batch.ndim == 3:
+            batch = batch[np.newaxis, ...]  # Promote to batch of 1
 
-    # Stack the features together along the last axis to form the feature vectors
-    return np.stack((feat_r, feat_g, feat_b), axis=-1)
+        if batch.ndim != 4 or batch.shape[-1] != 3:
+            raise ValueError("Each image batch must have shape (N, H, W, 3)")
+
+        feat_b = feature_func(batch[..., 0], axis=(1, 2))
+        feat_g = feature_func(batch[..., 1], axis=(1, 2))
+        feat_r = feature_func(batch[..., 2], axis=(1, 2))
+        return np.stack((feat_r, feat_g, feat_b), axis=-1)
+
+    if isinstance(images, list):
+        features = [process_batch(batch) for batch in images]
+        return np.concatenate(features, axis=0)
+    else:
+        return process_batch(images)
 
 
 def extract_single_channel_features(images: np.ndarray, type="median") -> np.ndarray:

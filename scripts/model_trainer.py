@@ -176,7 +176,7 @@ def train_svm_classifier(X: np.ndarray, labels: np.ndarray) -> SVC:
         # Increment the number of trials
         num_trials += 1
 
-    print(f"Found a good model after {num_trials} trial(s).")
+    print(f"Found a good SVM model after {num_trials} trial(s).")
     return svm_model
 
 
@@ -242,9 +242,7 @@ def train_card_types_model():
     # Extract the labels fvalues
     labels_values = [label.value for label in labels]
     knn_model = train_knn(X=features, labels=labels_values, k=3)
-
-    # Explore some features
-    # explore_features(features=features, labels=labels, label_type=CardTypes.STANCE)
+    # svm_model = train_svm_classifier(X=features, labels=labels_values)  # DOESN'T WORK WELL
 
     # Save the trained model
     save_model(knn_model, filename="card_type_predictor.knn")
@@ -305,7 +303,7 @@ def train_ground_cards_classifier():
 def main():
 
     ### For card types
-    # train_card_types_model()
+    train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -323,7 +321,7 @@ def main():
     # train_thor_cards_classifier()
 
     ### Train a model that identifies GROUND cards
-    train_ground_cards_classifier()
+    # train_ground_cards_classifier()
 
     return
 

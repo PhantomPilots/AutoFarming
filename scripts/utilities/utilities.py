@@ -606,7 +606,7 @@ def display_image(image: np.ndarray, title: str = "Image"):
     cv2.destroyAllWindows()
 
 
-def load_dataset(glob_pattern: str) -> list[np.ndarray]:
+def load_dataset(glob_pattern: str) -> tuple[list | np.ndarray, np.ndarray]:
     """Return all the data and labels together, based on the specified file pattern"""
     dataset = []
     all_labels = []
@@ -619,7 +619,11 @@ def load_dataset(glob_pattern: str) -> list[np.ndarray]:
         dataset.append(data)
         all_labels.append(labels)
 
-    dataset = np.concatenate(dataset, axis=0)
+    try:
+        dataset = np.concatenate(dataset, axis=0)
+    except ValueError:
+        print("Error concatenating dataset, returning list instead")
+
     all_labels = np.concatenate(all_labels, axis=0)
 
     return dataset, all_labels

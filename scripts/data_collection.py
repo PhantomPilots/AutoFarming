@@ -74,7 +74,7 @@ class CardTypeCollector(DataCollector):
             # Extract card type image
             card_type_image = get_card_type_image(card.card_image, num_units=num_units)
 
-            display_image(card_type_image)
+            # display_image(card_type_image)
 
             if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
@@ -314,6 +314,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-units", type=int, default=4, help="How many units in the front")
     args = parser.parse_args()
+
+    print(f"We'll collect data for {args.num_units} units in the front")
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
