@@ -13,7 +13,11 @@ lock = Vision("lock.png")
 resume = Vision("resume.png")
 restore_stamina = Vision("stamuse.png")
 startbutton = Vision("start.png")
-skip = Vision("skip.png")
+skip = MultiVision(
+    "skip.png",
+    "demonic_beasts\\skip_masked.png",
+    image_name="Skip",
+)
 dmg = Vision("dmg.png")
 reconnect = Vision("reconnect.png")
 restart = Vision("restart.png")
@@ -66,6 +70,9 @@ start_quest = Vision("start_quest.png")
 essette_shop = Vision("essette_shop.png")
 duplicate_connection = Vision("duplicate_connection.png")
 cross = Vision("cross.png")
+pause_fight = Vision("pause_fight.png")
+episode_clear = Vision("episode_clear.png")
+continue_fight = Vision("continue.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

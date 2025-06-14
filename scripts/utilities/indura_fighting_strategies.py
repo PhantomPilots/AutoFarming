@@ -44,7 +44,8 @@ class InduraBattleStrategy(IBattleStrategy):
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         # But NOT if we're on phase 3
         if (
-            len(king_debuf_card_ids)
+            phase != 3  # Not on phase 3
+            and len(king_debuf_card_ids)
             and (
                 find(vio.snake_f3p2_counter, screenshot)
                 or find(vio.melee_evasion, screenshot)
@@ -53,7 +54,6 @@ class InduraBattleStrategy(IBattleStrategy):
             )
             and not b_played_mini_king  # No friend has played a King's debuff card
             and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
-            and phase != 3  # Not on phase 3
         ):
             # print("Playing King's debuff card!")
             return king_debuf_card_ids[-1]
@@ -77,9 +77,6 @@ class InduraBattleStrategy(IBattleStrategy):
         )
         if len(heal_card_ids) and not picked_heal_ids.size:
             return heal_card_ids[-1]
-        elif picked_heal_ids.size:
-            pass
-            # print("We have an additional heal card but we've played one already")
 
         # Disable all King's attack cards
         king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
