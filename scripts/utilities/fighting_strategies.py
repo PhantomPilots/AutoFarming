@@ -30,6 +30,17 @@ class IBattleStrategy(abc.ABC):
     # In case the fighter dies!
     picked_cards: list[Card] = []
 
+    # What's the current fight turn?
+    _fight_turn = 0
+
+    def increment_fight_turn(self):
+        """Increment the fight turn"""
+        IBattleStrategy._fight_turn += 1
+
+    def reset_fight_turn(self):
+        """Reset the fight turn"""
+        IBattleStrategy._fight_turn = 0
+
     def pick_cards(
         self, picked_cards: list[Card] = None, cards_to_play=4, card_turn=0, **kwargs
     ) -> tuple[list[Card], list[int]]:

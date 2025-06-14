@@ -72,6 +72,8 @@ class IFighter(abc.ABC):
         with self._lock:
             print("Manually stopping the fighter thread.")
             self.exit_thread = True
+            # Reset the battle strategy turn
+            self.battle_strategy.reset_fight_turn()
 
     def play_cards(self):
         """Read the current hand of cards, and play them based on the available card slots."""
@@ -121,6 +123,8 @@ class IFighter(abc.ABC):
 
         elif empty_card_slots == 0:
             print("Finished my turn!")
+            # Increment to the next fight turn
+            self.battle_strategy.increment_fight_turn()
             # Reset variables
             self._reset_instance_variables()
             return 1

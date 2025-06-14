@@ -56,12 +56,12 @@ class InduraBattleStrategy(IBattleStrategy):
             # print("Playing King's debuff card!")
             return king_debuf_card_ids[-1]
 
-        # Disable all heal cards if someone has played one already
+        # Disable all heal cards if someone has played one already OR it's the first fight turn!
         heal_card_ids: list[int] = sorted(
             np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
             key=lambda idx: card_ranks[idx],
         )
-        if find(vio.mini_heal, six_empty_slots_image):
+        if find(vio.mini_heal, six_empty_slots_image) or self._fight_turn == 0:
             # Disabled all heal cards
             for idx in heal_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED

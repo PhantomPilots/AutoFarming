@@ -47,6 +47,8 @@ class InduraFighter(IFighter):
 
         with self._lock:
             self.exit_thread = True
+            # Reset the battle strategy turn
+            self.battle_strategy.reset_fight_turn()
 
     def play_cards(self):
         """Read the current hand of cards, and play them based on the available card slots.
@@ -60,8 +62,6 @@ class InduraFighter(IFighter):
             picked_cards=self.picked_cards,
             card_turn=InduraFighter.card_turn,
             cards_to_play=3,
-            phase=IFighter.current_phase,
-            floor=IFighter.current_floor,
         )
 
         slot_index = InduraFighter.card_turn
@@ -92,6 +92,9 @@ class InduraFighter(IFighter):
         elif empty_card_slots == 0 or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
+            # Increment to the next fight turn
+            self.battle_strategy.increment_fight_turn()
+            # And reset instance variables
             self._reset_instance_variables()
             return 1
 
