@@ -53,7 +53,7 @@ class IBattleStrategy(abc.ABC):
         IBattleStrategy.card_turn = card_turn
 
         # Extract the hand cards for this specific click
-        hand_of_cards: list[Card] = get_hand_cards() if cards_to_play == 4 else get_hand_cards_3_cards()
+        hand_of_cards: list[Card] = get_hand_cards(num_units=cards_to_play)
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])

@@ -36,6 +36,21 @@ class InduraFighter(IFighter):
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
+            # Update the current phase
+            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
+                print(f"MOVING TO PHASE {new_phase}!")
+                IFighter.current_phase = new_phase
+
+    def _identify_phase(self, screenshot: np.ndarray):
+        """Read the screenshot and identify the phase we're currently in"""
+        if find(vio.phase_2, screenshot, threshold=0.8):
+            return 2
+        elif find(vio.phase_3, screenshot, threshold=0.8):
+            return 3
+
+        # Default to phase 1 in case we don't see anything
+        return 1
+
     def my_turn_state(self):
         """Select and play the cards"""
 
@@ -62,6 +77,7 @@ class InduraFighter(IFighter):
             picked_cards=self.picked_cards,
             card_turn=InduraFighter.card_turn,
             cards_to_play=3,
+            phase=IFighter.current_phase,
         )
 
         slot_index = InduraFighter.card_turn
