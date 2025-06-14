@@ -33,7 +33,7 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
     h = h - 20
 
     i = 0
-    num_attempts = 1
+    NUM_ATTEMPTS = 1
     while True:
         try:
             # Whatever these lines are?
@@ -71,8 +71,8 @@ def capture_window() -> tuple[np.ndarray, tuple[int, int]]:
             break
 
         except Exception as e:
-            if i >= num_attempts:
-                print(f"[ERROR] Failed to capture window after {num_attempts} attempts.")
+            if i >= NUM_ATTEMPTS:
+                print(f"[ERROR] Failed to capture window after {NUM_ATTEMPTS} attempts.")
                 raise e
             print("[WARN] CompatibleDC failed, retrying...")
             time.sleep(0.02)  # Wait a bit before retrying

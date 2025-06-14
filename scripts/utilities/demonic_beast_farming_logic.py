@@ -197,6 +197,12 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             with IFarmer._lock:
                 DemonicBeastFarmer.current_floor = determine_db_floor(screenshot)
 
+            # We need to reset the DB fighter if we entered the wrong floor
+            if DemonicBeastFarmer.current_floor == -1:
+                print("We entered the wrong floor! Resetting DB...")
+                self.current_state = States.RESETTING_DB
+                return
+
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
 
