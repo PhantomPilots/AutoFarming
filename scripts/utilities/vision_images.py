@@ -11,7 +11,10 @@ run_game = MultiVision(
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")
-restore_stamina = Vision("stamuse.png")
+restore_stamina = Vision(
+    "stamuse.png",
+    image_name="restore stamina",
+)
 startbutton = Vision("start.png")
 skip = MultiVision(
     "skip.png",

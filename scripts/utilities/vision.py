@@ -12,7 +12,12 @@ from utilities.pattern_match_strategies import (
 class Vision:
     """Class to host a single image template to match"""
 
-    def __init__(self, needle_basename, matching_strategy: IMatchingStrategy = TemplateMatchingStrategy):
+    def __init__(
+        self,
+        needle_basename,
+        image_name: str | None = None,
+        matching_strategy: IMatchingStrategy = TemplateMatchingStrategy,
+    ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
 
         needle_path = os.path.join("images", needle_basename)
@@ -21,7 +26,10 @@ class Vision:
         self.matching_strategy = matching_strategy
 
         # Save the name of the needle image
-        self._image_name = os.path.basename(needle_basename).split(".")[0]
+        if image_name is None:
+            self._image_name = os.path.basename(needle_basename).split(".")[0]
+        else:
+            self._image_name = image_name
 
         # Store the needle image
         self.needle_img = cv2.imread(needle_path)
