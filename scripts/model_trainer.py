@@ -24,8 +24,8 @@ def load_card_type_features() -> list[np.ndarray]:
     dataset, all_labels = load_dataset("data/card_types*")
 
     # Load the features
-    card_features = extract_color_features(images=dataset, type="median")
-    # card_features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
+    # card_features = extract_color_features(images=dataset, type="median")
+    card_features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
 
     return card_features, all_labels
 
@@ -162,7 +162,7 @@ def train_svm_classifier(X: np.ndarray, labels: np.ndarray) -> SVC:
     acc = 0
     num_trials = 0
     print("Training SVM model...")
-    while acc < 0.99 and num_trials < 20:
+    while acc < 0.995 and num_trials < 20:
         # Split the data into training and testing sets
         X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
 
@@ -241,11 +241,12 @@ def train_card_types_model():
 
     # Extract the labels fvalues
     labels_values = [label.value for label in labels]
-    knn_model = train_knn(X=features, labels=labels_values, k=3)
-    # svm_model = train_svm_classifier(X=features, labels=labels_values)  # DOESN'T WORK WELL
+    # knn_model = train_knn(X=features, labels=labels_values, k=3)
+    svm_model = train_svm_classifier(X=features, labels=labels_values)  # DOESN'T WORK WELL
 
-    # Save the trained model
-    save_model(knn_model, filename="card_type_predictor.knn")
+    ## Save the trained model
+    # save_model(knn_model, filename="card_type_predictor.knn")
+    save_model(svm_model, filename="card_type_predictor.svm")
 
 
 def train_card_merges_model():

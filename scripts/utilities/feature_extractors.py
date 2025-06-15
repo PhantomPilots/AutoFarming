@@ -51,37 +51,44 @@ def plot_orb_keypoints(image: np.ndarray):
 
 # Function to extract color histogram features
 def extract_color_histograms_features(
-    images: list[np.ndarray] | np.ndarray, bins: tuple[int] = (8, 8, 8)
+    images: np.ndarray | list[np.ndarray], bins: tuple[int, int, int] = (8, 8, 8)
 ) -> np.ndarray:
-    """Compute color histograms for a batch of images. Works even with small images, and should work with SVM models.
+    """Compute color histograms for batches of images. Supports mixed batch sizes and resolutions.
 
     Args:
-        images (np.ndarray): A list of images with shape (width, height, channels), or an array with 'batch' as the first dimension.
-        bins (tuple): Number of bins for each channel in the histogram.
+        images (np.ndarray | list[np.ndarray]): Either a 4D array (N, H, W, 3),
+                                                or a list of such arrays with possibly varying H and W.
+        bins (tuple): Number of bins for each HSV channel.
 
     Returns:
-        np.ndarray: A 2D array where each row is the flattened histogram of an image.
+        np.ndarray: A 2D array where each row is the flattened histogram of one image.
     """
 
-    if isinstance(images, np.ndarray) and images.ndim == 3:
-        # It's a single image, let's make a batch off of it
-        images = images[np.newaxis, ...]
+    def process_batch(batch: np.ndarray) -> np.ndarray:
+        if batch.ndim == 3:
+            batch = batch[np.newaxis, ...]  # Promote single image to batch
 
-    histograms = []
+        if batch.ndim != 4 or batch.shape[-1] != 3:
+            raise ValueError(f"Each batch must have shape (N, H, W, 3), got {batch.shape}")
 
-    for image in images:
-        # Convert the image to HSV color space
-        hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        histograms = []
+        for img in batch:
+            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+            hist = cv2.calcHist([hsv], [0, 1, 2], None, bins, [0, 180, 0, 256, 0, 256])
+            cv2.normalize(hist, hist)
+            histograms.append(hist.flatten())
+        return np.array(histograms)
 
-        # Compute the histogram and normalize it
-        hist = cv2.calcHist([hsv_image], [0, 1, 2], None, bins, [0, 180, 0, 256, 0, 256])
-        cv2.normalize(hist, hist)
+    # If single 4D array, process directly
+    if isinstance(images, np.ndarray):
+        return process_batch(images)
 
-        # Flatten the histogram and add it to the list
-        histograms.append(hist.flatten())
+    # Otherwise, it's a list of 4D arrays
+    if not isinstance(images, list) or not all(isinstance(b, np.ndarray) for b in images):
+        raise TypeError("Expected a list of np.ndarray or a single np.ndarray")
 
-    # Convert the list of histograms to a NumPy array
-    return np.array(histograms)
+    all_histograms = [process_batch(batch) for batch in images]
+    return np.concatenate(all_histograms, axis=0)
 
 
 def extract_difference_of_histograms_features(images: np.ndarray) -> np.ndarray:

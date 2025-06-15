@@ -5,11 +5,12 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
 from utilities.card_data import CardTypes
+from utilities.feature_extractors import extract_color_features  # For card types KNN
+from utilities.feature_extractors import extract_color_histograms_features  # For SVM
 from utilities.feature_extractors import (
-    extract_color_features,
-    extract_color_histograms_features,
-    extract_difference_of_histograms_features,
+    extract_difference_of_histograms_features,  # For LR card merges
 )
 
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"  # Replace '4' with the number of cores you want to use
@@ -19,8 +20,8 @@ class IModel:
     """Interface class for any models needed. Is there anything they all share, to group here?"""
 
     # Class variable for the model
-    model: KNeighborsClassifier | LogisticRegression = None
-    # Model for transforming features before the the classifier
+    model: KNeighborsClassifier | LogisticRegression | SVC = None
+    # Model for transforming features before the classifier
     feature_transform_model: PCA | None = None
 
     @classmethod
@@ -37,6 +38,10 @@ class IModel:
             with open(os.path.join("models", model_filename), "rb") as model_file:
                 cls.model = pickle.load(model_file)
 
+    @classmethod
+    def predict(cls):
+        return cls.model.predict()
+
 
 class CardTypePredictor(IModel):
     """Predictor for card types"""
@@ -46,9 +51,14 @@ class CardTypePredictor(IModel):
         """Extract the features from the card and predict its type"""
 
         # Ensure the model is properly loaded
-        CardTypePredictor._load_model("card_type_predictor.knn")
+        # CardTypePredictor._load_model("card_type_predictor.knn")
+        CardTypePredictor._load_model("card_type_predictor.svm")
 
-        features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
+        ## KNN
+        # features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
+        ## SVM
+        features = extract_color_histograms_features(images=card_type_image[np.newaxis, ...], bins=(8, 8, 8))
+
         predicted_label = CardTypePredictor.model.predict(features).item()
         return CardTypes(predicted_label)
 

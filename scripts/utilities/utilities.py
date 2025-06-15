@@ -355,6 +355,9 @@ def capture_hand_image_3_cards() -> np.ndarray:
 
 def get_card_type_image(card: np.ndarray, num_units=4) -> np.ndarray:
     """Extract the card type image from the card"""
+    if num_units not in [3, 4]:
+        raise ValueError(f"Invalid number of units: {num_units}. Expected 3 or 4.")
+
     if num_units == 3:
         return get_card_type_image_3_cards(card)
     w = card.shape[-2]
