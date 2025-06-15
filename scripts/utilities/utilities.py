@@ -464,7 +464,7 @@ def determine_card_type(card: np.ndarray | None, three_cards: bool = False) -> C
     card_type = CardTypePredictor.predict_card_type(card_type_image)
     # If we predict GROUND, assume it's an ULTIMATE, therefore relying entirely on the GroundCardPredictor
     if card_type == CardTypes.GROUND:
-        print("Detecting GROUND, but setting ULTIMATE instead. Is this correct?")
+        # print("Detecting GROUND, but setting ULTIMATE instead. Is this correct?")
         card_type = CardTypes.ULTIMATE
     return card_type
 

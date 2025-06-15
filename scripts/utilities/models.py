@@ -37,6 +37,7 @@ class IModel:
         if cls.model is None:
             with open(os.path.join("models", model_filename), "rb") as model_file:
                 cls.model = pickle.load(model_file)
+            print(f"Loaded model: {model_filename}")
 
     @classmethod
     def predict(cls):

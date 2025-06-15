@@ -74,7 +74,7 @@ class CardTypeCollector(DataCollector):
             # Extract card type image
             card_type_image = get_card_type_image(card.card_image, num_units=num_units)
 
-            # display_image(card_type_image)
+            display_image(card_type_image)
 
             if i > 3 and previous_labels is not None and False:
                 # Use the first 4 instances of the previous labels as the last 4 of this iteration
