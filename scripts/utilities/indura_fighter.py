@@ -67,6 +67,7 @@ class InduraFighter(IFighter):
             print("We are doing really bad... We have to quit :(")
             press_key("esc")
             time.sleep(5)  # To allow the farmer to click OK and exit the fight
+            self.current_state = FightingStates.EXIT_FIGHT
             return
 
         # Just play the cards
