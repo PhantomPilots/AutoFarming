@@ -66,7 +66,7 @@ class InduraFighter(IFighter):
         if find(vio.mini_beta_buf, six_empty_slots_image):
             print("We are doing really bad... We have to quit :(")
             press_key("esc")
-            time.sleep(2)  # To allow the farmer to click OK and exit the fight
+            time.sleep(5)  # To allow the farmer to click OK and exit the fight
             return
 
         # Just play the cards
