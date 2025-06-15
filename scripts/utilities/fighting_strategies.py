@@ -57,8 +57,8 @@ class IBattleStrategy(abc.ABC):
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])
-        print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
-        print("Picked cards:", [card.card_type.name for card in IBattleStrategy.picked_cards])
+        # print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
+        # print("Picked cards:", [card.card_type.name for card in IBattleStrategy.picked_cards])
 
         card_indices = []
 
