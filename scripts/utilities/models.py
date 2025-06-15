@@ -57,7 +57,7 @@ class CardTypePredictor(IModel):
         ## KNN
         # features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
         ## SVM
-        features = extract_color_histograms_features(images=card_type_image[np.newaxis, ...], bins=(8, 8, 8))
+        features = extract_color_histograms_features(images=card_type_image[np.newaxis, ...], bins=(4, 4, 4))
 
         predicted_label = CardTypePredictor.model.predict(features).item()
         return CardTypes(predicted_label)

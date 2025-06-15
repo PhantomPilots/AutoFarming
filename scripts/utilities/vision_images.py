@@ -269,6 +269,7 @@ lancelot_unit = Vision("demons\\lancelot_unit.png")
 alpha_unit = Vision("demons\\alpha_unit.png")
 mini_king = Vision("demons\\mini_king.png")
 mini_heal = Vision("demons\\mini_heal.png")
+mini_beta_buf = Vision("demons\\mini_beta_buf.png")
 
 
 # For dailies

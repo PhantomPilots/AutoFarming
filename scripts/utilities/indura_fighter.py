@@ -9,11 +9,13 @@ from utilities.utilities import (
     capture_hand_image,
     capture_hand_image_3_cards,
     capture_window,
+    crop_image,
     display_image,
     find,
     find_and_click,
     get_card_slot_region_image,
     get_hand_cards_3_cards,
+    press_key,
 )
 
 
@@ -53,9 +55,22 @@ class InduraFighter(IFighter):
 
     def my_turn_state(self):
         """Select and play the cards"""
+        screenshot, window_location = capture_window()
+
+        # First, identify if we have to quit because a unit has died :(
+        six_empty_slots_image = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("6_cards_top_left"),
+            Coordinates.get_coordinates("6_cards_bottom_right"),
+        )
+        if find(vio.mini_beta_buf, six_empty_slots_image):
+            print("We are doing really bad... We have to quit :(")
+            press_key("esc")
+            time.sleep(2)  # To allow the farmer to click OK and exit the fight
+            return
 
         # Just play the cards
-        self.play_cards()
+        self.play_cards(screenshot, window_location)
 
     def exit_fight_state(self):
         """Very simple state, just exit the fight"""
@@ -65,11 +80,10 @@ class InduraFighter(IFighter):
             # Reset the battle strategy turn
             self.battle_strategy.reset_fight_turn()
 
-    def play_cards(self):
+    def play_cards(self, screenshot, window_location):
         """Read the current hand of cards, and play them based on the available card slots.
         We had to overrde this method!"""
 
-        screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
         # KEY: Read the hand of cards
