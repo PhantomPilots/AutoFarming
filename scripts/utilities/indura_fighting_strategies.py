@@ -67,6 +67,12 @@ class InduraBattleStrategy(IBattleStrategy):
             # Disabled all heal cards
             for idx in heal_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
+        # Also disable all heal rank 1 cards if we're on phase 2. Use them only for healing
+        elif phase == 2:
+            for idx in heal_card_ids:
+                if hand_of_cards[idx].card_rank.value == CardRanks.BRONZE.value:
+                    # Disable the heal rank 1 card
+                    hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         # But if we haven't disabled a heal, use one by default
         picked_heal_ids = np.where([card.card_type.value == CardTypes.RECOVERY.value for card in picked_cards])[0]
@@ -91,9 +97,7 @@ class InduraBattleStrategy(IBattleStrategy):
             hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         # But if EVERYTHING is disabled... re-enable everything again as a Debuff
-        if np.all(
-            [card.card_type == CardTypes.DISABLED or card.card_type == CardTypes.GROUND for card in hand_of_cards]
-        ):
+        if np.all([card.card_type in [CardTypes.DISABLED, CardTypes.GROUND] for card in hand_of_cards]):
             # print("All cards are DISABLED! Let's re-enable them as attack-debuffs...")
             for idx in range(len(hand_of_cards)):
                 if hand_of_cards[idx].card_type == CardTypes.DISABLED:
