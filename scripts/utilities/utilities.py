@@ -658,6 +658,7 @@ def re_open_7ds_window():
         time.sleep(5)  # Let's sleep to allow the game to be closed properly...
         entire_screen = capture_screen()
         if find_and_click(vio.run_game, entire_screen):
+            time.sleep(0.5)
+            press_key("esc")  # In case there's a "cancel" popup because the game couldn't open properly
             print("Trying to re-open the game...")
             time.sleep(10)  # Let's wait for a while
-            press_key("esc")  # In case there's a "cancel" popup because the game couldn't open properly
