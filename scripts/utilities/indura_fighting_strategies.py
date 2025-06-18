@@ -44,7 +44,7 @@ class InduraBattleStrategy(IBattleStrategy):
         # On phase 2, evaluate if Indura has multi-tiers activated
         have_multi_tiers = False
         if phase == 2:
-            have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 0
+            have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 1
 
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         # But NOT if we're on phase 3
