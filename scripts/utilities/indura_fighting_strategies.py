@@ -56,6 +56,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 or find(vio.melee_evasion, screenshot)
                 or find(vio.ranged_evasion, screenshot)
                 or have_multi_tiers  # For phase 2
+                or find(vio.oxidize_indura, screenshot)  # For phase 2
             )
             and not b_played_mini_king  # No friend has played a King's debuff card
             and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
