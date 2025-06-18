@@ -3,7 +3,7 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
-from utilities.utilities import capture_window, crop_image, find
+from utilities.utilities import capture_window, count_needle_image, crop_image, find
 
 
 class InduraBattleStrategy(IBattleStrategy):
@@ -41,6 +41,11 @@ class InduraBattleStrategy(IBattleStrategy):
         # if b_played_mini_king:
         #     print("The other party has played a King's debuff card!")
 
+        # On phase 2, evaluate if Indura has multi-tiers activated
+        have_multi_tiers = False
+        if phase == 2:
+            have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 0
+
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         # But NOT if we're on phase 3
         if (
@@ -50,12 +55,13 @@ class InduraBattleStrategy(IBattleStrategy):
                 find(vio.snake_f3p2_counter, screenshot)
                 or find(vio.melee_evasion, screenshot)
                 or find(vio.ranged_evasion, screenshot)
-                or find(vio.oxidize_indura, screenshot)
+                or have_multi_tiers  # For phase 2
             )
             and not b_played_mini_king  # No friend has played a King's debuff card
             and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
         ):
-            # print("Playing King's debuff card!")
+            if have_multi_tiers:
+                print("Seeing multiple tiers! Playing King's debuff card!")
             return king_debuf_card_ids[-1]
 
         # Disable all heal cards if someone has played one already OR it's the first fight turn!

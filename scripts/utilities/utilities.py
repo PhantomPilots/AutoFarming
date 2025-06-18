@@ -77,10 +77,15 @@ def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0
     # raise ValueError("This function should only be used for testing, killing program execution.")
 
 
-def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7):
-    """Count how many immortaility buffs the bird has"""
-    rectangles, _ = vio.immortality_buff.find_all_rectangles(screenshot, threshold=threshold)
+def count_needle_image(vio_image: Vision, screenshot: np.ndarray, threshold=0.7) -> int:
+    """Count how many times a `Vision` image is found in the screenshot"""
+    rectangles, _ = vio_image.find_all_rectangles(screenshot, threshold=threshold)
     return rectangles.shape[0]
+
+
+def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7) -> int:
+    """Count how many immortaility buffs the bird has"""
+    return count_needle_image(vio.immortality_buff, screenshot, threshold)
 
 
 def check_for_reconnect():
