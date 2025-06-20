@@ -171,6 +171,8 @@ class IFarmer:
         if find(vio.duplicate_connection, screenshot):
             print("Duplicate connection detected!")
             find_and_click(vio.ok_main_button, screenshot, window_location)
+            # And close the fighter thread if open
+            self.stop_fighter_thread()
 
         elif find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
             self.current_state = States.LOGIN_SCREEN
