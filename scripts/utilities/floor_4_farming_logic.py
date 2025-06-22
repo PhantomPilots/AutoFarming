@@ -108,10 +108,11 @@ class IFloor4Farmer(IFarmer):
         """This should be the original state. Let's go to the DemonicBeast menu"""
         screenshot, window_location = capture_window()
 
-        # We may se a "Cancel", if we just logged back in and where in the middle of a fight!
+        # We may see a "Cancel", if we just logged back in and we're in the middle of a fight!
         # Just consider that fight as lost...
         if find_and_click(vio.cancel, screenshot, window_location):
             print("We were in the middle of a fight, but let's start it over :(")
+            return
 
         # If we're back in the tavern, click on the battle menu.
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)

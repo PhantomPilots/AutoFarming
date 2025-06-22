@@ -153,6 +153,7 @@ class IFighter(abc.ABC):
                     card_to_play = list_of_cards[index]
 
             # Just click on the card
+            print("Playing card:", card_to_play.card_type.name, card_to_play.card_rank.name)
             self._click_card(card_to_play, window_location)
             return copy.deepcopy(card_to_play)  # Return the played card, to keep track of it
 

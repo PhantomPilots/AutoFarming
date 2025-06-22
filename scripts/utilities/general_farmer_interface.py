@@ -128,6 +128,8 @@ class IFarmer:
             time.sleep(1)
             return
 
+        # If we have a 'cancel', click that first!
+        find_and_click(vio.cancel, screenshot, window_location)
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
