@@ -195,7 +195,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if find(vio.startbutton, screenshot):
             # We can determine the floor number!
             with IFarmer._lock:
-                DemonicBeastFarmer.current_floor = determine_db_floor(screenshot, threshold=0.8)
+                DemonicBeastFarmer.current_floor = determine_db_floor(screenshot, threshold=0.9)
 
             # We need to reset the DB fighter if we entered the wrong floor
             if DemonicBeastFarmer.current_floor == -1:
