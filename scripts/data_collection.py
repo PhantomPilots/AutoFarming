@@ -261,8 +261,8 @@ class GroundDataCollector(DataCollector):
             # Extract the inside of the card, effectively removing its border/rank information
             card_interior = get_card_interior_image(card.card_image, num_units=num_units)
 
-            # # Let's plot the image for debugging
-            # display_image(card_interior)
+            # Let's plot the image for debugging
+            display_image(card_interior)
 
             card_label = input("Is this a GROUND card? 1/y, 0/n: ")
             card_label = 1 if "y" in card_label else 0 if "n" in card_label else int(card_label)
@@ -319,7 +319,7 @@ def main():
 
     # collect_data(MergeCardsCollector, filename="card_merges_data")
 
-    collect_data(CardTypeCollector, filename="card_types_data", num_units=args.num_units)
+    # collect_data(CardTypeCollector, filename="card_types_data", num_units=args.num_units)
 
     # collect_data(AmplifyCardsCollector, filename="amplify_cards_data")
 
@@ -327,7 +327,7 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    # collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
+    collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
 
 
 if __name__ == "__main__":
