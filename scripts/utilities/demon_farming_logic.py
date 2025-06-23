@@ -23,7 +23,6 @@ from utilities.utilities import (
     check_for_reconnect,
     click_and_sleep,
     crop_image,
-    determine_relative_coordinates,
     display_image,
     find,
     find_and_click,
