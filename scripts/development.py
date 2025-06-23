@@ -17,7 +17,9 @@ from utilities.utilities import (
     determine_relative_coordinates,
     display_image,
     find,
+    get_card_interior_image,
     get_card_slot_region_image,
+    get_card_type_image,
     get_hand_cards,
     is_amplify_card,
     is_Meli_card,
@@ -32,7 +34,19 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    # screenshot_testing(screenshot, vision_image=vio.global_server)
+    floor_img_region = crop_image(
+        screenshot,
+        Coordinates.get_coordinates("floor_top_left"),
+        Coordinates.get_coordinates("floor_bottom_right"),
+    )
+
+    display_image(floor_img_region)
+
+    print(find(vio.floor1, floor_img_region, threshold=0.8))
+    print(find(vio.floor2, floor_img_region, threshold=0.8))
+    print(find(vio.floor3, floor_img_region, threshold=0.8))
+
+    # screenshot_testing(screenshot, vision_image=vio.cancel)
     # determine_relative_coordinates(screenshot)
 
     # available_slots = BirdFighter.count_empty_card_slots(screenshot)
@@ -55,13 +69,15 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    hand_image = capture_hand_image()
-    display_image(hand_image)
+    # hand_image = capture_hand_image()
+    # display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    # cards = get_hand_cards()
+    # cards = get_hand_cards(num_units=3)
     # for i, card in enumerate(cards, start=0):
+    #     card_interior = get_card_type_image(card.card_image, num_units=3)
+
     #     print(f"Is {card.card_type.name} Meli's?", is_Meli_card(card))
     #     print(card.card_type.name, card.card_rank.name)
 
