@@ -17,7 +17,7 @@ class Coordinates:
         "bottom_right_card_slots": (410, 800),
         # General demonic beasts
         "floor_top_left": (344, 122),
-        "floor_bottom_right": (459, 170),
+        "floor_bottom_right": (459, 175),
         "right_swipe": (361, 466),
         "left_swipe": (177, 463),
         # For bird
