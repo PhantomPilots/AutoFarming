@@ -38,6 +38,8 @@ class States(Enum):
     MISSION_COMPLETE_STATE = auto()
     GOING_TO_BRAWL = auto()
     BRAWL_STATE = auto()
+    PLAYING_BRAWL = auto()
+    FINISHED_BRAWL = auto()
     AD_WHEEL = auto()
 
 
@@ -106,6 +108,8 @@ class DailyFarmer:
     def exit_farmer_state(self) -> bool:  # sourcery skip: extract-method
         screenshot, window_location = capture_window()
 
+        print("In EXIT FARMER state, trying to exit...")
+
         # First, ensure we're back on the tavern
         find_and_click(vio.back, screenshot, window_location)
 
@@ -167,7 +171,7 @@ class DailyFarmer:
 
         # If there's no 'go now', means we're done with the missions
         if not find(vio.go_now, screenshot):
-            print("No more missions, going to collect Brawl reward now.")
+            print("No more missions, going to collect Brawl reward now (1).")
             find_and_click(vio.back, screenshot, window_location)
             return States.GOING_TO_BRAWL
 
@@ -176,7 +180,7 @@ class DailyFarmer:
         screenshot, _ = capture_window()
         find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.battle_menu, screenshot, threshold=0.6):
-            print("No more missions, going to collect Brawl reward now.")
+            print("No more missions, going to collect Brawl reward now (2).")
             # Only go to the EXIT state if we're in the tavern already.
             return States.GOING_TO_BRAWL
 
@@ -533,10 +537,43 @@ class DailyFarmer:
             time.sleep(1)
             press_key("esc")
             time.sleep(1)
-            # find_and_click(vio.back, screenshot, window_location)
-            if find(vio.tavern, screenshot) or find(vio.back, screenshot):
-                print("Assuming Brawl reward collected, exiting daily farmer.")
-                DailyFarmer.current_state = States.EXIT_FARMER
+
+            # # find_and_click(vio.back, screenshot, window_location)
+            # if find(vio.tavern, screenshot) or find(vio.back, screenshot):
+            #     print("Assuming Brawl reward collected, exiting daily farmer.")
+            #     DailyFarmer.current_state = States.EXIT_FARMER
+
+            # ... And let's play a Brawl match too!
+            if find(vio.back, screenshot):
+                print("Going to PLAYING_BRAWL state")
+                DailyFarmer.current_state = States.PLAYING_BRAWL
+
+    def playing_brawl_state(self):
+        """Play a Brawl match such that Brawl doesn't reset"""
+
+        screenshot, window_location = capture_window()
+
+        # For after the match
+        if find(vio.ok_main_button, screenshot):
+            print("Brawl match finished. Hopefully we won!")
+            DailyFarmer.current_state = States.FINISHED_BRAWL
+            return
+
+        # To fight the match
+        find_and_click(vio.battle_brawl, screenshot, window_location)
+        if find_and_click(vio.ready_up_brawl, screenshot, window_location):
+            time.sleep(0.5)  # Necessary to wait a tiny bit, empirically found
+
+    def finished_brawl_state(self):
+        """After the Brawl match, we go back to the tavern"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.tavern, screenshot) or find(vio.back, screenshot):
+            print("Finished all farming!")
+            DailyFarmer.current_state = States.EXIT_FARMER
+            return
+
+        find_and_click(vio.ok_main_button, screenshot, window_location)
 
     def check_for_essette_shop(self):
         """Check if we have the Essette shop, and click on it if so to remove the popup"""
@@ -590,6 +627,10 @@ class DailyFarmer:
                 self.going_to_brawl_state()
             elif DailyFarmer.current_state == States.BRAWL_STATE:
                 self.brawl_state()
+            elif DailyFarmer.current_state == States.PLAYING_BRAWL:
+                self.playing_brawl_state()
+            elif DailyFarmer.current_state == States.FINISHED_BRAWL:
+                self.finished_brawl_state()
 
             elif DailyFarmer.current_state == States.AD_WHEEL:
                 self.ad_wheel_state()
