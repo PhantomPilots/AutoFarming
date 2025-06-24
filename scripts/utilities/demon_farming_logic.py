@@ -217,7 +217,7 @@ class IDemonFarmer(IFarmer):
             if self.demon_to_farm == vio.indura_demon:
                 time.sleep(2)
                 screenshot, window_location = capture_window()
-                if not self._valid_indura_team(screenshot, debug=False):
+                if not self._is_indura_team_valid(screenshot, debug=False):
                     print("The inviting team is not good enough for Indura! Canceling invitation...")
                     # display_image(screenshot, "valid team?")
                     time.sleep(1)
@@ -256,7 +256,7 @@ class IDemonFarmer(IFarmer):
                 self.current_state = States.GOING_TO_DEMONS
                 IDemonFarmer.not_seen_invite = False
 
-    def _valid_indura_team(self, screenshot: np.ndarray, debug=False) -> bool:
+    def _is_indura_team_valid(self, screenshot: np.ndarray, debug=False) -> bool:
         """Evaluate if the inviting team is good enough for Indura"""
         # Crop the image to the region of the team invite
         team_invite_region = crop_image(

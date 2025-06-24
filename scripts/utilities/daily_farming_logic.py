@@ -86,7 +86,7 @@ class DailyFarmer:
     def set_daily_pvp(self, do_daily_pvp: bool):
         """Set the daily PVP"""
         if do_daily_pvp:
-            print("We will DO daily PVP!")
+            print("If dailies is enabled, we will do daily PVP!")
         self.do_daily_pvp = do_daily_pvp
 
     def kill_farmer(self):
