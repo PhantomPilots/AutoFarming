@@ -113,6 +113,34 @@ Recommended team (in this order):
 Requirements:
 1. Start the script from within the Dogs floor selection screen.
 
+## Whale-mode Skoll and Hati (Dogs) Floors 1-3 farming script
+
+The script is named `scripts/DogsFarmerWhale.py`. It uses a very fast but more risky strategy (will likely lose with a Freeze debuff at the wrong time). 
+
+Required team:
+* Milim LR - !!!IMPORTANT Green or Blue Ludociel of Flash 6/6 link
+* Loli Merlin LR - OG Red Sariel 6/6 link
+* Thor UR - Sabunak 4/6+ link
+* Green Hel - OG Light Mael 4/6+ link
+
+Artifact set/s:
+* Use Set №37 or №29 (Maxed). 
+
+Minimum Unit Requirements:
+* 14M-16M+ Box CC (14M+ you lose more runs, from 16M+ you're going to be fine most of the times)
+* 6TH Constellation Complete (6TH is ideal but 5TH complete should also be fine)
+* ALL units with UR Atk-Crit Damage Gear Sets with the Atk Pieces (Top Row) Rolled at 14.5%+. The rest can be whatever but enough to survive just in case the Dog/s survive and attack you.
+* Loli Merlin LR + Relic
+* Milim LR + Relic
+* Thor UR built good
+* Green Hel built decently 
+* Sabunak 4/6 Minimum Link
+* OG Red Sariel 6/6 Link
+* OG Light Mael 4/6 Minimum Link
+
+Requirements:
+1. Start the script from within the Deer floor selection screen.
+
 ## Nidhogrr (Snake) farming script
 
 Can be found in `scripts/SnakeFarmer.py`. 
