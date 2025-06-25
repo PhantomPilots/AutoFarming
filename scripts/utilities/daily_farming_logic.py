@@ -535,13 +535,9 @@ class DailyFarmer:
                 point_coordinates=Coordinates.get_coordinates("receive_brawl"),
             )
             time.sleep(1)
-            press_key("esc")
+            screenshot, window_location = capture_window()
+            find_and_click(vio.reward, screenshot, window_location)
             time.sleep(1)
-
-            # # find_and_click(vio.back, screenshot, window_location)
-            # if find(vio.tavern, screenshot) or find(vio.back, screenshot):
-            #     print("Assuming Brawl reward collected, exiting daily farmer.")
-            #     DailyFarmer.current_state = States.EXIT_FARMER
 
             # ... And let's play a Brawl match too!
             if find(vio.back, screenshot):
@@ -568,7 +564,7 @@ class DailyFarmer:
         """After the Brawl match, we go back to the tavern"""
         screenshot, window_location = capture_window()
 
-        if find(vio.tavern, screenshot) or find(vio.back, screenshot):
+        if find(vio.back, screenshot):
             print("Finished all farming!")
             DailyFarmer.current_state = States.EXIT_FARMER
             return
