@@ -16,6 +16,10 @@ Also, use this code at your own risk.
 <img src="readme_images/bird_floor_4_sample.gif" alt="Floor4 GIF" width="24%">
 </div>
 
+## Discord
+
+Join the community if you want quick replies to any issues you may be having! https://discord.gg/XN8Vf4Yt7J
+
 
 ## Installation
 
