@@ -88,13 +88,15 @@ def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7) -> int:
     return count_needle_image(vio.immortality_buff, screenshot, threshold)
 
 
-def check_for_reconnect():
+def check_for_reconnect() -> bool:
     """Sometimes, we lose connection"""
     screenshot, window_location = capture_window()
+    if find_and_click(vio.restart, screenshot, window_location):
+        print("No reconnection possible, we have to restart the game!")
+        return False
     if find_and_click(vio.reconnect, screenshot, window_location):
         print("Reconnecting...")
-    elif find_and_click(vio.restart, screenshot, window_location):
-        print("No reconnection possible, we have to restart the game!")
+    return True
 
 
 def check_for_window_size():

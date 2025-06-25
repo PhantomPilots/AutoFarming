@@ -424,7 +424,10 @@ class DemonFarmer(IDemonFarmer):
 
         while True:
             # Try to reconnect first
-            check_for_reconnect()
+            if not (success := check_for_reconnect()):
+                # We had to restart the game! Let's log back in immediately
+                print("Let's try to log back in immediately...")
+                IFarmer.first_login = True
 
             # Check if to change the demon to farm
             self.rotate_demon()

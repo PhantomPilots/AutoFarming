@@ -34,19 +34,7 @@ def development():
     print("Screenshot shape:", screenshot.shape)
     # display_image(screenshot)
 
-    floor_img_region = crop_image(
-        screenshot,
-        Coordinates.get_coordinates("floor_top_left"),
-        Coordinates.get_coordinates("floor_bottom_right"),
-    )
-
-    display_image(floor_img_region)
-
-    print(find(vio.floor1, floor_img_region, threshold=0.8))
-    print(find(vio.floor2, floor_img_region, threshold=0.8))
-    print(find(vio.floor3, floor_img_region, threshold=0.8))
-
-    # screenshot_testing(screenshot, vision_image=vio.cancel)
+    screenshot_testing(screenshot, vision_image=vio.reward)
     # determine_relative_coordinates(screenshot)
 
     # available_slots = BirdFighter.count_empty_card_slots(screenshot)
