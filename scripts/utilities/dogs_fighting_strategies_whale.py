@@ -7,7 +7,9 @@ from utilities.utilities import find
 class DogsBattleStrategy(IBattleStrategy):
     """The logic behind the AI for Dogs based on custom strategy"""
 
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int) -> int:
+    def get_next_card_index(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], floor: int, phase: int, **kwargs
+    ) -> int:
         """Extract the next card index based on floor and phase"""
         if floor == 1:
             if phase == 1:
