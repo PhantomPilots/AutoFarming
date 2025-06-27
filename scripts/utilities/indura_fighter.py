@@ -87,16 +87,17 @@ class InduraFighter(IFighter):
 
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
-        # KEY: Read the hand of cards
-        current_hand = self.battle_strategy.pick_cards(
-            picked_cards=self.picked_cards,
-            card_turn=InduraFighter.card_turn,
-            cards_to_play=3,
-            phase=IFighter.current_phase,
-        )
-
         slot_index = InduraFighter.card_turn
+
         if empty_card_slots > 0:
+            # KEY: Read the hand of cards
+            current_hand = self.battle_strategy.pick_cards(
+                picked_cards=self.picked_cards,
+                card_turn=InduraFighter.card_turn,
+                cards_to_play=3,
+                phase=IFighter.current_phase,
+            )
+
             print(
                 f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
             )
@@ -120,7 +121,7 @@ class InduraFighter(IFighter):
                 InduraFighter.card_turn += 1
                 self.picked_cards[slot_index] = card_played
 
-        elif empty_card_slots == 0 or slot_index >= len(current_hand[1]):
+        elif empty_card_slots == 0:  # or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
             # Increment to the next fight turn

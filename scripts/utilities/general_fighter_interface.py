@@ -91,15 +91,15 @@ class IFighter(abc.ABC):
 
         slot_index = max(0, self.available_card_slots - empty_card_slots)
 
-        # KEY: Read the hand of cards
-        current_hand = self.battle_strategy.pick_cards(
-            picked_cards=self.picked_cards,
-            card_turn=slot_index,
-            phase=IFighter.current_phase,
-            floor=IFighter.current_floor,
-        )
-
         if empty_card_slots > 0:
+            # KEY: Read the hand of cards here
+            current_hand = self.battle_strategy.pick_cards(
+                picked_cards=self.picked_cards,
+                card_turn=slot_index,
+                phase=IFighter.current_phase,
+                floor=IFighter.current_floor,
+            )
+
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
             print(
