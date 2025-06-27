@@ -71,7 +71,11 @@ global_server = Vision("global_server.png")
 yes = Vision("yes.png")
 start_quest = Vision("start_quest.png")
 essette_shop = Vision("essette_shop.png")
-duplicate_connection = Vision("duplicate_connection.png")
+duplicate_connection = MultiVision(
+    "duplicate_connection.png",
+    "simultaneous_logins.png",
+    image_name="duplicate_connection",
+)
 cross = Vision("cross.png")
 pause_fight = Vision("pause_fight.png")
 episode_clear = Vision("episode_clear.png")
