@@ -16,7 +16,6 @@ Also, use this code at your own risk.
 <img src="readme_images/bird_floor_4_sample.gif" alt="Floor4 GIF" width="24%">
 </div>
 
-### GUI application
 <img src="readme_images/GUI.png" alt="GUI application" width="60%">
 
 <!-- ## Discord
