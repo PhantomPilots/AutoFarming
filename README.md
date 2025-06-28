@@ -47,20 +47,6 @@ This downloads the code into a folder named _AutoFarming_.
    2. Like before, while pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
    3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt` and press `ENTER`.
 
-#### Sizer
-
-Download and install the [Sizer](https://www.brianapps.net/sizer4/) application for custom re-sizing of windows. 
-Once installed, open it as administrator and:
-1. Set the game in ***portrait*** mode instead of landscape mode (in-game settings).
-2. Open Sizer. It's hidden at the bottom-right of your screen:<br>
-<img src="readme_images/sizer_icon.png" width="100"/><br>
-Right-click on it and select `Configure sizer...`.
-3. In Sizer, create a custom size of `540x960` and name it 7DS (first time only).
-4. Right-click on the border of the 7DS window and choose the custom size to resize the window:<br>
-<img src="readme_images/sizer.png" alt="Sizer" width="200"/><br>
-**This needs to be done ever time you want to run a script**.
-
-
 ### Code updates
 
 Updating the code is done using Git. The process is simple:
@@ -103,7 +89,6 @@ For detailed information on all the bots available, go to the [bots README file]
 
 ## Troubleshooting
 
-* If the script doesn't work as expected (e.g., not clicking anywhere), make sure the game window is resized with the custom size created at the beginning.
 * The scripts don't account for random pop-ups (such as demon invitations), so make sure you have those notifications disabled.
 * If when updating the code with `git pull` you get an error/warning saying the code cannot be updated, first run `git stash` and then `git pull` again. You should now see the code updated.
 * For more errors, please open a new "issue" in the "Issues" tab of this website.

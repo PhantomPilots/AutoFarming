@@ -58,8 +58,8 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    hand_image = capture_hand_image()
-    display_image(hand_image)
+    # hand_image = capture_hand_image()
+    # display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
