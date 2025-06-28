@@ -71,34 +71,6 @@ Updating the code is done using Git. The process is simple:
 
 ### How to run the scripts
 
-<!-- #### Python IDLE
-
-All scripts require being run as administrator. One way to do so is the following:
-1. Press the Windows key and type "IDLE". If Python is installed properly, you should see the IDLE app: <br>
-<img src="readme_images/idle_python.png" alt="IDLE app" width="200"/><br>
-Right-click on it and run it as an administrator.
-2. Click on `File -> Open...` and load the script you want to run.
-3. To run the script, press the `F5` key while the 7DS window is **fully visible** on the screen.
-4. To stop the script, close the new window that appeared after the previous point (where blue text is being written down). -->
-
-#### PowerShell
-
-<!-- Using the Python IDLE is easier, but it doesn't allow for `CTRL+C` to kill some scripts (like the `BirdFarmer.py`). Using PowerShell is a better alternative: -->
-1. Open PowerShell with administrator privileges.
-2. Navigate to the folder where you host the scripts. To do so, copy the path location:<br>
-<img src="readme_images/copy_location.png" alt="copy_location" width="200"/><br>
-
-3. Paste the location in PowerShell, preceded by `cd ` (note the space), and press `Enter`:<br>
-<img src="readme_images/location_in_powershell.png" width="250"/><br>
-
-4. Finally, type into PowerShell: `python BirdFarmer.py` (or whatever script you're trying to run).<br>
-**NOTE**: See the first section in [bots README file](BOTS_README.md) for a more detailed explanation about additional options.
-5. Now, to stop any script you can simply press `CTRL+C`.
-
-Happy farming!
-
-#### Graphical User Interface (GUI)
-
 For a more user-friendly experience, you can use the **AutoFarmers GUI** which provides:
 
 - **Tabbed Interface**: Easy access to all farmers in one window
@@ -108,15 +80,23 @@ For a more user-friendly experience, you can use the **AutoFarmers GUI** which p
 - **Visual Interface**: No need to remember command-line arguments
 
 **To use the GUI:**
-1. Navigate to the `scripts` folder
-2. Run: `python AutoFarmersGUI.py`
-3. Select the farmer tab you want to use
-4. Configure the arguments in the left panel
-5. Click "START" to begin farming
-6. Monitor progress in the terminal output window
-7. Click "STOP" when finished
+1. Open PowerShell with administrator privileges.
+2. Navigate to the `scripts` folder. To do so, copy the path location:<br>
+<img src="readme_images/copy_location.png" alt="copy_location" width="200"/><br>
+
+3. Paste the location in PowerShell, preceded by `cd ` (note the space), and press `Enter`:<br>
+<img src="readme_images/location_in_powershell.png" width="250"/><br>
+
+4. Run: `python AutoFarmers.py`
+5. Select the farmer tab you want to use
+6. Configure the arguments in the left panel
+7. Click "START" to begin farming
+8. Monitor progress in the terminal output window
+9. Click "STOP" when finished
 
 The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.
+
+Happy farming!
 
 ## Farming scripts
 
