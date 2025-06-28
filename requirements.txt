@@ -2,6 +2,7 @@ dill
 numpy==1.26.1
 opencv-python
 pyautogui
+PyQt5
 pynput
 pytz
 pywin32

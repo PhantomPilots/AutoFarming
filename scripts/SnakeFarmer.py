@@ -11,6 +11,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
+    parser.add_argument("--do-dailies", action="store_true", default=True, help="Do dailies (default: True)")
+    parser.add_argument("--no-do-dailies", dest="do_dailies", action="store_false", help="Don't do dailies")
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
@@ -21,7 +23,7 @@ def main():
         max_stamina_pots="inf",  # How many stamina pots at most
         max_floor_3_clears=args.clears,  # How many floor 3 clears at most
         password=args.password,  # Account password
-        do_dailies=True,
+        do_dailies=args.do_dailies,
     )
 
 

@@ -16,9 +16,12 @@ Also, use this code at your own risk.
 <img src="readme_images/bird_floor_4_sample.gif" alt="Floor4 GIF" width="24%">
 </div>
 
-## Discord
+### GUI application
+<img src="readme_images/GUI.png" alt="GUI application" width="60%">
 
-Join the community if you want quick replies to any issues you may be having! https://discord.gg/XN8Vf4Yt7J
+<!-- ## Discord
+
+Join the community if you want quick replies to any issues you may be having! https://discord.gg/XN8Vf4Yt7J -->
 
 
 ## Installation
@@ -94,6 +97,27 @@ Right-click on it and run it as an administrator.
 
 Happy farming!
 
+#### Graphical User Interface (GUI)
+
+For a more user-friendly experience, you can use the **AutoFarmers GUI** which provides:
+
+- **Tabbed Interface**: Easy access to all farmers in one window
+- **Real-time Output**: Live terminal output for each farmer
+- **Argument Configuration**: Simple forms for setting parameters
+- **Process Management**: Start/stop buttons for each farmer
+- **Visual Interface**: No need to remember command-line arguments
+
+**To use the GUI:**
+1. Navigate to the `scripts` folder
+2. Run: `python AutoFarmersGUI.py`
+3. Select the farmer tab you want to use
+4. Configure the arguments in the left panel
+5. Click "START" to begin farming
+6. Monitor progress in the terminal output window
+7. Click "STOP" when finished
+
+The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.
+
 ## Farming scripts
 
 For detailed information on all the bots available, go to the [bots README file](BOTS_README.md).
@@ -116,6 +140,7 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for Indura Extreme.
 - [X] Farmer for Indura Hell.
 - [X] Farmer for Indura Chaos.
+- [X] Unify all farmers in a single GUI.
 - [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
 ## Longer-term features
