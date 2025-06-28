@@ -1,6 +1,7 @@
 import time
 
 import numpy as np
+import win32api
 import win32con
 import win32gui
 import win32ui
@@ -14,6 +15,291 @@ def get_window_size():
     h = window_rect[3] - window_rect[1]
 
     return w, h
+
+
+def calculate_exact_border_sizes():
+    """Calculate the exact border sizes of the 7DS window"""
+    try:
+        hwnd_target = win32gui.FindWindow(None, r"7DS")
+        if hwnd_target == 0:
+            return None, None
+
+        # Get window rectangle (includes borders and title bar)
+        window_rect = win32gui.GetWindowRect(hwnd_target)
+        window_width = window_rect[2] - window_rect[0]
+        window_height = window_rect[3] - window_rect[1]
+
+        # Get client rectangle (just the content area)
+        client_rect = win32gui.GetClientRect(hwnd_target)
+        client_width = client_rect[2] - client_rect[0]
+        client_height = client_rect[3] - client_rect[1]
+
+        # Calculate border sizes
+        border_width = window_width - client_width
+        border_height = window_height - client_height
+
+        print(f"[DEBUG] Window size: {window_width}x{window_height}")
+        print(f"[DEBUG] Client size: {client_width}x{client_height}")
+        print(f"[DEBUG] Border sizes: {border_width}x{border_height}")
+
+        return border_width, border_height
+
+    except Exception as e:
+        print(f"[ERROR] Could not calculate border sizes: {e}")
+        return None, None
+
+
+def resize_7ds_window(width=540, height=960):
+    """Aggressively force resize the 7DS window by temporarily modifying window styles.
+    This is a more aggressive approach that tries to bypass aspect ratio constraints.
+    Also moves the window to ensure it's fully visible.
+
+    Args:
+        width (int): Target width of the window (default: 540)
+        height (int): Target height of the window (default: 960)
+
+    Returns:
+        bool: True if resize was successful, False otherwise
+    """
+    try:
+        # Find the 7DS window
+        hwnd_target = win32gui.FindWindow(None, r"7DS")
+        if hwnd_target == 0:
+            print("[ERROR] 7DS window not found!")
+            return False
+
+        # Get current window position
+        current_rect = win32gui.GetWindowRect(hwnd_target)
+        current_x = current_rect[0]
+        current_y = current_rect[1]
+
+        # Get current window style
+        current_style = win32gui.GetWindowLong(hwnd_target, win32con.GWL_STYLE)
+        current_ex_style = win32gui.GetWindowLong(hwnd_target, win32con.GWL_EXSTYLE)
+
+        print(f"[DEBUG] Current window style: {hex(current_style)}")
+        print(f"[DEBUG] Current extended style: {hex(current_ex_style)}")
+
+        # Calculate the exact border sizes
+        border_width, border_height = calculate_exact_border_sizes()
+        if border_width is None or border_height is None:
+            # Fallback to estimated values
+            border_width = 8
+            border_height = 31
+            print(f"[WARNING] Using fallback border sizes: {border_width}x{border_height}")
+        else:
+            print(f"[INFO] Using calculated border sizes: {border_width}x{border_height}")
+
+        # Calculate the total window size needed to achieve the desired client size
+        total_width = width + border_width
+        total_height = height + border_height
+
+        print(f"[DEBUG] Attempting aggressive resize to: {total_width}x{total_height}")
+
+        # Method 1: Try to temporarily remove resize restrictions
+        try:
+            # Remove WS_MAXIMIZEBOX and WS_MINIMIZEBOX to prevent maximize/minimize interference
+            new_style = current_style & ~win32con.WS_MAXIMIZEBOX & ~win32con.WS_MINIMIZEBOX
+            # Ensure WS_OVERLAPPEDWINDOW is set for proper window behavior
+            new_style |= win32con.WS_OVERLAPPEDWINDOW
+
+            print(f"[DEBUG] Setting new window style: {hex(new_style)}")
+            win32gui.SetWindowLong(hwnd_target, win32con.GWL_STYLE, new_style)
+
+            # Force a window update - fixed argument count
+            win32gui.SetWindowPos(
+                hwnd_target,
+                0,
+                0,
+                0,
+                0,
+                0,
+                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_FRAMECHANGED,
+            )
+
+            time.sleep(0.2)
+
+        except Exception as e:
+            print(f"[WARNING] Could not modify window style: {e}")
+
+        # Method 2: Try multiple resize approaches
+        resize_success = False
+
+        # Approach 1: SetWindowPos with specific flags
+        try:
+            result = win32gui.SetWindowPos(
+                hwnd_target, win32con.HWND_TOP, current_x, current_y, total_width, total_height, win32con.SWP_SHOWWINDOW
+            )
+            time.sleep(0.3)
+
+            # Check if it worked
+            new_rect = win32gui.GetWindowRect(hwnd_target)
+            new_width = new_rect[2] - new_rect[0]
+            new_height = new_rect[3] - new_rect[1]
+
+            print(f"[DEBUG] After SetWindowPos: {new_width}x{new_height}")
+
+            if abs(new_width - total_width) <= 15 and abs(new_height - total_height) <= 15:
+                resize_success = True
+                print("[SUCCESS] SetWindowPos worked!")
+
+        except Exception as e:
+            print(f"[WARNING] SetWindowPos failed: {e}")
+
+        # Approach 2: MoveWindow if SetWindowPos didn't work
+        if not resize_success:
+            try:
+                print("[DEBUG] Trying MoveWindow...")
+                result = win32gui.MoveWindow(hwnd_target, current_x, current_y, total_width, total_height, True)
+                time.sleep(0.3)
+
+                # Check if it worked
+                new_rect = win32gui.GetWindowRect(hwnd_target)
+                new_width = new_rect[2] - new_rect[0]
+                new_height = new_rect[3] - new_rect[1]
+
+                print(f"[DEBUG] After MoveWindow: {new_width}x{new_height}")
+
+                if abs(new_width - total_width) <= 15 and abs(new_height - total_height) <= 15:
+                    resize_success = True
+                    print("[SUCCESS] MoveWindow worked!")
+
+            except Exception as e:
+                print(f"[WARNING] MoveWindow failed: {e}")
+
+        # Restore original window style - fixed argument count
+        try:
+            win32gui.SetWindowLong(hwnd_target, win32con.GWL_STYLE, current_style)
+            win32gui.SetWindowPos(
+                hwnd_target,
+                0,
+                0,
+                0,
+                0,
+                0,
+                win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_NOZORDER | win32con.SWP_FRAMECHANGED,
+            )
+        except Exception as e:
+            print(f"[WARNING] Could not restore window style: {e}")
+
+        # Final check
+        final_rect = win32gui.GetWindowRect(hwnd_target)
+        final_width = final_rect[2] - final_rect[0]
+        final_height = final_rect[3] - final_rect[1]
+
+        # Get the actual client size after resize
+        final_client_rect = win32gui.GetClientRect(hwnd_target)
+        final_client_width = final_client_rect[2] - final_client_rect[0]
+        final_client_height = final_client_rect[3] - final_client_rect[1]
+
+        print(f"[DEBUG] Final window size: {final_width}x{final_height}")
+        print(f"[DEBUG] Final client size: {final_client_width}x{final_client_height}")
+
+        # Check if we achieved the target client size
+        client_width_diff = abs(final_client_width - width)
+        client_height_diff = abs(final_client_height - height)
+
+        if client_width_diff <= 10 and client_height_diff <= 10:
+            print(f"[SUCCESS] 7DS window client area resized to {final_client_width}x{final_client_height}")
+            print(f"[INFO] Target was {width}x{height}, difference: {client_width_diff}x{client_height_diff}")
+
+            # Now move the window to ensure it's fully visible
+            move_window_to_visible_area(hwnd_target, final_width, final_height)
+
+            return True
+        else:
+            print(f"[WARNING] Client area resize not exact. Got: {final_client_width}x{final_client_height}")
+            print(f"[WARNING] Target was {width}x{height}, difference: {client_width_diff}x{client_height_diff}")
+
+            # If we're close enough, still consider it a success
+            if client_width_diff <= 20 and client_height_diff <= 20:
+                print("[INFO] Close enough, considering resize successful")
+
+                # Still try to move the window
+                move_success = move_window_to_visible_area(hwnd_target, final_width, final_height)
+                if move_success:
+                    print("[SUCCESS] Window positioned to ensure full visibility")
+                else:
+                    print("[WARNING] Could not reposition window for full visibility")
+
+                return True
+            else:
+                print("[ERROR] Resize failed - client area too different from target")
+                return False
+
+    except Exception as e:
+        print(f"[ERROR] Exception in force resize: {e}")
+        return False
+
+
+def move_window_to_visible_area(hwnd, window_width, window_height):
+    """Move the window vertically to ensure it's fully visible and not covered by menu bar or taskbar.
+    Keeps the current horizontal position.
+
+    Args:
+        hwnd: Window handle
+        window_width: Width of the window
+        window_height: Height of the window
+
+    Returns:
+        bool: True if move was successful, False otherwise
+    """
+    try:
+        # Get current window position
+        current_rect = win32gui.GetWindowRect(hwnd)
+        current_x = current_rect[0]
+        current_y = current_rect[1]
+
+        # Get screen dimensions using win32api
+        screen_width = win32api.GetSystemMetrics(win32con.SM_CXSCREEN)
+        screen_height = win32api.GetSystemMetrics(win32con.SM_CYSCREEN)
+
+        # Get taskbar height (approximate)
+        taskbar_height = win32api.GetSystemMetrics(win32con.SM_CYMENU)
+
+        # Calculate safe area (avoiding menu bar at top and taskbar at bottom)
+        # Menu bar is typically around 30-40 pixels, taskbar around 40-50 pixels
+        menu_bar_height = 40  # Approximate menu bar height
+        safe_top = menu_bar_height
+        safe_bottom = screen_height - taskbar_height - 10  # 10 pixel margin
+
+        # Keep the current horizontal position, only adjust vertical
+        target_x = current_x
+        target_y = current_y
+
+        # Check if window is covered by menu bar at top
+        if target_y < safe_top:
+            target_y = safe_top
+            print(f"[DEBUG] Window was covered by menu bar, moving down to y={target_y}")
+
+        # Check if window goes below the safe area
+        if target_y + window_height > safe_bottom:
+            target_y = safe_bottom - window_height
+            print(f"[DEBUG] Window was below safe area, moving up to y={target_y}")
+
+        # Only move if position actually changed
+        if target_y != current_y:
+            print(f"[DEBUG] Screen dimensions: {screen_width}x{screen_height}")
+            print(f"[DEBUG] Moving window from y={current_y} to y={target_y} (keeping x={current_x})")
+
+            # Move the window to the calculated position
+            result = win32gui.SetWindowPos(
+                hwnd, win32con.HWND_TOP, target_x, target_y, window_width, window_height, win32con.SWP_SHOWWINDOW
+            )
+
+            if result:
+                print(f"[SUCCESS] Window moved to ({target_x}, {target_y})")
+                return True
+            else:
+                print("[ERROR] Failed to move window")
+                return False
+        else:
+            print(f"[INFO] Window is already in safe position ({current_x}, {current_y})")
+            return True
+
+    except Exception as e:
+        print(f"[ERROR] Exception while moving window: {e}")
+        return False
 
 
 def capture_window() -> tuple[np.ndarray, tuple[int, int]]:

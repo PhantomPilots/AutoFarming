@@ -44,6 +44,9 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+# Import the window resize function
+from utilities.capture_window import resize_7ds_window
+
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
                            🆓 FREE SOFTWARE 🆓
@@ -279,6 +282,19 @@ class FarmerTab(QWidget):
     def start_farmer(self):
         if self.process is not None:
             return
+
+        # First, try to resize the 7DS window to the required size
+        self.append_terminal("Attempting to resize 7DS window to 540x960...\n")
+        resize_success = resize_7ds_window(width=538, height=921)
+
+        if not resize_success:
+            self.append_terminal("[WARNING] Failed to resize 7DS window. Continuing with current window size...\n")
+        else:
+            self.append_terminal("[SUCCESS] 7DS window resized successfully!\n")
+
+        # Small delay to allow window resize to complete
+        time.sleep(0.5)
+
         script_path = os.path.join(os.path.dirname(__file__), self.farmer["script"])
         args = self.get_args()
         # Mask password in the command display

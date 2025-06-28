@@ -32,9 +32,10 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    # display_image(screenshot)
 
     screenshot_testing(screenshot, vision_image=vio.reward)
+    # display_image(screenshot)
+
     # determine_relative_coordinates(screenshot)
 
     # available_slots = BirdFighter.count_empty_card_slots(screenshot)
@@ -57,8 +58,8 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    # hand_image = capture_hand_image()
-    # display_image(hand_image)
+    hand_image = capture_hand_image()
+    display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
