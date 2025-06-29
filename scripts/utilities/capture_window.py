@@ -81,7 +81,8 @@ def resize_7ds_window(width=540, height=960):
         print(f"[DEBUG] Current extended style: {hex(current_ex_style)}")
 
         # Calculate the exact border sizes
-        border_width, border_height = calculate_exact_border_sizes()
+        # border_width, border_height = calculate_exact_border_sizes()
+        border_width, border_height = 18, 47
         if border_width is None or border_height is None:
             # Fallback to estimated values
             border_width = 8
@@ -199,7 +200,7 @@ def resize_7ds_window(width=540, height=960):
         client_width_diff = abs(final_client_width - width)
         client_height_diff = abs(final_client_height - height)
 
-        if client_width_diff <= 10 and client_height_diff <= 10:
+        if client_width_diff <= 1 and client_height_diff <= 1:
             print(f"[SUCCESS] 7DS window client area resized to {final_client_width}x{final_client_height}")
             print(f"[INFO] Target was {width}x{height}, difference: {client_width_diff}x{client_height_diff}")
 
