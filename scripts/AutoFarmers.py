@@ -83,7 +83,7 @@ FARMERS = [
                 "choices": ["indura_demon", "og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
                 "default": ["indura_demon"],
             },
-            {"name": "--time-to-sleep", "label": "Time to Sleep (s)", "type": "text", "default": "9.1"},
+            {"name": "--time-to-sleep", "label": "Time to Sleep (s)", "type": "text", "default": "9.15"},
             {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
         ],
     },
