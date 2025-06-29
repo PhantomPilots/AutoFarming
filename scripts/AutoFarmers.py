@@ -405,12 +405,7 @@ class FarmerTab(QWidget):
     def resize_window(self):
         """Resize the 7DS window to the required size"""
         self.append_terminal("Attempting to resize 7DS window to 538x921...\n")
-        resize_success = resize_7ds_window(width=538, height=921)
-
-        # if not resize_success:
-        #     self.append_terminal("[WARNING] Failed to resize 7DS window.\n")
-        # else:
-        #     self.append_terminal("[SUCCESS] 7DS window resized successfully!\n")
+        resize_7ds_window(width=538, height=921)
 
     def load_farmer_image(self, img, image_size):
         """Load and display farmer-specific images"""

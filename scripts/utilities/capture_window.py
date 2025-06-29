@@ -288,10 +288,10 @@ def move_window_to_visible_area(hwnd, window_width, window_height):
             )
 
             if result:
-                print(f"[SUCCESS] Window moved to ({target_x}, {target_y})")
+                # print(f"[SUCCESS] Window moved to ({target_x}, {target_y})")
                 return True
             else:
-                print("[ERROR] Failed to move window")
+                # print("[ERROR] Failed to move window")
                 return False
         else:
             print(f"[INFO] Window is already in safe position ({current_x}, {current_y})")
