@@ -236,6 +236,10 @@ class FarmerTab(QWidget):
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self.stop_farmer)
         btn_layout.addWidget(self.stop_btn)
+        self.resize_btn = QPushButton("RESIZE")
+        self.resize_btn.setStyleSheet("background-color: #FF9800; color: white; font-weight: bold;")
+        self.resize_btn.clicked.connect(self.resize_window)
+        btn_layout.addWidget(self.resize_btn)
         self.clear_btn = QPushButton("CLEAR")
         self.clear_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
         self.clear_btn.clicked.connect(self.clear_output)
@@ -397,6 +401,16 @@ class FarmerTab(QWidget):
         self.terminal.clear()
         self.output_lines = []
         self.append_terminal("\nOutput cleared.\n")
+
+    def resize_window(self):
+        """Resize the 7DS window to the required size"""
+        self.append_terminal("Attempting to resize 7DS window to 538x921...\n")
+        resize_success = resize_7ds_window(width=538, height=921)
+
+        # if not resize_success:
+        #     self.append_terminal("[WARNING] Failed to resize 7DS window.\n")
+        # else:
+        #     self.append_terminal("[SUCCESS] 7DS window resized successfully!\n")
 
     def load_farmer_image(self, img, image_size):
         """Load and display farmer-specific images"""
