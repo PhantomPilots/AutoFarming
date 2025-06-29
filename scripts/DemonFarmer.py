@@ -18,26 +18,44 @@ def main():
         default="chaos",
         help="Difficulty for Indura demon (choices: extreme, hell, chaos)",
     )
-
+    parser.add_argument(
+        "--demons-to-farm",
+        type=str,
+        default="indura_demon",
+        help="Comma-separated list of demons to farm: red_demon,gray_demon,crimson_demon,bell_demon,og_demon,indura_demon",
+    )
+    parser.add_argument(
+        "--time-to-sleep",
+        type=float,
+        default=9.1,
+        help="Seconds to sleep before accepting an invitation (default: 9.1)",
+    )
+    parser.add_argument("--do-dailies", action="store_true", default=True, help="Do dailies (default: True)")
+    parser.add_argument("--no-do-dailies", dest="do_dailies", action="store_false", help="Don't do dailies")
     args = parser.parse_args()
+
+    demon_map = {
+        "indura_demon": vio.indura_demon,
+        "og_demon": vio.og_demon,
+        "bell_demon": vio.bell_demon,
+        "red_demon": vio.red_demon,
+        "gray_demon": vio.gray_demon,
+        "crimson_demon": vio.crimson_demon,
+    }
+    demons_to_farm = [
+        demon_map[name.strip()] for name in args.demons_to_farm.split(",") if name.strip() in demon_map
+    ] or [vio.indura_demon]
 
     FarmingFactory.main_loop(
         farmer=DemonFarmer,
-        starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
-        demons_to_farm=[
-            # vio.red_demon,
-            # vio.gray_demon,
-            # vio.crimson_demon,
-            # vio.bell_demon,
-            # vio.og_demon,
-            vio.indura_demon,
-        ],
-        indura_difficulty=args.indura_diff,  # Difficulty of Indura demon
-        time_to_sleep=9.25,  # How many seconds to sleep before accepting an invitation
-        time_between_demons=2,  # How many hours between each type of demon
-        do_dailies=True,  # Do we halt demon farming to do dailies?
-        do_daily_pvp=True,  # If we do dailies, do we do PVP?
-        password=args.password,  # Account password
+        starting_state=States.GOING_TO_DEMONS,
+        demons_to_farm=demons_to_farm,
+        indura_difficulty=args.indura_diff,
+        time_to_sleep=args.time_to_sleep,
+        time_between_demons=2,
+        do_dailies=args.do_dailies,
+        do_daily_pvp=True,
+        password=args.password,
     )
 
 
