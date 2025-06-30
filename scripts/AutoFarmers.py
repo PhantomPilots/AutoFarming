@@ -352,26 +352,7 @@ class FarmerTab(QWidget):
                     self.output_timer.stop()
                     self.output_timer.deleteLater()
                     self.output_timer = None
-
-                # Send SIGINT signal to allow graceful shutdown
-                if hasattr(self.process, "pid") and self.process.pid():
-                    try:
-                        os.kill(self.process.pid(), signal.SIGINT)
-                        self.append_terminal("\nSIGINT signal sent to process. Waiting for graceful shutdown...\n")
-
-                        # Give the process some time to handle the signal gracefully
-                        # If it doesn't terminate within 5 seconds, force kill it
-                        if not self.process.waitForFinished(5000):  # 5 seconds timeout
-                            self.append_terminal("Process did not terminate gracefully. Force killing...\n")
-                            self.process.kill()
-                    except (OSError, AttributeError) as e:
-                        # Fallback to kill if SIGINT fails
-                        self.append_terminal(f"Failed to send SIGINT: {e}. Force killing process...\n")
-                        self.process.kill()
-                else:
-                    # Fallback if we can't get the PID
-                    self.process.kill()
-
+                self.process.kill()  # QProcess does not support SIGINT on Windows, so we use kill
             self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
