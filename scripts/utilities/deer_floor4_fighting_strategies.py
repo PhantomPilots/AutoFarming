@@ -16,23 +16,9 @@ from utilities.deer_utilities import (
     reorder_buff_removal_card,
     reorder_jorms_heal,
 )
-from utilities.fighting_strategies import (
-    IBattleStrategy,
-    SmarterBattleStrategy,
-    play_stance_card,
-)
+from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import (
-    capture_window,
-    count_immortality_buffs,
-    determine_card_merge,
-    display_image,
-    find,
-    get_hand_cards,
-    is_amplify_card,
-    is_ground_card,
-    screenshot_testing,
-)
+from utilities.utilities import capture_window, find
 
 logger = LoggerWrapper("BirdFloor4FightingStrategies", log_file="deer_floor4_AI.log")
 

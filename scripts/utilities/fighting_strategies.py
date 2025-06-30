@@ -17,7 +17,6 @@ from utilities.utilities import (
     find,
     get_hand_cards,
     get_hand_cards_3_cards,
-    is_ground_card,
 )
 
 logger = LoggerWrapper(name="FightingStrategies", log_file="fighter.log")

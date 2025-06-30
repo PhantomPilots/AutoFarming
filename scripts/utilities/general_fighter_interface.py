@@ -19,7 +19,6 @@ from utilities.utilities import (
     drag_im,
     get_click_point_from_rectangle,
     get_hand_cards,
-    is_ground_card,
     is_ground_region,
 )
 
