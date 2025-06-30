@@ -323,11 +323,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         # First of all, if Deer has a counter, use Hel ult if we have it
         if find(vio.snake_f3p2_counter, screenshot):
-            if len(
-                hel_ult_ids := np.where(
-                    [is_Hel_card(card) and card.card_rank == CardRanks.ULTIMATE for card in hand_of_cards]
-                )[0]
-            ):
+            if len(hel_ult_ids := np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]):
                 return hel_ult_ids[-1]
 
         if DeerFloor4BattleStrategy.turn < 3:
