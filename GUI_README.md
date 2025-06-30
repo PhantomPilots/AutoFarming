@@ -48,16 +48,6 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Final Boss**: Battle final bosses with different difficulty levels
 - **Tower Trials**: Complete tower trial challenges
 
-### Key Features
-
-- **Real-time Output**: See exactly what your farmer is doing as it happens
-- **Auto-scroll**: Terminal automatically scrolls to show the latest activity
-- **Smart Output Management**: Keeps the last 1000 lines to prevent memory issues
-- **Safe Process Control**: Proper shutdown handling to avoid crashes
-- **Error Display**: Shows errors clearly in both popup messages and terminal
-- **Window Management**: Automatically resizes your game window for best performance
-- **Image Support**: Each farmer has its own visual representation
-
 ### Requirements
 
 - **Python 3.10 or 3.11**: Download from Microsoft Store (recommended) or python.org
@@ -68,13 +58,12 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Game Window**: The GUI automatically resizes your 7DS Grand Cross window to 538x921 pixels for optimal performance
 - **Independent Farmers**: Each farmer runs separately, so you can stop one without affecting others
 - **Memory Efficient**: Output is limited to prevent memory issues during long farming sessions
-- **Cross-Platform**: Works on Windows (primary), with potential for other platforms
 - **Free Software**: This is completely free - if you paid for it, you were scammed!
 
 ### Troubleshooting
 
 - **GUI won't start**: 
-  - Make sure you're running from the `scripts/` directory
+  - Make sure you're running from the `scripts\` directory
   - Ensure Python 3.10 or 3.11 is installed
   - Try running PowerShell as Administrator
 - **Farmer won't start**: 
