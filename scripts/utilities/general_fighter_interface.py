@@ -146,7 +146,9 @@ class IFighter(abc.ABC):
                 while (
                     index != -1
                     and is_ground_region(screenshot, card_to_play.rectangle)
-                    and not is_ground_region(screenshot, prev_card.rectangle)  # Necessary to avoid false positives!
+                    and is_ground_region(  # Double check that we have 2 grounds before assuming it's a ground
+                        screenshot, prev_card.rectangle
+                    )
                 ):
                     # print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
