@@ -157,6 +157,7 @@ class IFighter(abc.ABC):
                         card_to_play = list_of_cards[-1]
                         break
                     card_to_play = list_of_cards[index]
+                    prev_card: Card = list_of_cards[index - 1]
 
             # Just click on the card
             print("Playing card:", card_to_play.card_type.name, card_to_play.card_rank.name)
