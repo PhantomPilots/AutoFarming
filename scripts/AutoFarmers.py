@@ -352,7 +352,7 @@ class FarmerTab(QWidget):
                     self.output_timer.stop()
                     self.output_timer.deleteLater()
                     self.output_timer = None
-                self.process.kill()  # QProcess does not support SIGINT on Windows, so we use kill
+                self.process.kill()
             self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)

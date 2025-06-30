@@ -13,6 +13,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     determine_card_merge,
+    display_image,
     find,
     get_hand_cards,
     get_hand_cards_3_cards,
@@ -69,14 +70,15 @@ class IBattleStrategy(abc.ABC):
                 hand_of_cards, IBattleStrategy.picked_cards, card_turn=card_turn, **kwargs
             )
             if isinstance(next_index, Integral):
-                # Ensure we don't pick a GROUND card
-                while (
-                    next_index != -1
-                    and next_index < len(hand_of_cards) - 1
-                    and is_ground_card(hand_of_cards[next_index])
-                ):
-                    print(f"We can't pick card with index {next_index}, it's GROUND.")
-                    next_index += 1
+                # # Ensure we don't pick a GROUND card
+                # while (
+                #     next_index != -1
+                #     and next_index < len(hand_of_cards) - 1
+                #     and is_ground_card(hand_of_cards[next_index])
+                # ):
+                #     print(f"We can't pick card with index {next_index}, it's GROUND.")
+                #     display_image(hand_of_cards[next_index].card_image, title="Ground Card?")
+                #     next_index += 1
 
                 # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 if IBattleStrategy.card_turn < len(IBattleStrategy.picked_cards):

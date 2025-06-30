@@ -584,10 +584,11 @@ def is_ground_region(screenshot: np.ndarray, rectangle: tuple[float, float, floa
         screenshot, (rectangle[0], rectangle[1]), (rectangle[0] + rectangle[2], rectangle[1] + rectangle[3])
     )
 
-    if plot:
+    is_ground = GroundCardPredictor.is_ground_card(region_image)
+    if plot and is_ground:
+        print("IS GROUND!")
         display_image(region_image, "Region to check if ground")
-
-    return GroundCardPredictor.is_ground_card(region_image)
+    return is_ground
 
 
 def is_stance_cancel_card(card: Card) -> bool:

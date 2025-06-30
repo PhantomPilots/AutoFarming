@@ -170,7 +170,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         if card_turn == 0:
             print(f"TURN {DeerFloor4BattleStrategy.turn}:")
 
-        card_ranks = [card.card_rank.value for card in hand_of_cards]
+        # Set ultimates as last to use
+        card_ranks = [
+            card.card_rank.value if card.card_type != CardTypes.ULTIMATE else -card.card_rank.value
+            for card in hand_of_cards
+        ]
+
         # All unit cards sorted
         tyr_hel_cards = sorted(
             np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],

@@ -143,7 +143,12 @@ class IFighter(abc.ABC):
             card_to_play = list_of_cards[index]
             if screenshot is not None:
                 # If we're provided a screenshot, try to determine if we're clicking on a ground slot
-                while index != -1 and is_ground_region(screenshot, card_to_play.rectangle):
+                prev_card: Card = list_of_cards[index - 1]
+                while (
+                    index != -1
+                    and is_ground_region(screenshot, card_to_play.rectangle)
+                    and not is_ground_region(screenshot, prev_card.rectangle)  # Necessary to avoid false positives!
+                ):
                     # print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
                     if index >= len(list_of_cards) - 1:
