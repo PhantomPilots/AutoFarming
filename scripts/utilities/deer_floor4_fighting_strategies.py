@@ -321,6 +321,15 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
         )
 
+        # First of all, if Deer has a counter, use Hel ult if we have it
+        if find(vio.snake_f3p2_counter, screenshot):
+            if len(
+                hel_ult_ids := np.where(
+                    [is_Hel_card(card) and card.card_rank == CardRanks.ULTIMATE for card in hand_of_cards]
+                )[0]
+            ):
+                return hel_ult_ids[-1]
+
         if DeerFloor4BattleStrategy.turn < 3:
             # Let's set the ults to be the last cards to use
             print("DISABLING ULTS!")
@@ -356,29 +365,18 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if len(blue_card_ids):
                 print("Initializing with blue card!")
                 return blue_card_ids[-1]
-        elif card_turn == 0:
-            if find(vio.blue_buff, screenshot) and len(blue_card_ids):
-                # Pick blue card
-                print("We're starting the round with a BLUE card!")
-                return blue_card_ids[-1]
-            if find(vio.red_buff, screenshot) and len(red_card_ids):
-                # Pick red card
-                print("We're starting the round with a RED card!")
-                return red_card_ids[-1]
-            if find(vio.green_buff, screenshot) and len(green_card_ids):
-                print("We're starting the round with a GREEN card!")
-                return green_card_ids[-1]
 
-        # Keep track of last picked card
-        last_card = picked_cards[card_turn - 1] if card_turn > 0 else Card()
-
-        if is_green_card(last_card) and len(blue_card_ids):
+        # Not the beginning of the turn, wheel has already started
+        if find(vio.blue_buff, screenshot) and len(blue_card_ids):
+            # Pick blue card
             print("Last card green! Picking blue")
-            # Gotta pick a blue card
             return blue_card_ids[-1]
-        if is_red_card(last_card) and len(green_card_ids):
+        if find(vio.red_buff, screenshot) and len(red_card_ids):
+            # Pick red card
+            print("Last card blue! Picking red")
+            return red_card_ids[-1]
+        if find(vio.green_buff, screenshot) and len(green_card_ids):
             print("Last card red! Picking green")
-            # First, if it's turn 2, use Jorm's buff card if it exists
             if DeerFloor4BattleStrategy.turn == 2:
                 print("Can we use a buff removal??")
             buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
@@ -387,10 +385,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 if len(buff_removal_ids) and DeerFloor4BattleStrategy.turn == 2
                 else green_card_ids[-1]
             )
-        if is_blue_card(last_card) and len(red_card_ids):
-            print("Last card blue! Picking red")
-            # Gotta pick a red card
-            return red_card_ids[-1]
 
         # If the above doesn't happen...
         print("Couldn't find the right card, defaulting while avoiding ultimates...")
