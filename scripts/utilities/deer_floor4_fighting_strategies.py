@@ -374,8 +374,14 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 print("We're starting the round with a GREEN card!")
                 return green_card_ids[-1]
 
-        # Keep track of last picked card
+        # Get the last picked card (from previous turn)
         last_card = picked_cards[card_turn - 1] if card_turn > 0 else Card()
+
+        # Special case: If we played Hel's ult as the previous card but no green buff appeared,
+        # reset the last_card to restart the color wheel
+        if card_turn == 1 and find(vio.hel_ult, last_card.card_image) and not find(vio.green_buff, screenshot):
+            print("Last card is Hel's ult, but no green buff! Re-starting the wheel.")
+            last_card = Card()
 
         if is_green_card(last_card) and len(blue_card_ids):
             print("Last card green! Picking blue")
