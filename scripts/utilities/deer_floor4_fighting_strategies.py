@@ -335,8 +335,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 # Only disable red up to turn 2
                 red_card_ids = red_card_ids[::-1]
 
-            if card_turn == 3:
-                # Move a card of someone that doesn't have an ult
+            if card_turn == 3 and not find(vio.hel_ult, picked_cards[0].card_image):
+                # Move a card of someone that doesn't have an ult AND if we haven't played a Hel's ult at the beginning
                 return self._move_card_for_ult(
                     hand_of_cards + picked_cards,
                     tyr_hel_cards=tyr_hel_cards,
