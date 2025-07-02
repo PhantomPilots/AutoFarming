@@ -18,9 +18,9 @@ Also, use this code at your own risk.
 
 <img src="readme_images/GUI.png" alt="GUI application" width="60%">
 
-<!-- ## Discord
+## Discord
 
-Join the community if you want quick replies to any issues you may be having! https://discord.gg/XN8Vf4Yt7J -->
+Join the community if you want quick replies to any issues you may be having! https://discord.gg/En2Wm6a5RV
 
 
 ## Installation
