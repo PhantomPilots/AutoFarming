@@ -158,6 +158,8 @@ class IFighter(abc.ABC):
                         break
                     card_to_play = list_of_cards[index]
                     prev_card: Card = list_of_cards[index - 1]
+                    # And retake the screenshot, just in case
+                    screenshot, _ = capture_window()
 
             # Just click on the card
             print("Playing card:", card_to_play.card_type.name, card_to_play.card_rank.name)
