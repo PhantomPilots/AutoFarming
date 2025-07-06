@@ -59,6 +59,7 @@ class DailyFarmer:
 
     # To check if we should kill the farmer
     farmer_killed = False
+    manual_kill = False
 
     def __init__(
         self,
@@ -96,6 +97,7 @@ class DailyFarmer:
         with DailyFarmer._lock:
             self.logger.info("Manually trying to kill the dailies thread...")
             DailyFarmer.farmer_killed = True
+            DailyFarmer.manual_kill = True
 
     def check_if_farmer_killed(self):
         """Check if the farmer was killed"""
@@ -105,7 +107,7 @@ class DailyFarmer:
                 self.logger.info("Successfully killing the farmer thread!")
                 DailyFarmer.farmer_killed = False
 
-    def exit_farmer_state(self) -> bool:  # sourcery skip: extract-method
+    def exit_farmer_state(self) -> bool:  # sourcery skip: extract-duplicate-method, extract-method, split-or-ifs
         screenshot, window_location = capture_window()
 
         print("In EXIT FARMER state, trying to exit...")
@@ -113,9 +115,9 @@ class DailyFarmer:
         # First, ensure we're back on the tavern
         find_and_click(vio.back, screenshot, window_location)
 
-        # Call the complete callback!
-        if find(vio.tavern, screenshot):
+        if find(vio.tavern, screenshot) or DailyFarmer.manual_kill:
             if self.complete_callback is not None:
+                # Call the complete callback if needed
                 self.complete_callback()
             # Let's reset the number of dungeon keys for tomorrow
             DailyFarmer.num_dungeon_keys = 3
@@ -125,6 +127,8 @@ class DailyFarmer:
             DailyFarmer.event_special_dungeon_complete = False
             # Reset the current state!
             DailyFarmer.current_state = States.IN_TAVERN_STATE
+            # Reset the manual kill
+            DailyFarmer.manual_kill = False
             return True
 
         return False
