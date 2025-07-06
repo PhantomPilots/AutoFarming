@@ -116,6 +116,10 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         if DeerFloor4BattleStrategy.turn == 0:
             if card_turn == 0:
+                if not len(tyr_hel_cards):
+                    raise ValueError(
+                        "Something's very wrong with your bot, no Hel/Tyr cards detected. Resize the 7DS window and try again."
+                    )
                 return tyr_hel_cards[0]  # tyr first card, or hel debuf
             elif card_turn == 1:
                 return jorm_cards[-1]  # Jorm buff removal, save heal for p2
