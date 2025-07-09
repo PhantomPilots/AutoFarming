@@ -111,6 +111,10 @@ class IFarmer:
         """We're at the login screen, need to login!"""
         screenshot, window_location = capture_window()
 
+        # First of all, if we have a 'cancel', click that first!
+        if find_and_click(vio.cancel, screenshot, window_location):
+            return
+
         # Flag to indicate if a successful login branch was detected
         login_attempted = False
 
@@ -128,8 +132,6 @@ class IFarmer:
             time.sleep(1)
             return
 
-        # If we have a 'cancel', click that first!
-        find_and_click(vio.cancel, screenshot, window_location)
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
