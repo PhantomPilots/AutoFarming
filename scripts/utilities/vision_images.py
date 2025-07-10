@@ -8,6 +8,10 @@ run_game = MultiVision(
     "run_game_2.png",
     image_name="Run game",
 )
+server_cancel = MultiVision(
+    "server_cancel.png",
+    image_name="server_cancel",
+)
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")

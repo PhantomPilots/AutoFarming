@@ -662,11 +662,10 @@ def re_open_7ds_window():
     """Re-open the 7DS window"""
     # Maybe the 7DS window is closed, so we need to re-open it
     if not is_7ds_window_open():
-        print("7DS window has been closed!")
-        time.sleep(5)  # Let's sleep to allow the game to be closed properly...
         entire_screen = capture_screen()
+        print("7DS window has been closed!")
+        find_and_click(vio.server_cancel, entire_screen)
+        time.sleep(5)  # Let's sleep to allow the game to be closed properly...
         if find_and_click(vio.run_game, entire_screen):
-            time.sleep(0.5)
-            press_key("esc")  # In case there's a "cancel" popup because the game couldn't open properly
             print("Trying to re-open the game...")
-            time.sleep(10)  # Let's wait for a while
+            time.sleep(5)  # Let's wait for a while
