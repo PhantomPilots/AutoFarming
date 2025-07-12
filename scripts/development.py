@@ -10,6 +10,7 @@ from utilities.coordinates import Coordinates
 from utilities.dogs_fighter import DogsFighter
 from utilities.utilities import (
     capture_hand_image,
+    capture_screen,
     capture_window,
     click_and_drag,
     crop_image,
@@ -32,9 +33,10 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
+    # screenshot_testing(screenshot, vision_image=vio.reward)
 
-    screenshot_testing(screenshot, vision_image=vio.reward)
-    # display_image(screenshot)
+    # full_screenshot = capture_screen()
+    # screenshot_testing(full_screenshot, vio.server_cancel)
 
     # determine_relative_coordinates(screenshot)
 
