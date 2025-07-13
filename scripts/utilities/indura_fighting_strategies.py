@@ -93,11 +93,12 @@ class InduraBattleStrategy(IBattleStrategy):
         )
         if len(heal_card_ids) and not picked_heal_ids.size:
             return heal_card_ids[-1]
+
         # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card if we haven't played a heal yet
-        elif phase == 3 and np.any([find(vio.alpha_ult, card.card_image) for card in hand_of_cards]):
+        if phase == 3 and np.any([find(vio.alpha_ult, card.card_image) for card in hand_of_cards]):
             # Check if we have a King's attack card
             played_king_att_card = np.where([find(vio.king_att, card.card_image) for card in picked_cards])[0]
-            if len(king_att_card_ids) and not len(played_king_att_card):
+            if len(king_att_card_ids) and not len(played_king_att_card) and not len(picked_heal_ids):
                 # Only play a King's attack card if we haven't played one yet
                 print("Playing King's attack card to increase Alpha's ult damage...")
                 return king_att_card_ids[-1]
