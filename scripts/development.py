@@ -13,6 +13,7 @@ from utilities.utilities import (
     capture_screen,
     capture_window,
     click_and_drag,
+    close_game,
     crop_image,
     determine_card_merge,
     determine_relative_coordinates,
@@ -33,12 +34,15 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.ok_main_button)
+    # screenshot_testing(screenshot, vision_image=vio.diamond)
+
+    # if find(vio.connection_confrm_expired, screenshot):
+    #     close_game()
 
     # full_screenshot = capture_screen()
     # screenshot_testing(full_screenshot, vio.server_cancel)
 
-    # determine_relative_coordinates(screenshot)
+    determine_relative_coordinates(screenshot)
 
     # available_slots = BirdFighter.count_empty_card_slots(screenshot)
     # print(f"These many empty slots: {available_slots}")

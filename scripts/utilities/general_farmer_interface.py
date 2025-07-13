@@ -15,6 +15,7 @@ from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_fighter_interface import IFighter
 from utilities.utilities import (
     click_and_sleep,
+    close_game,
     drag_im,
     find,
     find_and_click,
@@ -122,6 +123,10 @@ class IFarmer:
             print("Logged in successfully! Going back to the previous state...")
             self.current_state = initial_state
             login_attempted = True
+        elif find(vio.connection_confrm_expired, screenshot):
+            print("Connection confirmation expired!")
+            close_game()
+            return
 
         # Only try to log in if enough time has passed since the last logout
         if (
