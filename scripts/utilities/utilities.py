@@ -297,7 +297,7 @@ def press_key(key: str):
 def close_game():
     screenshot, window_location = capture_window()
     find_and_click(vio.ok_main_button, screenshot, window_location)
-    time.sleep(0.1)
+    time.sleep(1)
     pyautogui.hotkey("alt", "f4")
 
 
