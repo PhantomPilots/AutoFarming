@@ -12,6 +12,7 @@ server_cancel = MultiVision(
     "server_cancel.png",
     image_name="server_cancel",
 )
+connection_confrm_expired = Vision("connection_confirmation_expired.png")
 diamond = Vision("diamond.png")
 again = Vision("again.png")
 lock = Vision("lock.png")
@@ -369,18 +370,18 @@ tier_up_failed = Vision("dailies\\tier_up_failed.png")
 
 # Create a single OkVision instance for all OK buttons
 ok_main_button = MultiVision(
-    "ok_button.jpg",
-    "demonic_beasts\\OK_save_party.png",
-    "demonic_beasts\\ok_bird_defeat.png",
-    "final_boss\\fb_ok_button.png",
-    "dailies\\ok_pvp_defeat.png",
-    "salvage_ok.png",
-    "demonic_beasts\\bird_okay.png",
-    "demonic_beasts\\finished_fight_ok.png",
-    "demonic_beasts\\forfeit_fight_ok.png",
-    "demons\\demon_ok.jpg",
-    "demons\\dead_ok.jpg",
-    "demons\\kicked_ok.png",
+    "ok_buttons\\ok_button.jpg",
+    "ok_buttons\\OK_save_party.png",
+    "ok_buttons\\ok_bird_defeat.png",
+    "ok_buttons\\fb_ok_button.png",
+    "ok_buttons\\ok_pvp_defeat.png",
+    "ok_buttons\\salvage_ok.png",
+    "ok_buttons\\bird_okay.png",
+    "ok_buttons\\finished_fight_ok.png",
+    "ok_buttons\\forfeit_fight_ok.png",
+    "ok_buttons\\demon_ok.jpg",
+    "ok_buttons\\dead_ok.jpg",
+    "ok_buttons\\kicked_ok.png",
     "ok_buttons\\ok_maintenance.png",
     image_name="Ok button",
 )

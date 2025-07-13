@@ -294,6 +294,13 @@ def press_key(key: str):
     pyautogui.press(key)
 
 
+def close_game():
+    screenshot, window_location = capture_window()
+    find_and_click(vio.ok_main_button, screenshot, window_location)
+    time.sleep(0.1)
+    pyautogui.hotkey("alt", "f4")
+
+
 def format_duration(seconds):
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
