@@ -31,15 +31,26 @@ class InduraBattleStrategy(IBattleStrategy):
             ]
         )[0]
 
+        # Identify all King attack cards
+        king_att_card_ids: list[int] = sorted(
+            np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0],
+            key=lambda idx: card_ranks[idx],
+        )
+
         six_empty_slots_image = crop_image(
             screenshot,
             Coordinates.get_coordinates("6_cards_top_left"),
             Coordinates.get_coordinates("6_cards_bottom_right"),
         )
-        # Evaluate if the other party has played a King's debuff card
-        b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
-        # if b_played_mini_king:
-        #     print("The other party has played a King's debuff card!")
+
+        # On phase 3, if we have Alpha ult, play a King att card firt
+        if phase == 3 and np.any([find(vio.alpha_ult, card.card_image) for card in hand_of_cards]):
+            # Check if we have a King's attack card
+            played_king_att_card = np.where([find(vio.king_att, card.card_image) for card in picked_cards])[0]
+            if len(king_att_card_ids) and not len(played_king_att_card):
+                # Only play a King's attack card if we haven't played one yet
+                print("Playing King's attack card to increase Alpha's ult damage...")
+                return king_att_card_ids[-1]
 
         # On phase 2, evaluate if Indura has multi-tiers activated
         have_multi_tiers = False
@@ -48,6 +59,7 @@ class InduraBattleStrategy(IBattleStrategy):
 
         # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
         # But NOT if we're on phase 3
+        b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
         if (
             phase != 3  # Not on phase 3
             and len(king_debuf_card_ids)
@@ -92,7 +104,6 @@ class InduraBattleStrategy(IBattleStrategy):
             return heal_card_ids[-1]
 
         # Disable all King's attack cards
-        king_att_card_ids: list[int] = np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0]
         for idx in king_att_card_ids:
             hand_of_cards[idx].card_type = CardTypes.DISABLED
 
