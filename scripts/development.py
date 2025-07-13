@@ -33,7 +33,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    # screenshot_testing(screenshot, vision_image=vio.reward)
+    screenshot_testing(screenshot, vision_image=vio.ok_main_button)
 
     # full_screenshot = capture_screen()
     # screenshot_testing(full_screenshot, vio.server_cancel)

@@ -170,7 +170,8 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         screenshot, window_location = capture_window()
 
         # In case we didn't properly click it
-        find_and_click(vio.ok_main_button, screenshot, window_location)
+        if not find(vio.diamond, screenshot):
+            find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
         if floor_coordinates := find_floor_coordinates(screenshot, window_location):

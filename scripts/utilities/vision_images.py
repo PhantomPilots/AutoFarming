@@ -12,6 +12,7 @@ server_cancel = MultiVision(
     "server_cancel.png",
     image_name="server_cancel",
 )
+diamond = Vision("diamond.png")
 again = Vision("again.png")
 lock = Vision("lock.png")
 resume = Vision("resume.png")

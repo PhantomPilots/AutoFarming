@@ -109,7 +109,7 @@ class FinalBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we see an OK button bc of oath of combat not selected...
-        if find_and_click(vio.ok_main_button, screenshot, window_location):
+        if not find(vio.diamond, screenshot) and find_and_click(vio.ok_main_button, screenshot, window_location):
             return
 
         # We may need to restore stamina
