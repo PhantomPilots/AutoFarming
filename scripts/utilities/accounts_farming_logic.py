@@ -61,6 +61,8 @@ class ManyAccountsFarmer:
     # The thread for doing weeklies
     weeklies_thread: threading.Thread | None = None
 
+    do_weeklies: bool = False  # Whether to do weeklies or not
+
     _lock = Lock()  # To ensure thread safety when accessing shared resources
 
     def __init__(
@@ -82,7 +84,10 @@ class ManyAccountsFarmer:
             # And let's initialize the current account, only once
             self.pick_next_account()
 
-        self.do_weeklies = do_weeklies
+            # Should we do weeklies?
+            ManyAccountsFarmer.do_weeklies = do_weeklies
+            if do_weeklies:
+                print("We're going to do weeklies for each account!")
 
         self.account_list = ManyAccountsFarmer.account_list  # instance-level access to shared list
 
@@ -185,7 +190,7 @@ class ManyAccountsFarmer:
     def weekly_quests_state(self):
         """Doing weeklies for the current account"""
 
-        if not self.do_weeklies:
+        if not ManyAccountsFarmer.do_weeklies:
             print("Skipping weeklies.")
 
         self.weeklies_done()
