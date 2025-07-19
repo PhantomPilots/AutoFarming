@@ -295,10 +295,25 @@ def press_key(key: str):
 
 
 def close_game():
+    # Find the window by title
+    hwnd = win32gui.FindWindow(None, "7DS")
+    if hwnd == 0:
+        print("[ERROR] '7DS' window not found.")
+        return
+
+    # Bring the window to the foreground
+    win32gui.SetForegroundWindow(hwnd)
+
+    # Optional: give a moment for the window to become active
+    time.sleep(0.5)
+
+    # Now safe to proceed
     screenshot, window_location = capture_window()
     print("Trying to close the game...")
     find_and_click(vio.ok_main_button, screenshot, window_location)
     time.sleep(1)
+
+    # Send the hotkey
     pyautogui.hotkey("alt", "f4")
 
 

@@ -36,10 +36,14 @@ class FarmingFactory:
                 starting_state = farmer_instance.current_state
                 # Re-open the 7DS window if it has been closed
                 re_open_7ds_window()
+                raise e
 
             finally:
                 print("FINALLY:")
                 # Call the 'exit message'
-                farmer_instance.exit_message()
+                if hasattr(farmer_instance, "exit_message"):
+                    farmer_instance.exit_message()
+
                 # We also need to send a STOP command to the Fighter thread
-                farmer_instance.stop_fighter_thread()
+                if hasattr(farmer_instance, "stop_fighter_thread"):
+                    farmer_instance.stop_fighter_thread()

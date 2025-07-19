@@ -51,13 +51,25 @@ class ManyAccountsFarmer:
         complete_callback=None,
     )
 
-    def __init__(self):
+    def __init__(
+        self,
+        starting_state: States = States.SWITCH_ACCOUNT,
+        battle_strategy: IBattleStrategy | None = None,  # UNUSED
+        **kwargs,  # UNUSED
+    ):
 
         self.account_list = self.load_accounts()
-        self.current_account: dict[str, str] = None  # Stores "username": "password"
+        self.current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
+        print("Farmer started for the following accounts:")
+        for i, account in enumerate(self.account_list):
+            print(f"{account['user']}", end=", " if i < len(self.account_list) - 1 else "")
+        print("\n")
+
+        # And let's initialize the current account
+        self.pick_next_account()
 
         # We always want to initialize in the daily quests state
-        self.current_state: States = States.DAILY_QUESTS
+        self.current_state: States = starting_state
 
         # For the daily farmer
         ManyAccountsFarmer.daily_farmer.add_complete_callback(self.dailies_done)
@@ -69,6 +81,9 @@ class ManyAccountsFarmer:
         """Load accounts from a configuration file"""
         return load_yaml_config("config/accounts.yaml")["accounts"]
 
+    def exit_message(self):
+        """Final message to display on the screen farming is done"""
+
     def pick_next_account(self):
         """Pick the next account to work on"""
         if not len(self.account_list):
@@ -76,7 +91,7 @@ class ManyAccountsFarmer:
 
         # Get next account to work on
         self.current_account = self.account_list.pop(0)
-        print(f"Picked next account: {self.current_account['username']}")
+        print(f"Picked next account: {self.current_account['user']}")
 
     def switch_account_state(self):  # sourcery skip: extract-method
         """After we've picked the next account, we need to close the game and re-open it"""
@@ -120,9 +135,9 @@ class ManyAccountsFarmer:
                 vio.sync_code,
                 screenshot,
                 window_location,
-                point_coordinates=Coordinates.get_coordinates("username"),
+                point_coordinates=Coordinates.get_coordinates("sync_code"),
             )
-            type_word(self.current_account["username"])
+            type_word(self.current_account["sync"])
             time.sleep(0.5)
 
             # Then, password
@@ -130,6 +145,8 @@ class ManyAccountsFarmer:
             # Type the password and press enter
             type_word(self.current_account["password"])
             press_key("enter")
+
+            time.sleep(1)
 
     def daily_quests_state(self):
         """Doing dailies for the current account"""
@@ -145,13 +162,13 @@ class ManyAccountsFarmer:
     def dailies_done(self):
         """Callback to receive when the dailies farmer has finished for the current account"""
 
-        print("Finished dailies for account:", self.current_account["username"])
+        print("Finished dailies for account:", self.current_account["user"])
         self.current_state = States.WEEKLY_QUESTS
 
     def weeklies_done(self):
         """Callback to receive when the weeklies farmer has finished for the current account"""
 
-        print("Finished weeklies for account:", self.current_account["username"])
+        print("Finished weeklies for account:", self.current_account["user"])
         # Pick next account
         self.pick_next_account()
         # Close the game
@@ -160,11 +177,6 @@ class ManyAccountsFarmer:
         self.current_state = States.SWITCH_ACCOUNT
 
     def run(self):
-
-        print("Farmer started for the following accounts:")
-        for account in self.account_list:
-            print(f"Account: {account['username']}", end=", ")
-        print("\n")
 
         while True:
 
