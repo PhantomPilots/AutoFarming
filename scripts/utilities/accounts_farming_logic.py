@@ -1,3 +1,4 @@
+import threading
 import time
 from enum import Enum, auto
 from threading import Lock
@@ -53,6 +54,14 @@ class ManyAccountsFarmer:
     )
 
     account_list: list[dict[str, str]] | None = None
+
+    # The thread for doing dailies
+    dailies_thread: threading.Thread | None = None
+
+    # The thread for doing weeklies
+    weeklies_thread: threading.Thread | None = None
+
+    _lock = Lock()  # To ensure thread safety when accessing shared resources
 
     def __init__(
         self,
@@ -151,13 +160,24 @@ class ManyAccountsFarmer:
             type_word(self.current_account["password"])
             press_key("enter")
 
+            # Kill the farmers, in case they are running for some reason
+            if ManyAccountsFarmer.dailies_thread is not None and ManyAccountsFarmer.dailies_thread.is_alive():
+                ManyAccountsFarmer.daily_farmer.kill_farmer()
+            if ManyAccountsFarmer.weeklies_thread is not None and ManyAccountsFarmer.weeklies_thread.is_alive():
+                ManyAccountsFarmer.weekly_farmer.kill_farmer()
+
             time.sleep(3)  # Wait for proper login
 
     def daily_quests_state(self):
         """Doing dailies for the current account"""
         # TODO Probably set up the Dailies farmer here?
-
-        self.dailies_done()
+        with ManyAccountsFarmer._lock:
+            if (
+                ManyAccountsFarmer.dailies_thread is None or not ManyAccountsFarmer.dailies_thread.is_alive()
+            ) and self.current_state == States.DAILY_QUESTS:
+                ManyAccountsFarmer.dailies_thread = threading.Thread(target=self.daily_farmer.run, daemon=True)
+                ManyAccountsFarmer.dailies_thread.start()
+                print("Dailies farmer started!")
 
     def weekly_quests_state(self):
         """Doing weeklies for the current account"""
@@ -192,9 +212,27 @@ class ManyAccountsFarmer:
             print("Switching to next account...")
             self.current_state = States.SWITCH_ACCOUNT
 
+    def check_for_login(self):
+        """Check whether we need to switch to the login state"""
+        screenshot, window_location = capture_window()
+
+        # Check if duplicate connection, if so click on 'ok_main_button'
+        if find(vio.duplicate_connection, screenshot):
+            print("Duplicate connection detected!")
+            find_and_click(vio.ok_main_button, screenshot, window_location)
+
+        elif find(vio.password, screenshot) and self.current_state not in {
+            States.SWITCH_ACCOUNT,
+            States.WAITING_FOR_LOGIN,
+        }:
+            self.current_state = States.SWITCH_ACCOUNT
+            print(f"We've been logged out! Tell {self.current_account['user']} that we're logging back in.")
+
     def run(self):
 
         while True:
+
+            self.check_for_login()
 
             if self.current_state == States.DAILY_QUESTS:
                 self.daily_quests_state()

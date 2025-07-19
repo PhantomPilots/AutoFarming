@@ -87,6 +87,7 @@ cross = Vision("cross.png")
 pause_fight = Vision("pause_fight.png")
 episode_clear = Vision("episode_clear.png")
 continue_fight = Vision("continue.png")
+annoying_chat_popup = Vision("annoying_chat_popup.png")
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

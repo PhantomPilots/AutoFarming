@@ -575,10 +575,11 @@ class DailyFarmer:
 
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-    def check_for_essette_shop(self):
+    def check_for_annoying_popups(self):
         """Check if we have the Essette shop, and click on it if so to remove the popup"""
         screenshot, window_location = capture_window()
         find_and_click(vio.essette_shop, screenshot, window_location)
+        # find_and_click(vio.annoying_chat_popup, screenshot, window_location)
 
     def run(self):
 
@@ -586,7 +587,7 @@ class DailyFarmer:
 
         while True:
 
-            self.check_for_essette_shop()
+            self.check_for_annoying_popups()
 
             # In case we manually press the "kill switch"
             self.check_if_farmer_killed()
