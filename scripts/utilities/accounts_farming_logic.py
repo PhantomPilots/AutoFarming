@@ -87,7 +87,9 @@ class ManyAccountsFarmer:
             # Should we do weeklies?
             ManyAccountsFarmer.do_weeklies = do_weeklies
             if do_weeklies:
-                print("We're going to do weeklies for each account!")
+                print("We're going to do weeklies for each account as well!")
+            else:
+                print("We will NOT do weeklies, just dailies.")
 
         self.account_list = ManyAccountsFarmer.account_list  # instance-level access to shared list
 
@@ -178,7 +180,6 @@ class ManyAccountsFarmer:
 
     def daily_quests_state(self):
         """Doing dailies for the current account"""
-        # TODO Probably set up the Dailies farmer here?
         with ManyAccountsFarmer._lock:
             if (
                 ManyAccountsFarmer.dailies_thread is None or not ManyAccountsFarmer.dailies_thread.is_alive()

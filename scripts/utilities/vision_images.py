@@ -370,6 +370,9 @@ battle_brawl = Vision("dailies\\battle_brawl.png")
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
 tier_up_failed = Vision("dailies\\tier_up_failed.png")
 
+# For weeklies
+kh_boss_battle = Vision("weeklies\\kh_boss_battle.png")
+
 
 # Create a single OkVision instance for all OK buttons
 ok_main_button = MultiVision(
