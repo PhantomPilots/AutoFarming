@@ -27,7 +27,7 @@ class FarmingFactory:
                 farmer_instance.run()
 
             except KeyboardInterrupt as e:
-                print("Exiting the program.")
+                print(f"{e}: Exiting the program.")
                 sys.exit(0)
 
             except Exception as e:
@@ -36,7 +36,6 @@ class FarmingFactory:
                 starting_state = farmer_instance.current_state
                 # Re-open the 7DS window if it has been closed
                 re_open_7ds_window()
-                raise e
 
             finally:
                 print("FINALLY:")

@@ -35,6 +35,7 @@ class States(Enum):
     DAILY_QUESTS = auto()
     WEEKLY_QUESTS = auto()
     SWITCH_ACCOUNT = auto()
+    WAITING_FOR_LOGIN = auto()
 
 
 class ManyAccountsFarmer:
@@ -51,22 +52,27 @@ class ManyAccountsFarmer:
         complete_callback=None,
     )
 
+    account_list: list[dict[str, str]] | None = None
+
     def __init__(
         self,
         starting_state: States = States.SWITCH_ACCOUNT,
         battle_strategy: IBattleStrategy | None = None,  # UNUSED
         **kwargs,  # UNUSED
     ):
-
-        self.account_list = self.load_accounts()
         self.current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
-        print("Farmer started for the following accounts:")
-        for i, account in enumerate(self.account_list):
-            print(f"{account['user']}", end=", " if i < len(self.account_list) - 1 else "")
-        print("\n")
 
-        # And let's initialize the current account
-        self.pick_next_account()
+        if ManyAccountsFarmer.account_list is None:
+            ManyAccountsFarmer.account_list = self.load_accounts()
+            print("Farmer started for the following accounts:")
+            for i, account in enumerate(ManyAccountsFarmer.account_list):
+                print(f"{account['user']}", end=", " if i < len(self.account_list) - 1 else "")
+            print("\n")
+
+            # And let's initialize the current account, only once
+            self.pick_next_account()
+
+        self.account_list = ManyAccountsFarmer.account_list  # instance-level access to shared list
 
         # We always want to initialize in the daily quests state
         self.current_state: States = starting_state
@@ -138,7 +144,6 @@ class ManyAccountsFarmer:
                 point_coordinates=Coordinates.get_coordinates("sync_code"),
             )
             type_word(self.current_account["sync"])
-            time.sleep(0.5)
 
             # Then, password
             find_and_click(vio.password, screenshot, window_location)
@@ -146,7 +151,7 @@ class ManyAccountsFarmer:
             type_word(self.current_account["password"])
             press_key("enter")
 
-            time.sleep(1)
+            time.sleep(3)  # Wait for proper login
 
     def daily_quests_state(self):
         """Doing dailies for the current account"""
@@ -169,12 +174,23 @@ class ManyAccountsFarmer:
         """Callback to receive when the weeklies farmer has finished for the current account"""
 
         print("Finished weeklies for account:", self.current_account["user"])
-        # Pick next account
-        self.pick_next_account()
+
         # Close the game
         close_game()
-        # Switch to next account
-        self.current_state = States.SWITCH_ACCOUNT
+        # And let's wait for the game to re-open properly
+        self.current_state = States.WAITING_FOR_LOGIN
+
+    def waiting_for_login_state(self):
+        """State to wait for the login screen to appear"""
+        screenshot, _ = capture_window()
+
+        # Switch to next account only when we see the login screen
+        if find(vio.sync_code, screenshot):
+            # Pick next account
+            self.pick_next_account()
+
+            print("Switching to next account...")
+            self.current_state = States.SWITCH_ACCOUNT
 
     def run(self):
 
@@ -186,5 +202,7 @@ class ManyAccountsFarmer:
                 self.weekly_quests_state()
             elif self.current_state == States.SWITCH_ACCOUNT:
                 self.switch_account_state()
+            elif self.current_state == States.WAITING_FOR_LOGIN:
+                self.waiting_for_login_state()
 
             time.sleep(1)
