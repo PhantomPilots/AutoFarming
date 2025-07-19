@@ -118,7 +118,7 @@ class DogsFighter(IFighter):
         # Then play the cards
         self.play_cards()
 
-    def _identify_current_phase(self):
+    def _identify_current_phase(self):  # sourcery skip: extract-duplicate-method
         """Identify DB phase"""
         screenshot, window_location = capture_window()
         if find(vio.phase_1, screenshot, threshold=0.8) and IFighter.current_phase != 1:
@@ -196,4 +196,4 @@ class DogsFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.7)
+            time.sleep(0.5)

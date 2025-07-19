@@ -351,4 +351,4 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             elif self.current_floor == States.EXIT_FARMER:
                 self.exit_farmer_state()
 
-            time.sleep(0.8)
+            time.sleep(0.6)
