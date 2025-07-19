@@ -67,6 +67,7 @@ class ManyAccountsFarmer:
         self,
         starting_state: States = States.SWITCH_ACCOUNT,
         battle_strategy: IBattleStrategy | None = None,  # UNUSED
+        do_weeklies: bool = False,
         **kwargs,  # UNUSED
     ):
         self.current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
@@ -80,6 +81,8 @@ class ManyAccountsFarmer:
 
             # And let's initialize the current account, only once
             self.pick_next_account()
+
+        self.do_weeklies = do_weeklies
 
         self.account_list = ManyAccountsFarmer.account_list  # instance-level access to shared list
 
@@ -181,6 +184,9 @@ class ManyAccountsFarmer:
 
     def weekly_quests_state(self):
         """Doing weeklies for the current account"""
+
+        if not self.do_weeklies:
+            print("Skipping weeklies.")
 
         self.weeklies_done()
 
