@@ -95,9 +95,11 @@ class IFarmer:
         Not abstract since not all farmers use a fighter, and therefore a 'fight complete callback'.
         """
 
-    def exit_farmer_state(self):
+    def exit_farmer_state(self, msg: str | None = None):
         """Exit the farming!"""
-        raise KeyboardInterrupt("Terminating process: farming cycle completed.")
+        if msg is None:
+            msg = "Terminating process: farming cycle completed."
+        raise KeyboardInterrupt(msg)
 
     def check_for_dailies(self) -> bool:
         """Return whether we have to do our dailies"""

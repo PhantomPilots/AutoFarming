@@ -6,6 +6,7 @@ PyQt5
 pynput
 pytz
 pywin32
+pyyaml
 scikit-learn==1.5.1
 termcolor
 tqdm

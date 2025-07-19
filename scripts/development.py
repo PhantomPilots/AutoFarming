@@ -19,6 +19,7 @@ from utilities.utilities import (
     determine_relative_coordinates,
     display_image,
     find,
+    find_and_click,
     get_card_interior_image,
     get_card_slot_region_image,
     get_card_type_image,
@@ -37,6 +38,8 @@ def development():
     # screenshot_testing(screenshot, vision_image=vio.diamond)
 
     # if find(vio.connection_confrm_expired, screenshot):
+    #     close_game()
+    # if find_and_click(vio.password, screenshot, window_location):
     #     close_game()
 
     # full_screenshot = capture_screen()

@@ -2,7 +2,6 @@ import glob
 import os
 import random
 import time
-from enum import Enum
 from numbers import Integral
 from typing import Callable, Union
 
@@ -15,6 +14,7 @@ import win32api
 import win32con
 import win32gui
 import win32ui
+import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from utilities.capture_window import (
@@ -296,6 +296,7 @@ def press_key(key: str):
 
 def close_game():
     screenshot, window_location = capture_window()
+    print("Trying to close the game...")
     find_and_click(vio.ok_main_button, screenshot, window_location)
     time.sleep(1)
     pyautogui.hotkey("alt", "f4")
@@ -676,3 +677,10 @@ def re_open_7ds_window():
         if find_and_click(vio.run_game, entire_screen):
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
+
+
+def load_yaml_config(file_path: str) -> dict:
+    """Load a YAML configuration file and return its contents as a dictionary."""
+    with open(file_path, "r") as file:
+        config = yaml.safe_load(file)
+    return config

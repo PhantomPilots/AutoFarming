@@ -20,7 +20,7 @@ from utilities.utilities import (
 )
 from utilities.vision import Vision
 
-logger = LoggerWrapper(name="DailyLogger", log_file="daily_farmer_logger.log")
+logger = LoggerWrapper(name="WeeklyLogger", log_file="weekly_farmer_logger.log")
 
 
 class States(Enum):
@@ -42,19 +42,12 @@ class States(Enum):
     AD_WHEEL = auto()
 
 
-class DailyFarmer:
+class WeeklyFarmer:
 
     # Current state should be a class variable, since this class runs in a separate thread
     current_state = None
 
-    # How many dungeons keys we'll try to use
-    num_dungeon_keys = 3
-
-    pvp_auto = False
-
-    # For event-special dungeon
-    event_special_dungeon_complete = False
-
+    # Lock for thread safety, always necessary
     _lock = Lock()
 
     # To check if we should kill the farmer
@@ -65,19 +58,15 @@ class DailyFarmer:
         self,
         starting_state=States.IN_TAVERN_STATE,
         battle_strategy=None,  # TODO Find a way to remove this, not all farmers need a battle strategy
-        do_daily_pvp=False,
         logger=logger,
-        complete_callback: Callable = None,
+        complete_callback: Callable | None = None,
         **kwargs,
     ):
 
-        if DailyFarmer.current_state is None:
-            DailyFarmer.current_state = starting_state
+        if WeeklyFarmer.current_state is None:
+            WeeklyFarmer.current_state = starting_state
 
         self.logger = logger
-
-        # Do we do daily PVP?
-        self.set_daily_pvp(do_daily_pvp)
 
         # In case we're given a callback, call it upon exit
         self.add_complete_callback(complete_callback)

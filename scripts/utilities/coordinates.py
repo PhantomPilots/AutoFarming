@@ -12,6 +12,7 @@ class Coordinates:
         "battle_menu": (502, 676),  # Coordinates for the battle menu in the Tavern screen
         "knighthood": (421, 677),
         "center_screen": (270, 480),  # To click on the center of the screen
+        "username": (278, 388),  # Coordinates for the username input field
         # The region in the screenshot corresponding to the card slots
         "top_left_card_slots": (150, 690),
         "bottom_right_card_slots": (410, 800),

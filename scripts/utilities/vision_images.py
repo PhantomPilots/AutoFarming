@@ -8,6 +8,8 @@ run_game = MultiVision(
     "run_game_2.png",
     image_name="Run game",
 )
+password = Vision("password.png")
+sync_code = Vision("sync_code.png")
 server_cancel = MultiVision(
     "server_cancel.png",
     image_name="server_cancel",
@@ -72,7 +74,6 @@ battle_menu = Vision("battle_menu.jpg")
 cancel = Vision("cancel.png")
 skill_locked = Vision("skill_locked.png")
 victory = Vision("victory.png")
-password = Vision("password.png")
 global_server = Vision("global_server.png")
 yes = Vision("yes.png")
 start_quest = Vision("start_quest.png")
