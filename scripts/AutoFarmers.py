@@ -162,6 +162,13 @@ FARMERS = [
         "script": "TowerTrialsFarmer.py",
         "args": [],
     },
+    {
+        "name": "Accounts Farmer",
+        "script": "AccountsFarmer.py",
+        "args": [
+            {"name": "--do-weeklies", "label": "Do Weeklies", "type": "checkbox", "default": False},
+        ],
+    },
 ]
 
 
@@ -273,9 +280,7 @@ class FarmerTab(QWidget):
             elif arg["type"] == "checkbox":
                 checked = widget.isChecked()
                 if checked:
-                    args.append("--do-dailies")
-                else:
-                    args.append("--no-do-dailies")
+                    args.append(arg["name"])
             elif arg["type"] == "multiselect":
                 if selected := [item.text() for item in widget.selectedItems()]:
                     args.extend([arg["name"], ",".join(selected)])
@@ -418,6 +423,7 @@ class FarmerTab(QWidget):
             "Dogs Whale": "dogs_whale_farmer.jpg",
             "Snake Farmer": "snake_farmer.png",
             "Final Boss": "final_boss.png",
+            "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
         }
 
         # Check if this farmer has a specific image

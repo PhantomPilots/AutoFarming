@@ -16,7 +16,6 @@ from utilities.utilities import (
     crop_image,
     find,
     find_and_click,
-    press_key,
 )
 from utilities.vision import Vision
 
