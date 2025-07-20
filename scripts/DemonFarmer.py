@@ -30,8 +30,7 @@ def main():
         default=9.1,
         help="Seconds to sleep before accepting an invitation (default: 9.1)",
     )
-    parser.add_argument("--do-dailies", action="store_true", default=True, help="Do dailies (default: True)")
-    parser.add_argument("--no-do-dailies", dest="do_dailies", action="store_false", help="Don't do dailies")
+    parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     args = parser.parse_args()
 
     demon_map = {
