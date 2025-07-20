@@ -75,13 +75,19 @@ class ManyAccountsFarmer:
         self.current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
 
         if ManyAccountsFarmer.account_list is None:
+            # It's the first time initializing the farmer!
+
+            # First, close the game, so that we start fresh
+            close_game()
+
+            # Load accounts from the configuration file
             ManyAccountsFarmer.account_list = self.load_accounts()
             print("Farmer started for the following accounts:")
             for i, account in enumerate(ManyAccountsFarmer.account_list):
                 print(f"{account['user']}", end=", " if i < len(self.account_list) - 1 else "")
             print("\n")
 
-            # And let's initialize the current account, only once
+            # Let's initialize the current account
             self.pick_next_account()
 
             # Should we do weeklies?
