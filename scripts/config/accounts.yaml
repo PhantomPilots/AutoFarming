@@ -1,9 +1,12 @@
 
 # List of accounts and their passwords
 accounts:
-  - username: "user1"
-    password: "pass1"
-  - username: "user2"
-    password: "pass2"
-  - username: "user3"
-    password: "pass3"
+  - user: "user1" # Whatever identifiable name for user 1
+    sync: "..." 
+    password: "..."
+  - user: "user2" # Whatever identifiable name for user 2
+    sync: "..." 
+    password: "..."
+  - user: "user3" # Whatever identifiable name for user 3
+    sync: "..."
+    password: "..."
