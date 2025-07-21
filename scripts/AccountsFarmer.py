@@ -12,7 +12,7 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=ManyAccountsFarmer,
-        starting_state=States.SWITCH_ACCOUNT,  # Should be 'DALY_QUESTS'
+        starting_state=States.WAITING_FOR_LOGIN,  # Should be 'DALY_QUESTS'
         do_weeklies=args.do_weeklies,  # Whether to do weeklies or not
     )
 

@@ -18,6 +18,7 @@ from utilities.utilities import (
     capture_window,
     click_and_sleep,
     close_game,
+    close_game_if_not_in_login_screen,
     crop_image,
     find,
     find_and_click,
@@ -41,6 +42,8 @@ class States(Enum):
 
 class ManyAccountsFarmer:
     """Farmer for managing dailies and weeklies of a set of accounts"""
+
+    current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
 
     daily_farmer = DailyFarmer(
         starting_state=DailyFarmerStates.IN_TAVERN_STATE,
@@ -67,28 +70,23 @@ class ManyAccountsFarmer:
 
     def __init__(
         self,
-        starting_state: States = States.SWITCH_ACCOUNT,
+        starting_state: States = States.WAITING_FOR_LOGIN,
         battle_strategy: IBattleStrategy | None = None,  # UNUSED
         do_weeklies: bool = False,
         **kwargs,  # UNUSED
     ):
-        self.current_account: dict[str, str] = None  # Dict with {"user":..., "sync":..., "password":...}
 
+        # It's the first time initializing the farmer!
         if ManyAccountsFarmer.account_list is None:
-            # It's the first time initializing the farmer!
-
-            # First, close the game, so that we start fresh
-            close_game()
+            # Close the game if we're logged in, so that we start fresh
+            close_game_if_not_in_login_screen()
 
             # Load accounts from the configuration file
             ManyAccountsFarmer.account_list = self.load_accounts()
             print("Farmer started for the following accounts:")
             for i, account in enumerate(ManyAccountsFarmer.account_list):
-                print(f"{account['user']}", end=", " if i < len(self.account_list) - 1 else "")
+                print(f"{account['user']}", end=", " if i < len(ManyAccountsFarmer.account_list) - 1 else "")
             print("\n")
-
-            # Let's initialize the current account
-            self.pick_next_account()
 
             # Should we do weeklies?
             ManyAccountsFarmer.do_weeklies = do_weeklies
@@ -96,8 +94,6 @@ class ManyAccountsFarmer:
                 print("We're going to do weeklies for each account as well!")
             else:
                 print("We will NOT do weeklies, just dailies.")
-
-        self.account_list = ManyAccountsFarmer.account_list  # instance-level access to shared list
 
         # We always want to initialize in the daily quests state
         self.current_state: States = starting_state
@@ -117,16 +113,24 @@ class ManyAccountsFarmer:
 
     def pick_next_account(self):
         """Pick the next account to work on"""
-        if not len(self.account_list):
+        if not len(ManyAccountsFarmer.account_list):
             raise KeyboardInterrupt("Finished farming all accounts! Nothing else to do.")
 
         # Get next account to work on
-        self.current_account = self.account_list.pop(0)
-        print(f"Picked next account: {self.current_account['user']}")
+        ManyAccountsFarmer.current_account = ManyAccountsFarmer.account_list.pop(0)
+        print(f"Picked next account: {ManyAccountsFarmer.current_account['user']}")
+
+    def init_state(self):
+        """First state, which we'll enter only once"""
+        screenshot, _ = capture_window()
+
+        # Only start the state machine once we can confirm that we've rebooted the game
+        if find(vio.sync_code, screenshot):
+            print("We are ready to start farming!")
+            self.current_state = States.SWITCH_ACCOUNT
 
     def switch_account_state(self):  # sourcery skip: extract-method
         """After we've picked the next account, we need to close the game and re-open it"""
-        # TODO How to handle "re-logging in" to the new account? We cannot use the IFarmer interface here
         screenshot, window_location = capture_window()
 
         # First of all, if we have a 'cancel', click that first!
@@ -168,12 +172,12 @@ class ManyAccountsFarmer:
                 window_location,
                 point_coordinates=Coordinates.get_coordinates("sync_code"),
             )
-            type_word(self.current_account["sync"])
+            type_word(ManyAccountsFarmer.current_account["sync"])
 
             # Then, password
             find_and_click(vio.password, screenshot, window_location)
             # Type the password and press enter
-            type_word(self.current_account["password"])
+            type_word(ManyAccountsFarmer.current_account["password"])
             press_key("enter")
 
             # Kill the farmers, in case they are running for some reason
@@ -205,16 +209,16 @@ class ManyAccountsFarmer:
     def dailies_done(self):
         """Callback to receive when the dailies farmer has finished for the current account"""
 
-        print("Finished dailies for account:", self.current_account["user"])
+        print("Finished dailies for account:", ManyAccountsFarmer.current_account["user"])
         self.current_state = States.WEEKLY_QUESTS
 
     def weeklies_done(self):
         """Callback to receive when the weeklies farmer has finished for the current account"""
 
-        print("Finished weeklies for account:", self.current_account["user"])
+        print("Finished weeklies for account:", ManyAccountsFarmer.current_account["user"])
 
         # Close the game
-        close_game()
+        close_game_if_not_in_login_screen()
         # And let's wait for the game to re-open properly
         self.current_state = States.WAITING_FOR_LOGIN
 
@@ -244,7 +248,9 @@ class ManyAccountsFarmer:
             States.WAITING_FOR_LOGIN,
         }:
             self.current_state = States.SWITCH_ACCOUNT
-            print(f"We've been logged out! Tell {self.current_account['user']} that we're logging back in.")
+            print(
+                f"We've been logged out! Tell {ManyAccountsFarmer.current_account['user']} that we're logging back in."
+            )
 
     def run(self):
 

@@ -298,7 +298,7 @@ def close_game():
     # Find the window by title
     hwnd = win32gui.FindWindow(None, "7DS")
     if hwnd == 0:
-        print("[ERROR] '7DS' window not found.")
+        print("[WARN] '7DS' window not found.")
         return
 
     # Bring the window to the foreground
@@ -315,6 +315,18 @@ def close_game():
 
     # Send the hotkey
     pyautogui.hotkey("alt", "f4")
+
+
+def close_game_if_not_in_login_screen():
+    # Find the window by title
+    hwnd = win32gui.FindWindow(None, "7DS")
+    if hwnd == 0:
+        print("[WARN] '7DS' window not found.")
+        return
+
+    screenshot, _ = capture_window()
+    if not find(vio.sync_code, screenshot):
+        close_game()
 
 
 def format_duration(seconds):
