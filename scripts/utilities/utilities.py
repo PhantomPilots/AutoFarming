@@ -307,12 +307,6 @@ def close_game():
     # Optional: give a moment for the window to become active
     time.sleep(0.5)
 
-    # Now safe to proceed
-    screenshot, window_location = capture_window()
-    print("Trying to close the game...")
-    find_and_click(vio.ok_main_button, screenshot, window_location)
-    time.sleep(1)
-
     # Send the hotkey
     pyautogui.hotkey("alt", "f4")
 
@@ -324,9 +318,17 @@ def close_game_if_not_in_login_screen():
         print("[WARN] '7DS' window not found.")
         return
 
+    # Bring the window to the foreground
+    win32gui.SetForegroundWindow(hwnd)
+
+    # Optional: give a moment for the window to become active
+    time.sleep(0.5)
+
     screenshot, _ = capture_window()
     if not find(vio.sync_code, screenshot):
-        close_game()
+        print("Trying to close the game...")
+        # Send the hotkey
+        pyautogui.hotkey("alt", "f4")
 
 
 def format_duration(seconds):
