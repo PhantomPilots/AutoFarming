@@ -34,6 +34,8 @@ from utilities.weekly_farming_logic import WeeklyFarmer
 class States(Enum):
     """States for the Accounts farmer"""
 
+    LOGGED_IN = auto()
+    CHECK_IN = auto()
     DAILY_QUESTS = auto()
     WEEKLY_QUESTS = auto()
     SWITCH_ACCOUNT = auto()
@@ -139,7 +141,7 @@ class ManyAccountsFarmer:
 
         if find(vio.tavern, screenshot):
             print("Logged in successfully! Going back to the previous state...")
-            self.current_state = States.DAILY_QUESTS
+            self.current_state = States.LOGGED_IN
         elif find(vio.connection_confrm_expired, screenshot):
             print("Connection confirmation expired!")
             close_game()
@@ -150,7 +152,7 @@ class ManyAccountsFarmer:
 
         if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             print("We're seeing a daily reset!")
-            self.current_state = States.DAILY_RESET
+            self.current_state = States.LOGGED_IN
             login_attempted = True
 
         elif find_and_click(vio.yes, screenshot, window_location):
@@ -187,6 +189,49 @@ class ManyAccountsFarmer:
                 ManyAccountsFarmer.weekly_farmer.kill_farmer()
 
             time.sleep(3)  # Wait for proper login
+
+    def logged_in_state(self):
+        """Right when we just logged in. Let's try to check in"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
+            print("Going to CHECK IN state")
+            self.current_state = States.CHECK_IN
+            return
+
+        # Click on "Knighthood"
+        find_and_click(
+            vio.battle_menu,
+            screenshot,
+            window_location,
+            threshold=0.6,
+            point_coordinates=Coordinates.get_coordinates("knighthood"),
+        )
+
+    def check_in_state(self):
+        """Let's check in"""
+        screenshot, window_location = capture_window()
+
+        if find(vio.search_for_a_kh, screenshot):
+            print("We're not in any KH, we cannot check in...")
+            press_key("esc")
+            self.current_state = States.DAILY_QUESTS
+            return
+
+        # Check in
+        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
+            print("Checked in successfully!")
+
+        # Click on the reward
+        click_and_sleep(vio.check_in_reward, screenshot, window_location)
+
+        # Exit the knighthood after checking in...
+        if find(vio.check_in_complete, screenshot):
+            press_key("esc")
+
+        if find(vio.battle_menu, screenshot, threshold=0.6):
+            print("Going to do all dailies!")
+            self.current_state = States.DAILY_QUESTS
 
     def daily_quests_state(self):
         """Doing dailies for the current account"""
@@ -260,6 +305,10 @@ class ManyAccountsFarmer:
 
             if self.current_state == States.DAILY_QUESTS:
                 self.daily_quests_state()
+            elif self.current_state == States.LOGGED_IN:
+                self.logged_in_state()
+            elif self.current_state == States.CHECK_IN:
+                self.check_in_state()
             elif self.current_state == States.WEEKLY_QUESTS:
                 self.weekly_quests_state()
             elif self.current_state == States.SWITCH_ACCOUNT:
