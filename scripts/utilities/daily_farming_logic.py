@@ -539,11 +539,13 @@ class DailyFarmer:
                 point_coordinates=Coordinates.get_coordinates("receive_brawl"),
             )
             time.sleep(1)
+
             screenshot, window_location = capture_window()
             find_and_click(vio.reward, screenshot, window_location)
             time.sleep(1)
 
             # ... And let's play a Brawl match too!
+            screenshot, window_location = capture_window()
             if find(vio.back, screenshot):
                 print("Going to PLAYING_BRAWL state")
                 DailyFarmer.current_state = States.PLAYING_BRAWL
