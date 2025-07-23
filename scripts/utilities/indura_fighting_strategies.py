@@ -171,11 +171,10 @@ class InduraBattleStrategy(IBattleStrategy):
         num_buffs -= len(played_alpha_att)
 
         if num_buffs < 1:
-            for idx in len(hand_of_cards):
-                idx: int
-                if find(vio.alpha_att, hand_of_cards[idx].card_image):
+            for item in hand_of_cards:
+                if find(vio.alpha_att, item.card_image):
                     print("We can't play an Alpha card yet!")
-                    hand_of_cards[idx].card_type = CardTypes.DISABLED
+                    item.card_type = CardTypes.DISABLED
 
         # No need to return anything since we modify the hand of card "in place"
         return hand_of_cards
