@@ -57,6 +57,10 @@ class InduraBattleStrategy(IBattleStrategy):
                 and not len(played_king_debuf_cards)  # We haven't played a King's debuff card ourselves
             ):
                 return king_debuf_card_ids[-1]
+            # Disable King's debuffs so that we don't play them by mistake
+            elif len(king_debuf_card_ids):
+                for idx in king_debuf_card_ids:
+                    hand_of_cards[idx].card_type = CardTypes.DISABLED
 
             # Re-collection heal IDs in case we've disabled them
             heal_card_ids: list[int] = sorted(
@@ -69,6 +73,22 @@ class InduraBattleStrategy(IBattleStrategy):
         elif phase == 2:
             # On phase 2, evaluate if Indura has multi-tiers activated
             have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 1
+
+            # # If it's the 2nd card, check if we should play a debuff
+            # if (
+            #     card_turn == 1
+            #     and len(heal_card_ids)  # Assuming we'll play a heal on card_turn == 2
+            #     and len(picked_cards)
+            #     and picked_cards[0].card_type == CardTypes.ATTACK
+            # ):
+            #     # Play a debuff to gain an ult gauge
+            #     debuff_ids = sorted(
+            #         np.where([card.card_type == CardTypes.DEBUFF for card in hand_of_cards])[0],
+            #         key=lambda idx: card_ranks[idx],
+            #     )
+            #     if len(debuff_ids):
+            #         print("Playing a debuff card to potentially gain an ult gauge!")
+            #         return debuff_ids[-1]
 
             # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
             b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
@@ -86,6 +106,10 @@ class InduraBattleStrategy(IBattleStrategy):
                 if have_multi_tiers:
                     print("Seeing multiple tiers! Playing King's debuff card!")
                 return king_debuf_card_ids[-1]
+            # Disable King's debuffs so that we don't play them by mistake
+            elif len(king_debuf_card_ids):
+                for idx in king_debuf_card_ids:
+                    hand_of_cards[idx].card_type = CardTypes.DISABLED
 
             # Disable all heal cards if someone has played one already
             if find(vio.mini_heal, six_empty_slots_image) or card_turn < 2 or not find(vio.oxidize_indura, screenshot):
@@ -102,8 +126,6 @@ class InduraBattleStrategy(IBattleStrategy):
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
-            picked_heal_ids = np.where([card.card_type.value == CardTypes.RECOVERY.value for card in picked_cards])[0]
-
             # Play a heal if we can
             heal_card_ids = sorted(
                 np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
@@ -113,14 +135,23 @@ class InduraBattleStrategy(IBattleStrategy):
                 return heal_card_ids[-1]
 
             # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card first
-            king_att_card_ids: list[int] = sorted(
-                np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0],
-                key=lambda idx: card_ranks[idx],
-            )
             if np.any([find(vio.alpha_ult, card.card_image) for card in hand_of_cards]):
                 # Check if we have a King's attack card
+                king_att_card_ids: list[int] = sorted(
+                    np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0],
+                    key=lambda idx: card_ranks[idx],
+                )
+                played_heal_ids = np.where([card.card_type.value == CardTypes.RECOVERY.value for card in picked_cards])[
+                    0
+                ]
                 played_king_att_card = np.where([find(vio.king_att, card.card_image) for card in picked_cards])[0]
-                if len(king_att_card_ids) and not len(played_king_att_card) and not len(picked_heal_ids):
+                num_alpha_buffs = self._count_alpha_buffs(screenshot)
+                if (
+                    num_alpha_buffs < 2
+                    and len(king_att_card_ids)
+                    and not len(played_king_att_card)
+                    and not len(played_heal_ids)
+                ):
                     # Only play a King's attack card if we haven't played one yet
                     print("Playing King's attack card to increase Alpha's ult damage...")
                     return king_att_card_ids[-1]
@@ -154,12 +185,7 @@ class InduraBattleStrategy(IBattleStrategy):
     def _disable_alpha_att_cards(self, screenshot: np.ndarray, hand_of_cards: list[Card], picked_cards: list[Card]):
         """Check if we need to disable Alpha attack cards based on the buffs we have"""
 
-        half_screenshot = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("half_screen_top_left"),
-            Coordinates.get_coordinates("half_screen_bottom_right"),
-        )
-        num_buffs = count_needle_image(vio.alpha_buff, half_screenshot, threshold=0.6)
+        num_buffs = self._count_alpha_buffs(screenshot)
 
         played_single_targets = np.where(
             [find(vio.king_att, card.card_image) or find(vio.lance_att, card.card_image) for card in picked_cards]
@@ -178,3 +204,12 @@ class InduraBattleStrategy(IBattleStrategy):
 
         # No need to return anything since we modify the hand of card "in place"
         return hand_of_cards
+
+    def _count_alpha_buffs(self, screenshot: np.ndarray):
+        """Count how manny Alpha buffs we have currently. Doesn't consider played ST cards in the same turn"""
+        half_screenshot = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("half_screen_top_left"),
+            Coordinates.get_coordinates("half_screen_bottom_right"),
+        )
+        return count_needle_image(vio.alpha_buff, half_screenshot, threshold=0.6)
