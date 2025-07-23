@@ -170,7 +170,7 @@ class InduraBattleStrategy(IBattleStrategy):
         num_buffs = max(0, min(3, num_buffs))
         num_buffs -= len(played_alpha_att)
 
-        if num_buffs < 1:
+        if num_buffs < 2:
             for item in hand_of_cards:
                 if find(vio.alpha_att, item.card_image):
                     print("We can't play an Alpha card yet!")
