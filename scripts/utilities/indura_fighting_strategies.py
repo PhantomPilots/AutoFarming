@@ -127,6 +127,9 @@ class InduraBattleStrategy(IBattleStrategy):
 
         # More common code
 
+        # Before proceeding, check if we need to disable Alpha att cards
+        self._disable_alpha_att_cards(screenshot, hand_of_cards, picked_cards)
+
         # Try to play an ultimate
         ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
         if len(ult_ids):
@@ -147,3 +150,32 @@ class InduraBattleStrategy(IBattleStrategy):
 
         # Default
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+
+    def _disable_alpha_att_cards(self, screenshot: np.ndarray, hand_of_cards: list[Card], picked_cards: list[Card]):
+        """Check if we need to disable Alpha attack cards based on the buffs we have"""
+
+        half_screenshot = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("half_screen_top_left"),
+            Coordinates.get_coordinates("half_screen_bottom_right"),
+        )
+        num_buffs = count_needle_image(vio.alpha_buff, half_screenshot, threshold=0.6)
+
+        played_single_targets = np.where(
+            [find(vio.king_att, card.card_image) or find(vio.lance_att, card.card_image) for card in picked_cards]
+        )[0]
+        played_alpha_att = np.where([find(vio.alpha_att, card.card_image) for card in picked_cards])[0]
+
+        num_buffs += len(played_single_targets)
+        num_buffs = max(0, min(3, num_buffs))
+        num_buffs -= len(played_alpha_att)
+
+        if num_buffs < 1:
+            for idx in len(hand_of_cards):
+                idx: int
+                if find(vio.alpha_att, hand_of_cards[idx].card_image):
+                    print("We can't play an Alpha card yet!")
+                    hand_of_cards[idx].card_type = CardTypes.DISABLED
+
+        # No need to return anything since we modify the hand of card "in place"
+        return hand_of_cards

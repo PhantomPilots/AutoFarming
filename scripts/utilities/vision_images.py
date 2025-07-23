@@ -306,6 +306,8 @@ mini_beta_buf = Vision("demons\\mini_beta_buf.png")
 indura_tier = Vision("demons\\indura_tier.png")  # For phase 2 of Chaos!
 alpha_ult = Vision("demons\\alpha_ult.png")
 alpha_buff = Vision("demons\\alpha_buff.png")
+lance_att = Vision("demons\\lance_att.png")
+alpha_att = Vision("demons\\alpha_att.png")
 
 
 # For dailies

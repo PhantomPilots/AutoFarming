@@ -60,6 +60,9 @@ class Coordinates:
         "team_invite_bottom_right": (449, 669),
         "6_cards_top_left": (75, 693),  # Top-left corner of the 6 empty slots
         "6_cards_bottom_right": (471, 793),  # Bottom-right corner of the 6 empty slots
+        # For Indura
+        "half_screen_top_left": (247, 438),  # To detect Alpha buffs only on our side
+        "half_screen_bottom_right": (491, 689),
     }
 
     @staticmethod
