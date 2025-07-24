@@ -153,7 +153,6 @@ class ManyAccountsFarmer:
         if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
             print("We're seeing a daily reset!")
             self.current_state = States.LOGGED_IN
-            login_attempted = True
 
         elif find_and_click(vio.yes, screenshot, window_location):
             print("Downloading update...")
@@ -194,19 +193,33 @@ class ManyAccountsFarmer:
         """Right when we just logged in. Let's try to check in"""
         screenshot, window_location = capture_window()
 
+        # If we see a "cross", click it before clicking the OK button
+        if find_and_click(vio.cross, screenshot, window_location):
+            screenshot, window_location = capture_window()
+
+        # We may be receiving the daily rewards now
+        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
+
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
             print("Going to CHECK IN state")
             self.current_state = States.CHECK_IN
             return
 
         # Click on "Knighthood"
-        find_and_click(
+        if find_and_click(
             vio.battle_menu,
             screenshot,
             window_location,
             threshold=0.6,
             point_coordinates=Coordinates.get_coordinates("knighthood"),
-        )
+        ):
+            return
+
+        # In case we have a "Start" mission
+        find_and_click(vio.start_quest, screenshot, window_location)
+
+        # In case an OK pop-up shows up
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
 
     def check_in_state(self):
         """Let's check in"""
