@@ -581,7 +581,11 @@ class DailyFarmer:
         """Check if we have the Essette shop, and click on it if so to remove the popup"""
         screenshot, window_location = capture_window()
         find_and_click(vio.essette_shop, screenshot, window_location)
-        # find_and_click(vio.annoying_chat_popup, screenshot, window_location)
+
+        if DailyFarmer.current_state == States.IN_TAVERN_STATE and find_and_click(
+            vio.annoying_chat_popup, screenshot, window_location
+        ):
+            print("Closing the annoying chat popup...")
 
     def run(self):
 
