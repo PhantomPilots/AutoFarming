@@ -35,7 +35,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    # screenshot_testing(screenshot, vision_image=vio.diamond)
+    screenshot_testing(screenshot, vision_image=vio.cross)
 
     # if find(vio.connection_confrm_expired, screenshot):
     #     close_game()
@@ -45,7 +45,7 @@ def development():
     # full_screenshot = capture_screen()
     # screenshot_testing(full_screenshot, vio.server_cancel)
 
-    determine_relative_coordinates(screenshot)
+    # determine_relative_coordinates(screenshot)
 
     # available_slots = BirdFighter.count_empty_card_slots(screenshot)
     # print(f"These many empty slots: {available_slots}")

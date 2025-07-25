@@ -264,10 +264,9 @@ class IDemonFarmer(IFarmer):
             Coordinates.get_coordinates("team_invite_top_left"),
             Coordinates.get_coordinates("team_invite_bottom_right"),
         )
-        valid = (
-            find(vio.lancelot_unit, team_invite_region, threshold=0.7)
-            and find(vio.alpha_unit, team_invite_region, threshold=0.7)
-        ) or find(vio.new_freyr_unit, team_invite_region, threshold=0.7)
+        valid = find(vio.lancelot_unit, team_invite_region, threshold=0.7) and find(
+            vio.alpha_unit, team_invite_region, threshold=0.7
+        )  # or find(vio.new_freyr_unit, team_invite_region, threshold=0.7)
         if debug and not valid:
             display_image(screenshot, title="Inviting team is not good enough")
         return valid
