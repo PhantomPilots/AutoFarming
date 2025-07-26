@@ -106,10 +106,10 @@ class InduraBattleStrategy(IBattleStrategy):
                 if have_multi_tiers:
                     print("Seeing multiple tiers! Playing King's debuff card!")
                 return king_debuf_card_ids[-1]
+
             # Disable King's debuffs so that we don't play them by mistake
-            elif len(king_debuf_card_ids):
-                for idx in king_debuf_card_ids:
-                    hand_of_cards[idx].card_type = CardTypes.DISABLED
+            for idx in king_debuf_card_ids:
+                hand_of_cards[idx].card_type = CardTypes.DISABLED
 
             # Disable all heal cards if it's not the 3rd card and especially if we're not seeing an oxidize
             if card_turn < 2 or not find(vio.oxidize_indura, screenshot):
