@@ -111,13 +111,13 @@ class InduraBattleStrategy(IBattleStrategy):
                 for idx in king_debuf_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
-            # Disable all heal cards if someone has played one already
-            if find(vio.mini_heal, six_empty_slots_image) or card_turn < 2 or not find(vio.oxidize_indura, screenshot):
+            # Disable all heal cards if it's not the 3rd card and especially if we're not seeing an oxidize
+            if card_turn < 2 or not find(vio.oxidize_indura, screenshot):
                 # Disabled all heal cards, unless it's 3rd card
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
-            # Play a heal card in the last turn, when it's not the first "fight turn"
-            elif card_turn == 2 and len(heal_card_ids):
+            # Play a heal card in the last turn if we're seeing an oxidize! -- Could be an `else` entirely
+            elif card_turn == 2 and len(heal_card_ids) and find(vio.oxidize_indura, screenshot):
                 return heal_card_ids[-1]
 
         elif phase == 3:
