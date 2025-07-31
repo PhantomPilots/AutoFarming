@@ -155,6 +155,7 @@ class IFarmer:
             vio.global_server,
             screenshot,
             window_location,
+            threshold=0.6,
             point_coordinates=Coordinates.get_coordinates("center_screen"),
         ):
             print("Trying to log back in...")
