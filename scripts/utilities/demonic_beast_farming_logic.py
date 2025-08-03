@@ -138,7 +138,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # Go into the 'Demonic Beast' section
         find_and_click(self.db_image, screenshot, window_location)
 
-        if find(vio.empty_party, screenshot):
+        if find(vio.empty_party, screenshot) or find(vio.save_party, screenshot):
             # We have to set the party.
             print("Moving to state SET_PARTY")
             self.current_state = States.SET_PARTY
