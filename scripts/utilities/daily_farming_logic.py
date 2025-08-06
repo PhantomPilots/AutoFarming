@@ -232,6 +232,8 @@ class DailyFarmer:
             DailyFarmer.current_state = States.IN_TAVERN_STATE
             return
 
+        # In case we need to cancel something
+        find_and_click(vio.cancel, screenshot, window_location)
         # If there's any OK button
         find_and_click(vio.ok_main_button, screenshot, window_location)
         # In case we see a cross, exit
@@ -240,8 +242,6 @@ class DailyFarmer:
         find_and_click(vio.patrol_dispatched, screenshot, window_location)
         # Daily quest for when a battle happened
         find_and_click(vio.daily_quest_info, screenshot, window_location)
-        # In case we need to cancel something
-        find_and_click(vio.cancel, screenshot, window_location)
         # Click on the Result
         find_and_click(vio.daily_result, screenshot, window_location)
         # Go back
