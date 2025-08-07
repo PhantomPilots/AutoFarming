@@ -88,6 +88,11 @@ pause_fight = Vision("pause_fight.png")
 episode_clear = Vision("episode_clear.png")
 continue_fight = Vision("continue.png")
 annoying_chat_popup = Vision("annoying_chat_popup.png")
+change_stats = MultiVision(
+    "change_again.png",
+    "change_stats.png",
+    image_name="Change stats",
+)
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

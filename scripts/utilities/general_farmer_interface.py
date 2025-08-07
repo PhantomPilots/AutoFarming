@@ -183,6 +183,7 @@ class IFarmer:
         if find(vio.duplicate_connection, screenshot):
             print("Duplicate connection detected!")
             find_and_click(vio.ok_main_button, screenshot, window_location)
+
             # And close the fighter thread if open
             self.stop_fighter_thread()
 
@@ -190,6 +191,9 @@ class IFarmer:
             self.current_state = States.LOGIN_SCREEN
             IFarmer.logged_out_time = time.time()
             print(f"We've been logged out! Waiting {MINUTES_TO_WAIT_BEFORE_LOGIN} mins to log back in...")
+
+            # And close the fighter thread if open
+            self.stop_fighter_thread()
 
             # Kill the dailies thread if it's running!
             if IFarmer.dailies_thread is not None and IFarmer.dailies_thread.is_alive():
