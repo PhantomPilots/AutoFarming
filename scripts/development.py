@@ -35,7 +35,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.change_stats)
+    # screenshot_testing(screenshot, vision_image=vio.change_stats)
 
     # if find(vio.connection_confrm_expired, screenshot):
     #     close_game()
@@ -67,8 +67,8 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    # hand_image = capture_hand_image()
-    # display_image(hand_image)
+    hand_image = capture_hand_image()
+    display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
