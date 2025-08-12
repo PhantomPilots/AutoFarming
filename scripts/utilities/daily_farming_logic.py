@@ -385,7 +385,11 @@ class DailyFarmer:
             # Go to the mission
             self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.89)
 
-        if find(vio.daily_quest_info, screenshot) or find(vio.daily_result, screenshot):
+        if (
+            find(vio.daily_quest_info, screenshot)
+            or find(vio.daily_result, screenshot)
+            or DailyFarmer.num_dungeon_keys == 0
+        ):
             print("Mission complete!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
@@ -419,7 +423,7 @@ class DailyFarmer:
         ## Below, we're inside the team setting
 
         # Increase the auto ticket by two and clear mission
-        for _ in range(DailyFarmer.num_dungeon_keys):
+        for _ in range(DailyFarmer.num_dungeon_keys - 1):
             click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
 
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):

@@ -701,7 +701,8 @@ def re_open_7ds_window():
     if not is_7ds_window_open():
         entire_screen = capture_screen()
         print("7DS window has been closed!")
-        find_and_click(vio.server_cancel, entire_screen)
+        if find_and_click(vio.server_cancel, entire_screen):
+            print("We cannot open the game...")
         time.sleep(5)  # Let's sleep to allow the game to be closed properly...
         if find_and_click(vio.run_game, entire_screen):
             print("Trying to re-open the game...")
