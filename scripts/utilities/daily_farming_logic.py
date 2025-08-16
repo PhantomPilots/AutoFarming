@@ -559,6 +559,9 @@ class DailyFarmer:
 
         screenshot, window_location = capture_window()
 
+        # In case we didn't click it in the previous state
+        find_and_click(vio.reward, screenshot, window_location)
+
         # For after the match
         if find(vio.ok_main_button, screenshot):
             print("Brawl match finished. Hopefully we won!")
