@@ -4,11 +4,10 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
-from typing import Callable
 
-import pytz
 import utilities.vision_images as vio
-from utilities.capture_window import capture_screen, capture_window, is_7ds_window_open
+from utilities.capture_window import capture_window
+from utilities.constants import *
 from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
 from utilities.daily_farming_logic import States as DailyFarmerStates
@@ -22,12 +21,6 @@ from utilities.utilities import (
     press_key,
     type_word,
 )
-
-# Some constants
-# For dailies and logging back in after being logged out
-PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-MINUTES_TO_WAIT_BEFORE_LOGIN = 30
-CHECK_IN_HOUR = 2  # Pacific Time
 
 
 class States(Enum):
