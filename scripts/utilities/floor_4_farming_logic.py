@@ -164,7 +164,7 @@ class IFloor4Farmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Restore stamina if we need to
-        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.7):
+        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
             IFarmer.stamina_pots += 1
             # screenshot_testing(screenshot, vio.restore_stamina)
             return
