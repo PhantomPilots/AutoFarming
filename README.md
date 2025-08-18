@@ -42,10 +42,9 @@ Install Python <b>3.10</b> or <b>3.11</b> from the Microsoft Store:<br>
 `git clone https://github.com/PhantomPilots/AutoFarming.git`<br>
 and press `ENTER`.
 This downloads the code into a folder named _AutoFarming_.
-1. Now we need to install some additional Python modules for the scripts to work. To do so, follow these steps:
-   1. Open the _AutoFarming_ folder.
-   2. Like before, while pressing the `SHIFT` key, right-click inside the folder and then click on `Open PowerShell window here`.
-   3. Once the terminal opens, paste the command: `python -m pip install -r requirements.txt` and press `ENTER`.
+
+#### Additional Python modules
+Now we need to install some additional Python modules for the scripts to work. To do so, click on `install.bat` that is within `scripts`.
 
 ### Code updates
 
@@ -65,19 +64,14 @@ For a more user-friendly experience, you can use the **AutoFarmers GUI** which p
 - **Visual Interface**: No need to remember command-line arguments
 
 **To use the GUI:**
-1. Open PowerShell with administrator privileges.
-2. Navigate to the `scripts` folder. To do so, copy the path location:<br>
-<img src="readme_images/copy_location.png" alt="copy_location" width="200"/><br>
-
-3. Paste the location in PowerShell, preceded by `cd ` (note the space), and press `Enter`:<br>
-<img src="readme_images/location_in_powershell.png" width="250"/><br>
-
-4. Run: `python AutoFarmers.py`
+1. Inside `scripts`, click on `main.bat`. This should open an interface to interact with.
 5. Select the farmer tab you want to use
 6. Configure the arguments in the left panel
 7. Click "START" to begin farming
 8. Monitor progress in the terminal output window
 9. Click "STOP" when finished
+
+**NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 
 The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.
 
