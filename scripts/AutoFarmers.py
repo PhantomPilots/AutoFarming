@@ -169,6 +169,11 @@ FARMERS = [
             {"name": "--do-weeklies", "label": "Do Weeklies", "type": "checkbox", "default": False},
         ],
     },
+    {
+        "name": "Reroll Constellation",
+        "script": "RerollConstellation.py",
+        "args": [],
+    },
 ]
 
 
@@ -424,6 +429,7 @@ class FarmerTab(QWidget):
             "Snake Farmer": "snake_farmer.png",
             "Final Boss": "final_boss.png",
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
+            "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
         }
 
         # Check if this farmer has a specific image
