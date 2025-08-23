@@ -25,7 +25,7 @@ cd /d "%~dp0"
 :: Fallback to python if py isn't present.
 where py >nul 2>&1
 if %errorlevel%==0 (
-  py -3 AutoFarmers.py
+  python AutoFarmers.py
 ) else (
   :: If you know the exact path, you can hardcode it instead of relying on PATH:
   :: "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python310\python.exe" AutoFarmers.py
