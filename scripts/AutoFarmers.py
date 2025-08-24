@@ -158,6 +158,18 @@ FARMERS = [
         ],
     },
     {
+        "name": "SA Coin Farmer",
+        "script": "SADungeonFarmer.py",
+        "args": [
+            {
+                "name": "--max-resets",
+                "label": "Max resets",
+                "type": "text",
+                "default": "10",
+            }
+        ],
+    },
+    {
         "name": "Tower Trials",
         "script": "TowerTrialsFarmer.py",
         "args": [],
@@ -430,6 +442,7 @@ class FarmerTab(QWidget):
             "Final Boss": "final_boss.png",
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
             "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
+            "SA Coin Farmer": "sa_coin_farmer.png",
         }
 
         # Check if this farmer has a specific image

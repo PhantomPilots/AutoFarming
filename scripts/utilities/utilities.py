@@ -89,13 +89,18 @@ def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7) -> int:
 
 
 def check_for_reconnect() -> bool:
-    """Sometimes, we lose connection"""
+    """Return True if we can keep running, False if restart is needed."""
     screenshot, window_location = capture_window()
-    if find_and_click(vio.restart, screenshot, window_location):
-        print("No reconnection possible, we have to restart the game!")
-        return False
+
     if find_and_click(vio.reconnect, screenshot, window_location):
         print("Reconnecting...")
+        return True
+
+    if find_and_click(vio.restart, screenshot, window_location):
+        print("No reconnection possible, restarting the game...")
+        return False
+
+    # No reconnect/restart buttons found → assume connection is fine
     return True
 
 
@@ -291,6 +296,7 @@ def drag_im(start_point, end_point, window_location, steps=100, sleep_after_clic
 
 
 def press_key(key: str):
+    print(f"Pressing key '{key}'")
     pyautogui.press(key)
 
 

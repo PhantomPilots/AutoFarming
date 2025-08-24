@@ -49,6 +49,7 @@ free_stage = Vision("free_stage.png")
 auto_repeat_on = Vision("auto_repeat_on.png")
 auto_repeat_off = Vision("auto_repeat_off.png")
 tavern = Vision("tavern.png")
+fs_dungeon = Vision("fs_dungeon.png")
 # equipment_full = Vision("equipment_full.png")
 loading_screen = Vision("loading.png")  # Not used
 high_grade_equipment = Vision("high_grade_equipment.png")
@@ -93,6 +94,15 @@ change_stats = MultiVision(
     "change_stats.png",
     image_name="Change stats",
 )
+
+
+# SA coin farmer
+clock_tower = Vision("sa_coin_dungeon\\clock_tower.png")
+clock_tower_floor = Vision("sa_coin_dungeon\\clock_tower_floor.png")
+sa_coin = Vision("sa_coin.png")
+sa_boss = Vision("sa_coin_dungeon\\sa_boss.png")
+chest = Vision("sa_coin_dungeon\\chest.png")
+
 
 # Equipment farming
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")

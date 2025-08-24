@@ -39,6 +39,9 @@ class Coordinates:
         "start_drag": (280, 914),
         "end_drag": (280, 550),
         "showdown": (280, 870),
+        # For SA coin dungeon
+        "start_drag_sa": (276, 800),
+        "end_drag_sa": (275, 650),
         # Dogs farming
         "light_dog": (346, 386),
         "dark_dog": (160, 412),
