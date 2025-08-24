@@ -134,14 +134,14 @@ class SADungeonFarmer(IFarmer):
         find_and_click(vio.startbutton, screenshot, window_location)
 
         if (
-            find(vio.sa_boss, screenshot)
+            find(vio.sa_boss, screenshot, threshold=0.6)
             and SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS
             and not find(vio.chest, screenshot)
         ):
             self.current_state = States.RESTART_FIGHT
             SADungeonFarmer.num_resets += 1
             print(
-                f"No, restarting the fight...\n"
+                f"We don't see a chest, restarting the fight...\n"
                 f"We'll restart at most {SADungeonFarmer.MAX_RESETS-SADungeonFarmer.num_resets} more times"
             )
             time.sleep(1)
