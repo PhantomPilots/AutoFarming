@@ -42,14 +42,6 @@ class SADungeonFarmer(IFarmer):
         """Let's go to the dungeon"""
         screenshot, window_location = capture_window()
 
-        if find_and_click(vio.ok_main_button, screenshot, window_location):
-            time.sleep(1)
-            screenshot, window_location = capture_window()
-            # Tower opened, let's click on it
-            find_and_click(vio.clock_tower, screenshot, window_location)
-            self.current_state = States.GOING_TO_FLOOR_STATE
-            return
-
         # Click on battle menu
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
         # Click on FS dungeon
@@ -58,8 +50,8 @@ class SADungeonFarmer(IFarmer):
         find_and_click(vio.fort_solgress_special, screenshot, window_location)
         # Clock Tower
         if find(vio.clock_tower, screenshot):
-            print("Let's go to the floor...")
             self.current_state = States.OPENING_DUNGEON
+            print(f"Going to {self.current_state}")
 
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
@@ -153,6 +145,7 @@ class SADungeonFarmer(IFarmer):
 
         if find(vio.tavern_loading_screen, screenshot):
             self.current_state = States.OPENING_DUNGEON
+            print(f"Going to {self.current_state}")
             return
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
@@ -171,7 +164,8 @@ class SADungeonFarmer(IFarmer):
             print(f"Going to {self.current_state}")
             return
 
-        press_key("esc")
+        if not find(vio.fs_loading_screen, screenshot):
+            press_key("esc")
 
     def check_for_esette_popup(self):
         """Check if we have the Essette shop, and click on it if so to remove the popup"""

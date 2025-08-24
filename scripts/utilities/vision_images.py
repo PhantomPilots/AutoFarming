@@ -102,6 +102,7 @@ clock_tower_floor = Vision("sa_coin_dungeon\\clock_tower_floor.png")
 sa_coin = Vision("sa_coin.png")
 sa_boss = Vision("sa_coin_dungeon\\sa_boss.png")
 chest = Vision("sa_coin_dungeon\\chest.png")
+fs_loading_screen = Vision("fs_loading_screen.png")
 
 
 # Equipment farming
