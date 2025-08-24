@@ -131,6 +131,7 @@ class IFloor4Farmer(IFarmer):
                 window_location,
                 drag_duration=0.2,
             )
+            time.sleep(0.5)
             return
 
         # Go into the 'db' section

@@ -133,6 +133,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
                 window_location,
                 drag_duration=0.2,
             )
+            time.sleep(0.5)
             return
 
         # Go into the 'Demonic Beast' section
