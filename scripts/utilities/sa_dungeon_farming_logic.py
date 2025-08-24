@@ -208,4 +208,4 @@ class SADungeonFarmer(IFarmer):
             elif self.current_state == States.RUN_ENDED:
                 self.run_ended_state()
 
-            time.sleep(0.8)
+            time.sleep(0.5)
