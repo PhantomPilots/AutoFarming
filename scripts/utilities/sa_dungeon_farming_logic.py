@@ -97,7 +97,14 @@ class SADungeonFarmer(IFarmer):
             print(f"Going to {self.current_state}")
             return
 
-        find_and_click(vio.clock_tower_floor, screenshot, window_location)
+        if find(vio.clock_tower_floor, screenshot):
+            rectangle = vio.clock_tower_floor.find(screenshot)
+            find_and_click(
+                vio.clock_tower_floor,
+                screenshot,
+                window_location,
+                point_coordinates=(Coordinates.get_coordinates("center_screen")[0], rectangle[1] + rectangle[-1] / 2),
+            )
 
     def get_ready_state(self):
         """Prepare the fight and go!"""
@@ -113,6 +120,11 @@ class SADungeonFarmer(IFarmer):
     def fighting_state(self):
         """Fighting!"""
         screenshot, window_location = capture_window()
+
+        if find(vio.auto_repeat_ended, screenshot):
+            print("Finished this run! Gotta re-open the dungeon")
+            self.current_state = States.RUN_ENDED
+            return
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
@@ -135,16 +147,9 @@ class SADungeonFarmer(IFarmer):
             time.sleep(1)
             return
 
-        # TODO: If we see "dungeon closed", go to OPENING STATE
-
     def restart_fight_state(self):
         """We gotta restart, because of no chest..."""
         screenshot, window_location = capture_window()
-
-        if find(vio.auto_repeat_ended, screenshot):
-            print("Finished this run! Gotta re-open the dungeon")
-            self.current_state = States.RUN_ENDED
-            return
 
         if find(vio.tavern_loading_screen, screenshot):
             self.current_state = States.OPENING_DUNGEON
@@ -162,11 +167,16 @@ class SADungeonFarmer(IFarmer):
         screenshot, _ = capture_window()
 
         if find(vio.back, screenshot) or find(vio.clock_tower, screenshot):
-            self.current_state = States.OPENING_DUNGEON
+            self.current_state = States.GOING_TO_DUNGEON
             print(f"Going to {self.current_state}")
             return
 
         press_key("esc")
+
+    def check_for_esette_popup(self):
+        """Check if we have the Essette shop, and click on it if so to remove the popup"""
+        screenshot, window_location = capture_window()
+        find_and_click(vio.essette_shop, screenshot, window_location)
 
     def run(self):
 
@@ -175,6 +185,7 @@ class SADungeonFarmer(IFarmer):
         while True:
 
             check_for_reconnect()
+            self.check_for_esette_popup()
 
             if self.current_state == States.GOING_TO_DUNGEON:
                 self.going_to_dungeon_state()

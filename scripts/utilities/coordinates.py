@@ -69,7 +69,7 @@ class Coordinates:
     }
 
     @staticmethod
-    def get_coordinates(event):
+    def get_coordinates(event: str):
         x, y = Coordinates.__coordinates[event]
         return x, y
 
