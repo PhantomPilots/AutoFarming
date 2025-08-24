@@ -64,7 +64,7 @@ For a more user-friendly experience, you can use the **AutoFarmers GUI** which p
 - **Visual Interface**: No need to remember command-line arguments
 
 **To use the GUI:**
-1. Inside `scripts`, click on `main.bat`. This should open an interface to interact with.
+1. Inside `scripts`, click on `main.exe`. This should open an interface to interact with.
 5. Select the farmer tab you want to use
 6. Configure the arguments in the left panel
 7. Click "START" to begin farming

@@ -165,7 +165,7 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Indura.
 So far, it only accepts the "Hell" difficulty.
 
-**An important feature** is that the bot will stop farming demons **at 2am PT time** to **check in and do all the daily missions** except PVP (unless the option is enabled, see below).
+**An important feature** is that the bot will stop farming demons **at 4am PT time** to **check in and do all the daily missions** except PVP (unless the option is enabled, see below).
 
 You can find all the setup options inside the file:
 
