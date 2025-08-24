@@ -158,7 +158,7 @@ FARMERS = [
         ],
     },
     {
-        "name": "SA Coin Farmer",
+        "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
         "args": [
             {
@@ -202,7 +202,7 @@ class FarmerTab(QWidget):
         # Left panel
         left_panel = QVBoxLayout()
         # Title
-        title = QLabel(f"{self.farmer['name']} Configuration")
+        title = QLabel(f"{self.farmer['name']}")
         title.setFont(QFont("Arial", 12, QFont.Bold))
         left_panel.addWidget(title)
         # Image placeholder
@@ -442,7 +442,7 @@ class FarmerTab(QWidget):
             "Final Boss": "final_boss.png",
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
             "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
-            "SA Coin Farmer": "sa_coin_farmer.png",
+            "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
         }
 
         # Check if this farmer has a specific image

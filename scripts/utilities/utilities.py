@@ -1,7 +1,9 @@
+import contextlib
 import glob
 import os
 import random
 import time
+from ctypes import windll
 from numbers import Integral
 from typing import Callable, Union
 
@@ -253,34 +255,77 @@ def rclick(x, y, sleep_after_click=0.01):
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTUP, 0, 0)
 
 
-def click_and_drag(start_x, start_y, end_x, end_y, steps=100, sleep_after_click=0.01, drag_duration=0.5):
-    """Move to the start position and press the left mouse button down"""
-    win32api.SetCursorPos((start_x, start_y))
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+# def click_and_drag(start_x, start_y, end_x, end_y, steps=100, sleep_after_click=0.01, drag_duration=0.5):
+#     """Move to the start position and press the left mouse button down"""
+#     win32api.SetCursorPos((start_x, start_y))
+#     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
 
-    # Optionally, you can sleep for a while before starting the drag
-    time.sleep(sleep_after_click)
+#     # Optionally, you can sleep for a while before starting the drag
+#     time.sleep(sleep_after_click)
 
-    # Calculate the distance to move in each step
-    delta_x = (end_x - start_x) / steps
-    delta_y = (end_y - start_y) / steps
+#     # Calculate the distance to move in each step
+#     delta_x = (end_x - start_x) / steps
+#     delta_y = (end_y - start_y) / steps
 
-    # Calculate the time to sleep between steps
-    step_duration = drag_duration / steps
+#     # Calculate the time to sleep between steps
+#     step_duration = drag_duration / steps
 
-    # Move to the end position incrementally
-    for step in range(steps):
-        # Update cursor position by a small amount
-        new_x = int(start_x + delta_x * step)
-        new_y = int(start_y + delta_y * step)
-        win32api.SetCursorPos((new_x, new_y))
-        time.sleep(step_duration)
+#     # Move to the end position incrementally
+#     for step in range(steps):
+#         # Update cursor position by a small amount
+#         new_x = int(start_x + delta_x * step)
+#         new_y = int(start_y + delta_y * step)
+#         win32api.SetCursorPos((new_x, new_y))
+#         time.sleep(step_duration)
 
-    # Release the left mouse button
-    win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+#     # Release the left mouse button
+#     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
 
 
-def drag_im(start_point, end_point, window_location, steps=100, sleep_after_click=0.01, drag_duration=0.5):
+def click_and_drag(start_x, start_y, end_x, end_y, sleep_after_click=0.01, drag_duration=0.5):
+    """
+    Smoothly drag from (start_x, start_y) to (end_x, end_y) in ~drag_duration seconds.
+    Keeps same arguments as before, but uses elapsed-time control so it's consistent
+    whether launched from PowerShell or a .bat.
+    """
+
+    # Optional high-resolution timer
+    winmm = getattr(windll, "winmm", None)
+    if winmm:
+        with contextlib.suppress(Exception):
+            winmm.timeBeginPeriod(1)
+    try:
+        # Go to start and press down
+        win32api.SetCursorPos((start_x, start_y))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+        if sleep_after_click > 0:
+            time.sleep(sleep_after_click)
+
+        t0 = time.perf_counter()
+        t_end = t0 + drag_duration
+        dx, dy = end_x - start_x, end_y - start_y
+
+        while True:
+            now = time.perf_counter()
+            if now >= t_end:
+                break
+            a = (now - t0) / drag_duration  # progress 0..1
+            x = int(start_x + dx * a)
+            y = int(start_y + dy * a)
+            win32api.SetCursorPos((x, y))
+            time.sleep(0)  # yield CPU
+
+        # Ensure final position and release
+        win32api.SetCursorPos((end_x, end_y))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+
+    finally:
+        if winmm:
+            with contextlib.suppress(Exception):
+                winmm.timeEndPeriod(1)
+
+
+def drag_im(start_point, end_point, window_location, sleep_after_click=0.01, drag_duration=0.5):
     """Click and drag on an image given a window location"""
     global_start_point = (start_point[0] + window_location[0], start_point[1] + window_location[1])
     global_end_point = (end_point[0] + window_location[0], end_point[1] + window_location[1])
@@ -289,7 +334,6 @@ def drag_im(start_point, end_point, window_location, steps=100, sleep_after_clic
         global_start_point[1],
         global_end_point[0],
         global_end_point[1],
-        steps=steps,
         sleep_after_click=sleep_after_click,
         drag_duration=drag_duration,
     )

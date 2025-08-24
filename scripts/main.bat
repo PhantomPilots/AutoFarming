@@ -1,36 +1,34 @@
-@echo off
-setlocal
-
-:: --- Admin check (robust) ---
-:: fltmc requires admin; returns nonzero if not admin
-fltmc >nul 2>&1
-if errorlevel 1 (
-  echo Requesting administrative privileges...
-  :: Relaunch this .bat elevated under cmd.exe so .bat handling is consistent
-  %SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -Command ^
-    "Start-Process -FilePath '%ComSpec%' -ArgumentList '/c, ""%~f0""' -Verb RunAs"
-
-  :: If UAC was cancelled, show a message instead of silently closing
-  if errorlevel 1 (
-    echo Elevation was cancelled or failed.
-    pause
-  )
-  exit /b
-)
-
-:: --- Already elevated below this line ---
-cd /d "%~dp0"
-
-:: Prefer the Python launcher (works across per-user/system installs)
-:: Fallback to python if py isn't present.
-where py >nul 2>&1
-if %errorlevel%==0 (
-  python AutoFarmers.py
-) else (
-  :: If you know the exact path, you can hardcode it instead of relying on PATH:
-  :: "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python310\python.exe" AutoFarmers.py
-  python AutoFarmers.py
-)
-
-echo.
-pause
+::[Bat To Exe Converter]
+::
+::YAwzoRdxOk+EWAjk
+::fBw5plQjdCyDJGyX8VAjFBZXQQ2WAE+1EbsQ5+n//NaCsU4cGes8d4GbkuXHbukQ5SU=
+::YAwzuBVtJxjWCl3EqQJgSA==
+::ZR4luwNxJguZRRnk
+::Yhs/ulQjdF+5
+::cxAkpRVqdFKZSTk=
+::cBs/ulQjdF+5
+::ZR41oxFsdFKZSDk=
+::eBoioBt6dFKZSDk=
+::cRo6pxp7LAbNWATEpCI=
+::egkzugNsPRvcWATEpCI=
+::dAsiuh18IRvcCxnZtBJQ
+::cRYluBh/LU+EWAnk
+::YxY4rhs+aU+JeA==
+::cxY6rQJ7JhzQF1fEqQJQ
+::ZQ05rAF9IBncCkqN+0xwdVs0
+::ZQ05rAF9IAHYFVzEqQJQ
+::eg0/rx1wNQPfEVWB+kM9LVsJDGQ=
+::fBEirQZwNQPfEVWB+kM9LVsJDGQ=
+::cRolqwZ3JBvQF1fEqQJQ
+::dhA7uBVwLU+EWDk=
+::YQ03rBFzNR3SWATElA==
+::dhAmsQZ3MwfNWATElA==
+::ZQ0/vhVqMQ3MEVWAtB9wSA==
+::Zg8zqx1/OA3MEVWAtB9wSA==
+::dhA7pRFwIByZRRnk
+::Zh4grVQjdCyDJGyX8VAjFBZXQQ2WAGi1ArAg++zo0O2EnmwIQO0ZeZ3W36adHPMQ+Ez0YYUR23tTloUJFB44
+::YB416Ek+ZW8=
+::
+::
+::978f952a14a936cc963da21a135fa983
+python AutoFarmers.py
