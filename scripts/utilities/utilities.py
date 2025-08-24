@@ -266,8 +266,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, sleep_after_click=0.01, drag_
         # Go to start and press down
         win32api.SetCursorPos((start_x, start_y))
         win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
-        if sleep_after_click > 0:
-            time.sleep(sleep_after_click)
+        time.sleep(sleep_after_click)
 
         t0 = time.perf_counter()
         t_end = t0 + drag_duration
@@ -293,7 +292,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, sleep_after_click=0.01, drag_
                 winmm.timeEndPeriod(1)
 
 
-def drag_im(start_point, end_point, window_location, sleep_after_click=0.01, drag_duration=0.5):
+def drag_im(start_point, end_point, window_location, sleep_after_click=0.2, drag_duration=0.5):
     """Click and drag on an image given a window location"""
     global_start_point = (start_point[0] + window_location[0], start_point[1] + window_location[1])
     global_end_point = (end_point[0] + window_location[0], end_point[1] + window_location[1])
