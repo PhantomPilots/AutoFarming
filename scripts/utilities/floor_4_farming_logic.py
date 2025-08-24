@@ -129,7 +129,7 @@ class IFloor4Farmer(IFarmer):
                 Coordinates.get_coordinates("right_swipe"),
                 Coordinates.get_coordinates("left_swipe"),
                 window_location,
-                drag_duration=0.2,
+                drag_duration=0.5,
             )
             time.sleep(0.5)
             return

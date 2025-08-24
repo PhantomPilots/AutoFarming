@@ -73,7 +73,7 @@ class SADungeonFarmer(IFarmer):
                 Coordinates.get_coordinates("start_drag_sa"),
                 Coordinates.get_coordinates("end_drag_sa"),
                 window_location,
-                drag_duration=0.2,
+                drag_duration=0.5,
             )
             return
 
