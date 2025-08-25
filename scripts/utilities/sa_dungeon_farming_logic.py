@@ -24,12 +24,20 @@ class States(Enum):
     RUN_ENDED = auto()
 
 
+class Scrolling(Enum):
+    DOWN = auto()
+    UP = auto()
+
+
 class SADungeonFarmer(IFarmer):
     """SA dungeon farmer"""
 
     MAX_RESETS = 3
 
     num_resets = 0
+
+    # Should we scroll up or down? Variable for hystheresis behavior
+    scrolling = Scrolling.DOWN
 
     def __init__(self, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
         self.current_state = starting_state
@@ -49,7 +57,7 @@ class SADungeonFarmer(IFarmer):
         # Click on FS Special
         find_and_click(vio.fort_solgress_special, screenshot, window_location)
         # Clock Tower
-        if find(vio.sa_coin, screenshot) or find(vio.clock_tower, screenshot):
+        if find(vio.sa_coin, screenshot) or find(vio.clock_tower, screenshot) or find(vio.fs_dungeon_lock, screenshot):
             self.current_state = States.OPENING_DUNGEON
             print(f"Going to {self.current_state}")
 
@@ -68,12 +76,29 @@ class SADungeonFarmer(IFarmer):
             return
 
         if not find(vio.sa_coin, screenshot) and find(vio.back, screenshot):
-            # Let's drag up
-            drag_im(
-                Coordinates.get_coordinates("start_drag_sa"),
-                Coordinates.get_coordinates("end_drag_sa"),
-                window_location,
-            )
+            # Let's drag, up or down?
+            rectangle = vio.fs_dungeon_lock.find(screenshot)
+            if SADungeonFarmer.scrolling == Scrolling.DOWN:
+                drag_im(
+                    rectangle[:2] if len(rectangle) else Coordinates.get_coordinates("start_drag_sa"),
+                    (
+                        (rectangle[0], rectangle[1] - 150)
+                        if len(rectangle)
+                        else Coordinates.get_coordinates("end_drag_sa")
+                    ),
+                    window_location,
+                )
+            elif SADungeonFarmer.scrolling == Scrolling.UP:
+                drag_im(
+                    rectangle[:2] if len(rectangle) else Coordinates.get_coordinates("end_drag_sa"),
+                    (
+                        (rectangle[0], rectangle[1] + 150)
+                        if len(rectangle)
+                        else Coordinates.get_coordinates("start_drag_sa")
+                    ),
+                    window_location,
+                )
+
             return
 
         if find(vio.sa_coin, screenshot):
