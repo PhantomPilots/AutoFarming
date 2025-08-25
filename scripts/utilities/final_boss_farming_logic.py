@@ -96,7 +96,6 @@ class FinalBossFarmer(IFarmer):
                     Coordinates.get_coordinates("start_drag"),
                     Coordinates.get_coordinates("end_drag"),
                     window_location,
-                    drag_duration=0.5,
                 )
                 # And try to find 'challenge' now
                 time.sleep(0.3)
