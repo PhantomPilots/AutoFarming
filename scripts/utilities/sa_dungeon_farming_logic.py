@@ -49,7 +49,7 @@ class SADungeonFarmer(IFarmer):
         # Click on FS Special
         find_and_click(vio.fort_solgress_special, screenshot, window_location)
         # Clock Tower
-        if find(vio.clock_tower, screenshot):
+        if find(vio.sa_coin, screenshot) or find(vio.clock_tower, screenshot):
             self.current_state = States.OPENING_DUNGEON
             print(f"Going to {self.current_state}")
 
@@ -77,7 +77,15 @@ class SADungeonFarmer(IFarmer):
             )
             return
 
-        find_and_click(vio.clock_tower, screenshot, window_location)
+        if find(vio.sa_coin, screenshot):
+            # Let's try to access/open the tower
+            rectangle = vio.sa_coin.find(screenshot)
+            find_and_click(
+                vio.sa_coin,
+                screenshot,
+                window_location,
+                point_coordinates=(Coordinates.get_coordinates("center_screen")[0], rectangle[1] + rectangle[-1] / 2),
+            )
 
     def going_to_floor_state(self):
         """Dungeon is open, let's go to the floor"""
@@ -159,7 +167,7 @@ class SADungeonFarmer(IFarmer):
         """We finished a run! Gotta re-open the dungeon, by ESC-ing until we're back into the dungeon"""
         screenshot, _ = capture_window()
 
-        if find(vio.back, screenshot) or find(vio.clock_tower, screenshot):
+        if find(vio.back, screenshot) or find(vio.sa_coin, screenshot):
             self.current_state = States.GOING_TO_DUNGEON
             print(f"Going to {self.current_state}")
             return
