@@ -36,9 +36,6 @@ class SADungeonFarmer(IFarmer):
 
     num_resets = 0
 
-    # Should we scroll up or down? Variable for hystheresis behavior
-    scrolling = Scrolling.DOWN
-
     def __init__(self, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
         self.current_state = starting_state
 
@@ -77,8 +74,11 @@ class SADungeonFarmer(IFarmer):
 
         if not find(vio.sa_coin, screenshot) and find(vio.back, screenshot):
             # Let's drag, up or down?
+            direction = Scrolling.DOWN if find(vio.fs_event_dungeon, screenshot) else Scrolling.UP
+
+            # If we find a "lock", let's scroll from that position
             rectangle = vio.fs_dungeon_lock.find(screenshot)
-            if SADungeonFarmer.scrolling == Scrolling.DOWN:
+            if direction == Scrolling.DOWN:
                 drag_im(
                     rectangle[:2] if len(rectangle) else Coordinates.get_coordinates("start_drag_sa"),
                     (
@@ -88,7 +88,7 @@ class SADungeonFarmer(IFarmer):
                     ),
                     window_location,
                 )
-            elif SADungeonFarmer.scrolling == Scrolling.UP:
+            elif direction == Scrolling.UP:
                 drag_im(
                     rectangle[:2] if len(rectangle) else Coordinates.get_coordinates("end_drag_sa"),
                     (
