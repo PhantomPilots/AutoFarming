@@ -181,10 +181,6 @@ class SADungeonFarmer(IFarmer):
             print(f"Current max reset time found: {SADungeonFarmer.max_time_for_reset:.2f}")
             SADungeonFarmer.start_reset_time = None
 
-            # TODO: REMOVE
-            if SADungeonFarmer.start_dungeon_time is None:
-                SADungeonFarmer.start_dungeon_time = time.time()
-
         if find(vio.sa_boss, screenshot, threshold=0.6) and not find(vio.chest, screenshot, threshold=0.6):
             # Let's decide if we use a timer or if we use max resets
             print("We don't see a chest, can we restart the fight?")
