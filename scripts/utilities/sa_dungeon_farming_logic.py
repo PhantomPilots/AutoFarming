@@ -196,9 +196,7 @@ class SADungeonFarmer(IFarmer):
                     self.lets_restart_fight(screenshot)
 
             # If we cannot use a timer
-            elif (
-                SADungeonFarmer.max_time_for_reset == 0 or SADungeonFarmer.start_dungeon_time is None
-            ) and SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
+            elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
                 self.lets_restart_fight(screenshot)
 
     def lets_restart_fight(self, screenshot: np.ndarray):
