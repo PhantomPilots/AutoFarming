@@ -35,7 +35,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.sa_boss, threshold=0.6)
+    screenshot_testing(screenshot, vision_image=vio.claim_all, threshold=0.7)
 
     # if find(vio.connection_confrm_expired, screenshot):
     #     close_game()

@@ -357,6 +357,7 @@ boss_battle = Vision("dailies\\boss_battle.png")
 normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")
 plus_auto_ticket = Vision("dailies\\plus_auto_ticket.png")
 # Patrol
+claim_reward = Vision("dailies\\claim_reward.png")
 complete_all = Vision("dailies\\complete_all.png")
 reward = Vision("dailies\\patrol_reward.png", image_name="reward")
 set_all_patrol = Vision("dailies\\set_all.png")

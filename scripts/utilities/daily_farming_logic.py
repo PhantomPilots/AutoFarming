@@ -476,6 +476,7 @@ class DailyFarmer:
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
+        find_and_click(vio.claim_reward, screenshot, window_location)
         find_and_click(vio.patrol_all, screenshot, window_location)
         # First click on complete all
         find_and_click(vio.complete_all, screenshot, window_location)
