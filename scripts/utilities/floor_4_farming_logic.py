@@ -150,7 +150,7 @@ class IFloor4Farmer(IFarmer):
             return
 
         # In case we need to unlock the floor
-        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
 
         # Click on floor 4 if it's available
         find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7)

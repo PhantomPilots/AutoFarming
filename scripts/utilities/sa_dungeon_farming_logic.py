@@ -46,10 +46,14 @@ class SADungeonFarmer(IFarmer):
     start_dungeon_time = None
 
     # To count how much time between runs
-    start_reset_time = None
+    reset_time_start = None
 
     # Longest time for a reset
     max_time_for_reset = 0
+
+    # To compute how long the longest run lasted
+    longest_run_time = 0
+    run_start_time = None
 
     def __init__(self, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
         self.current_state = starting_state
@@ -174,26 +178,30 @@ class SADungeonFarmer(IFarmer):
         if find_and_click(vio.startbutton, screenshot, window_location):
             # If we come from a reset, let's log how much time has passed
             if (
-                SADungeonFarmer.start_reset_time is not None
-                and time.time() - SADungeonFarmer.start_reset_time > SADungeonFarmer.max_time_for_reset
+                SADungeonFarmer.reset_time_start is not None
+                and time.time() - SADungeonFarmer.reset_time_start > SADungeonFarmer.max_time_for_reset
             ):
-                SADungeonFarmer.max_time_for_reset = time.time() - SADungeonFarmer.start_reset_time
+                SADungeonFarmer.max_time_for_reset = time.time() - SADungeonFarmer.reset_time_start
             print(f"Current max reset time found: {SADungeonFarmer.max_time_for_reset:.2f}")
-            SADungeonFarmer.start_reset_time = None
+            # Reset the reset start timer
+            SADungeonFarmer.reset_time_start = None
+            # Start the run timer
+            SADungeonFarmer.run_start_time = time.time()
 
         if find(vio.sa_boss, screenshot, threshold=0.6) and not find(vio.chest, screenshot, threshold=0.6):
             # Let's decide if we use a timer or if we use max resets
             print("We don't see a chest, can we restart the fight?")
 
-            if SADungeonFarmer.max_time_for_reset > 0 and SADungeonFarmer.start_dungeon_time is not None:
-                # Let's compute if we can reset...
-                remaining_time = (30 * 60 + SADungeonFarmer.start_dungeon_time) - (
-                    time.time() + SADungeonFarmer.max_time_for_reset + 5  # Adding 5 seconds of buffer
-                )
-                if remaining_time > 0:
-                    # We can restart!
-                    print(f"We have {remaining_time/60:.2f} mins left. Enough time to restart the fight once more!")
-                    self.lets_restart_fight(screenshot)
+            if SADungeonFarmer.start_dungeon_time is not None:
+                if SADungeonFarmer.max_time_for_reset > 0:
+                    # Let's compute if we can reset...
+                    remaining_time = (30 * 60 + SADungeonFarmer.start_dungeon_time) - (
+                        time.time() + SADungeonFarmer.max_time_for_reset + 5  # Adding 5 seconds of buffer
+                    )
+                    if remaining_time > 0:
+                        # We can restart!
+                        print(f"We have {remaining_time/60:.2f} mins left. Enough time to restart the fight once more!")
+                        self.lets_restart_fight(screenshot)
 
             # If we cannot use a timer
             elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
@@ -225,7 +233,7 @@ class SADungeonFarmer(IFarmer):
 
         press_key("esc")
         # Let's start the smaller timer that will count how long a reset takes
-        SADungeonFarmer.start_reset_time = time.time()
+        SADungeonFarmer.reset_time_start = time.time()
 
     def run_ended_state(self):
         """We finished a run! Gotta re-open the dungeon, by ESC-ing until we're back into the dungeon"""
