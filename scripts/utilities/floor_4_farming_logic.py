@@ -274,4 +274,4 @@ class IFloor4Farmer(IFarmer):
             elif self.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()
 
-            time.sleep(0.6)
+            time.sleep(0.8)
