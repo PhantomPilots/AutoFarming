@@ -321,7 +321,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, *, sleep_after_click=0.02, dr
                 winmm.timeEndPeriod(1)
 
 
-def drag_im(start_point, end_point, window_location, sleep_after_click=0.2, drag_duration=0.35, *, join=True):
+def drag_im(start_point, end_point, window_location, sleep_after_click=0.15, drag_duration=0.35, *, join=True):
     global_start = (start_point[0] + window_location[0], start_point[1] + window_location[1])
     global_end = (end_point[0] + window_location[0], end_point[1] + window_location[1])
 
