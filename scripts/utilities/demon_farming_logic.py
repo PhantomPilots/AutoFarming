@@ -29,7 +29,7 @@ from utilities.utilities import (
 )
 from utilities.vision import Vision
 
-logger = LoggerWrapper(name="DemonLogger", log_file="demon_farmer.log")
+logger = LoggerWrapper(name="DemonLogger", log_to_file=False)
 
 
 class States(Enum):
@@ -231,7 +231,9 @@ class IDemonFarmer(IFarmer):
 
             # Need to re-check if 'accept invitation' is there
             screenshot, window_location = capture_window()
-            click_and_sleep(vio.accept_invitation, screenshot, window_location, threshold=0.7, sleep_time=4)
+            find_and_click(vio.accept_invitation, screenshot, window_location, threshold=0.7)
+            logger.save_image(screenshot, subdir="demons")  # Save the image for debugging the time
+            time.sleep(3)
 
             # Evaluate if the invite was successsful
             screenshot, _ = capture_window()
