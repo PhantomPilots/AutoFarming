@@ -230,9 +230,8 @@ class IDemonFarmer(IFarmer):
             sleep_thread.join()  # Wait for the sleeping thread to finish
 
             # Need to re-check if 'accept invitation' is there
-            screenshot, window_location = capture_window()
-            find_and_click(vio.accept_invitation, screenshot, window_location, threshold=0.7)
-            logger.save_image(screenshot, subdir="demons")  # Save the image for debugging the time
+            accept_screenshot, window_location = capture_window()
+            find_and_click(vio.accept_invitation, accept_screenshot, window_location, threshold=0.7)
             time.sleep(3)
 
             # Evaluate if the invite was successsful
@@ -240,6 +239,8 @@ class IDemonFarmer(IFarmer):
             if find(vio.real_time, screenshot):
                 IDemonFarmer.missed_invites += 1
                 print(f"We missed the invite :( {IDemonFarmer.missed_invites} invites so far.")
+                # And let's save the screenshot we tried to accept on, to see what happened
+                logger.save_image(accept_screenshot, subdir="demons")
 
             return
 
