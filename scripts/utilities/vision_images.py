@@ -104,6 +104,7 @@ sa_boss = Vision("sa_coin_dungeon\\sa_boss.png")
 chest = Vision("sa_coin_dungeon\\chest.png")
 fs_loading_screen = Vision("fs_loading_screen.png")
 fs_dungeon_lock = Vision("sa_coin_dungeon\\fs_dungeon_lock.png")
+finished_auto_repeat_fight = Vision("finished_auto_repeat_fight.png")
 
 
 # Equipment farming

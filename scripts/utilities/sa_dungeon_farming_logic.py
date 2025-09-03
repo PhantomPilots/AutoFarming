@@ -182,16 +182,20 @@ class SADungeonFarmer(IFarmer):
             return
 
         # If we've finished the fight, log how long did it take?
-        if False:  # TODO: Identify the end of the fight
+        if find(vio.finished_auto_repeat_fight, screenshot):
+            this_run_time = time.time() - SADungeonFarmer.run_start_time
+            if this_run_time < 10:
+                return  # We're just waiting to start the next fight!
+
             if SADungeonFarmer.run_start_time is not None:
-                SADungeonFarmer.longest_run_time = max(
-                    SADungeonFarmer.longest_run_time, time.time() - SADungeonFarmer.run_start_time
-                )
+                SADungeonFarmer.longest_run_time = max(SADungeonFarmer.longest_run_time, this_run_time)
+
             print(f"Longest run time found: {SADungeonFarmer.longest_run_time:.2f} secs.")
             # Don't add time offset, let's count the total run time including the transition
             SADungeonFarmer.run_start_time = time.time()
             # Increase the done total runs
             SADungeonFarmer.num_runs_complete += 1
+            print(f"We've completed {SADungeonFarmer.num_runs_complete}/12 runs")
 
         if find_and_click(vio.startbutton, screenshot, window_location):
             # If we come from a reset, let's log how much time has passed
