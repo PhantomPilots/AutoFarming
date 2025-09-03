@@ -174,7 +174,6 @@ class IFarmer:
 
         # Check if duplicate connection, if so click on 'ok_main_button'
         if find(vio.duplicate_connection, screenshot):
-            print("Duplicate connection detected!")
             find_and_click(vio.ok_main_button, screenshot, window_location)
 
             # And close the fighter thread if open
