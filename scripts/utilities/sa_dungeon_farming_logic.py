@@ -36,29 +36,26 @@ class Scrolling(Enum):
 class SADungeonFarmer(IFarmer):
     """SA dungeon farmer"""
 
-    # How many max resets in total
-    MAX_RESETS = 3
+    # How many max resets in total -- Only used in the no-Timer approach
+    MAX_RESETS = 10
 
     # How many resets so far
     num_resets = 0
+    # How many runs we've done?
+    num_runs_complete = 0
 
     # start time since opening the dungeon
     start_dungeon_time = None
 
-    # To count how much time between runs
-    reset_time_start = None
-
-    # Longest time for a reset
+    # To count how much time resetting takes
     max_time_for_reset = 0
+    reset_time_start = None
 
     # To compute how long the longest run lasted
     longest_run_time = 0
     run_start_time = None
 
-    # How many runs we've done?
-    num_runs_complete = 0
-
-    def __init__(self, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
+    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
         self.current_state = starting_state
 
         SADungeonFarmer.MAX_RESETS = max_resets
