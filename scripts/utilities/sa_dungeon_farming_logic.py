@@ -168,7 +168,7 @@ class SADungeonFarmer(IFarmer):
         """Fighting!"""
         screenshot, window_location = capture_window()
 
-        if find(vio.auto_repeat_ended, screenshot):
+        if find(vio.auto_repeat_ended, screenshot, threshold=0.8):
             print("Finished this run! Gotta re-open the dungeon")
             self.current_state = States.RUN_ENDED
             return
