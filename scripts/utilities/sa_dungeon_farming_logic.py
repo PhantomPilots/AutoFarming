@@ -236,6 +236,9 @@ class SADungeonFarmer(IFarmer):
             elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
                 self.lets_restart_fight(screenshot)
 
+            else:
+                print("Nope, we don't have enough time left for more resets! Gotta speedrun.")
+
     def lets_restart_fight(self, screenshot: np.ndarray):
         """Common logic to restart the fight"""
         self.current_state = States.RESTART_FIGHT
