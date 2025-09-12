@@ -155,7 +155,8 @@ class SADungeonFarmer(IFarmer):
         """Prepare the fight and go!"""
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.auto_repeat_off, screenshot, window_location)
+        if find_and_click(vio.auto_repeat_off, screenshot, window_location, threshold=0.8):
+            return
 
         # Let's fight!
         if find(vio.startbutton, screenshot):
