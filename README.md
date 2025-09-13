@@ -22,6 +22,11 @@ Also, use this code at your own risk.
 
 Join the community if you want quick replies to any issues you may be having! https://discord.gg/En2Wm6a5RV
 
+## Requirements
+
+* Works on the official 7DS PC Beta Client: https://7dsgc.netmarble.com/en/pcclient.
+* Disable "landscape mode" in Settings within the game (that means, enable portrait mode).
+* Disable all notifications within the game (e.g., random battle invites.)
 
 ## Installation
 
