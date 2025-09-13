@@ -74,22 +74,6 @@ class InduraBattleStrategy(IBattleStrategy):
             # On phase 2, evaluate if Indura has multi-tiers activated
             have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 1
 
-            # # If it's the 2nd card, check if we should play a debuff
-            # if (
-            #     card_turn == 1
-            #     and len(heal_card_ids)  # Assuming we'll play a heal on card_turn == 2
-            #     and len(picked_cards)
-            #     and picked_cards[0].card_type == CardTypes.ATTACK
-            # ):
-            #     # Play a debuff to gain an ult gauge
-            #     debuff_ids = sorted(
-            #         np.where([card.card_type == CardTypes.DEBUFF for card in hand_of_cards])[0],
-            #         key=lambda idx: card_ranks[idx],
-            #     )
-            #     if len(debuff_ids):
-            #         print("Playing a debuff card to potentially gain an ult gauge!")
-            #         return debuff_ids[-1]
-
             # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
             b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
             if (
@@ -107,18 +91,20 @@ class InduraBattleStrategy(IBattleStrategy):
                     print("Seeing multiple tiers! Playing King's debuff card!")
                 return king_debuf_card_ids[-1]
 
+            # If we see an oxidize, we need to play level 2 or 3 cards
+            if find(vio.oxidize_indura, screenshot):
+                if lvl2_3_cards := np.where((card_ranks == 1) | (card_ranks == 2))[0]:
+                    return sorted(lvl2_3_cards, key=lambda idx: card_ranks[idx])[-1]
+
             # Disable King's debuffs so that we don't play them by mistake
             for idx in king_debuf_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
 
-            # Disable all heal cards if it's not the 3rd card and especially if we're not seeing an oxidize
+            # Disable all heal cards if we're not seeing an oxidize
             if card_turn < 2 or not find(vio.oxidize_indura, screenshot):
                 # Disabled all heal cards, unless it's 3rd card
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
-            # Play a heal card in the last turn if we're seeing an oxidize! -- Could be an `else` entirely
-            elif card_turn == 2 and len(heal_card_ids) and find(vio.oxidize_indura, screenshot):
-                return heal_card_ids[-1]
 
         elif phase == 3:
             if find(vio.mini_heal, six_empty_slots_image):
