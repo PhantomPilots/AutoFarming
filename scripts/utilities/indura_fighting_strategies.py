@@ -95,6 +95,7 @@ class InduraBattleStrategy(IBattleStrategy):
             if find(vio.oxidize_indura, screenshot):
                 lvl2_3_cards = np.where((card_ranks == 1) | (card_ranks == 2))[0]
                 if len(lvl2_3_cards) > 0:
+                    print("Trying to remove oxidize!")
                     return sorted(lvl2_3_cards, key=lambda idx: card_ranks[idx])[-1]
 
             # Disable King's debuffs so that we don't play them by mistake
