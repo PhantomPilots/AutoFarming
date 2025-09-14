@@ -93,7 +93,8 @@ class InduraBattleStrategy(IBattleStrategy):
 
             # If we see an oxidize, we need to play level 2 or 3 cards
             if find(vio.oxidize_indura, screenshot):
-                if lvl2_3_cards := np.where((card_ranks == 1) | (card_ranks == 2))[0]:
+                lvl2_3_cards = np.where((card_ranks == 1) | (card_ranks == 2))[0]
+                if len(lvl2_3_cards) > 0:
                     return sorted(lvl2_3_cards, key=lambda idx: card_ranks[idx])[-1]
 
             # Disable King's debuffs so that we don't play them by mistake
