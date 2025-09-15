@@ -282,6 +282,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_boss_battle, screenshot, window_location)
+            return
 
         if find(vio.daily_quest_info, screenshot):
             print("Mission complete!")
@@ -306,6 +307,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_vanya_ale, screenshot, window_location)
+            return
 
         if find(vio.meli_affection, screenshot) or find(vio.perci_affection, screenshot):
             # Consider the mission done already, since it's all automatic!
@@ -385,6 +387,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_fort_solgress, screenshot, window_location, threshold=0.89)
+            return
 
         if (
             find(vio.daily_quest_info, screenshot)
@@ -440,6 +443,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_pvp, screenshot, window_location)
+            return
 
         # If we've failed tier up...
         find_and_click(vio.tier_up_failed, screenshot, window_location)
@@ -473,6 +477,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.85)
+            return
 
         if find(vio.patrol_dispatched, screenshot):
             print("Finished Patrol mission")
@@ -494,6 +499,7 @@ class DailyFarmer:
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
             self.go_to_mission(vio.daily_friendship_coins, screenshot, window_location)
+            return
 
         if find_and_click(vio.send_friendship_coins, screenshot, window_location, threshold=0.8):
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
