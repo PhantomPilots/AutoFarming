@@ -443,6 +443,8 @@ class DailyFarmer:
 
         # If we've failed tier up...
         find_and_click(vio.tier_up_failed, screenshot, window_location)
+        # If we successfully tiered up!
+        find_and_click(vio.tier_up_successful, screenshot, window_location)
 
         # For when Monday
         find_and_click(vio.view_pvp_results, screenshot, window_location)

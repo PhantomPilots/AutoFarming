@@ -392,6 +392,7 @@ battle_brawl = Vision("dailies\\battle_brawl.png")
 # PVP
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
 tier_up_failed = Vision("dailies\\tier_up_failed.png")
+tier_up_successful = Vision("dailies\\tier_up_successful.png")
 
 # For weeklies
 kh_boss_battle = Vision("weeklies\\kh_boss_battle.png")
