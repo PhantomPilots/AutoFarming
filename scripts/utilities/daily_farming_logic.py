@@ -479,7 +479,7 @@ class DailyFarmer:
             self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.85)
             return
 
-        if find(vio.patrol_dispatched, screenshot):
+        if find(vio.patrol_dispatched, screenshot) or find (vio.cancel, screenshot):
             print("Finished Patrol mission")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
