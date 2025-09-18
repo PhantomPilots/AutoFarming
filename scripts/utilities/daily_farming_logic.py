@@ -479,12 +479,12 @@ class DailyFarmer:
             self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.85)
             return
 
-        if find(vio.patrol_dispatched, screenshot) or find (vio.cancel, screenshot):
+        if find(vio.cancel, screenshot):
             print("Finished Patrol mission")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
-        find_and_click(vio.claim_reward, screenshot, window_location)
+        click_and_sleep(vio.claim_reward, screenshot, window_location, sleep_time=1)
         find_and_click(vio.patrol_all, screenshot, window_location)
         # First click on complete all
         find_and_click(vio.complete_all, screenshot, window_location)
