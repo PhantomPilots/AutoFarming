@@ -301,7 +301,6 @@ class FarmerTab(QWidget):
             elif arg["type"] == "multiselect":
                 if selected := [item.text() for item in widget.selectedItems()]:
                     args.extend([arg["name"]] + selected)
-
             elif value := widget.text():
                 args.extend([arg["name"], value])
         return args
