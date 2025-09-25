@@ -21,8 +21,10 @@ def main():
     parser.add_argument(
         "--demons-to-farm",
         type=str,
-        default="indura_demon",
-        help="Comma-separated list of demons to farm: red_demon,gray_demon,crimson_demon,bell_demon,og_demon,indura_demon",
+        nargs="+",
+        choices=["red_demon", "gray_demon", "crimson_demon", "bell_demon", "og_demon", "indura_demon"],
+        default=["indura_demon"],
+        help="List of demons to farm (space-separated).",
     )
     parser.add_argument(
         "--time-to-sleep",
@@ -41,9 +43,7 @@ def main():
         "gray_demon": vio.gray_demon,
         "crimson_demon": vio.crimson_demon,
     }
-    demons_to_farm = [
-        demon_map[name.strip()] for name in args.demons_to_farm.split(",") if name.strip() in demon_map
-    ] or [vio.indura_demon]
+    demons_to_farm = [demon_map[name] for name in args.demons_to_farm]
 
     FarmingFactory.main_loop(
         farmer=DemonFarmer,

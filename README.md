@@ -20,7 +20,7 @@ Also, use this code at your own risk.
 
 ## Discord
 
-Join the community if you want quick replies to any issues you may be having! https://discord.gg/En2Wm6a5RV
+Join the community if you want quick replies to issues, have new feature requests, etc.: https://discord.gg/En2Wm6a5RV
 
 ## Requirements
 
