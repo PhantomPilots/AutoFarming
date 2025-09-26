@@ -124,6 +124,7 @@ phase_4 = Vision("demonic_beasts\\phase_4.png")
 dead_unit = Vision("demonic_beasts\\dead_unit.png")
 db_victory = Vision("demonic_beasts\\db_victory.png")
 demonic_beast_battle = Vision("demonic_beasts\\demonic_beast_battle.png")
+set_db_party = Vision("demonic_beasts\\set_party.png")
 
 # For Bird farming
 demonic_beast = Vision("demonic_beasts\\creature_nest.png")
