@@ -116,6 +116,9 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if self.check_for_dailies():
             return
 
+        # When coming from 'resetting DB'
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+
         # If we're back in the tavern, click on the battle menu.
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
@@ -292,15 +295,17 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         screenshot, window_location = capture_window()
 
         # Click on the confirmation window...
-        find_and_click(vio.ok_main_button, screenshot, window_location)
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
+            print("Moving to the original state, GOING_TO_DB")
+            self.current_state = States.GOING_TO_DB
 
         # Click on the 'reset' button
         find_and_click(vio.reset_demonic_beast, screenshot, window_location, threshold=0.6)
 
-        # Once we see the main Demonic Beast screen again, we can move the the original state
-        if find(vio.empty_party, screenshot):
-            print("Moving to the original state, GOING_TO_DB")
-            self.current_state = States.GOING_TO_DB
+        # # Once we see the main Demonic Beast screen again, we can move the the original state
+        # if find(vio.empty_party, screenshot):
+        #     print("Moving to the original state, GOING_TO_DB")
+        #     self.current_state = States.GOING_TO_DB
 
     def dailies_complete_callback(self):
         """The dailies thread told us we're done with all the dailies, go back to regular farming"""
