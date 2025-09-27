@@ -77,6 +77,7 @@ WHALE_REQUIREMENTS = {
 • 14-16M+ CC • 6th Constellation (5th ok)<br>
 • UR Atk/Crit gear (14.5%+ top pieces)<br>
 • Team: Milim LR, Loli Merlin LR, Thor, Green Hel<br>
+• Links: Ludo on Milim, OG Red Sariel on Merlin, Sab on Thor, Mael on Hel<br>
 • Artifacts #37 or #29</p>
     """,
     "Snake Whale": """
@@ -84,6 +85,7 @@ WHALE_REQUIREMENTS = {
 • 16M+ CC • 6th Constellation (5th ok)<br>
 • Atk/Crit gear 14.5%+ (HP/Def for Nasiens)<br>
 • Team: Jinwoo, Nasiens, Cha Hae-In, Urek<br>
+• Links: Roxy on Jinwoo, UR Escanor on Nasiens, Tarm on Cha, Sab on Urek<br>
 • All relics + Cha must have lowest HP</p>
     """,
 }
