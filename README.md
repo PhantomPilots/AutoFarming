@@ -26,6 +26,7 @@ Join the community if you want quick replies to issues, have new feature request
 
 * Works on the official 7DS PC Beta Client: https://7dsgc.netmarble.com/en/pcclient.
 * Disable "landscape mode" in Settings within the game (that means, enable portrait mode).
+* Set the game in English!
 * Disable all notifications within the game (e.g., random battle invites.)
 
 ## Installation

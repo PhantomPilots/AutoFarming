@@ -305,6 +305,7 @@ class AboutTab(QWidget):
 
     def create_description_section(self, layout):
         """Create the description section"""
+        # Main description
         desc_label = QLabel()
         desc_label.setWordWrap(True)
         desc_label.setAlignment(Qt.AlignLeft)
@@ -312,20 +313,55 @@ class AboutTab(QWidget):
             """
 <h3>🎮 AutoFarmers for 7DS Grand Cross</h3>
 <p>Automate your farming in Seven Deadly Sins: Grand Cross with this collection of specialized bots.</p>
+        """
+        )
+        desc_label.setStyleSheet("font-size: 12px; line-height: 1.4;")
+        layout.addWidget(desc_label)
 
+        # Available Farmers and Requirements in two columns
+        farmers_req_layout = QHBoxLayout()
+
+        # Left column - Available Farmers
+        farmers_label = QLabel()
+        farmers_label.setWordWrap(True)
+        farmers_label.setAlignment(Qt.AlignTop)
+        farmers_label.setText(
+            """
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
 • Final Boss battles and Tower Trials<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
-
-<p><strong>Features:</strong> Pause/Resume any farmer • Auto window resizing • Live output logs</p>
-
-<p><em>Pick a farmer tab to configure and start, and join our Discord for help!</em></p>
         """
         )
-        desc_label.setStyleSheet("font-size: 12px; line-height: 1.4;")
-        layout.addWidget(desc_label)
+        farmers_label.setStyleSheet("font-size: 12px; line-height: 1.4;")
+        farmers_req_layout.addWidget(farmers_label)
+
+        # Right column - Requirements
+        req_label = QLabel()
+        req_label.setWordWrap(True)
+        req_label.setAlignment(Qt.AlignTop)
+        req_label.setText(
+            """
+<p><strong>⚙️ Requirements:</strong><br>
+• Official 7DS PC Beta Client<br>
+• Portrait mode (disable landscape)<br>
+• Game set to English<br>
+• Disable all game notifications</p>
+        """
+        )
+        req_label.setStyleSheet("font-size: 12px; line-height: 1.4;")
+        farmers_req_layout.addWidget(req_label)
+
+        layout.addLayout(farmers_req_layout)
+
+        # Call to action
+        cta_label = QLabel()
+        cta_label.setWordWrap(True)
+        cta_label.setAlignment(Qt.AlignCenter)
+        cta_label.setText("<p><em>Pick a farmer tab to configure and start, and join our Discord for help!</em></p>")
+        cta_label.setStyleSheet("font-size: 12px; line-height: 1.4; font-style: italic; color: #666;")
+        layout.addWidget(cta_label)
 
     def on_update_clicked(self):
         """Handle update button click - run git stash then git pull"""
