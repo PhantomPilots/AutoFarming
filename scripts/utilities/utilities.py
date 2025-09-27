@@ -2,6 +2,7 @@ import contextlib
 import glob
 import os
 import random
+import tempfile
 import threading
 import time
 from ctypes import windll
@@ -37,6 +38,33 @@ from utilities.models import (
     ThorCardPredictor,
 )
 from utilities.vision import Vision
+
+
+def get_pause_flag_path(pid: int | None = None) -> str:
+    """Get the path to the pause flag file for a given process ID"""
+    if pid is None:
+        pid = os.getpid()
+    return os.path.join(tempfile.gettempdir(), f"autofarmers_pause_{pid}.flag")
+
+
+def is_paused() -> bool:
+    """Check if the current process is paused"""
+    return os.path.exists(get_pause_flag_path())
+
+
+def wait_if_paused(print_messages: bool = True):
+    """Wait while the process is paused, with optional status messages"""
+    if not is_paused():
+        return
+
+    if print_messages:
+        print("Paused...")
+
+    while is_paused():
+        time.sleep(0.1)
+
+    if print_messages:
+        print("Resumed.")
 
 
 def draw_rectangles(
@@ -93,6 +121,7 @@ def count_immortality_buffs(screenshot: np.ndarray, threshold=0.7) -> int:
 
 def check_for_reconnect() -> bool:
     """Return True if we can keep running, False if restart is needed."""
+    wait_if_paused()
     screenshot, window_location = capture_window()
 
     if find_and_click(vio.reconnect, screenshot, window_location):
@@ -238,6 +267,7 @@ def find_floor_coordinates(screenshot: np.ndarray, window_location):
 
 
 def click(x, y, sleep_after_click=0.01):
+    wait_if_paused()
     pyautogui.moveTo(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
     time.sleep(sleep_after_click)
@@ -245,6 +275,7 @@ def click(x, y, sleep_after_click=0.01):
 
 
 def rclick(x, y, sleep_after_click=0.01):
+    wait_if_paused()
     pyautogui.moveTo(x, y)
     win32api.mouse_event(win32con.MOUSEEVENTF_RIGHTDOWN, 0, 0)
     time.sleep(sleep_after_click)
@@ -337,6 +368,7 @@ def drag_im(start_point, end_point, window_location, sleep_after_click=0.15, dra
 
 
 def press_key(key: str):
+    wait_if_paused()
     print(f"Pressing key '{key}'")
     pyautogui.press(key)
 

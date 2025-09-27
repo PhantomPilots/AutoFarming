@@ -46,6 +46,7 @@ from PyQt5.QtWidgets import (
 
 # Import the window resize function
 from utilities.capture_window import capture_window, resize_7ds_window
+from utilities.utilities import get_pause_flag_path
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
@@ -195,6 +196,7 @@ class FarmerTab(QWidget):
         self.farmer = farmer
         self.process = None
         self.output_lines = []
+        self.paused = False
         self.init_ui()
 
     def init_ui(self):
@@ -260,6 +262,11 @@ class FarmerTab(QWidget):
         self.stop_btn.setEnabled(False)
         self.stop_btn.clicked.connect(self.stop_farmer)
         btn_layout.addWidget(self.stop_btn)
+        self.pause_btn = QPushButton("PAUSE")
+        self.pause_btn.setStyleSheet("background-color: #FFC107; color: white; font-weight: bold;")
+        self.pause_btn.setEnabled(False)
+        self.pause_btn.clicked.connect(self.toggle_pause)
+        btn_layout.addWidget(self.pause_btn)
         self.resize_btn = QPushButton("RESIZE")
         self.resize_btn.setStyleSheet("background-color: #FF9800; color: white; font-weight: bold;")
         self.resize_btn.clicked.connect(self.resize_window)
@@ -348,6 +355,20 @@ class FarmerTab(QWidget):
         self.process.start(sys.executable, ["-u", script_path] + args)
         self.start_btn.setEnabled(False)
         self.stop_btn.setEnabled(True)
+        self.pause_btn.setEnabled(True)
+        self.pause_btn.setText("PAUSE")
+        self.paused = False
+
+        # Clean up any old pause flag for this PID
+        pid = self.process.processId()
+        if pid > 0:
+            flag_path = get_pause_flag_path(pid)
+            if os.path.exists(flag_path):
+                try:
+                    os.remove(flag_path)
+                except:
+                    pass  # Ignore cleanup errors
+
         self.append_terminal(
             f"Started {self.farmer['name']} with:\n{' '.join([sys.executable, '-u', script_path]+display_args)}\n"
         )
@@ -359,6 +380,16 @@ class FarmerTab(QWidget):
 
     def stop_farmer(self):
         if self.process is not None:
+            # Clean up pause flag before stopping
+            pid = self.process.processId()
+            if pid > 0:
+                flag_path = get_pause_flag_path(pid)
+                if os.path.exists(flag_path):
+                    try:
+                        os.remove(flag_path)
+                    except:
+                        pass  # Ignore cleanup errors
+
             with contextlib.suppress(Exception):
                 # Stop the output timer
                 if hasattr(self, "output_timer") and self.output_timer is not None:
@@ -369,6 +400,9 @@ class FarmerTab(QWidget):
             self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        self.pause_btn.setEnabled(False)
+        self.pause_btn.setText("PAUSE")
+        self.paused = False
         self.append_terminal("\nProcess stopped.\n")
 
     def handle_stdout(self):
@@ -394,6 +428,17 @@ class FarmerTab(QWidget):
         self.terminal.moveCursor(self.terminal.textCursor().End)
 
     def process_finished(self):
+        # Clean up pause flag when process finishes
+        if self.process is not None:
+            pid = self.process.processId()
+            if pid > 0:
+                flag_path = get_pause_flag_path(pid)
+                if os.path.exists(flag_path):
+                    try:
+                        os.remove(flag_path)
+                    except:
+                        pass  # Ignore cleanup errors
+
         # Stop the output timer
         if hasattr(self, "output_timer") and self.output_timer is not None:
             self.output_timer.stop()
@@ -402,6 +447,9 @@ class FarmerTab(QWidget):
         self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
+        self.pause_btn.setEnabled(False)
+        self.pause_btn.setText("PAUSE")
+        self.paused = False
         self.append_terminal("\nProcess finished.\n")
 
     def check_output(self):
@@ -432,6 +480,35 @@ class FarmerTab(QWidget):
             self.append_terminal("[WARNING] Failed to resize 7DS window. Continuing with current window size...\n")
         # Small delay to allow window resize to complete
         time.sleep(0.5)
+
+    def toggle_pause(self):
+        """Toggle pause/resume for the current farmer process"""
+        if self.process is None or self.process.state() != QProcess.Running:
+            return
+
+        pid = self.process.processId()
+        flag_path = get_pause_flag_path(pid)
+
+        if not self.paused:
+            # Pause the process
+            try:
+                with open(flag_path, "w") as f:
+                    f.write("")  # Create empty flag file
+                self.paused = True
+                self.pause_btn.setText("RESUME")
+                self.append_terminal(f"[PAUSED] Created pause flag at {flag_path}\n")
+            except Exception as e:
+                self.append_terminal(f"[ERROR] Failed to create pause flag: {e}\n")
+        else:
+            # Resume the process
+            try:
+                if os.path.exists(flag_path):
+                    os.remove(flag_path)
+                self.paused = False
+                self.pause_btn.setText("PAUSE")
+                self.append_terminal(f"[RESUMED] Removed pause flag\n")
+            except Exception as e:
+                self.append_terminal(f"[ERROR] Failed to remove pause flag: {e}\n")
 
     def load_farmer_image(self, img, image_size):
         """Load and display farmer-specific images"""
