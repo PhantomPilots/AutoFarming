@@ -247,8 +247,7 @@ class AboutTab(QWidget):
 
         # Try to load the GUI image from readme_images
         image_paths = [
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "readme_images", "GUI.png"),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", "final_boss.png"),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", "main_gui.jpg"),
         ]
 
         image_loaded = False
@@ -256,8 +255,8 @@ class AboutTab(QWidget):
             if os.path.exists(image_path):
                 pixmap = QPixmap(image_path)
                 if not pixmap.isNull():
-                    # Scale to a reasonable size for the hero image
-                    scaled_pixmap = pixmap.scaled(600, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    # Scale to match the widescreen aspect ratio of main_gui.jpg (16:9)
+                    scaled_pixmap = pixmap.scaled(640, 360, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                     img_label.setPixmap(scaled_pixmap)
                     img_label.setFixedSize(scaled_pixmap.size())
                     image_loaded = True
@@ -265,7 +264,7 @@ class AboutTab(QWidget):
 
         if not image_loaded:
             img_label.setText("🖼️ AutoFarmers GUI\n(Image not found)")
-            img_label.setFixedSize(600, 200)
+            img_label.setFixedSize(640, 360)
             img_label.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666; font-size: 14px;")
 
         # Center the image
