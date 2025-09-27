@@ -57,14 +57,18 @@ class IFarmer:
     first_login: bool = False
 
     # To allow every farmer instance to do dailies
-    daily_farmer = DailyFarmer(
-        starting_state=DailyFarmerStates.IN_TAVERN_STATE,
-        do_daily_pvp=False,
-        complete_callback=None,
-    )
+    daily_farmer = None
 
     # Whether we want to do dailies
     do_dailies: bool = False
+
+    def __init__(self):
+        """Just to initialize the Daily Farmer"""
+        IFarmer.daily_farmer = DailyFarmer(
+            starting_state=DailyFarmerStates.IN_TAVERN_STATE,
+            do_daily_pvp=False,
+            complete_callback=None,
+        )
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""

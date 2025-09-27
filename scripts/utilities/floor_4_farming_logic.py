@@ -55,6 +55,8 @@ class IFloor4Farmer(IFarmer):
         password: str | None = None,
     ):
 
+        super().__init__()
+
         # Store the account password in this instance if given
         if password:
             IFarmer.password = password

@@ -55,6 +55,8 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         do_dailies=False,
         logger=logger,
     ):
+        super().__init__()
+
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
 
         # Store the account password in this instance if given

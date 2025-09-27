@@ -293,6 +293,13 @@ class DailyFarmer:
 
         # Increase the auto ticket by one and clear mission
         click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=1)
+
+        # For auto-salvaging
+        if click_and_sleep(vio.auto_salvage, screenshot, window_location, threshold=0.8, sleep_time=1):
+            # We need to re-capture the screen to access the 'Apply' button
+            screenshot, window_location = capture_window()
+            click_and_sleep(vio.apply, screenshot, window_location, sleep_time=1)
+
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
 
@@ -659,4 +666,4 @@ class DailyFarmer:
                 if self.exit_farmer_state():
                     return
 
-            time.sleep(1)
+            time.sleep(0.7)

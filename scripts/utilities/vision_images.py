@@ -330,6 +330,7 @@ alpha_att = Vision("demons\\alpha_att.png")
 
 
 # For dailies
+auto_salvage = Vision("dailies\\auto_salvage.png")
 go_now = Vision("dailies\\go_now.png")
 coins_shop = Vision("dailies\\coins.png")
 mail = Vision("dailies\\mail.png")
