@@ -576,7 +576,7 @@ class FarmerTab(QWidget):
             req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
             req_label.setText(WHALE_REQUIREMENTS[self.farmer["name"]])
             req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
-            req_label.setMaximumHeight(80)
+            req_label.setMaximumHeight(120)
             req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
             left_panel.addWidget(req_label)
             left_panel.addSpacing(4)
