@@ -155,7 +155,7 @@ class DailyFarmer:
         if find(vio.daily_boss_battle, screenshot, threshold=0.89):
             print("Going to BOSS_STATE")
             return States.BOSS_STATE
-        if find(vio.daily_patrol, screenshot, threshold=0.85):
+        if find(vio.daily_patrol, screenshot, threshold=0.89):
             print("Going to PATROL_STATE")
             return States.PATROL_STATE
         if find(vio.daily_vanya_ale, screenshot, threshold=0.89):
@@ -472,7 +472,7 @@ class DailyFarmer:
 
         if find(vio.daily_tasks, screenshot):
             # Go to the mission
-            self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.85)
+            self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.89)
 
         if find(vio.cancel, screenshot):
             print("Finished Patrol mission")
