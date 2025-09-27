@@ -145,6 +145,15 @@ FARMERS = [
         ],
     },
     {
+        "name": "Snake Whale",
+        "script": "SnakeFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
+        ],
+    },
+    {
         "name": "Final Boss",
         "script": "FinalBossFarmer.py",
         "args": [
@@ -789,6 +798,7 @@ class FarmerTab(QWidget):
             "Dogs Farmer": "dogs_farmer.jpeg",
             "Dogs Whale": "dogs_whale_farmer.jpg",
             "Snake Farmer": "snake_farmer.png",
+            "Snake Whale": "snake_whale_farmer.png",
             "Final Boss": "final_boss.png",
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
             "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image

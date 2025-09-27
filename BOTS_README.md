@@ -138,10 +138,7 @@ Minimum Unit Requirements:
 * OG Red Sariel 6/6 Link
 * OG Light Mael 4/6 Minimum Link
 
-Requirements:
-1. Start the script from within the Deer floor selection screen.
-
-## Nidhogrr (Snake) farming script
+## Nidhoggr (Snake) farming script
 
 Can be found in `scripts/SnakeFarmer.py`. 
 
@@ -150,6 +147,38 @@ Recommended team:
 * Red Margaret
 * Freyja with relic
 * LR Liz
+
+Requirements:
+1. Start the script from within the Snake floor selection screen.
+
+## Whale-mode Nidhoggr (Snake) Floors 1-3 farming script
+
+The script is named `scripts/SnakeFarmerWhale.py`. It uses a very fast but more risky strategy (can lose if your account/units aren't strong enough to one shot him each phase). 
+
+Required team:
+* Sung Jinwoo - Roxy of Frenzy (either one) 6/6 link
+* Nasiens - UR Escanor or Skuld 3/6+ link 
+* Cha Hae-In - !!!IMPORTANT She has to have the LOWEST HP of the team. Red Tarmiel 6/6 link
+* Urek Mazino - Sabunak 4/6+ link
+
+Artifact set/s:
+* Use Set №37 or №29 (Maxed). 
+
+Food (not necessary at all):
+* Crit Chance if you're using Red Tarmiel link, Lifesteal or ATK if you use Mage Merlin.
+* HP or DEF if you want to be SUUUUUUPER safe.
+
+Minimum Unit Requirements:
+* 16M+ Box CC (recommended high box cc as the team is basically a glass cannon)
+* 6TH Constellation Complete (6TH is ideal but 5TH complete should also be fine)
+* Jinwoo, Cha, Urek Atk-Crit Damage rolled 14.5%+. Nasiens HP-Def rolled 14.5%+.
+* Jinwoo + Relic
+* Nasiens built good
+* Cha Hae-In + Relic
+* Urek Mazino + Relic
+* Sabunak 4/6 Minimum Link
+* OG Roxy of Frenzy or the Christmas one 6/6 Link
+* UR Escanor or Skuld 3/6 Minimum Link
 
 Requirements:
 1. Start the script from within the Snake floor selection screen.
