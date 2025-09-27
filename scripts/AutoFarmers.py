@@ -63,6 +63,31 @@ FREE_SOFTWARE_MESSAGE = """=====================================================
 
 """
 
+# Requirements for whale farmers (displayed in GUI)
+WHALE_REQUIREMENTS = {
+    "Deer Whale": """
+<p><strong>Requirements:</strong><br>
+• 16M+ CC • 5th+ Constellation<br>
+• UR Atk/Crit gear (14.5%+ atk pieces)<br>
+• Team order: Jorm → Loli Merlin → Freyr → Albedo<br>
+• All units need relics</p>
+    """,
+    "Dogs Whale": """
+<p><strong>Requirements:</strong><br>
+• 14-16M+ CC • 6th Constellation (5th ok)<br>
+• UR Atk/Crit gear (14.5%+ top pieces)<br>
+• Team: Milim LR, Loli Merlin LR, Thor, Green Hel<br>
+• Artifacts #37 or #29</p>
+    """,
+    "Snake Whale": """
+<p><strong>Requirements:</strong><br>
+• 16M+ CC • 6th Constellation (5th ok)<br>
+• Atk/Crit gear 14.5%+ (HP/Def for Nasiens)<br>
+• Team: Jinwoo, Nasiens, Cha Hae-In, Urek<br>
+• All relics + Cha must have lowest HP</p>
+    """,
+}
+
 # Farmer script definitions (argument structure)
 FARMERS = [
     {
@@ -124,7 +149,15 @@ FARMERS = [
             {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
         ],
     },
-    {"name": "Deer Whale", "script": "DeerFarmerWhale.py", "args": []},
+    {
+        "name": "Deer Whale",
+        "script": "DeerFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
+        ],
+    },
     {
         "name": "Dogs Farmer",
         "script": "DogsFarmer.py",
@@ -134,7 +167,15 @@ FARMERS = [
             {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
         ],
     },
-    {"name": "Dogs Whale", "script": "DogsFarmerWhale.py", "args": []},
+    {
+        "name": "Dogs Whale",
+        "script": "DogsFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies", "type": "checkbox", "default": True},
+        ],
+    },
     {
         "name": "Snake Farmer",
         "script": "SnakeFarmer.py",
@@ -525,6 +566,19 @@ class FarmerTab(QWidget):
             left_panel.addWidget(args_group)
         else:
             self.arg_widgets = {}
+
+        # Add whale farmer requirements if applicable
+        if self.farmer["name"] in WHALE_REQUIREMENTS:
+            req_label = QLabel()
+            req_label.setWordWrap(True)
+            req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            req_label.setText(WHALE_REQUIREMENTS[self.farmer["name"]])
+            req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
+            req_label.setMaximumHeight(80)
+            req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            left_panel.addWidget(req_label)
+            left_panel.addSpacing(4)
+
         # Start/Stop buttons
         btn_layout = QHBoxLayout()
         self.start_btn = QPushButton("START")
