@@ -21,8 +21,8 @@ import signal
 import sys
 import time
 
-from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, QTimer
-from PyQt5.QtGui import QColor, QFont, QPalette, QPixmap
+from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, QUrl
+from PyQt5.QtGui import QColor, QDesktopServices, QFont, QPalette, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -188,6 +188,236 @@ FARMERS = [
         "args": [],
     },
 ]
+
+
+class AboutTab(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.update_process = None
+        self.updating = False
+        self.repo_root = os.path.dirname(os.path.dirname(__file__))
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout(self)
+        layout.setSpacing(15)
+        layout.setContentsMargins(30, 20, 30, 20)
+
+        # Title section
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(5)
+
+        # Main title
+        title = QLabel("🚀 AutoFarmers — 7DS Grand Cross")
+        title.setFont(QFont("Arial", 18, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        title_layout.addWidget(title)
+
+        # Tagline
+        tagline = QLabel("Automate the grind. Save your time.")
+        tagline.setFont(QFont("Arial", 12))
+        tagline.setAlignment(Qt.AlignCenter)
+        tagline.setStyleSheet("color: #666; font-style: italic;")
+        title_layout.addWidget(tagline)
+
+        layout.addLayout(title_layout)
+
+        # Hero image
+        self.load_hero_image(layout)
+
+        # Action buttons
+        self.create_action_buttons(layout)
+
+        # Description section
+        self.create_description_section(layout)
+
+        # Status line
+        self.status_label = QLabel("")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("color: #888; font-size: 15px;")
+        layout.addWidget(self.status_label)
+
+        layout.addStretch(1)
+
+    def load_hero_image(self, layout):
+        """Load and display the hero image"""
+        img_label = QLabel()
+        img_label.setAlignment(Qt.AlignCenter)
+        img_label.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0;")
+
+        # Try to load the GUI image from readme_images
+        image_paths = [
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "readme_images", "GUI.png"),
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", "final_boss.png"),
+        ]
+
+        image_loaded = False
+        for image_path in image_paths:
+            if os.path.exists(image_path):
+                pixmap = QPixmap(image_path)
+                if not pixmap.isNull():
+                    # Scale to a reasonable size for the hero image
+                    scaled_pixmap = pixmap.scaled(600, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    img_label.setPixmap(scaled_pixmap)
+                    img_label.setFixedSize(scaled_pixmap.size())
+                    image_loaded = True
+                    break
+
+        if not image_loaded:
+            img_label.setText("🖼️ AutoFarmers GUI\n(Image not found)")
+            img_label.setFixedSize(600, 200)
+            img_label.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666; font-size: 14px;")
+
+        # Center the image
+        img_layout = QHBoxLayout()
+        img_layout.addStretch(1)
+        img_layout.addWidget(img_label)
+        img_layout.addStretch(1)
+        layout.addLayout(img_layout)
+
+    def create_action_buttons(self, layout):
+        """Create the action buttons row"""
+        btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(15)
+
+        # Center the buttons
+        btn_layout.addStretch(1)
+
+        # Update button (primary)
+        self.update_btn = QPushButton("🔄 UPDATE")
+        self.update_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold; padding: 8px 16px;")
+        self.update_btn.clicked.connect(self.on_update_clicked)
+        btn_layout.addWidget(self.update_btn)
+
+        # GitHub button
+        github_btn = QPushButton("🐙 GitHub")
+        github_btn.setStyleSheet("background-color: #333; color: white; font-weight: bold; padding: 8px 16px;")
+        github_btn.clicked.connect(lambda: self.open_url("https://github.com/PhantomPilots/AutoFarming"))
+        btn_layout.addWidget(github_btn)
+
+        # Discord button
+        discord_btn = QPushButton("💬 Discord")
+        discord_btn.setStyleSheet("background-color: #7289DA; color: white; font-weight: bold; padding: 8px 16px;")
+        discord_btn.clicked.connect(lambda: self.open_url("https://discord.gg/En2Wm6a5RV"))
+        btn_layout.addWidget(discord_btn)
+
+        btn_layout.addStretch(1)
+        layout.addLayout(btn_layout)
+
+    def create_description_section(self, layout):
+        """Create the description section"""
+        desc_label = QLabel()
+        desc_label.setWordWrap(True)
+        desc_label.setAlignment(Qt.AlignLeft)
+        desc_label.setText(
+            """
+<h3>🎮 AutoFarmers for 7DS Grand Cross</h3>
+<p>Automate your farming in Seven Deadly Sins: Grand Cross with this collection of specialized bots.</p>
+
+<p><strong>Available Farmers:</strong><br>
+• Demon, Bird, Deer, Snake, Dogs farming<br>
+• Final Boss battles and Tower Trials<br>
+• Account management and daily quests<br>
+• Equipment farming and constellation rerolls</p>
+
+<p><strong>Features:</strong> Pause/Resume any farmer • Auto window resizing • Live output logs</p>
+
+<p><em>Pick a farmer tab to configure and start, and join our Discord for help!</em></p>
+        """
+        )
+        desc_label.setStyleSheet("font-size: 12px; line-height: 1.4;")
+        layout.addWidget(desc_label)
+
+    def on_update_clicked(self):
+        """Handle update button click - run git stash then git pull"""
+        if self.updating:
+            return  # Already updating
+
+        # Start the update process
+        self.updating = True
+        self.update_btn.setEnabled(False)
+        self.status_label.setText("🔄 Running 'git stash'...")
+
+        # Start with git stash
+        self.run_git_command(["stash"], self.after_stash)
+
+    def open_url(self, url: str):
+        """Open URL in default browser"""
+        try:
+            QDesktopServices.openUrl(QUrl(url))
+            if "github" in url.lower():
+                self.status_label.setText("🐙 Opening GitHub repository...")
+            elif "discord" in url.lower():
+                self.status_label.setText("💬 Opening Discord invite...")
+            else:
+                self.status_label.setText(f"🌐 Opening {url}...")
+
+            # Clear status after 2 seconds
+            QTimer.singleShot(2000, lambda: self.status_label.setText(""))
+        except Exception as e:
+            self.status_label.setText(f"❌ Failed to open URL: {e}")
+
+    def after_stash(self, exit_code):
+        """Handle completion of git stash command"""
+        if exit_code != 0:
+            self.status_label.setText("❌ git stash failed")
+            self.updating = False
+            self.update_btn.setEnabled(True)
+            return
+
+        # Stash successful, now run git pull
+        self.status_label.setText("🔄 Running 'git pull'...")
+        self.run_git_command(["pull"], self.after_pull)
+
+    def after_pull(self, exit_code):
+        """Handle completion of git pull command"""
+        if exit_code == 0:
+            self.status_label.setText("✅ Update complete!")
+        else:
+            self.status_label.setText("❌ git pull failed")
+
+        # Re-enable button and reset state
+        self.updating = False
+        self.update_btn.setEnabled(True)
+
+        # Clear status after 5 seconds
+        QTimer.singleShot(5000, lambda: self.status_label.setText(""))
+
+    def run_git_command(self, args, on_finished):
+        """Run a git command in the repo root directory"""
+        if self.update_process is not None:
+            return  # Already running a command
+
+        self.update_process = QProcess(self)
+        self.update_process.setWorkingDirectory(self.repo_root)
+        self.update_process.setProcessChannelMode(QProcess.MergedChannels)
+
+        # Connect signals
+        self.update_process.finished.connect(
+            lambda exit_code, exit_status: self.on_git_finished(exit_code, on_finished)
+        )
+        self.update_process.readyReadStandardOutput.connect(self.on_git_output)
+
+        # Start the git command
+        self.update_process.start("git", args)
+
+        if not self.update_process.waitForStarted(3000):
+            self.status_label.setText("❌ Failed to start git command")
+            self.update_process = None
+            self.updating = False
+            self.update_btn.setEnabled(True)
+
+    def on_git_output(self):
+        """Handle git command output (optional - could be used for detailed logging)"""
+        if self.update_process is not None:
+            # For now, we'll just read and ignore the output
+            # In the future, this could be logged to a details view
+            self.update_process.readAllStandardOutput()
+
+    def on_git_finished(self, exit_code, callback):
+        """Handle git command completion"""
+        self.update_process = None
+        callback(exit_code)
 
 
 class FarmerTab(QWidget):
@@ -553,11 +783,21 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AutoFarmers - 7DS Grand Cross")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(100, 100, 1150, 680)  # Adjusted size for About tab
         self.tabs = QTabWidget()
+
+        # Add About tab as the first tab
+        about_tab = AboutTab()
+        self.tabs.addTab(about_tab, "About")
+
+        # Add farmer tabs
         for farmer in FARMERS:
             tab = FarmerTab(farmer)
             self.tabs.addTab(tab, farmer["name"])
+
+        # Set About tab as the default
+        self.tabs.setCurrentIndex(0)
+
         self.setCentralWidget(self.tabs)
 
 
