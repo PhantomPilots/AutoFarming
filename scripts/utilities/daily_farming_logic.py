@@ -601,9 +601,14 @@ class DailyFarmer:
         find_and_click(vio.essette_shop, screenshot, window_location)
 
         if (
-            DailyFarmer.current_state == States.IN_TAVERN_STATE
+            DailyFarmer.current_state in [States.IN_TAVERN_STATE, States.PVP_STATE]
             and find(vio.battle_menu, screenshot)
-            and find_and_click(vio.annoying_chat_popup, screenshot, window_location, threshold=0.8)
+            and find_and_click(
+                vio.annoying_chat_popup,
+                screenshot,
+                window_location,
+                threshold=0.8,
+            )
         ):
             print("Closing the annoying chat popup...")
 
