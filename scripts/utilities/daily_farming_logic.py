@@ -607,7 +607,7 @@ class DailyFarmer:
                 vio.annoying_chat_popup,
                 screenshot,
                 window_location,
-                threshold=0.8,
+                threshold=0.9,
             )
         ):
             print("Closing the annoying chat popup...")
