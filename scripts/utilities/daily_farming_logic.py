@@ -283,7 +283,7 @@ class DailyFarmer:
             # Go to the mission
             self.go_to_mission(vio.daily_boss_battle, screenshot, window_location)
 
-        if find(vio.daily_quest_info, screenshot):
+        if find(vio.daily_quest_info, screenshot) or find(vio.cancel, screenshot):
             print("Mission complete!")
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
