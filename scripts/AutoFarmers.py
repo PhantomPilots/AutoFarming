@@ -832,6 +832,7 @@ class FarmerTab(QWidget):
         else:
             # Resume the process
             try:
+                self.resize_window()
                 if os.path.exists(flag_path):
                     os.remove(flag_path)
                 self.paused = False
