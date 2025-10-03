@@ -263,6 +263,10 @@ class IDemonFarmer(IFarmer):
 
     def _is_indura_team_valid(self, screenshot: np.ndarray, debug=False) -> bool:
         """Evaluate if the inviting team is good enough for Indura"""
+        if self.indura_difficulty == "extreme":
+            # Allow any team in Extreme difficulty
+            return True
+
         # Crop the image to the region of the team invite
         team_invite_region = crop_image(
             screenshot,
