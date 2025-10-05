@@ -207,8 +207,8 @@ class IDemonFarmer(IFarmer):
         if now.hour > CHECK_IN_HOUR and IFarmer.daily_checkin:
             print("Resetting daily checkin")
             IFarmer.daily_checkin = False
-            # Allow fast login the next time we're logged out
-            IFarmer.first_login = True
+            # # Allow fast login the next time we're logged out
+            # IFarmer.first_login = True
 
         if find(vio.accept_invitation, screenshot, threshold=0.7):
             # First of all, start the sleeping thread
