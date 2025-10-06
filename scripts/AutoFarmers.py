@@ -223,6 +223,11 @@ FARMERS = [
         ],
     },
     {
+        "name": "Guild Boss Farmer",
+        "script": "GuildBossFarmer.py",
+        "args": [],
+    },
+    {
         "name": "Tower Trials",
         "script": "TowerTrialsFarmer.py",
         "args": [],
@@ -860,6 +865,7 @@ class FarmerTab(QWidget):
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
             "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
             "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
+            "Guild Boss Farmer": "guild_boss_farmer.jpg",
         }
 
         # Check if this farmer has a specific image
