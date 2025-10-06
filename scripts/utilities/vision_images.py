@@ -345,6 +345,10 @@ alpha_buff = Vision("demons\\alpha_buff.png")
 lance_att = Vision("demons\\lance_att.png")
 alpha_att = Vision("demons\\alpha_att.png")
 
+# Guild Boss
+knighthood_boss = Vision("guild_boss\\knighthood_boss.png")
+belgius_hel = Vision("guild_boss\\belguis_hel.png")
+kh_rank = Vision("guild_boss\\knighthood_rank.png")
 
 # For dailies
 auto_salvage = Vision("dailies\\auto_salvage.png")

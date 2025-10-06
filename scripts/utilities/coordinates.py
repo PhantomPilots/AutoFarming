@@ -66,6 +66,8 @@ class Coordinates:
         # For Indura
         "half_screen_top_left": (247, 438),  # To detect Alpha buffs only on our side
         "half_screen_bottom_right": (491, 689),
+        # Guild Boss
+        "change_gb": (50, 451),  # To change to the GB to the left until Belgius is found
     }
 
     @staticmethod

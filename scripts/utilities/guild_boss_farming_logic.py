@@ -23,6 +23,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
+    click_im,
     crop_image,
     display_image,
     find,
@@ -35,6 +36,7 @@ logger = LoggerWrapper(name="GuildBossLogger", log_to_file=False)
 
 class States(Enum):
     GOING_TO_GB = auto()
+    FINDING_BOSS = auto()
     FIGHTING = auto()
 
 
@@ -42,21 +44,69 @@ class GuildBossFarmer(IFarmer):
 
     def __init__(
         self,
-        battle_strategy: IBattleStrategy = None,  # No need
         starting_state=States.GOING_TO_GB,
+        battle_strategy: IBattleStrategy = None,  # No need
     ):
-        super().__init__()
+        self.current_state = starting_state
 
     def going_to_gb_state(self):
         screenshot, window_location = capture_window()
 
+        if find(vio.kh_rank, screenshot):
+            self.current_state = States.FINDING_BOSS
+            print(f"Moving to state {self.current_state}")
+            return
+
+        find_and_click(vio.knighthood_boss, screenshot, window_location)
+
+        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
+
+    def finding_boss_state(self):
+        screenshot, window_location = capture_window()
+
+        if find(vio.startbutton, screenshot):
+            self.current_state = States.FIGHTING
+            print(f"Moving to state {self.current_state}")
+            return
+
+        # If we find it, go into the fight!
+        find_and_click(vio.belgius_hel, screenshot, window_location)
+
+        # Search until we find the Belgius hel
+        if not find(vio.belgius_hel, screenshot):
+            click_im(Coordinates.get_coordinates("change_gb"), window_location)
+            time.sleep(1)
+
     def fighting(self):
         screenshot, window_location = capture_window()
 
-    def run(self):
+        # If we've ended the fight...
+        find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.episode_clear, screenshot, window_location)
+        find_and_click(vio.boss_results, screenshot, window_location)
+        find_and_click(vio.boss_mission, screenshot, window_location)
+        # We may need to restore stamina
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            IFarmer.stamina_pots += 1
+            print(f"We've used {IFarmer.stamina_pots} stamina pots")
+            return
 
-        print("[WARN] Guild Boss farmer not implemented yet, try again soon.")
-        sys.exit(1)
+        find_and_click(vio.skip, screenshot, window_location)
+        # Weird that here, we need a threshold of 0.7 for the AUTO button... But seems to work?
+        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
+
+        find_and_click(vio.startbutton, screenshot, window_location)
+
+        if find_and_click(vio.again, screenshot, window_location):
+            print("Re-starting the fight!")
+
+        elif find(vio.failed, screenshot):
+            print("Oh no, we have lost :( Retrying...")
+            self.current_state = States.FINDING_BOSS
+            # TODO: The line below may cause a bot lock, may have to fix it
+            find_and_click(vio.ok_main_button, screenshot, window_location)
+
+    def run(self):
 
         while True:
             # Try to reconnect first
@@ -67,6 +117,9 @@ class GuildBossFarmer(IFarmer):
 
             if self.current_state == States.GOING_TO_GB:
                 self.going_to_gb_state()
+
+            elif self.current_state == States.FINDING_BOSS:
+                self.finding_boss_state()
 
             elif self.current_state == States.FIGHTING:
                 self.fighting()

@@ -120,7 +120,7 @@ class FinalBossFarmer(IFarmer):
         find_and_click(vio.startbutton, screenshot, window_location)
 
         # If we see a SKIP button
-        if find(vio.skip_bird, screenshot, threshold=0.7) or find(vio.fb_aut_off, screenshot):
+        if find(vio.skip, screenshot, threshold=0.7) or find(vio.fb_aut_off, screenshot):
             # Go to fight!
             print("Moving to FIGHTING")
             self.current_state = States.FIGHTING
