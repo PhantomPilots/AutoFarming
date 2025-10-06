@@ -42,6 +42,8 @@ class States(Enum):
 
 class GuildBossFarmer(IFarmer):
 
+    num_fights = 0
+
     def __init__(
         self,
         starting_state=States.GOING_TO_GB,
@@ -89,7 +91,7 @@ class GuildBossFarmer(IFarmer):
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
-            print(f"We've used {IFarmer.stamina_pots} stamina pots")
+            logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
         find_and_click(vio.skip, screenshot, window_location)
@@ -99,7 +101,8 @@ class GuildBossFarmer(IFarmer):
         find_and_click(vio.startbutton, screenshot, window_location)
 
         if find_and_click(vio.again, screenshot, window_location):
-            print("Re-starting the fight!")
+            GuildBossFarmer.num_fights += 1
+            logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
 
         elif find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
