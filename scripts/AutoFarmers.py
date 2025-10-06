@@ -64,7 +64,7 @@ FREE_SOFTWARE_MESSAGE = """=====================================================
 """
 
 # Requirements for whale farmers (displayed in GUI)
-WHALE_REQUIREMENTS = {
+REQUIREMENTS = {
     "Deer Whale": """
 <p><strong>Requirements:</strong><br>
 • 16M+ CC • 5th+ Constellation<br>
@@ -87,6 +87,10 @@ WHALE_REQUIREMENTS = {
 • Team: Jinwoo, Nasiens, Cha Hae-In, Urek<br>
 • Links: Roxy on Jinwoo, UR Escanor on Nasiens, Tarm on Cha, Sab on Urek<br>
 • All relics + Cha must have lowest HP</p>
+    """,
+    "Guild Boss Farmer": """
+<p><strong>Requirements:</strong><br>
+• Start the bot from within the fight itself</p>
     """,
 }
 
@@ -575,11 +579,11 @@ class FarmerTab(QWidget):
             self.arg_widgets = {}
 
         # Add whale farmer requirements if applicable
-        if self.farmer["name"] in WHALE_REQUIREMENTS:
+        if self.farmer["name"] in REQUIREMENTS:
             req_label = QLabel()
             req_label.setWordWrap(True)
             req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            req_label.setText(WHALE_REQUIREMENTS[self.farmer["name"]])
+            req_label.setText(REQUIREMENTS[self.farmer["name"]])
             req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
             req_label.setMaximumHeight(120)
             req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
