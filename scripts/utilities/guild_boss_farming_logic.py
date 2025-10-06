@@ -85,6 +85,7 @@ class GuildBossFarmer(IFarmer):
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_results, screenshot, window_location)
         find_and_click(vio.boss_mission, screenshot, window_location)
+        find_and_click(vio.daily_quest_info, screenshot, window_location)
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
