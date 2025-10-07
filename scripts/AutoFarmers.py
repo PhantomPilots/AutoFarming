@@ -229,7 +229,10 @@ FARMERS = [
     {
         "name": "Guild Boss Farmer",
         "script": "GuildBossFarmer.py",
-        "args": [],
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
     },
     {
         "name": "Tower Trials",
