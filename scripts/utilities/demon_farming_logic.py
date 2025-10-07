@@ -195,20 +195,10 @@ class IDemonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, if it's time to check in, do it
-        now = datetime.now(PACIFIC_TIMEZONE)
-        if self.do_dailies and (
-            not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR and find(vio.cancel_realtime, screenshot)
-        ):
-            print("Going to CHECK IN!")
-            self.current_state = GlobalStates.DAILY_RESET
+        if self.check_for_dailies():
             return
-
-        # Reset the daily check in flag
-        if now.hour > CHECK_IN_HOUR and IFarmer.daily_checkin:
-            print("Resetting daily checkin")
-            IFarmer.daily_checkin = False
-            # # Allow fast login the next time we're logged out
-            # IFarmer.first_login = True
+        # If we're past the checkin hour, reset the flag for tomorrow
+        self.maybe_reset_daily_checkin_flag()
 
         if find(vio.accept_invitation, screenshot, threshold=0.7):
             # First of all, start the sleeping thread

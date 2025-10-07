@@ -117,6 +117,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # First of all, check whether it's time to do our dailies!
         if self.check_for_dailies():
             return
+        self.maybe_reset_daily_checkin_flag()
 
         # When coming from 'resetting DB'
         find_and_click(vio.ok_main_button, screenshot, window_location)

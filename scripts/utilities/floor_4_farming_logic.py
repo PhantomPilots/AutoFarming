@@ -150,6 +150,7 @@ class IFloor4Farmer(IFarmer):
         # First of all, check if we have to do our dailies. If not, go straight to the original states
         if self.check_for_dailies():
             return
+        self.maybe_reset_daily_checkin_flag()
 
         # In case we need to unlock the floor
         find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)

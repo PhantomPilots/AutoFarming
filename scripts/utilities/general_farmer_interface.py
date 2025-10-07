@@ -107,6 +107,13 @@ class IFarmer:
             return True
         return False
 
+    def maybe_reset_daily_checkin_flag(self):
+        """Reset the flag for the next day"""
+        now = datetime.now(PACIFIC_TIMEZONE)
+        if now.hour > CHECK_IN_HOUR and IFarmer.daily_checkin:
+            print("Resetting daily checkin")
+            IFarmer.daily_checkin = False
+
     def login_screen_state(self, initial_state: States):
         """We're at the login screen, need to login!"""
         screenshot, window_location = capture_window()

@@ -119,6 +119,7 @@ class DailyFarmer:
             if self.complete_callback is not None:
                 # Call the complete callback if needed
                 self.complete_callback()
+
             # Let's reset the number of dungeon keys for tomorrow
             DailyFarmer.num_dungeon_keys = 3
             # Reset the PVP auto
@@ -129,6 +130,7 @@ class DailyFarmer:
             DailyFarmer.current_state = States.IN_TAVERN_STATE
             # Reset the manual kill
             DailyFarmer.manual_kill = False
+
             return True
 
         return False

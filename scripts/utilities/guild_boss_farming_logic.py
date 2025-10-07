@@ -48,8 +48,28 @@ class GuildBossFarmer(IFarmer):
         self,
         starting_state=States.GOING_TO_GB,
         battle_strategy: IBattleStrategy = None,  # No need
+        do_dailies=False,  # Do we halt demon farming to do dailies?
+        do_daily_pvp=False,  # If we do dailies, do we do PVP?
+        password: str = None,
     ):
+        # To initialize the Daily Farmer thread
+        super().__init__()
+
         self.current_state = starting_state
+
+        # Set specific properties of our DailyFarmer
+        IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
+        IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+        self.do_dailies = do_dailies
+        if do_dailies:
+            print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
+
+    def dailies_complete_callback(self):
+        """The dailies thread told us we're done with all the dailies, go back to farming demons"""
+        with IFarmer._lock:
+            print("All dailies complete! Going back to farming Guild Boss.")
+            IFarmer.dailies_thread = None
+            self.current_state = States.GOING_TO_GB
 
     def going_to_gb_state(self):
         screenshot, window_location = capture_window()
@@ -100,7 +120,16 @@ class GuildBossFarmer(IFarmer):
 
         find_and_click(vio.startbutton, screenshot, window_location)
 
-        if find_and_click(vio.again, screenshot, window_location):
+        if find(vio.again, screenshot):
+
+            # First, if it's time to check in, do it
+            if self.check_for_dailies():
+                return
+            # Reset the daily checkin flag for tomorrow after we're done
+            self.maybe_reset_daily_checkin_flag()
+
+            # If we're not checking in, let's keep fighting
+            find_and_click(vio.again, screenshot, window_location)
             GuildBossFarmer.num_fights += 1
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
 
@@ -119,6 +148,9 @@ class GuildBossFarmer(IFarmer):
                 print("Let's try to log back in immediately...")
                 IFarmer.first_login = True
 
+            # Check if we need to log in again!
+            self.check_for_login_state()
+
             if self.current_state == States.GOING_TO_GB:
                 self.going_to_gb_state()
 
@@ -127,6 +159,21 @@ class GuildBossFarmer(IFarmer):
 
             elif self.current_state == States.FIGHTING:
                 self.fighting()
+
+            elif self.current_state == GlobalStates.DAILY_RESET:
+                self.daily_reset_state()
+
+            elif self.current_state == GlobalStates.CHECK_IN:
+                self.check_in_state()
+
+            elif self.current_state == GlobalStates.DAILIES_STATE:
+                self.dailies_state()
+
+            elif self.current_state == GlobalStates.FORTUNE_CARD:
+                self.fortune_card_state()
+
+            elif self.current_state == GlobalStates.LOGIN_SCREEN:
+                self.login_screen_state(initial_state=States.GOING_TO_GB)
 
             # We need the loop to run very fast
             time.sleep(0.7)
