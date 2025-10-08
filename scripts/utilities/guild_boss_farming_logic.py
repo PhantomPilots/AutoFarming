@@ -105,6 +105,7 @@ class GuildBossFarmer(IFarmer):
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
+            GuildBossFarmer.num_fights -= 1
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
