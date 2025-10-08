@@ -1,6 +1,5 @@
 import threading
 import time
-from datetime import datetime
 from enum import Enum
 
 import numpy as np
@@ -10,7 +9,6 @@ from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import (
     CHECK_IN_HOUR,
     MINUTES_TO_WAIT_BEFORE_LOGIN,
-    PACIFIC_TIMEZONE,
     IFarmer,
 )
 from utilities.general_farmer_interface import States as GlobalStates
