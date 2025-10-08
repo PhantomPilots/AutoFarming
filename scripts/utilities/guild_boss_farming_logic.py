@@ -96,6 +96,12 @@ class GuildBossFarmer(IFarmer):
     def fighting_state(self):
         screenshot, window_location = capture_window()
 
+        # First, check if we should go back to the initial state
+        if find(vio.belgius_hel, screenshot):
+            print("We're somehow not fighting anymore, let's go back to fighting...")
+            self.current_state = States.GOING_TO_GB
+            return
+
         # If we've ended the fight...
         find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
         find_and_click(vio.episode_clear, screenshot, window_location)
