@@ -120,6 +120,14 @@ FARMERS = [
         ],
     },
     {
+        "name": "Guild Boss Farmer",
+        "script": "GuildBossFarmer.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
         "name": "Bird Farmer",
         "script": "BirdFarmer.py",
         "args": [
@@ -224,14 +232,6 @@ FARMERS = [
                 "type": "text",
                 "default": "10",
             }
-        ],
-    },
-    {
-        "name": "Guild Boss Farmer",
-        "script": "GuildBossFarmer.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
         ],
     },
     {
