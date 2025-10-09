@@ -111,7 +111,7 @@ class GuildBossFarmer(IFarmer):
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
-            GuildBossFarmer.num_fights -= 1
+            GuildBossFarmer.num_fights -= 1  # Necessary, since we had increased it previously
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
@@ -122,7 +122,6 @@ class GuildBossFarmer(IFarmer):
         find_and_click(vio.startbutton, screenshot, window_location)
 
         if find(vio.again, screenshot):
-
             # First, if it's time to check in, do it
             if self.check_for_dailies():
                 press_key("esc")  # To make sure we'll be in the right screen for DAILIES
