@@ -62,6 +62,9 @@ class IFarmer:
     # Whether we want to do dailies
     do_dailies: bool = False
 
+    # To keep track of whether we're doing dailies
+    doing_dailies = False
+
     def __init__(self):
         """Just to initialize the Daily Farmer"""
         IFarmer.daily_farmer = DailyFarmer(
@@ -102,7 +105,7 @@ class IFarmer:
         """Return whether we have to do our dailies"""
         now = datetime.now(PACIFIC_TIMEZONE)
         if self.do_dailies and (not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR):
-            print("Going to CHECK IN!")
+            print("Let's do all the dailies!")
             self.current_state = States.DAILY_RESET
             return True
         return False
@@ -127,8 +130,10 @@ class IFarmer:
 
         if find(vio.tavern, screenshot):
             print("Logged in successfully! Going back to the previous state...")
-            self.current_state = initial_state
+            self.current_state = States.DAILY_RESET if IFarmer.doing_dailies else initial_state
             login_attempted = True
+            # Reset the 'doing_dailies' flag
+            IFarmer.doing_dailies = False
         elif find(vio.connection_confrm_expired, screenshot):
             print("Connection confirmation expired!")
             close_game()
@@ -200,6 +205,8 @@ class IFarmer:
 
             # Kill the dailies thread if it's running!
             if IFarmer.dailies_thread is not None and IFarmer.dailies_thread.is_alive():
+                print("We were doing dailies! Let's continue when we log back in...")
+                IFarmer.doing_dailies = True
                 IFarmer.daily_farmer.kill_farmer()
 
     def fortune_card_state(self):
