@@ -1,29 +1,20 @@
 # AVAILABLE BOTS
 
-All bots can be run from within the `Autofarming\scripts\` directory with a command that looks like:<br>
-```python <SCRIPT_NAME> -p <PASSWORD>```
-* `<SCRIPT_NAME>` will be the name of the file, for instance `BirdFarmer.py`.
-* `<PASSWORD>` is optional, and it is your account password. If provided, the bot will automatically log back into the game if a duplicate connection is detected.
+## Demon farming script
 
-When farming the Indura demon, you can specify the fight difficulty like this:
-* `python DemonFarmer.py -d chaos`<br>
-It accepts `chaos`, `hell` and `extreme`.
+In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Indura.
+So far, it only accepts the "Hell" difficulty (except for Indura, which accepts all).
 
-You can combine multiple options, such as:
-* `python DemonFarmer.py -d chaos -p myPassword42`
+* You can find all the setup options inside the corresponding GUI tab.
+* You may need to play with "time to sleep" value, which determines how many seconds to wait before accepting an invite.
+⚠ Lower than `9`, you'll risk wasting all your 3 daily demon invites.
 
-To see all available options for a specific bot, you can do:
-* `python <SCRIPT_NAME> --help`
 
-## Equipment farming script
+## Guild Boss farmer
 
-A script that probably no one needs but me, `scripts/EquipmentFarmer.py` farms gear to extract blue stones while auto-salvaging whenever the equipment inventory becomes full. Then it goes back to farming. 
+It farms Guild Boss uninterruptedly. Should be used during stsamina reduction days only!
 
-Requirements for it to work properly:
-1. Have the "auto-farming" option of free stages set to 'infinite' with auto-renewal of stamina pots.
-2. Have the desired farming team set.
-3. Ensure the salvaging options on tavern-Diane are the desired ones.
-4. Start the script already from within fighting an equipment farming free stage.
+**Requirement:** Start the bot from within a fight already.
 
 ## Floor 4 of Bird
 
@@ -189,40 +180,3 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 
-## Demon farming script
-
-In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Indura.
-So far, it only accepts the "Hell" difficulty.
-
-**An important feature** is that the bot will stop farming demons **at 4am PT time** to **check in and do all the daily missions** except PVP (unless the option is enabled, see below).
-
-You can find all the setup options inside the file:
-
-```python
-FarmingFactory.main_loop(
-    farmer=DemonFarmer,
-    starting_state=States.GOING_TO_DEMONS,  # Should be 'GOING_TO_DEMONS'
-    demons_to_farm=[
-        # vio.red_demon,
-        # vio.gray_demon,
-        # vio.crimson_demon,
-        # vio.bell_demon,
-        # vio.og_demon,
-        vio.indura_demon,
-    ],
-    indura_difficulty=args.indura_diff,  # Difficulty of Indura demon
-    time_to_sleep=9.15,  # How many seconds to sleep before accepting an invitation
-    time_between_demons=2,  # How many hours between each type of demon
-    do_dailies=True,  # Do we halt demon farming to do dailies?
-    do_daily_pvp=True,  # If we do dailies, do we do PVP?
-    password=args.password,  # Account password
-)
-```
-
-* To select the demons you want to farm, inside `DemonFarmer.py` uncomment (removing the `#` symbol) the lines for the demons you want to farm.
-
-* You may need to play with the timing in the line:<br>
-```time_to_sleep=9.15,  # How many seconds to sleep before accepting an invitation```<br>
-⚠ Lower than `9`, you'll risk wasting all your 3 daily demon invites.
-
-* Doing the automatic dailies can be disabled by setting its option to `False`. PVP daily mission can be enabled/disabled accordingly as well.

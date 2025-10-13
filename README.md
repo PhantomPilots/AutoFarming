@@ -54,28 +54,18 @@ Now we need to install some additional Python modules for the scripts to work. T
 
 ### Code updates
 
-Updating the code is done using Git. The process is simple:
-1. Similarly to Installation point 4.2., open a PowerShell window within the AutoFarming folder.
-2. Type in `git pull` and press `ENTER`.
-   * If when running `git pull` you get an error/warning saying the code cannot be updated, first run `git stash` and then `git pull` again. You should now see the code updated.
+Now, simply via the `Update` button in the "About" tab of the GUI!
 
-### How to run the scripts
+### How to run the bots
 
-For a more user-friendly experience, you can use the **AutoFarmers GUI** which provides:
-
-- **Tabbed Interface**: Easy access to all farmers in one window
-- **Real-time Output**: Live terminal output for each farmer
-- **Argument Configuration**: Simple forms for setting parameters
-- **Process Management**: Start/stop buttons for each farmer
-- **Visual Interface**: No need to remember command-line arguments
-
-**To use the GUI:**
 1. Inside `scripts`, click on `main.exe`. This should open an interface to interact with.
-5. Select the farmer tab you want to use
-6. Configure the arguments in the left panel
-7. Click "START" to begin farming
-8. Monitor progress in the terminal output window
-9. Click "STOP" when finished
+2. Select the farmer tab you want to use
+3. Configure the arguments in the left panel
+4. Click "START" to begin farming
+5. Monitor progress in the terminal output window
+6. Click "STOP" when finished
+
+You can PAUSE/RESUME the bot at any time with the corresponding button.
 
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 
