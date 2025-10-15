@@ -104,7 +104,7 @@ class DailyFarmer:
         with DailyFarmer._lock:
             if DailyFarmer.farmer_killed:
                 DailyFarmer.current_state = States.EXIT_FARMER
-                self.logger.info("Successfully killing the farmer thread!")
+                self.logger.info("Successfully killing the dailies thread!")
                 DailyFarmer.farmer_killed = False
 
     def exit_farmer_state(self) -> bool:  # sourcery skip: extract-duplicate-method, extract-method, split-or-ifs
