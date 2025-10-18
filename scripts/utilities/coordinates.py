@@ -68,6 +68,10 @@ class Coordinates:
         "half_screen_bottom_right": (491, 689),
         # Guild Boss
         "change_gb": (50, 451),  # To change to the GB to the left until Belgius is found
+        # Demon King
+        "hell": (446, 708),
+        "extreme": (279, 710),
+        "hard": (111, 710),
     }
 
     @staticmethod

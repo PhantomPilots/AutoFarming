@@ -164,26 +164,8 @@ FARMERS = [
         ],
     },
     {
-        "name": "Deer Whale",
-        "script": "DeerFarmerWhale.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-        ],
-    },
-    {
         "name": "Dogs Farmer",
         "script": "DogsFarmer.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-        ],
-    },
-    {
-        "name": "Dogs Whale",
-        "script": "DogsFarmerWhale.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
@@ -200,12 +182,44 @@ FARMERS = [
         ],
     },
     {
+        "name": "Deer Whale",
+        "script": "DeerFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Dogs Whale",
+        "script": "DogsFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
         "name": "Snake Whale",
         "script": "SnakeFarmerWhale.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Demon King Farmer",
+        "script": "DemonKingFarmer.py",
+        "args": [
+            {
+                "name": "--dk-diff",
+                "label": "Difficulty",
+                "type": "dropdown",
+                "choices": ["hard", "extreme", "hell"],
+                "default": "hell",
+            },
+            {"name": "--max-coins", "label": "Max coins", "type": "text", "default": "20"},
         ],
     },
     {
@@ -873,6 +887,7 @@ class FarmerTab(QWidget):
             "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
             "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
             "Guild Boss Farmer": "guild_boss_farmer.jpg",
+            "Demon King Farmer": "dk_farmer.jpg",
         }
 
         # Check if this farmer has a specific image

@@ -7,6 +7,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter
 from utilities.card_data import CardTypes
 from utilities.coordinates import Coordinates
+from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
 from utilities.utilities import (
     capture_hand_image,
@@ -35,7 +36,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.fb_aut_off, threshold=0.7)
+    # screenshot_testing(screenshot, vision_image=vio.startbutton, threshold=0.7)
 
     # if find(vio.connection_confrm_expired, screenshot):
     #     close_game()
@@ -47,8 +48,10 @@ def development():
 
     # determine_relative_coordinates(screenshot)
 
-    # available_slots = BirdFighter.count_empty_card_slots(screenshot)
+    # available_slots = DemonKingFighter.count_empty_card_slots(screenshot)
     # print(f"These many empty slots: {available_slots}")
+    # phase = DemonKingFighter._identify_phase(screenshot)
+    # print(f"We're in phase {phase}")
 
     # while True:
     #     screenshot, _ = capture_window()

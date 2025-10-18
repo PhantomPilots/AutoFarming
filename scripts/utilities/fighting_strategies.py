@@ -42,7 +42,7 @@ class IBattleStrategy(abc.ABC):
         IBattleStrategy._fight_turn = 0
 
     def pick_cards(
-        self, picked_cards: list[Card] = None, cards_to_play=4, card_turn=0, **kwargs
+        self, picked_cards: list[Card] = None, num_units=4, card_turn=0, **kwargs
     ) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
@@ -53,7 +53,7 @@ class IBattleStrategy(abc.ABC):
         IBattleStrategy.card_turn = card_turn
 
         # Extract the hand cards for this specific click
-        hand_of_cards: list[Card] = get_hand_cards(num_units=cards_to_play)
+        hand_of_cards: list[Card] = get_hand_cards(num_units=num_units)
         original_hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])

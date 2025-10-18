@@ -40,7 +40,11 @@ main_menu_original = Vision("main_menu.png")
 main_menu = Vision("main_menu_transparent.png")
 main_menu_exclamation = Vision("main_menu_exclamation.png")
 register_all = Vision("register_all.png")
-apply = Vision("apply.png")
+apply = MultiVision(
+    "apply.png",
+    "demon_king\\apply_dk.png",
+    image_name="apply",
+)
 salvage = Vision("salvage.png")
 back = Vision("back.png")
 equipment = Vision("equipment.png")
@@ -349,6 +353,19 @@ alpha_att = Vision("demons\\alpha_att.png")
 knighthood_boss = Vision("guild_boss\\knighthood_boss.png")
 belgius_hel = Vision("guild_boss\\belguis_hel.png")
 kh_rank = Vision("guild_boss\\knighthood_rank.png")
+
+# Demon King
+demon_king = Vision("demon_king\\demon_king.png")
+dk_hell = Vision("demon_king\\dk_hell.png")
+dk_extreme = Vision("demon_king\\dk_extreme.png")
+dk_hard = Vision("demon_king\\dk_hard.png")
+x3 = Vision("demon_king\\x3.png")
+register_coins = Vision("demon_king\\register_coins.png")
+# Cards
+gelda_card = Vision("demon_king\\gelda_card.png")
+cusack_cleave = Vision("demon_king\\cusack_cleave.png")
+dk_meli_st = Vision("demon_king\\dk_meli_st.png")
+skuld_stance = Vision("demon_king\\skuld_stance.png")
 
 # For dailies
 auto_salvage = Vision("dailies\\auto_salvage.png")
