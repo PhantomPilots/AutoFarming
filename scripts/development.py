@@ -15,6 +15,7 @@ from utilities.utilities import (
     capture_window,
     click_and_drag,
     close_game,
+    count_needle_image,
     crop_image,
     determine_card_merge,
     determine_relative_coordinates,
@@ -36,7 +37,9 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    # screenshot_testing(screenshot, vision_image=vio.startbutton, threshold=0.7)
+    screenshot_testing(screenshot, vision_image=vio.register_coins, threshold=0.7)
+
+    # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 
     # if find(vio.connection_confrm_expired, screenshot):
     #     close_game()

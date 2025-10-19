@@ -93,9 +93,9 @@ class InduraFighter(IFighter):
             # KEY: Read the hand of cards
             current_hand = self.battle_strategy.pick_cards(
                 picked_cards=self.picked_cards,
-                card_turn=InduraFighter.card_turn,
                 num_units=3,
                 phase=IFighter.current_phase,
+                card_turn=InduraFighter.card_turn,
             )
 
             print(

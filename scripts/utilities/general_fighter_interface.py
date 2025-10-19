@@ -74,7 +74,7 @@ class IFighter(abc.ABC):
             # Reset the battle strategy turn
             self.battle_strategy.reset_fight_turn()
 
-    def play_cards(self):
+    def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
         screenshot, window_location = capture_window()
@@ -97,6 +97,7 @@ class IFighter(abc.ABC):
                 card_turn=slot_index,
                 phase=IFighter.current_phase,
                 floor=IFighter.current_floor,
+                **kwargs,
             )
 
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now

@@ -92,6 +92,11 @@ REQUIREMENTS = {
 <p><strong>Requirements:</strong><br>
 • Start the bot from within the fight itself</p>
     """,
+    "Demon King Farmer": """
+<p><strong>Requirements:</strong><br>
+• Team A: DK Meli, Cusack (att/crit), G Gelda (HP, lifesteal), Any 4th<br>
+• Team B: Skuld (att/crit), any boosters</p>
+    """,
 }
 
 # Farmer script definitions (argument structure)
@@ -219,7 +224,7 @@ FARMERS = [
                 "choices": ["hard", "extreme", "hell"],
                 "default": "hell",
             },
-            {"name": "--max-coins", "label": "Max coins", "type": "text", "default": "20"},
+            {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "20"},
         ],
     },
     {

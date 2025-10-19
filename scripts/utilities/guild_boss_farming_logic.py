@@ -97,7 +97,7 @@ class GuildBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, check if we should go back to the initial state
-        if find(vio.belgius_hel, screenshot):
+        if find(vio.belgius_hel, screenshot, threshold=0.8):
             print("We're somehow not fighting anymore, let's go back to fighting...")
             self.current_state = States.GOING_TO_GB
             return

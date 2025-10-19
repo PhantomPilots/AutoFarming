@@ -41,13 +41,14 @@ class IBattleStrategy(abc.ABC):
         """Reset the fight turn"""
         IBattleStrategy._fight_turn = 0
 
-    def pick_cards(
-        self, picked_cards: list[Card] = None, num_units=4, card_turn=0, **kwargs
-    ) -> tuple[list[Card], list[int]]:
+    def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         if picked_cards is None:
             picked_cards: list[Card] = []
+
+        card_turn = kwargs.get("card_turn", 0)
+
         # Assign the given picked cards to the class variable
         IBattleStrategy.picked_cards = deepcopy(picked_cards)
         IBattleStrategy.card_turn = card_turn
@@ -65,9 +66,7 @@ class IBattleStrategy(abc.ABC):
         for _ in range(1):  # Now we only have to pick one card at a time! Will make it much faster
 
             # Extract the next index to click on
-            next_index = self.get_next_card_index(
-                hand_of_cards, IBattleStrategy.picked_cards, card_turn=card_turn, **kwargs
-            )
+            next_index = self.get_next_card_index(hand_of_cards, IBattleStrategy.picked_cards, **kwargs)
             if isinstance(next_index, Integral):
                 # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 if IBattleStrategy.card_turn < len(IBattleStrategy.picked_cards):

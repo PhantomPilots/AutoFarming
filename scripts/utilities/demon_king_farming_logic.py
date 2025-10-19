@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 from enum import Enum, auto
@@ -37,7 +38,7 @@ class DemonKingFarmer(IFarmer):
 
     num_fights = 0
 
-    num_coins_used = 0
+    num_clears = 0
 
     dk_difficulty = "hell"
 
@@ -46,7 +47,7 @@ class DemonKingFarmer(IFarmer):
         starting_state=States.GOING_TO_DK,
         battle_strategy: IBattleStrategy = None,  # No need
         dk_difficulty: str = "hell",  # Demon King difficulty
-        max_coins: str | float | int = 20,  # How many coins to use at most
+        num_clears: str | float | int = 20,  # How many coins to use at most
         **kwargs,
     ):
         # To initialize the Daily Farmer thread
@@ -58,9 +59,9 @@ class DemonKingFarmer(IFarmer):
 
         DemonKingFarmer.dk_difficulty = dk_difficulty
 
-        self.max_coins = float(max_coins)
-        if self.max_coins < float("inf"):
-            print(f"We'll spend at most {self.max_coins} coins")
+        self.max_clears = float(num_clears)
+        if self.max_clears < float("inf"):
+            print(f"We'll do at most {int(self.max_clears)} runs")
 
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete
@@ -69,13 +70,6 @@ class DemonKingFarmer(IFarmer):
             callback=self.fight_complete_callback,
         )
         self.dk_fighting_thread: threading.Thread = None
-
-    def dailies_complete_callback(self):
-        """The dailies thread told us we're done with all the dailies, go back to farming demons"""
-        with IFarmer._lock:
-            print("All dailies complete! Going back to farming Guild Boss.")
-            IFarmer.dailies_thread = None
-            self.current_state = States.GOING_TO_DK
 
     def _click_difficulty(self, screenshot: np.ndarray, window_location: tuple):
         """Click on the desired difficulty"""
@@ -89,6 +83,9 @@ class DemonKingFarmer(IFarmer):
     def going_to_dk_state(self):
         screenshot, window_location = capture_window()
 
+        # In case we come from a complete fight
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+
         if find(vio.register_coins, screenshot):
             self.current_state = States.OPEN_DK
             print(f"Going to {self.current_state}")
@@ -101,7 +98,7 @@ class DemonKingFarmer(IFarmer):
 
         self._click_difficulty(screenshot, window_location)
 
-        find_and_click(vio.demon_king, screenshot, window_location)
+        find_and_click(vio.demon_king, screenshot, window_location, threshold=0.8)
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
     def open_dk_state(self):
@@ -141,11 +138,20 @@ class DemonKingFarmer(IFarmer):
             self.dk_fighting_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.dk_fighting_thread.start()
 
-    def fight_complete_callback(self, **kwargs):
+    def fight_complete_callback(self, victory: bool = None):
         """Callback called by the DemonKingFighter when the fight is over (because we won or lost)"""
 
         # self.current_state = States.GOING_TO_DK
-        print("Fight complete! What should we do now?")
+
+        if victory:
+            print("Fight complete!")
+            DemonKingFarmer.num_clears += 1
+            if DemonKingFarmer.num_clears >= self.max_clears:
+                raise KeyboardInterrupt("We've cleared the DK enough times, stopping the farming.")
+        else:
+            print("We lost :(")
+
+        self.current_state = States.GOING_TO_DK
 
     def run(self):
 

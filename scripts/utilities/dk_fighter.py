@@ -22,7 +22,7 @@ from utilities.utilities import (
 class DemonKingFighter(IFighter):
     """The Indura fighter!"""
 
-    card_turn = 0
+    current_team = 0
 
     def fighting_state(self):
         screenshot, _ = capture_window()
@@ -58,65 +58,24 @@ class DemonKingFighter(IFighter):
         """Select and play the cards"""
         screenshot, window_location = capture_window()
 
+        if IFighter.current_phase == 2 and DemonKingFighter.current_team == 0:
+            print("Switching teams...")
+            DemonKingFighter.current_team = 1
+            find_and_click(vio.switch_dk_team, screenshot, window_location)
+
         # Just play the cards
-        self.play_cards(screenshot, window_location)
+        self.play_cards(dk_team=DemonKingFighter.current_team)
 
     def exit_fight_state(self):
         """Very simple state, just exit the fight"""
+        screenshot, _ = capture_window()
 
         with self._lock:
             self.exit_thread = True
             # Reset the battle strategy turn
             self.battle_strategy.reset_fight_turn()
 
-    def play_cards(self, screenshot, window_location):
-        """Read the current hand of cards, and play them based on the available card slots.
-        We had to overrde this method!"""
-
-        empty_card_slots = self.count_empty_card_slots(screenshot)
-
-        slot_index = DemonKingFighter.card_turn
-
-        if empty_card_slots > 0:
-            # KEY: Read the hand of cards
-            current_hand = self.battle_strategy.pick_cards(
-                picked_cards=self.picked_cards,
-                card_turn=DemonKingFighter.card_turn,
-                num_units=4,
-                phase=IFighter.current_phase,
-            )
-
-            print(
-                f"Selecting card for slot index {slot_index}, with {self.available_card_slots} og card slots and now seeing {empty_card_slots} empty slots.",
-            )
-            # What is the index in the hand we have to play? It can be an `int` or a `tuple[int, int]`
-            index_to_play = current_hand[1][0]
-
-            # Count how many GROUND before and after playing a card
-            hand_cards = get_hand_cards_3_cards()
-            before_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
-            # Play/move the selected card
-            card_played = self._play_card(
-                current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
-            )
-            time.sleep(0.5)
-            # Count GROUND cards after
-            hand_cards = get_hand_cards_3_cards()
-            after_num_ground_cards = len([card for card in hand_cards if card.card_type == CardTypes.GROUND])
-
-            if after_num_ground_cards > before_num_ground_cards:
-                # Increment the card turn, and add the picked card to the list of picked cards
-                DemonKingFighter.card_turn += 1
-                self.picked_cards[slot_index] = card_played
-
-        elif empty_card_slots == 0:  # or slot_index >= len(current_hand[1]):
-            print("Finished my turn!")
-            DemonKingFighter.card_turn = 0
-            # Increment to the next fight turn
-            self.battle_strategy.increment_fight_turn()
-            # And reset instance variables
-            self._reset_instance_variables()
-            return 1
+        self.complete_callback(find(vio.victory, screenshot))
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -126,7 +85,7 @@ class DemonKingFighter(IFighter):
 
         rectangles, _ = vio.empty_card_slot.find_all_rectangles(card_slots_image, threshold=threshold)
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.7)
-        rectangles_3, _ = vio.indura_empty_slot.find_all_rectangles(screenshot, threshold=0.7)
+        rectangles_3, _ = vio.dk_empty_slot.find_all_rectangles(screenshot, threshold=0.7)
 
         # Pick what type of rectangles to keep
         rectangles = rectangles_3 if rectangles_3.size else rectangles_2 if rectangles_2.size else rectangles
@@ -153,4 +112,4 @@ class DemonKingFighter(IFighter):
                 print("Closing DK fighter thread!")
                 return
 
-            time.sleep(1)
+            time.sleep(0.7)

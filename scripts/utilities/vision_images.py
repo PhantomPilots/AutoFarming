@@ -361,11 +361,18 @@ dk_extreme = Vision("demon_king\\dk_extreme.png")
 dk_hard = Vision("demon_king\\dk_hard.png")
 x3 = Vision("demon_king\\x3.png")
 register_coins = Vision("demon_king\\register_coins.png")
+switch_dk_team = Vision("demon_king\\switch_dk_team.png")
+stance = Vision("demon_king\\stance.png")
+lvl_1_rule = Vision("demon_king\\lvl_1.png")
+lvl_2_rule = Vision("demon_king\\lvl_2.png")
+lvl_3_rule = Vision("demon_king\\lvl_3.png")
 # Cards
 gelda_card = Vision("demon_king\\gelda_card.png")
 cusack_cleave = Vision("demon_king\\cusack_cleave.png")
 dk_meli_st = Vision("demon_king\\dk_meli_st.png")
 skuld_stance = Vision("demon_king\\skuld_stance.png")
+# Empty card slots
+dk_empty_slot = Vision("demon_king\\empty_slot.png")
 
 # For dailies
 auto_salvage = Vision("dailies\\auto_salvage.png")
