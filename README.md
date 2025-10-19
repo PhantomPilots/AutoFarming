@@ -85,6 +85,8 @@ For detailed information on all the bots available, go to the [bots README file]
 
 
 ## Shorter-term features
+- [X] Demon King farmer
+- [X] Guild Boss farmer
 - [X] Farmer for Bird Floor 4.
 - [X] Farmer for Deer Floor 4.
 - [X] Farmer for floors 1-3 of Deer.

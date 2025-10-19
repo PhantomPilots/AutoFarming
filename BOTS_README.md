@@ -9,6 +9,15 @@ So far, it only accepts the "Hell" difficulty (except for Indura, which accepts 
 * You may need to play with "time to sleep" value, which determines how many seconds to wait before accepting an invite.
 ⚠ Lower than `9`, you'll risk wasting all your 3 daily demon invites.
 
+## Demon King farmer
+
+Farms the Demon King fight. You're responsible for in-game pre-setting what coins to use.
+
+**Requirements**:
+* Team A: DK Meli (att/crit), LR Cusack (att/crit), G Gelda (HP/lifesteal), any 4th
+* Team B: Skuld (att/crit), any 3 boosters
+
+**Disclaimer**: The rules on phase 2 are not well understood yet, work in progress.
 
 ## Guild Boss farmer
 

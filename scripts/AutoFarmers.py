@@ -94,8 +94,8 @@ REQUIREMENTS = {
     """,
     "Demon King Farmer": """
 <p><strong>Requirements:</strong><br>
-• Team A: DK Meli, Cusack (att/crit), G Gelda (HP, lifesteal), Any 4th<br>
-• Team B: Skuld (att/crit), any boosters</p>
+• Team A: DK Meli (att/crit), LR Cusack (att/crit), G Gelda (HP, lifesteal), any 4th<br>
+• Team B: Skuld (att/crit), any 3 boosters</p>
     """,
 }
 
