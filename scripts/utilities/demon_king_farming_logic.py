@@ -53,8 +53,6 @@ class DemonKingFarmer(IFarmer):
         # To initialize the Daily Farmer thread
         super().__init__()
 
-        logger.warning("Demon King fight still in development!")
-
         self.current_state = starting_state
 
         DemonKingFarmer.dk_difficulty = dk_difficulty
