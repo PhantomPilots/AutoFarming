@@ -99,7 +99,7 @@ class GuildBossFarmer(IFarmer):
         # First, check if we should go back to the initial state
         if find(vio.belgius_hel, screenshot, threshold=0.8):
             print("We're somehow not fighting anymore, let's go back to fighting...")
-            self.current_state = States.GOING_TO_GB
+            self.current_state = States.FINDING_BOSS
             return
 
         # If we've ended the fight...
