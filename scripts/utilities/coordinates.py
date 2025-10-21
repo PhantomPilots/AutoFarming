@@ -72,6 +72,8 @@ class Coordinates:
         "hell": (446, 708),
         "extreme": (279, 710),
         "hard": (111, 710),
+        "rules_window_top": (145, 259),
+        "rules_window_bottom": (403, 400),
     }
 
     @staticmethod

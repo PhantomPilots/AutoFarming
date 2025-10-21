@@ -69,6 +69,28 @@ class Vision:
             haystack_img, self.needle_img, threshold=threshold, method=method
         )
 
+    def find_with_confidence(
+        self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED
+    ) -> tuple[np.ndarray, float] | tuple[np.ndarray, None]:
+        """Find the best match and return both the rectangle and its confidence value.
+
+        Returns:
+            (np.ndarray, float): tuple of (rectangle, confidence)
+                                 or (empty array, None) if not found.
+        """
+        if self.needle_img is None:
+            return np.array([], dtype=np.int32).reshape(0, 4), None
+
+        # If the matching strategy supports this directly, use it
+        if hasattr(self.matching_strategy, "find_with_confidence"):
+            return self.matching_strategy.find_with_confidence(
+                haystack_img, self.needle_img, threshold=threshold, cv_method=method
+            )
+
+        # Otherwise, gracefully fall back to standard `find`
+        rect = self.matching_strategy.find(haystack_img, self.needle_img, threshold=threshold, cv_method=method)
+        return rect, None
+
 
 class MultiVision(Vision):
     """A class that will contain all OK buttons to be searched for in the screenshot"""
@@ -128,3 +150,29 @@ class MultiVision(Vision):
             if len(all_rectangles) > 0:
                 return all_rectangles, confidences
         return all_rectangles, confidences
+
+    def find_with_confidence(
+        self,
+        haystack_img,
+        threshold=0.5,
+        method=cv2.TM_CCOEFF_NORMED,
+    ) -> tuple[np.ndarray, float | None]:
+        """Like `find`, but returns (rectangle, confidence) for the best match found."""
+        best_rect = np.array([], dtype=np.int32).reshape(0, 4)
+        best_conf = -np.inf
+
+        for needle_img in self.needle_imgs:
+            if hasattr(self.matching_strategy, "find_with_confidence"):
+                rect, conf = self.matching_strategy.find_with_confidence(
+                    haystack_img, needle_img, threshold=threshold, cv_method=method
+                )
+            else:
+                rect = self.matching_strategy.find(haystack_img, needle_img, threshold=threshold, cv_method=method)
+                conf = None
+
+            if rect.size and (conf is None or conf > best_conf):
+                best_rect, best_conf = rect, conf if conf is not None else best_conf
+
+        if best_conf == -np.inf:
+            return np.array([], dtype=np.int32).reshape(0, 4), None
+        return best_rect, best_conf

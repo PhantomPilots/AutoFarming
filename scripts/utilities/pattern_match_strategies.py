@@ -57,17 +57,23 @@ class TemplateMatchingStrategy:
         return grouped_rectangles, confidence_weights
 
     @staticmethod
-    def find(image: np.ndarray, template: np.ndarray, **kwargs):
-        """Find the best rectangle match of the needle in the haystack"""
-
+    def _best_match(image: np.ndarray, template: np.ndarray, **kwargs):
+        """Internal helper: returns best (rectangle, confidence)."""
         rectangles, weights = TemplateMatchingStrategy.find_all_rectangles(image, template, **kwargs)
 
-        # Check if there are any rectangles after grouping
         if len(rectangles) == 0:
-            return np.array([], dtype=np.int32).reshape(0, 4)
+            return np.array([], dtype=np.int32).reshape(0, 4), None
 
-        # Find the index of the rectangle with the highest weight
         best_index = np.argmax(weights)
+        return rectangles[best_index], weights[best_index]
 
-        # Return the single rectangle with the highest confidence
-        return rectangles[best_index]
+    @staticmethod
+    def find(image: np.ndarray, template: np.ndarray, **kwargs) -> np.ndarray:
+        """Find the best rectangle match of the needle in the haystack"""
+        best_rect, _ = TemplateMatchingStrategy._best_match(image, template, **kwargs)
+        return best_rect
+
+    @staticmethod
+    def find_with_confidence(image: np.ndarray, template: np.ndarray, **kwargs) -> tuple[np.ndarray, np.ndarray]:
+        """Like `find`, but returning confidence value as well"""
+        return TemplateMatchingStrategy._best_match(image, template, **kwargs)

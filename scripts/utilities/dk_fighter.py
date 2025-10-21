@@ -59,9 +59,11 @@ class DemonKingFighter(IFighter):
         screenshot, window_location = capture_window()
 
         if IFighter.current_phase == 2 and DemonKingFighter.current_team == 0:
+            find_and_click(vio.switch_dk_team, screenshot, window_location)
             print("Switching teams...")
             DemonKingFighter.current_team = 1
-            find_and_click(vio.switch_dk_team, screenshot, window_location)
+            # And let's sleep for a couple seconds
+            time.sleep(5)
 
         # Just play the cards
         self.play_cards(dk_team=DemonKingFighter.current_team)

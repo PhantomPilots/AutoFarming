@@ -128,7 +128,14 @@ class DemonKingFarmer(IFarmer):
 
     def fighting_state(self):
         """Currently fighting... We should be using the DK fighter"""
+
         screenshot, window_location = capture_window()
+
+        # We may need to restore stamina
+        if find_and_click(vio.restore_stamina, screenshot, window_location):
+            IFarmer.stamina_pots += 1
+            logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
+            return
 
         find_and_click(vio.startbutton, screenshot, window_location)
         find_and_click(vio.skip, screenshot, window_location)
@@ -144,8 +151,8 @@ class DemonKingFarmer(IFarmer):
         # self.current_state = States.GOING_TO_DK
 
         if victory:
-            print("Fight complete!")
             DemonKingFarmer.num_clears += 1
+            print(f"Fight complete! Cleared DK {DemonKingFarmer.num_clears} times.")
             if DemonKingFarmer.num_clears >= self.max_clears:
                 raise KeyboardInterrupt("We've cleared the DK enough times, stopping the farming.")
         else:

@@ -78,7 +78,11 @@ check_in_complete = Vision("check_in_complete.png")
 battle_menu = Vision("battle_menu.jpg")
 cancel = Vision("cancel.png")
 skill_locked = Vision("skill_locked.png")
-victory = Vision("victory.png")
+victory = MultiVision(
+    "victory.png",
+    "demonic_beasts\\db_victory.png",
+    image_name="victory",
+)
 global_server = Vision("global_server.png")
 yes = Vision("yes.png")
 start_quest = Vision("start_quest.png")
@@ -362,15 +366,17 @@ dk_hard = Vision("demon_king\\dk_hard.png")
 x3 = Vision("demon_king\\x3.png")
 register_coins = Vision("demon_king\\register_coins.png")
 switch_dk_team = Vision("demon_king\\switch_dk_team.png")
-stance = Vision("demon_king\\stance.png")
+stance_counter = Vision("demon_king\\stance.png")
 lvl_1_rule = Vision("demon_king\\lvl_1.png")
 lvl_2_rule = Vision("demon_king\\lvl_2.png")
 lvl_3_rule = Vision("demon_king\\lvl_3.png")
+corrosion_stance = Vision("demon_king\\corrosion_stance.png")
 # Cards
 gelda_card = Vision("demon_king\\gelda_card.png")
 cusack_cleave = Vision("demon_king\\cusack_cleave.png")
 dk_meli_st = Vision("demon_king\\dk_meli_st.png")
 skuld_stance = Vision("demon_king\\skuld_stance.png")
+skuld_st = Vision("demon_king\\skuld_st.png")
 # Empty card slots
 dk_empty_slot = Vision("demon_king\\empty_slot.png")
 
