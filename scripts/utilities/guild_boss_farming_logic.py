@@ -105,13 +105,15 @@ class GuildBossFarmer(IFarmer):
         # If we've ended the fight...
         find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
         find_and_click(vio.episode_clear, screenshot, window_location)
-        find_and_click(vio.boss_results, screenshot, window_location)
         find_and_click(vio.boss_mission, screenshot, window_location)
         find_and_click(vio.daily_quest_info, screenshot, window_location)
+        if find_and_click(vio.boss_results, screenshot, window_location):
+            GuildBossFarmer.num_fights += 1
+            logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
+
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
-            GuildBossFarmer.num_fights -= 1  # Necessary, since we had increased it previously
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
@@ -131,8 +133,6 @@ class GuildBossFarmer(IFarmer):
 
             # If we're not checking in, let's keep fighting
             find_and_click(vio.again, screenshot, window_location)
-            GuildBossFarmer.num_fights += 1
-            logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
 
         elif find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
