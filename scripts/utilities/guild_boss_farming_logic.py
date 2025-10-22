@@ -110,6 +110,7 @@ class GuildBossFarmer(IFarmer):
         if find_and_click(vio.boss_results, screenshot, window_location):
             GuildBossFarmer.num_fights += 1
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
+            return
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
