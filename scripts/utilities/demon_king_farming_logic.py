@@ -55,6 +55,9 @@ class DemonKingFarmer(IFarmer):
 
         self.current_state = starting_state
 
+        if dk_difficulty != "hell":
+            print("[WARN] Sorry, only hell difficulty supported for now.")
+            dk_difficulty = "hell"
         DemonKingFarmer.dk_difficulty = dk_difficulty
 
         self.max_clears = float(num_clears)
