@@ -65,6 +65,9 @@ FREE_SOFTWARE_MESSAGE = """=====================================================
 
 # Requirements for whale farmers (displayed in GUI)
 REQUIREMENTS = {
+    "Demon Farmer": """
+<p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
+    """,
     "Deer Whale": """
 <p><strong>Requirements:</strong><br>
 • 16M+ CC • 5th+ Constellation<br>
