@@ -24,7 +24,7 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=DemonKingFarmer,
-        starting_state=States.PREPARE_FIGHT,
+        starting_state=States.GOING_TO_DK,
         battle_strategy=DemonKingBattleStrategy,
         num_clears=args.num_clears,
         dk_difficulty=args.dk_diff,
