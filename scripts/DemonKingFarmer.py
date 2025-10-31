@@ -14,7 +14,7 @@ def main():
         "-d",
         type=str,
         choices=["hard", "extreme", "hell"],
-        default="hell",
+        default="hard",
         help="Difficulty (choices: hard, extreme, hell)",
     )
     parser.add_argument(
@@ -24,7 +24,7 @@ def main():
 
     FarmingFactory.main_loop(
         farmer=DemonKingFarmer,
-        starting_state=States.FIGHTING,
+        starting_state=States.PREPARE_FIGHT,
         battle_strategy=DemonKingBattleStrategy,
         num_clears=args.num_clears,
         dk_difficulty=args.dk_diff,

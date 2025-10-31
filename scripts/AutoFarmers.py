@@ -97,8 +97,8 @@ REQUIREMENTS = {
     """,
     "Demon King Farmer": """
 <p><strong>Requirements:</strong><br>
-• Team A: DK Meli (att/crit), LR Cusack (att/crit), G Gelda (HP, lifesteal), any 4th<br>
-• Team B: Skuld (att/crit), any 3 boosters</p>
+• Team A: Skuld (att/crit), any 3 boosters<br>
+• Team B: Anything, won't be used</p>
     """,
 }
 
@@ -225,9 +225,9 @@ FARMERS = [
                 "label": "Difficulty",
                 "type": "dropdown",
                 "choices": ["hard", "extreme", "hell"],
-                "default": "hell",
+                "default": "hard",
             },
-            {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "20"},
+            {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "10"},
         ],
     },
     {

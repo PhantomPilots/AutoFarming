@@ -118,6 +118,15 @@ def load_ground_cards_features() -> list[np.ndarray]:
     return features_reduced, all_labels, pca_model
 
 
+def load_unit_type_features() -> list[np.ndarray]:
+    """We'll use the same features as the card types"""
+    dataset, all_labels = load_dataset("data/unit_type*")
+
+    card_features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
+
+    return card_features, all_labels
+
+
 def explore_features(features, labels: list[CardTypes], label_type: CardTypes):
     """Explore the features for specific labels, for debugging..."""
 
@@ -301,6 +310,13 @@ def train_ground_cards_classifier():
     save_model(pca_model, filename="pca_ground_cards_model.pca")
 
 
+def train_unit_type_classifier():
+    """Train a model that identifies the unit type color of a unit"""
+    features, labels = load_unit_type_features()
+    model = train_svm_classifier(X=features, labels=labels)
+    save_model(model, filename="unit_type_predictor.svm")
+
+
 def main():
 
     ### For card types
@@ -321,8 +337,11 @@ def main():
     ### Train model to identify Thor cards
     # train_thor_cards_classifier()
 
-    ### Train a model that identifies GROUND cards
-    train_ground_cards_classifier()
+    # ### Train a model that identifies GROUND cards
+    # train_ground_cards_classifier()
+
+    ### Train a model that the color type of a unit
+    train_unit_type_classifier()
 
     return
 

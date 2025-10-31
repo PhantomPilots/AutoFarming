@@ -1,8 +1,9 @@
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.card_data import Card, CardColors, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
+from utilities.pattern_match_strategies import TemplateMatchingStrategy
 from utilities.utilities import capture_window, count_needle_image, crop_image, find
 
 
@@ -10,7 +11,14 @@ class DemonKingBattleStrategy(IBattleStrategy):
     """Demon King battle strategy"""
 
     def get_next_card_index(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], *, phase: int = 1, card_turn=0, dk_team=0, **kwargs
+        self,
+        hand_of_cards: list[Card],
+        picked_cards: list[Card],
+        *,
+        phase: int = 1,
+        card_turn=0,
+        color_cards_dict: dict[CardColors, list[np.ndarray]] = {},
+        **kwargs,
     ) -> int:
         """Extract the next card index based on the hand and picked cards information,
         together with the current floor and phase.
@@ -19,7 +27,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         return (
             self.get_next_card_index_phase1(hand_of_cards, picked_cards)
             if phase == 1
-            else self.get_next_card_index_phase2(hand_of_cards, picked_cards, card_turn, dk_team)
+            else self.get_next_card_index_phase2(hand_of_cards, picked_cards, card_turn, color_cards_dict)
         )
 
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
@@ -36,7 +44,11 @@ class DemonKingBattleStrategy(IBattleStrategy):
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(
-        self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int, dk_team: int
+        self,
+        hand_of_cards: list[Card],
+        picked_cards: list[Card],
+        card_turn: int,
+        color_cards_dict: dict[CardColors, list[np.ndarray]],
     ) -> int:
         """We should be able to 1-turn it!"""
         screenshot, _ = capture_window()
@@ -49,7 +61,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
             key=lambda idx: card_ranks[idx],
         )
 
-        if rules_time := find(vio.dk_empty_slot, screenshot):
+        if its_rules_time := find(vio.dk_empty_slot, screenshot):
             print("Let's try to follow the rules!")
 
             rules_window = crop_image(
@@ -63,22 +75,25 @@ class DemonKingBattleStrategy(IBattleStrategy):
             third_rule_window = rules_window[:, 2 * rules_width :, ...]
 
             # Evaluate all windows
-            rule_levels = []
+            color_rules: list[CardColors] = []
             for rule_window in (first_rule_window, second_rule_window, third_rule_window):
-                level, _ = self._best_rule_for_window(rule_window)
-                rule_levels.append(level)
+                rule, _ = self._best_rule_for_window(rule_window)
+                color_rules.append(rule)
 
-            print("Detected rule levels:", rule_levels)
+            print(f"Detected color rules: {[rule.name for rule in color_rules]}")
 
             if card_turn <= 2:
-                target_card_rank = CardRanks(rule_levels[card_turn] - 1)
-                print("Current rule?", target_card_rank)
+                target_rule = color_rules[card_turn]
 
-                candidates = np.where([card.card_rank == target_card_rank for card in hand_of_cards])[0]
-                # Let's first reorder the candidates such that we avoid picking a Freyr stance card
-                candidates = self._reorder_freyr_ids(hand_of_cards, candidates)
-                if len(candidates):
-                    return candidates[-1]
+                # Retrieve all images corresponding to the target_rule color from the given color_cards_dict
+                potential_cards = color_cards_dict[target_rule]
+                # Try to find a card corresponding to this color
+                for idx, card in enumerate(hand_of_cards):
+                    for pot_card in potential_cards:
+                        best_rect = TemplateMatchingStrategy.find(card.card_image, pot_card)
+                        if best_rect is not None and best_rect.size > 0:
+                            return idx
+
             else:
                 print(f"[WARN] Card turn is {card_turn}>2, wierdly, so we cannot follow any rule.")
 
@@ -129,23 +144,23 @@ class DemonKingBattleStrategy(IBattleStrategy):
             for idx in stance_card_ids:
                 hand_of_cards[idx].card_type = CardTypes.DISABLED
 
-        # Play a Skuld attack if possible
-        skuld_att_ids = sorted(
-            np.where([find(vio.skuld_st, card.card_image) for card in hand_of_cards])[0],
-            key=lambda idx: card_ranks[idx],
-        )
-        if len(skuld_att_ids):
-            return skuld_att_ids[-1]
+        # # Play a Skuld attack if possible
+        # skuld_att_ids = sorted(
+        #     np.where([find(vio.skuld_st, card.card_image) for card in hand_of_cards])[0],
+        #     key=lambda idx: card_ranks[idx],
+        # )
+        # if len(skuld_att_ids):
+        #     return skuld_att_ids[-1]
 
         # Otherwise, we cannot kill it in 1 turns, so let's default to regular strategy
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def _best_rule_for_window(self, window: np.ndarray):
+    def _best_rule_for_window(self, window: np.ndarray) -> tuple[CardColors, float]:
         """Return the best (rule_level, confidence) for one rule window."""
         results = {
-            1: vio.lvl_1_rule.find_with_confidence(window, threshold=0.8),
-            2: vio.lvl_2_rule.find_with_confidence(window, threshold=0.8),
-            3: vio.lvl_3_rule.find_with_confidence(window, threshold=0.8),
+            CardColors(1): vio.strength_rule.find_with_confidence(window, threshold=0.8),
+            CardColors(2): vio.hp_rule.find_with_confidence(window, threshold=0.8),
+            CardColors(3): vio.speed_rule.find_with_confidence(window, threshold=0.8),
         }
 
         # Pick the rule with the highest confidence

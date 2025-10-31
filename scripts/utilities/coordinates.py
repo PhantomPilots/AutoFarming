@@ -74,6 +74,8 @@ class Coordinates:
         "hard": (111, 710),
         "rules_window_top": (145, 259),
         "rules_window_bottom": (403, 400),
+        "top_left_4_units": (58, 239),
+        "bottom_right_4_units": (507, 408),
     }
 
     @staticmethod

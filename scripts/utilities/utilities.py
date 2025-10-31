@@ -27,7 +27,7 @@ from utilities.capture_window import (
     get_window_size,
     is_7ds_window_open,
 )
-from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.card_data import Card, CardColors, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.models import (
     AmplifyCardPredictor,
@@ -36,6 +36,7 @@ from utilities.models import (
     GroundCardPredictor,
     HAMCardPredictor,
     ThorCardPredictor,
+    UnitTypePredictor,
 )
 from utilities.vision import Vision
 
@@ -564,6 +565,21 @@ def get_hand_cards_3_cards() -> list[Card]:
     ]
 
 
+def set_card_colors(hand_of_cards: list[Card], list_of_colors: list[CardColors] = None) -> None:
+    """Sets the color attribute of a hand of cards in-place"""
+
+    if list_of_colors is None:
+        print("[WARN] No list of colors provided, cannot set any card color")
+        return
+
+    for idx in len(hand_of_cards):
+        color = CardColors(list_of_colors[idx // 2])
+        print(f"Setting color: {color.name}")
+        hand_of_cards[idx].card_color = color
+
+    print("Card colors set successfully!")
+
+
 def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
     """Get the sub-image where the card slots are"""
     return crop_image(
@@ -571,6 +587,40 @@ def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
         Coordinates.get_coordinates("top_left_card_slots"),
         Coordinates.get_coordinates("bottom_right_card_slots"),
     )
+
+
+def extract_units_types() -> list[np.ndarray]:
+    """Get a of images corresponding to the unit types, in order"""
+    screenshot, _ = capture_window()
+
+    units_window = crop_image(
+        screenshot,
+        Coordinates.get_coordinates("top_left_4_units"),
+        Coordinates.get_coordinates("bottom_right_4_units"),
+    )
+
+    # Determine the width of each column
+    _, width = units_window.shape[:2]
+    column_width = int(width / 4)
+
+    # For each on
+    units = [units_window[:, column_width * i : column_width * (i + 1)] for i in range(4)]
+    units_types = []
+    for unit in units:
+        unit_type = crop_image(unit, (84, 5), (97, 15))
+        units_types.append(unit_type)
+
+    return units_types
+
+
+def determine_unit_types() -> list[CardColors]:
+    """Directly return a list of unit colors (types)"""
+    unit_colors_im = extract_units_types()
+    unit_types = []
+    for color_im in unit_colors_im:
+        u_type = UnitTypePredictor.predict_unit_type(color_im)
+        unit_types.append(u_type)
+    return unit_types
 
 
 def determine_card_type(card: np.ndarray | None, three_cards: bool = False) -> CardTypes:

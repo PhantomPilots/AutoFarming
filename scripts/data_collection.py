@@ -20,6 +20,7 @@ from utilities.utilities import (
     crop_image,
     determine_relative_coordinates,
     display_image,
+    extract_units_types,
     get_card_interior_image,
     get_card_type_image,
     get_hand_cards,
@@ -276,6 +277,34 @@ class GroundDataCollector(DataCollector):
         return data, labels
 
 
+class UnitTypeDataCollector(DataCollector):
+    """Identify the unit type"""
+
+    def collect_hand_data(self, **kwargs) -> list[np.ndarray]:
+
+        unit_color_types = extract_units_types()
+
+        data = []
+        labels = []
+
+        for unit_type_im in unit_color_types:
+            # Let's plot the image for debugging
+            display_image(unit_type_im)
+
+            card_label = input("What type? 1:RED, 2:GREEN, 3:BLUE, 4:LIGHT, 5:DARK : ")
+            card_label = int(card_label)
+            if card_label not in np.arange(5) + 1:
+                raise ValueError(f"WRONG value '{card_label}'")
+
+            data.append(unit_type_im)
+            labels.append(card_label)
+
+        data = np.stack(data, axis=0)
+        labels = np.stack(labels, axis=0)
+
+        return data, labels
+
+
 def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
     """Creates a dictionary with the data and saves it under 'data/'"""
 
@@ -327,7 +356,9 @@ def main():
 
     # collect_data(ThorCardCollector, filename="thor_cards_data")
 
-    collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
+    # collect_data(GroundDataCollector, filename="ground_data", num_units=args.num_units)
+
+    collect_data(UnitTypeDataCollector, filename="unit_type", num_units=args.num_units)
 
 
 if __name__ == "__main__":

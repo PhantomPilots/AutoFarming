@@ -1,21 +1,17 @@
 import time
+from collections import defaultdict
 
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardTypes
+from utilities.card_data import Card, CardColors, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.utilities import (
-    capture_hand_image,
-    capture_hand_image_3_cards,
     capture_window,
-    crop_image,
-    display_image,
     find,
     find_and_click,
     get_card_slot_region_image,
-    get_hand_cards_3_cards,
-    press_key,
+    get_hand_cards,
 )
 
 
@@ -23,6 +19,15 @@ class DemonKingFighter(IFighter):
     """The Indura fighter!"""
 
     current_team = 0
+
+    # So that we can run specific logic on turn 1
+    first_turn = True
+
+    # Color dictionary of cards
+    color_cards_dict = defaultdict(list)
+
+    def _set_list_of_unit_colors(self, list_of_unit_colors: list[CardColors]):
+        self._list_of_unit_colors = list_of_unit_colors
 
     def fighting_state(self):
         screenshot, _ = capture_window()
@@ -43,6 +48,20 @@ class DemonKingFighter(IFighter):
                 print(f"MOVING TO PHASE {new_phase}!")
                 IFighter.current_phase = new_phase
 
+            if DemonKingFighter.first_turn:
+                self.build_cards_to_colors()
+                DemonKingFighter.first_turn = False
+
+    def build_cards_to_colors(self):
+        """Build the dictionary that will contain what card interiors correspond to what color"""
+
+        hand_of_cards = get_hand_cards()
+        for idx, color in enumerate(self._list_of_unit_colors):
+            DemonKingFighter.color_cards_dict[color].append(hand_of_cards[idx * 2].card_image)
+            DemonKingFighter.color_cards_dict[color].append(hand_of_cards[idx * 2 + 1].card_image)
+
+        print("Built dictionary of card colors! With these colors:", list(DemonKingFighter.color_cards_dict.keys()))
+
     @staticmethod
     def _identify_phase(screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -58,15 +77,15 @@ class DemonKingFighter(IFighter):
         """Select and play the cards"""
         screenshot, window_location = capture_window()
 
-        if IFighter.current_phase == 2 and DemonKingFighter.current_team == 0:
-            find_and_click(vio.switch_dk_team, screenshot, window_location)
-            print("Switching teams...")
-            DemonKingFighter.current_team = 1
-            # And let's sleep for a couple seconds
-            time.sleep(5)
+        # if IFighter.current_phase == 2 and DemonKingFighter.current_team == 0:
+        #     find_and_click(vio.switch_dk_team, screenshot, window_location)
+        #     print("Switching teams...")
+        #     DemonKingFighter.current_team = 1
+        #     # And let's sleep for a couple seconds
+        #     time.sleep(5)
 
         # Just play the cards
-        self.play_cards(dk_team=DemonKingFighter.current_team)
+        self.play_cards(dk_team=DemonKingFighter.current_team, color_cards_dict=DemonKingFighter.color_cards_dict)
 
     def exit_fight_state(self):
         """Very simple state, just exit the fight"""
@@ -95,9 +114,10 @@ class DemonKingFighter(IFighter):
         return 3 if find(vio.skill_locked, screenshot, threshold=0.6) else min(3, len(rectangles))
 
     @IFighter.run_wrapper
-    def run(self):
+    def run(self, unit_colors: list[CardColors]):
 
-        print("Fighting very hard on Demon King...")
+        print("[Fighter] Successfully received these unit colors: ", [utype.name for utype in unit_colors])
+        self._set_list_of_unit_colors(unit_colors)
 
         while True:
 

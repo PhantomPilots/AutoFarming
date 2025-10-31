@@ -6,6 +6,7 @@ from enum import Enum, auto
 import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
+from utilities.card_data import CardColors
 from utilities.constants import MINUTES_TO_WAIT_BEFORE_LOGIN
 from utilities.coordinates import Coordinates
 from utilities.dk_fighter import DemonKingFighter
@@ -18,6 +19,8 @@ from utilities.utilities import (
     check_for_reconnect,
     click_and_sleep,
     click_im,
+    crop_image,
+    determine_unit_types,
     find,
     find_and_click,
     press_key,
@@ -42,6 +45,8 @@ class DemonKingFarmer(IFarmer):
 
     dk_difficulty = "hell"
 
+    unit_colors: list[CardColors] = []
+
     def __init__(
         self,
         starting_state=States.GOING_TO_DK,
@@ -55,9 +60,9 @@ class DemonKingFarmer(IFarmer):
 
         self.current_state = starting_state
 
-        if dk_difficulty != "hell":
-            print("[WARN] Sorry, only hell difficulty supported for now.")
-            dk_difficulty = "hell"
+        if dk_difficulty != "hard":
+            print("[WARN] Sorry, `hard` difficulty is the most efficient one! So the only one supported.")
+            dk_difficulty = "hard"
         DemonKingFarmer.dk_difficulty = dk_difficulty
 
         self.max_clears = float(num_clears)
@@ -106,6 +111,7 @@ class DemonKingFarmer(IFarmer):
         """Open the DK fight"""
         screenshot, window_location = capture_window()
 
+        time.sleep(1.5)
         click_and_sleep(vio.x3, screenshot, window_location, threshold=0.8, sleep_time=1)
         click_and_sleep(vio.register_coins, screenshot, window_location, sleep_time=1)
         if find_and_click(vio.apply, screenshot, window_location):
@@ -123,9 +129,15 @@ class DemonKingFarmer(IFarmer):
 
         self._click_difficulty(screenshot, window_location)
 
-        if find(vio.startbutton, screenshot, window_location):
+        if find(vio.startbutton, screenshot):
             self.current_state = States.FIGHTING
             print(f"Going to {self.current_state}")
+
+    def store_unit_types(self):
+        """Let's store the colors for each unit in our dictionary..."""
+        unit_colors_team_a = determine_unit_types()
+        DemonKingFarmer.unit_colors = unit_colors_team_a
+        print(f"Stored these unit types: {[utype.name for utype in DemonKingFarmer.unit_colors]}")
 
     def fighting_state(self):
         """Currently fighting... We should be using the DK fighter"""
@@ -138,18 +150,22 @@ class DemonKingFarmer(IFarmer):
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
-        find_and_click(vio.startbutton, screenshot, window_location)
+        if find(vio.startbutton, screenshot):
+            print("Let's store unit types...")
+            self.store_unit_types()
+            find_and_click(vio.startbutton, screenshot, window_location)
+
         find_and_click(vio.skip, screenshot, window_location)
 
         if self.dk_fighting_thread is None or not self.dk_fighting_thread.is_alive():
             print("Let's start the DK fight!")
-            self.dk_fighting_thread = threading.Thread(target=self.fighter.run, daemon=True)
+            self.dk_fighting_thread = threading.Thread(
+                target=self.fighter.run, daemon=True, args=(DemonKingFarmer.unit_colors,)
+            )
             self.dk_fighting_thread.start()
 
     def fight_complete_callback(self, victory: bool = None):
         """Callback called by the DemonKingFighter when the fight is over (because we won or lost)"""
-
-        # self.current_state = States.GOING_TO_DK
 
         if victory:
             DemonKingFarmer.num_clears += 1
@@ -186,4 +202,4 @@ class DemonKingFarmer(IFarmer):
                 self.fighting_state()
 
             # We need the loop to run very fast
-            time.sleep(0.7)
+            time.sleep(0.5)

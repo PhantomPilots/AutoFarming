@@ -19,7 +19,9 @@ from utilities.utilities import (
     crop_image,
     determine_card_merge,
     determine_relative_coordinates,
+    determine_unit_types,
     display_image,
+    extract_units_types,
     find,
     find_and_click,
     get_card_interior_image,
@@ -37,7 +39,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.db_victory, threshold=0.7)
+    # screenshot_testing(screenshot, vision_image=vio.db_victory, threshold=0.7)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 
@@ -46,10 +48,14 @@ def development():
     # if find_and_click(vio.password, screenshot, window_location):
     #     close_game()
 
+    # determine_relative_coordinates(unit)
+
     # full_screenshot = capture_screen()
     # screenshot_testing(full_screenshot, vio.server_cancel)
 
-    # determine_relative_coordinates(screenshot)
+    # units = determine_unit_types()
+    # for unit in units:
+    #     print("We saw this unit type:", unit)
 
     # available_slots = DemonKingFighter.count_empty_card_slots(screenshot)
     # print(f"These many empty slots: {available_slots}")

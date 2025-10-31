@@ -6,7 +6,7 @@ from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from utilities.card_data import CardTypes
+from utilities.card_data import CardColors, CardTypes
 from utilities.feature_extractors import extract_color_features  # For card types KNN
 from utilities.feature_extractors import extract_color_histograms_features  # For SVM
 from utilities.feature_extractors import (
@@ -62,6 +62,26 @@ class CardTypePredictor(IModel):
 
         predicted_label = CardTypePredictor.model.predict(features).item()
         return CardTypes(predicted_label)
+
+
+class UnitTypePredictor(IModel):
+    """Predictor for card types"""
+
+    @staticmethod
+    def predict_unit_type(unit_type_image: np.ndarray) -> CardColors:
+        """Extract the features from the card and predict its type"""
+
+        # Ensure the model is properly loaded
+        # CardTypePredictor._load_model("card_type_predictor.knn")
+        UnitTypePredictor._load_model("unit_type_predictor.svm")
+
+        ## KNN
+        # features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
+        ## SVM
+        features = extract_color_histograms_features(images=unit_type_image[np.newaxis, ...], bins=(4, 4, 4))
+
+        predicted_label = UnitTypePredictor.model.predict(features).item()
+        return CardColors(predicted_label)
 
 
 class CardMergePredictor(IModel):
