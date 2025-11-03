@@ -109,7 +109,7 @@ class InduraBattleStrategy(IBattleStrategy):
                     elif remaining_points > 0:
                         InduraBattleStrategy.oxidize_count += 1
                         return sorted(
-                            np.concatenate(lvl2_cards, lvl3_cards), key=lambda idx: card_ranks[idx], reverse=True
+                            np.concatenate([lvl2_cards, lvl3_cards]), key=lambda idx: card_ranks[idx], reverse=True
                         )[-1]
 
             # Disable King's debuffs so that we don't play them by mistake
