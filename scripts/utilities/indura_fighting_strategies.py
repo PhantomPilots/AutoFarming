@@ -9,6 +9,8 @@ from utilities.utilities import capture_window, count_needle_image, crop_image, 
 class InduraBattleStrategy(IBattleStrategy):
     """The logic that should pick King's debuff card only if there's a stance present"""
 
+    oxidize_count = 0
+
     def get_next_card_index(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int = 1, card_turn=0, **kwargs
     ) -> int:
@@ -42,6 +44,9 @@ class InduraBattleStrategy(IBattleStrategy):
         )
 
         if phase == 1:
+            # Reset the oxidize count
+            InduraBattleStrategy.oxidize_count = 0
+
             # Disable all heal cards if someone has played one already OR it's the first fight turn!
             if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy._fight_turn == 0:
                 # Disabled all heal cards, unless it's 3rd card and not 1st turn
@@ -74,7 +79,6 @@ class InduraBattleStrategy(IBattleStrategy):
             # On phase 2, evaluate if Indura has multi-tiers activated
             have_multi_tiers = count_needle_image(vio.indura_tier, screenshot) > 1
 
-            # Check if stance is present, and play a debuff card if present. Also play it if we're on phase 2!
             b_played_mini_king = find(vio.mini_king, six_empty_slots_image)
             if (
                 len(king_debuf_card_ids)
@@ -93,10 +97,20 @@ class InduraBattleStrategy(IBattleStrategy):
 
             # If we see an oxidize, we need to play level 2 or 3 cards
             if find(vio.oxidize_indura, screenshot):
-                lvl2_3_cards = np.where((card_ranks == 1) | (card_ranks == 2))[0]
-                if len(lvl2_3_cards) > 0:
+                lvl2_cards = np.where((card_ranks == 1))[0]
+                lvl3_cards = np.where((card_ranks == 2))[0]
+                if len(lvl2_cards) or len(lvl3_cards):
                     print("Trying to remove oxidize!")
-                    return sorted(lvl2_3_cards, key=lambda idx: card_ranks[idx])[-1]
+                    remaining_points = 3 - InduraBattleStrategy.oxidize_count
+
+                    if remaining_points > 1 and len(lvl3_cards):
+                        InduraBattleStrategy.oxidize_count += 1.5
+                        return lvl3_cards[-1]
+                    elif remaining_points > 0:
+                        InduraBattleStrategy.oxidize_count += 1
+                        return sorted(
+                            np.concatenate(lvl2_cards, lvl3_cards), key=lambda idx: card_ranks[idx], reverse=True
+                        )[-1]
 
             # Disable King's debuffs so that we don't play them by mistake
             for idx in king_debuf_card_ids:
