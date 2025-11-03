@@ -126,6 +126,10 @@ class InduraBattleStrategy(IBattleStrategy):
 
         elif phase == 3:
             InduraBattleStrategy.turn_phase3 += 1
+<<<<<<< HEAD
+=======
+            print(f"We're on turn {InduraBattleStrategy.turn_phase3}")
+>>>>>>> 5fd7290ecad2886241b015ebe55e172da1cfad45
 
             if find(vio.mini_heal, six_empty_slots_image):
                 # Disabled all heal cards
