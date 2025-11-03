@@ -101,18 +101,19 @@ class InduraBattleStrategy(IBattleStrategy):
             if find(vio.oxidize_indura, screenshot):
                 lvl2_cards = np.where((card_ranks == 1))[0]
                 lvl3_cards = np.where((card_ranks == 2))[0]
-                if len(lvl2_cards) or len(lvl3_cards):
-                    print("Trying to remove oxidize!")
-                    remaining_points = 3 - InduraBattleStrategy.oxidize_count
+                remaining_points = 3 - InduraBattleStrategy.oxidize_count
+                if (len(lvl2_cards) or len(lvl3_cards)) and remaining_points > 0:
+                    print(f"Trying to remove oxidize! {remaining_points} points remaining")
 
                     if remaining_points > 1 and len(lvl3_cards):
                         InduraBattleStrategy.oxidize_count += 1.5
                         return lvl3_cards[-1]
-                    elif remaining_points > 0:
-                        InduraBattleStrategy.oxidize_count += 1
-                        return sorted(
-                            np.concatenate([lvl2_cards, lvl3_cards]), key=lambda idx: card_ranks[idx], reverse=True
-                        )[-1]
+
+                    # Here, let's try to use silver cards if we can
+                    InduraBattleStrategy.oxidize_count += 1
+                    return sorted(
+                        np.concatenate([lvl2_cards, lvl3_cards]), key=lambda idx: card_ranks[idx], reverse=True
+                    )[-1]
 
             # Disable King's debuffs so that we don't play them by mistake
             for idx in king_debuf_card_ids:
