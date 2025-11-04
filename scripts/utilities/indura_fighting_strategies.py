@@ -95,7 +95,16 @@ class InduraBattleStrategy(IBattleStrategy):
             ):
                 if have_multi_tiers:
                     print("Seeing multiple tiers! Playing King's debuff card!")
-                return king_debuf_card_ids[-1]
+
+                picked_card_id = king_debuf_card_ids[-1]
+                if find(vio.oxidize_indura, screenshot):
+                    # Make sure to increase the oxidize count accordingly!
+                    if hand_of_cards[picked_card_id].card_rank == CardRanks.SILVER:
+                        InduraBattleStrategy.oxidize_count += 1
+                    elif hand_of_cards[picked_card_id].card_rank == CardRanks.GOLD:
+                        InduraBattleStrategy.oxidize_count += 1.5
+                    print(f"Increasing oxidize count to {InduraBattleStrategy.oxidize_count}")
+                return picked_card_id
 
             # If we see an oxidize, we need to play level 2 or 3 cards
             if find(vio.oxidize_indura, screenshot):
