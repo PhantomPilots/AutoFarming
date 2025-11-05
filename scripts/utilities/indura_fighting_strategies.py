@@ -10,7 +10,6 @@ class InduraBattleStrategy(IBattleStrategy):
     """The logic that should pick King's debuff card only if there's a stance present"""
 
     oxidize_count = 0
-    turn_phase3 = 0
 
     def get_next_card_index(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int = 1, card_turn=0, **kwargs
@@ -47,7 +46,6 @@ class InduraBattleStrategy(IBattleStrategy):
         if phase == 1:
             # Reset the oxidize count
             InduraBattleStrategy.oxidize_count = 0
-            InduraBattleStrategy.turn_phase3 = 0
 
             # Disable all heal cards if someone has played one already OR it's the first fight turn!
             if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy._fight_turn == 0:
@@ -135,8 +133,7 @@ class InduraBattleStrategy(IBattleStrategy):
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         elif phase == 3:
-            InduraBattleStrategy.turn_phase3 += 1
-            print(f"We're on turn {InduraBattleStrategy.turn_phase3}")
+            print(f"We're on turn {InduraBattleStrategy._fight_turn} of phase 3")
 
             if find(vio.mini_heal, six_empty_slots_image):
                 # Disabled all heal cards
@@ -148,7 +145,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
                 key=lambda idx: card_ranks[idx],
             )
-            if len(heal_card_ids) and InduraBattleStrategy.turn_phase3 % 2 == 1:
+            if len(heal_card_ids) and InduraBattleStrategy._fight_turn % 2 == 0:
                 return heal_card_ids[-1]
 
             # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card first

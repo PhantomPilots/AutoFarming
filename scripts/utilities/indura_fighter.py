@@ -42,6 +42,8 @@ class InduraFighter(IFighter):
             if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"MOVING TO PHASE {new_phase}!")
                 IFighter.current_phase = new_phase
+                if new_phase == 3:
+                    self.battle_strategy.reset_fight_turn()
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
