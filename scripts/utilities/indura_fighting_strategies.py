@@ -145,7 +145,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
                 key=lambda idx: card_ranks[idx],
             )
-            if len(heal_card_ids) and InduraBattleStrategy._fight_turn % 2 == 0:
+            if len(heal_card_ids):  # and InduraBattleStrategy._fight_turn % 2 == 0:
                 return heal_card_ids[-1]
 
             # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card first
