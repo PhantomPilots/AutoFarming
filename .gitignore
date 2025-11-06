@@ -5,3 +5,5 @@ __pycache__/
 debug*
 *.log
 logs/
+cython_build/
+*original.py
