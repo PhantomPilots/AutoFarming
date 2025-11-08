@@ -157,25 +157,30 @@ class DemonKingFarmer(IFarmer):
 
         find_and_click(vio.skip, screenshot, window_location)
 
-        if self.dk_fighting_thread is None or not self.dk_fighting_thread.is_alive():
-            print("Let's start the DK fight!")
-            self.dk_fighting_thread = threading.Thread(
-                target=self.fighter.run, daemon=True, args=(DemonKingFarmer.unit_colors,)
-            )
-            self.dk_fighting_thread.start()
+        with IFarmer._lock:
+            # Lock necessary, such that `fight_complete_callback` and the next `if` don't happen simultaneously
+            if (
+                self.dk_fighting_thread is None or not self.dk_fighting_thread.is_alive()
+            ) and self.current_state == States.FIGHTING:
+                print("Let's start the DK fight!")
+                self.dk_fighting_thread = threading.Thread(
+                    target=self.fighter.run, daemon=True, args=(DemonKingFarmer.unit_colors,)
+                )
+                self.dk_fighting_thread.start()
 
     def fight_complete_callback(self, victory: bool = None):
         """Callback called by the DemonKingFighter when the fight is over (because we won or lost)"""
 
-        if victory:
-            DemonKingFarmer.num_clears += 1
-            print(f"Fight complete! Cleared DK {DemonKingFarmer.num_clears} times.")
-            if DemonKingFarmer.num_clears >= self.max_clears:
-                raise KeyboardInterrupt("We've cleared the DK enough times, stopping the farming.")
-        else:
-            print("We lost :(")
+        with IFarmer._lock:
+            if victory:
+                DemonKingFarmer.num_clears += 1
+                print(f"Fight complete! Cleared DK {DemonKingFarmer.num_clears} times.")
+                if DemonKingFarmer.num_clears >= self.max_clears:
+                    raise KeyboardInterrupt("We've cleared the DK enough times, stopping the farming.")
+            else:
+                print("We lost :(")
 
-        self.current_state = States.GOING_TO_DK
+            self.current_state = States.GOING_TO_DK
 
     def run(self):
 
