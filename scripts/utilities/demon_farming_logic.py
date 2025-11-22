@@ -340,8 +340,17 @@ class IDemonFarmer(IFarmer):
 
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
+
             percent = IDemonFarmer.demons_destroyed / IDemonFarmer.num_tries * 100 if IDemonFarmer.num_tries > 0 else 0
-            print(f"We've destroyed {IDemonFarmer.demons_destroyed}/{IDemonFarmer.num_tries} demons ({percent:.2f}%).")
+            demon_label = " Indura" if "indura" in self.demon_to_farm.image_name.lower() else ""
+
+            msg = (
+                f"We've destroyed {IDemonFarmer.demons_destroyed}/"
+                f"{IDemonFarmer.num_tries}{demon_label} demons "
+                f"({percent:.2f}%)."
+            )
+
+            print(msg)
             print(f"We've missed {IDemonFarmer.missed_invites} invites.")
             print(f"Moving to {self.current_state}.")
 

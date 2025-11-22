@@ -296,6 +296,13 @@ snake_f3p2_counter = Vision("snake\\f3p2_counter.png")
 extort = Vision("snake\\extort.png")
 damage_increase = Vision("snake\\damage_increase.png")
 
+# For Rat
+ratatoskr = Vision("rat\\ratatoskr.png")
+jorm_bleed = Vision("rat\\jorm_bleed.png")
+val_shock = Vision("rat\\val_shock.png")
+val_poison = Vision("rat\\val_poison.png")
+val_ult = Vision("rat\\val_ult.png")
+
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
 hell_difficulty = Vision("final_boss\\hell_difficulty.png")

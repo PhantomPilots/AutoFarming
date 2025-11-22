@@ -74,6 +74,16 @@ class IFighter(abc.ABC):
             # Reset the battle strategy turn
             self.battle_strategy.reset_fight_turn()
 
+    def get_current_hand(self, slot_index, **kwargs):
+        """Separating this function because we may need to pass in different args depending on the Fighter"""
+        return self.battle_strategy.pick_cards(
+            picked_cards=self.picked_cards,
+            card_turn=slot_index,
+            phase=IFighter.current_phase,
+            floor=IFighter.current_floor,
+            **kwargs,
+        )
+
     def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
@@ -92,13 +102,7 @@ class IFighter(abc.ABC):
 
         if empty_card_slots > 0:
             # KEY: Read the hand of cards here
-            current_hand = self.battle_strategy.pick_cards(
-                picked_cards=self.picked_cards,
-                card_turn=slot_index,
-                phase=IFighter.current_phase,
-                floor=IFighter.current_floor,
-                **kwargs,
-            )
+            current_hand = self.get_current_hand(slot_index, **kwargs)
 
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.

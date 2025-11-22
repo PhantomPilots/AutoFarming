@@ -1,0 +1,36 @@
+import pyautogui as pyautogui
+import utilities.vision_images as vio
+from utilities.demonic_beast_farming_logic import DemonicBeastFarmer, States
+from utilities.fighting_strategies import IBattleStrategy
+from utilities.logging_utils import LoggerWrapper
+from utilities.rat_fighter import IFighter, RatFighter
+
+logger = LoggerWrapper(name="RatLogger", log_file="rat_logger.log")
+
+
+class RatFarmer(DemonicBeastFarmer):
+
+    def __init__(
+        self,
+        battle_strategy: IBattleStrategy,
+        starting_state=States.GOING_TO_DB,
+        num_floor_3_clears="inf",
+        logger=logger,
+        password: str | None = None,
+        do_dailies=False,
+    ):
+        super().__init__(
+            starting_state=starting_state,
+            max_floor_3_clears=num_floor_3_clears,
+            demonic_beast_image=vio.ratatoskr,
+            logger=logger,
+            password=password,
+            do_dailies=do_dailies,
+        )
+
+        # Using composition to decouple the main farmer logic from the actual fight.
+        # Pass in the callback to call after the fight is complete.
+        self.fighter: IFighter = RatFighter(
+            battle_strategy=battle_strategy,
+            callback=self.fight_complete_callback,
+        )

@@ -320,7 +320,7 @@ def train_unit_type_classifier():
 def main():
 
     ### For card types
-    # train_card_types_model()
+    train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -341,7 +341,7 @@ def main():
     # train_ground_cards_classifier()
 
     ### Train a model that the color type of a unit
-    train_unit_type_classifier()
+    # train_unit_type_classifier()
 
     return
 

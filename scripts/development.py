@@ -9,6 +9,7 @@ from utilities.card_data import CardTypes
 from utilities.coordinates import Coordinates
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
+from utilities.rat_fighter import RatFighter
 from utilities.utilities import (
     capture_hand_image,
     capture_screen,
@@ -48,7 +49,7 @@ def development():
     # if find_and_click(vio.password, screenshot, window_location):
     #     close_game()
 
-    # determine_relative_coordinates(unit)
+    # determine_relative_coordinates(screenshot)
 
     # full_screenshot = capture_screen()
     # screenshot_testing(full_screenshot, vio.server_cancel)
@@ -57,7 +58,7 @@ def development():
     # for unit in units:
     #     print("We saw this unit type:", unit)
 
-    # available_slots = DemonKingFighter.count_empty_card_slots(screenshot)
+    # available_slots = RatFighter.count_empty_card_slots(screenshot)
     # print(f"These many empty slots: {available_slots}")
     # phase = DemonKingFighter._identify_phase(screenshot)
     # print(f"We're in phase {phase}")

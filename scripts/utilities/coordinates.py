@@ -13,6 +13,7 @@ class Coordinates:
         "knighthood": (421, 677),
         "center_screen": (270, 480),  # To click on the center of the screen
         "sync_code": (278, 388),  # Coordinates for the username input field
+        "talent": (276, 665),  # Where the Talent button is
         # The region in the screenshot corresponding to the card slots
         "top_left_card_slots": (150, 690),
         "bottom_right_card_slots": (410, 800),

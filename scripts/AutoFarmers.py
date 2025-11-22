@@ -68,6 +68,15 @@ REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
     """,
+    "Deer Farmer": """
+<p><strong>Requirements:</strong><br>
+• Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
+• NO SKULD</p>
+    """,
+    "Rat Farmer": """
+<p><strong>Requirements:</strong><br>
+• Red Jorm, LR Liz, Blue Valenti, any strong 4th (King-Diane recommended)</p>
+    """,
     "Deer Whale": """
 <p><strong>Requirements:</strong><br>
 • 16M+ CC • 5th+ Constellation<br>
@@ -183,6 +192,15 @@ FARMERS = [
     {
         "name": "Snake Farmer",
         "script": "SnakeFarmer.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Rat Farmer",
+        "script": "RatFarmer.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
@@ -889,6 +907,7 @@ class FarmerTab(QWidget):
             "Dogs Farmer": "dogs_farmer.jpeg",
             "Dogs Whale": "dogs_whale_farmer.jpg",
             "Snake Farmer": "snake_farmer.png",
+            "Rat Farmer": "rat_farmer.jpg",
             "Snake Whale": "snake_whale_farmer.png",
             "Final Boss": "final_boss.png",
             "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
