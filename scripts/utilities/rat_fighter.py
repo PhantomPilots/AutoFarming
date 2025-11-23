@@ -82,6 +82,8 @@ class RatFighter(IFighter):
 
     def check_for_bleed(self):
         """If we go to F1P3 without a bleed, let's reset"""
+        hand_of_cards = get_hand_cards()
+        return any(find(vio.jorm_bleed, card.card_image) for card in hand_of_cards)
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
