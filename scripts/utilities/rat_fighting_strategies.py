@@ -252,6 +252,11 @@ class RatFightingStrategy(IBattleStrategy):
                 print("Saving Diane strong cards for phase 3...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
+        # If we're not in the middle stump, disable diane AOEs
+        if current_stump != 1:
+            for i in diane_aoe_ids:
+                hand_of_cards[i].card_type = CardTypes.GROUND
+
         if card_turn == 3 and not find(vio.rat_hidden, screenshot):
             if len(poison_ids):
                 return poison_ids[-1]
