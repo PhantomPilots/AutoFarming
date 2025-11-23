@@ -169,7 +169,7 @@ class SmarterBattleStrategy(IBattleStrategy):
 
         # CARD MERGE -- If there's a card that generates a merge (and not disabled), pick it!
         for i in range(1, len(hand_of_cards) - 1):
-            if hand_of_cards[i].card_type != CardTypes.DISABLED and determine_card_merge(
+            if hand_of_cards[i].card_type not in [CardTypes.DISABLED, CardTypes.GROUND] and determine_card_merge(
                 hand_of_cards[i - 1], hand_of_cards[i + 1]
             ):
                 return i
