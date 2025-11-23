@@ -3,6 +3,7 @@ import threading
 import time
 from enum import Enum
 
+import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
@@ -16,11 +17,12 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    determine_db_floor,
+    crop_image,
     drag_im,
     find,
     find_and_click,
     find_floor_coordinates,
+    screenshot_testing,
 )
 
 logger = LoggerWrapper("DBLogger", log_file="demonic_beast_logger.log")
@@ -37,7 +39,7 @@ class States(Enum):
 
 class DemonicBeastFarmer(IFarmer, abc.ABC):
 
-    current_floor = 1
+    current_floor = 2
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
@@ -170,6 +172,32 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         # Save the party
         find_and_click(vio.save_party, screenshot, window_location)
 
+    def determine_db_floor(self, screenshot: np.ndarray, threshold=0.9) -> int:
+        """Determine the Demonic Beast floor"""
+        # sourcery skip: assign-if-exp, reintroduce-else
+        floor_img_region = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("floor_top_left"),
+            Coordinates.get_coordinates("floor_bottom_right"),
+        )
+
+        # display_image(floor_img_region)
+        # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
+
+        # Default
+        db_floor = -1
+
+        if find(vio.floor2, floor_img_region, threshold=threshold):
+            db_floor = 2
+        elif find(vio.floor3, floor_img_region, threshold=threshold):
+            db_floor = 3
+        elif find(vio.floor1, floor_img_region, threshold=threshold):
+            db_floor = 1
+
+        print(f"We're gonna fight floor {db_floor}.")
+
+        return db_floor
+
     def proceed_to_floor_state(self):
         """Start the floor fight!"""
 
@@ -201,7 +229,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if find(vio.startbutton, screenshot):
             # We can determine the floor number!
             with IFarmer._lock:
-                DemonicBeastFarmer.current_floor = determine_db_floor(screenshot, threshold=0.9)
+                DemonicBeastFarmer.current_floor = self.determine_db_floor(screenshot)
 
             # We need to reset the DB fighter if we entered the wrong floor
             if DemonicBeastFarmer.current_floor == -1:

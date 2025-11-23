@@ -677,33 +677,6 @@ def determine_card_rank(card: np.ndarray, three_cards: bool = False) -> CardRank
     )
 
 
-def determine_db_floor(screenshot: np.ndarray, threshold=0.9) -> int:
-    """Determine the Demonic Beast floor"""
-    # sourcery skip: assign-if-exp, reintroduce-else
-    floor_img_region = crop_image(
-        screenshot,
-        Coordinates.get_coordinates("floor_top_left"),
-        Coordinates.get_coordinates("floor_bottom_right"),
-    )
-
-    # display_image(floor_img_region)
-    # screenshot_testing(floor_img_region, vio.floor1, threshold=threshold)
-
-    # Default
-    db_floor = -1
-
-    if find(vio.floor2, floor_img_region, threshold=threshold):
-        db_floor = 2
-    elif find(vio.floor3, floor_img_region, threshold=threshold):
-        db_floor = 3
-    elif find(vio.floor1, floor_img_region, threshold=threshold):
-        db_floor = 1
-
-    print(f"We're gonna fight floor {db_floor}.")
-
-    return db_floor
-
-
 def is_amplify_card(card: Card) -> bool:
     """Identify if a card is amplify or Thor"""
     if card.card_image is None:

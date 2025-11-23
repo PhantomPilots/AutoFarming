@@ -303,11 +303,14 @@ rat_buff = MultiVision(
     "rat\\rat_buff_small.png",
     image_name="rat_buff",
 )
+rat_hidden = Vision("rat\\rat_hidden.png")
 jorm_bleed = Vision("rat\\jorm_bleed.png")
 val_shock = Vision("rat\\val_shock.png")
 val_poison = Vision("rat\\val_poison.png")
 val_ult = Vision("rat\\val_ult.png")
 jorm_buff_rem = Vision("rat\\jorm_buff_rem.png")
+kdiane_aoe = Vision("rat\\kdiane_aoe.png")
+kdiane_ult = Vision("rat\\kdiane_ult.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

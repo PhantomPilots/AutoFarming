@@ -17,8 +17,6 @@ from utilities.utilities import (
 
 class RatFighter(IFighter):
 
-    current_floor = 1
-
     # 0, 1 or 2 (left, middle, right). We start in the middle
     current_stump = -1
     next_stump = 1
@@ -122,7 +120,7 @@ class RatFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, window_location = capture_window()
+        screenshot, _ = capture_window()
 
         # First, update the current phase
         IFighter.current_phase = self._identify_phase(screenshot)
