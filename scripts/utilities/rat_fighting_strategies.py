@@ -102,6 +102,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         if card_turn == 3:
             # Let's try to move the Rat
+            picked_ids = []
             if current_stump == 0:
                 picked_ids = max(poison_ids, bleed_ids, key=len)
             elif current_stump == 1:
@@ -114,21 +115,6 @@ class RatFightingStrategy(IBattleStrategy):
         for card in hand_of_cards:
             if card.debuff_type != DebuffTypes.NONE or (phase == 2 and find(vio.val_ult, card.card_image)):
                 card.card_type = CardTypes.DISABLED
-
-        # Let's place Diane's AoEs to the rightmost position first
-        diane_aoe_ids = np.where(
-            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
-        )[0]
-
-        if len(diane_aoe_ids):
-            # Extract in original order
-            aoe_cards = [hand_of_cards[i] for i in diane_aoe_ids]
-
-            # Everything else
-            other_cards = [c for i, c in enumerate(hand_of_cards) if i not in diane_aoe_ids]
-
-            # Rebuild the list: AOE first (leftmost), then others
-            hand_of_cards[:] = aoe_cards + other_cards
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
