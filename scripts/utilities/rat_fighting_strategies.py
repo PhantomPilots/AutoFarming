@@ -118,10 +118,6 @@ class RatFightingStrategy(IBattleStrategy):
             if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
-        print("Defaulting with these debuff types:")
-        for card in hand_of_cards:
-            print(card.card_type.name)
-
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor1_phase3(
@@ -166,10 +162,6 @@ class RatFightingStrategy(IBattleStrategy):
             if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
-        print("Defaulting with these debuff types:")
-        for card in hand_of_cards:
-            print(card.card_type.name)
-
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor2_phase1(
@@ -197,11 +189,11 @@ class RatFightingStrategy(IBattleStrategy):
         # Disable all debuffs and buffs
 
         immortality = find(vio.immortality_buff, screenshot)
-        for card in hand_of_cards:
+        for i, card in enumerate(hand_of_cards):
             if immortality and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
-                card.card_type = CardTypes.DISABLED
+                hand_of_cards[i].card_type = CardTypes.DISABLED
             if card.card_type == CardTypes.BUFF:
-                card.card_type = CardTypes.GROUND
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -234,9 +226,9 @@ class RatFightingStrategy(IBattleStrategy):
                 return max(bleed_ids, shock_ids, key=len)[-1]
 
         # Disable all debuffs
-        for card in hand_of_cards:
+        for i, card in enumerate(hand_of_cards):
             if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.GROUND
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -266,9 +258,9 @@ class RatFightingStrategy(IBattleStrategy):
         if find(vio.immortality_buff, screenshot) and len(diane_aoe_ids) and current_stump == 1:
             return diane_aoe_ids[-1]
 
-        for card in hand_of_cards:
+        for i, card in enumerate(hand_of_cards):
             if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
-                card.card_type = CardTypes.GROUND
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
