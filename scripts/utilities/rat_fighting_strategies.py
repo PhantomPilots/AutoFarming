@@ -79,9 +79,18 @@ class RatFightingStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         # For bleed IDs, don't play bleeds on phase 2
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
+        bleed_ids = np.where(
+            [
+                card.debuff_type == DebuffTypes.BLEED and card.card_type != CardTypes.DISABLED and phase != 2
+                for card in hand_of_cards
+            ]
+        )[0]
+        shock_ids = np.where(
+            [card.debuff_type == DebuffTypes.SHOCK and card.card_type != CardTypes.DISABLED for card in hand_of_cards]
+        )[0]
+        poison_ids = np.where(
+            [card.debuff_type == DebuffTypes.POISON and card.card_type != CardTypes.DISABLED for card in hand_of_cards]
+        )[0]
         buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
 
         # First, if we see too many buffs on the Rat, let's try to remove them
