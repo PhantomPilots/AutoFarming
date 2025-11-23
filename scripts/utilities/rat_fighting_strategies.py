@@ -196,8 +196,9 @@ class RatFightingStrategy(IBattleStrategy):
 
         # Disable all debuffs and buffs
 
+        immortality = find(vio.immortality_buff, screenshot)
         for card in hand_of_cards:
-            if find(vio.immortality_buff, screenshot) and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
+            if immortality and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
                 card.card_type = CardTypes.DISABLED
             if card.card_type == CardTypes.BUFF:
                 card.card_type = CardTypes.GROUND
@@ -225,7 +226,7 @@ class RatFightingStrategy(IBattleStrategy):
                 print("Saving Diane strong cards for phase 3...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        if card_turn == 3:
+        if card_turn == 3 and not find(vio.rat_hidden, screenshot):
             if len(poison_ids):
                 return poison_ids[-1]
             elif len(bleed_ids) or len(shock_ids):
