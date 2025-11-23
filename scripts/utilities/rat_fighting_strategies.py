@@ -91,6 +91,10 @@ class RatFightingStrategy(IBattleStrategy):
             # Disable valenti's ultimate entirely
             print("Disabling Valenti's ultimate...")
             hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
+        if phase == 2 and len(shock_ids) == 1:
+            print("We have a single shock card, let's save it for next round...")
+            hand_of_cards[shock_ids[-1]].card_type = CardTypes.GROUND
+            shock_ids = np.array([])
 
         # First, if we see too many buffs on the Rat, let's try to remove them
         num_rat_buffs = count_rat_buffs(screenshot)
