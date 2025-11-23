@@ -114,9 +114,13 @@ class RatFightingStrategy(IBattleStrategy):
             if len(picked_ids):
                 return picked_ids[-1]
 
+        for i in range(len(hand_of_cards)):
+            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
+                hand_of_cards[i].card_type = CardTypes.GROUND
+
+        print("Defaulting with these debuff types:")
         for card in hand_of_cards:
-            if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.GROUND
+            print(card.card_type.name)
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -158,9 +162,9 @@ class RatFightingStrategy(IBattleStrategy):
             if len(picked_ids):
                 return picked_ids[-1]
 
-        for card in hand_of_cards:
-            if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.GROUND
+        for i in range(len(hand_of_cards)):
+            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         print("Defaulting with these debuff types:")
         for card in hand_of_cards:
