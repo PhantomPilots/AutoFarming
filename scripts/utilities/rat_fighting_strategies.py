@@ -114,8 +114,14 @@ class RatFightingStrategy(IBattleStrategy):
             if len(picked_ids):
                 return picked_ids[-1]
 
+        # Diane AOEs
+        diane_aoe_ids = np.where(
+            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
+        )[0]
         for i in range(len(hand_of_cards)):
-            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
+            if hand_of_cards[i].debuff_type != DebuffTypes.NONE or (
+                i in diane_aoe_ids and hand_of_cards[i].card_type == CardTypes.DISABLED
+            ):
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
