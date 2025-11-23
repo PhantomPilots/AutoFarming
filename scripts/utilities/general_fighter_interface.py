@@ -74,16 +74,6 @@ class IFighter(abc.ABC):
             # Reset the battle strategy turn
             self.battle_strategy.reset_fight_turn()
 
-    def get_current_hand(self, slot_index, **kwargs):
-        """Separating this function because we may need to pass in different args depending on the Fighter"""
-        return self.battle_strategy.pick_cards(
-            picked_cards=self.picked_cards,
-            card_turn=slot_index,
-            phase=IFighter.current_phase,
-            floor=IFighter.current_floor,
-            **kwargs,
-        )
-
     def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
@@ -102,7 +92,13 @@ class IFighter(abc.ABC):
 
         if empty_card_slots > 0:
             # KEY: Read the hand of cards here
-            current_hand = self.get_current_hand(slot_index, **kwargs)
+            current_hand = self.battle_strategy.pick_cards(
+                picked_cards=self.picked_cards,
+                card_turn=slot_index,
+                phase=IFighter.current_phase,
+                floor=IFighter.current_floor,
+                **kwargs,
+            )
 
             # Read the card index based on how many empty slots we had at the beginning, and how many we have now
             # TODO: In DOGS, "count_empty_card_slots" doesn't work as well as we want, fixed this somehow.
@@ -126,12 +122,16 @@ class IFighter(abc.ABC):
             self.picked_cards[slot_index] = card_played
 
         elif empty_card_slots == 0:
-            print("Finished my turn!")
-            # Increment to the next fight turn
-            self.battle_strategy.increment_fight_turn()
-            # Reset variables
-            self._reset_instance_variables()
-            return 1
+            return self.finish_turn()
+
+    def finish_turn(self):
+        """May need to re-implement (like on Rat Fighter)"""
+        print("Finished my turn!")
+        # Increment to the next fight turn
+        self.battle_strategy.increment_fight_turn()
+        # Reset variables
+        self._reset_instance_variables()
+        return 1
 
     def _play_card(
         self,

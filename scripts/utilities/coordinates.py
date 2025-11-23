@@ -77,6 +77,10 @@ class Coordinates:
         "rules_window_bottom": (403, 400),
         "top_left_4_units": (58, 239),
         "bottom_right_4_units": (507, 408),
+        # Rat
+        "left_log": (148, 390),
+        "middle_log": (242, 377),
+        "right_log": (330, 380),
     }
 
     @staticmethod

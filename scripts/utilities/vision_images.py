@@ -298,10 +298,16 @@ damage_increase = Vision("snake\\damage_increase.png")
 
 # For Rat
 ratatoskr = Vision("rat\\ratatoskr.png")
+rat_buff = MultiVision(
+    "rat\\rat_buff.png",
+    "rat\\rat_buff_small.png",
+    image_name="rat_buff",
+)
 jorm_bleed = Vision("rat\\jorm_bleed.png")
 val_shock = Vision("rat\\val_shock.png")
 val_poison = Vision("rat\\val_poison.png")
 val_ult = Vision("rat\\val_ult.png")
+jorm_buff_rem = Vision("rat\\jorm_buff_rem.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

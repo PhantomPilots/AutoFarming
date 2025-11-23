@@ -3,7 +3,7 @@ from typing import Callable
 import numpy as np
 import utilities.vision_images as vio
 from utilities.card_data import Card, CardRanks, CardTypes
-from utilities.utilities import find
+from utilities.utilities import count_needle_image, find
 
 
 def is_shock_card(card: Card):
@@ -16,3 +16,11 @@ def is_bleed_card(card: Card):
 
 def is_poison_card(card: Card):
     return find(vio.val_poison, card.card_image) or find(vio.val_ult, card.card_image)
+
+
+def is_buff_removal(card: Card):
+    return find(vio.lr_liz_aoe, card.card_image) or find(vio.jorm_buff_rem, card.card_image)
+
+
+def count_rat_buffs(screenshot, threshold=0.6) -> int:
+    return count_needle_image(vio.rat_buff, screenshot, threshold)

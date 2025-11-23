@@ -75,7 +75,8 @@ REQUIREMENTS = {
     """,
     "Rat Farmer": """
 <p><strong>Requirements:</strong><br>
-• Red Jorm, LR Liz, Blue Valenti, any strong 4th (King-Diane recommended)</p>
+• Red Jorm, LR Liz, Blue Valenti, any strong 4th (King-Diane recommended)<br>
+• If using King-Diane, place them to the very right</p>
     """,
     "Deer Whale": """
 <p><strong>Requirements:</strong><br>

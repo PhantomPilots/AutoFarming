@@ -5,7 +5,14 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
-from utilities.utilities import capture_window, find, find_and_click, get_hand_cards
+from utilities.rat_utilities import is_bleed_card, is_poison_card, is_shock_card
+from utilities.utilities import (
+    capture_window,
+    click_im,
+    find,
+    find_and_click,
+    get_hand_cards,
+)
 
 
 class RatFighter(IFighter):
@@ -13,7 +20,8 @@ class RatFighter(IFighter):
     current_floor = 1
 
     # 0, 1 or 2 (left, middle, right). We start in the middle
-    current_stump = 1
+    current_stump = -1
+    next_stump = 1
 
     def fighting_state(self):
 
@@ -54,11 +62,14 @@ class RatFighter(IFighter):
             # Update the current phase
             if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"MOVING TO PHASE {new_phase}!")
+                RatFighter.next_stump = 1
+                RatFighter.current_stump = -1
                 IFighter.current_phase = new_phase
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
-            self.identify_stump_position()
+            print(f"Current stump: {RatFighter.next_stump}")
+            self.update_stump(window_location)
             self.current_state = FightingStates.MY_TURN
 
     def _identify_phase(self, screenshot: np.ndarray):
@@ -74,22 +85,64 @@ class RatFighter(IFighter):
         # Default to phase 1 in case we don't see anything
         return 1
 
-    def identify_stump_position(self):
+    def identify_stump_position(self):  # sourcery skip: extract-duplicate-method
         """We need to find a way to identify what stump Rat is on... Because of this, we need to
         check the last bleed/poison/shock card played
         """
-        # TODO Implement
-        RatFighter.current_stump = 1
+        for card in reversed(self.picked_cards):
+            # TODO: Gotta click on the Rat as well
+            if is_bleed_card(card) and self.current_stump != 2:
+                print("Rat moving to the right!")
+                RatFighter.next_stump = 2
+                return
+            if is_poison_card(card) and self.current_stump != 1:
+                print("Rat moving to the center!")
+                RatFighter.next_stump = 1
+                return
+            if is_shock_card(card) and self.current_stump != 0:
+                print("Rat moving to the left!")
+                RatFighter.next_stump = 0
+                return
+
+    def update_stump(self, window_location):
+        """Click on a new stump if applicable, and activate the talent"""
+
+        if RatFighter.next_stump != RatFighter.current_stump:
+            if RatFighter.next_stump == 0:
+                click_im(Coordinates.get_coordinates("left_log"), window_location)
+            elif RatFighter.next_stump == 1:
+                click_im(Coordinates.get_coordinates("middle_log"), window_location)
+            elif RatFighter.next_stump == 2:
+                click_im(Coordinates.get_coordinates("right_log"), window_location)
+            RatFighter.current_stump = RatFighter.next_stump
+            time.sleep(0.3)
+
+        # And click on the talent!
+        click_im(Coordinates.get_coordinates("talent"), window_location)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        screenshot, _ = capture_window()
+        screenshot, window_location = capture_window()
 
         # First, update the current phase
         IFighter.current_phase = self._identify_phase(screenshot)
 
         # Then, play the cards
         self.play_cards(current_stump=RatFighter.current_stump)
+
+    def finish_turn(self):
+        """This function is used within `self.play_cards()`.
+        For the Rat Fighter, we need to read what's the last played card that'll move the Rat!"""
+
+        print("Finished my turn! Identifying where Rat will move next...")
+        self.identify_stump_position()
+
+        # Increment to the next fight turn
+        self.battle_strategy.increment_fight_turn()
+        # Reset variables
+        self._reset_instance_variables()
+
+        return 1
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""
@@ -107,7 +160,11 @@ class RatFighter(IFighter):
         # The second one is in case we cannot play ANY card. Then, the empty card slots look different
         rectangles_2, _ = vio.empty_card_slot_2.find_all_rectangles(screenshot, threshold=0.6)
 
-        return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else rectangles.shape[0] + rectangles_2.shape[0]
+        return (
+            4
+            if find(vio.skill_locked, screenshot, threshold=0.6)
+            else min(4, rectangles.shape[0] + rectangles_2.shape[0])
+        )
 
     def exit_fight_state(self):
         """We have to manually finish the fight because we've been fully disabled..."""
