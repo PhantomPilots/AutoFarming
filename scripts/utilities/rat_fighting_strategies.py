@@ -186,6 +186,7 @@ class RatFightingStrategy(IBattleStrategy):
         # If no immortality anymore, let's save all good KDiane cards
         if not find(vio.immortality_buff, screenshot):
             for i in diane_aoe_ids:
+                print("Saving Diane strong cards for phase 3...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
         if card_turn == 3 and find(vio.rat_hidden, screenshot):
@@ -214,8 +215,6 @@ class RatFightingStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
-        bleed_ids = np.where([c.debuff_type == DebuffTypes.BLEED and phase != 2 for c in hand_of_cards])[0]
-        shock_ids = np.where([c.debuff_type == DebuffTypes.SHOCK for c in hand_of_cards])[0]
         poison_ids = np.where([c.debuff_type == DebuffTypes.POISON for c in hand_of_cards])[0]
 
         # Diane AOEs
@@ -227,11 +226,11 @@ class RatFightingStrategy(IBattleStrategy):
             print("We need to move the Rat back to the middle!")
             return poison_ids[-1]
 
-        if find(vio.immortality_buff, screenshot) and len(diane_aoe_ids):
+        if find(vio.immortality_buff, screenshot) and len(diane_aoe_ids) and current_stump == 1:
             return diane_aoe_ids[-1]
 
         for card in hand_of_cards:
-            if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
+            if card.debuff_type != DebuffTypes.NONE:
                 card.card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
