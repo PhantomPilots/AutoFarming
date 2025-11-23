@@ -150,7 +150,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         for card in hand_of_cards:
             if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.DISABLED
+                card.card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
