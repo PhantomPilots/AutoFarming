@@ -124,6 +124,8 @@ class RatFightingStrategy(IBattleStrategy):
             if hand_of_cards[i].debuff_type != DebuffTypes.NONE or (
                 i in diane_aoe_ids and hand_of_cards[i].card_type == CardTypes.DISABLED
             ):
+                if i in diane_aoe_ids:
+                    print("Fully disabling KDiane's AOE since it's disabled")
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
