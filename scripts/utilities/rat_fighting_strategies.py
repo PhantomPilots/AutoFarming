@@ -135,9 +135,15 @@ class RatFightingStrategy(IBattleStrategy):
         if find(vio.damage_reduction, screenshot):
             print("We gotta disable all ults except Valenti's!")
             for i, card in enumerate(hand_of_cards):
-                if (i not in valenti_ult_id and card.card_type == CardTypes.ULTIMATE) or (
-                    i in valenti_ult_id and current_stump != 0
-                ):
+
+                if card.card_type != CardTypes.ULTIMATE:
+                    continue
+
+                is_valenti = i in valenti_ult_id
+
+                # Disable non-Valenti always
+                # Disable Valenti too unless stump==0
+                if (not is_valenti) or (is_valenti and current_stump != 0):
                     card.card_type = CardTypes.DISABLED
 
         if card_turn == 3:
