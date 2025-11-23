@@ -157,10 +157,18 @@ class RatFightingStrategy(IBattleStrategy):
                 picked_ids = shock_ids if len(shock_ids) else poison_ids if len(poison_ids) else []
             if len(picked_ids):
                 return picked_ids[-1]
+        else:
+            hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
+            if current_stump == 1:
+                for i in bleed_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+            elif current_stump == 2:
+                for i in shock_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
 
         for i in range(len(hand_of_cards)):
             if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
-                hand_of_cards[i].card_type = CardTypes.GROUND
+                hand_of_cards[i].card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
