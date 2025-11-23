@@ -81,19 +81,16 @@ class RatFightingStrategy(IBattleStrategy):
         print(f"We're in card turn: {card_turn}")
 
         # For bleed IDs, don't play bleeds on phase 2
-        bleed_ids = np.where(
-            [
-                card.debuff_type == DebuffTypes.BLEED and card.card_type != CardTypes.DISABLED and phase != 2
-                for card in hand_of_cards
-            ]
-        )[0]
-        shock_ids = np.where(
-            [card.debuff_type == DebuffTypes.SHOCK and card.card_type != CardTypes.DISABLED for card in hand_of_cards]
-        )[0]
-        poison_ids = np.where(
-            [card.debuff_type == DebuffTypes.POISON and card.card_type != CardTypes.DISABLED for card in hand_of_cards]
-        )[0]
+        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
+        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
+        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
+        valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
+
+        if phase == 2 and len(valenti_ult_id):
+            # Disable valenti's ultimate entirely
+            print("Disabling Valenti's ultimate...")
+            hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
 
         # First, if we see too many buffs on the Rat, let's try to remove them
         num_rat_buffs = count_rat_buffs(screenshot)
@@ -104,14 +101,19 @@ class RatFightingStrategy(IBattleStrategy):
 
         if card_turn == 3:
             # Let's try to move the Rat
-            picked_ids = []
+            def enabled_ids(id_list):
+                return [i for i in id_list if hand_of_cards[i].card_type not in [CardTypes.DISABLED, CardTypes.GROUND]]
+
             if current_stump == 0:
-                picked_ids = max(poison_ids, bleed_ids, key=len)
+                opts = (enabled_ids(poison_ids), enabled_ids(bleed_ids))
             elif current_stump == 1:
-                picked_ids = max(bleed_ids, shock_ids, key=len)
-            elif current_stump == 2:
-                picked_ids = max(shock_ids, poison_ids, key=len)
-            if len(picked_ids):
+                opts = (enabled_ids(bleed_ids), enabled_ids(shock_ids))
+            else:  # current_stump == 2
+                opts = (enabled_ids(shock_ids), enabled_ids(poison_ids))
+
+            picked_ids = max(opts, key=len)
+
+            if picked_ids:
                 return picked_ids[-1]
 
         # Diane AOEs
