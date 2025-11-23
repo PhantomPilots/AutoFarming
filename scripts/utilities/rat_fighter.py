@@ -69,11 +69,19 @@ class RatFighter(IFighter):
                 RatFighter.current_stump = -1
                 IFighter.current_phase = new_phase
 
+                if IFighter.current_floor == 1 and IFighter.current_phase == 3 and not self.check_for_bleed():
+                    print("We're entering F1P3 without a bleed card... Gotta restart the fight.")
+                    self.current_state = FightingStates.EXIT_FIGHT
+                    return
+
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
             print(f"Current stump: {RatFighter.next_stump}")
             self.update_stump(window_location)
             self.current_state = FightingStates.MY_TURN
+
+    def check_for_bleed(self):
+        """If we go to F1P3 without a bleed, let's reset"""
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""

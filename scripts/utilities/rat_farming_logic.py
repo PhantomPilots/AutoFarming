@@ -20,7 +20,7 @@ class RatFarmer(DemonicBeastFarmer):
         starting_state=States.GOING_TO_DB,
         max_stamina_pots="inf",
         num_floor_3_clears="inf",
-        reset_after_defeat=True,
+        reset_after_defeat=False,
         logger=logger,
         password: str | None = None,
         do_dailies=False,

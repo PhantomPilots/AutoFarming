@@ -79,7 +79,9 @@ class RatFightingStrategy(IBattleStrategy):
     ):
         """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
         # Reset
-        RatFightingStrategy.turns_in_f2p2 = 0
+        if RatFightingStrategy.turns_in_f2p2 > 0:
+            print("Resetting F2P2 counter")
+            RatFightingStrategy.turns_in_f2p2 = 0
 
         screenshot, _ = capture_window()
 
