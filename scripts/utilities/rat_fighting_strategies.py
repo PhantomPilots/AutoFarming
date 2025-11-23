@@ -162,6 +162,10 @@ class RatFightingStrategy(IBattleStrategy):
             if card.debuff_type != DebuffTypes.NONE:
                 card.card_type = CardTypes.GROUND
 
+        print("Defaulting with these debuff types:")
+        for card in hand_of_cards:
+            print(card.card_type.name)
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor2_phase1(
