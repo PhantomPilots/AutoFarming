@@ -41,8 +41,6 @@ logger = LoggerWrapper("RatFightingStrategies", log_file="rat_AI.log")
 class RatFightingStrategy(IBattleStrategy):
     """The logic behind Rat. It's gonna be complex, brace yourself..."""
 
-    enable_ults = False
-
     def get_next_card_index(
         self,
         hand_of_cards: list[Card],
@@ -109,12 +107,28 @@ class RatFightingStrategy(IBattleStrategy):
                 if card.debuff_type != DebuffTypes.NONE or (phase == 2 and find(vio.val_ult, card.card_image)):
                     card.card_type = CardTypes.DISABLED
 
+        # Let's place Diane's AoEs to the rightmost position first
+        diane_aoe_ids = np.where(
+            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
+        )[0]
+
+        if len(diane_aoe_ids):
+            # Extract in original order
+            aoe_cards = [hand_of_cards[i] for i in diane_aoe_ids]
+
+            # Everything else
+            other_cards = [c for i, c in enumerate(hand_of_cards) if i not in diane_aoe_ids]
+
+            # Rebuild the list: AOE first (leftmost), then others
+            hand_of_cards[:] = aoe_cards + other_cards
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor1_phase3(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Phase 3, the hardcore one..."""
+        screenshot, _ = capture_window()
 
         # For bleed IDs, don't play bleeds on phase 2
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
@@ -122,11 +136,17 @@ class RatFightingStrategy(IBattleStrategy):
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
+        if find(vio.damage_reduction, screenshot):
+            print("We gotta disable all ults except Valenti's!")
+            for i, card in enumerate(hand_of_cards):
+                if i not in valenti_ult_id and card.card_type == CardTypes.ULTIMATE:
+                    card.card_type = CardTypes.DISABLED
+
         if card_turn == 3:
             # Let's try to move the Rat
+            picked_ids = []
             if current_stump == 0 and len(valenti_ult_id):
                 picked_ids = valenti_ult_id
-                RatFightingStrategy.enable_ults = True
             elif current_stump == 1:
                 picked_ids = bleed_ids if len(bleed_ids) else shock_ids if len(shock_ids) else []
             elif current_stump == 2:
@@ -134,10 +154,9 @@ class RatFightingStrategy(IBattleStrategy):
             if len(picked_ids):
                 return picked_ids[-1]
 
-        else:
-            for card in hand_of_cards:
-                if card.debuff_type != DebuffTypes.NONE or find(vio.val_ult, card.card_image):
-                    card.card_type = CardTypes.DISABLED
+        for card in hand_of_cards:
+            if card.debuff_type != DebuffTypes.NONE:
+                card.card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 

@@ -303,6 +303,7 @@ rat_buff = MultiVision(
     "rat\\rat_buff_small.png",
     image_name="rat_buff",
 )
+damage_reduction = Vision("rat\\damage_reduction.png")
 rat_hidden = Vision("rat\\rat_hidden.png")
 jorm_bleed = Vision("rat\\jorm_bleed.png")
 val_shock = Vision("rat\\val_shock.png")
