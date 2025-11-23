@@ -17,7 +17,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=RatFarmer,
         battle_strategy=RatFightingStrategy,  # The AI that will pick the cards
-        starting_state=States.FIGHTING_FLOOR,  # Should be 'GOING_TO_BIRD'
+        starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_BIRD'
         num_floor_3_clears=args.clears,  # A number or "inf"
         password=args.password,  # Account password
         do_dailies=args.do_dailies,  # Should we do our dailies?
