@@ -102,10 +102,9 @@ class RatFightingStrategy(IBattleStrategy):
             if len(picked_ids):
                 return picked_ids[-1]
 
-        else:
-            for card in hand_of_cards:
-                if card.debuff_type != DebuffTypes.NONE or (phase == 2 and find(vio.val_ult, card.card_image)):
-                    card.card_type = CardTypes.DISABLED
+        for card in hand_of_cards:
+            if card.debuff_type != DebuffTypes.NONE or (phase == 2 and find(vio.val_ult, card.card_image)):
+                card.card_type = CardTypes.DISABLED
 
         # Let's place Diane's AoEs to the rightmost position first
         diane_aoe_ids = np.where(
