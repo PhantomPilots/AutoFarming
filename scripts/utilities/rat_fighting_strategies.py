@@ -174,9 +174,11 @@ class RatFightingStrategy(IBattleStrategy):
                 return picked_ids[-1]
         elif current_stump == 1:
             for i in bleed_ids:
+                print(f"We're on card turn {card_turn}, disabling bleed IDs")
                 hand_of_cards[i].card_type = CardTypes.GROUND
         elif current_stump == 2:
             for i in shock_ids:
+                print(f"We're on card turn {card_turn}, disabling shock IDs")
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         for i in valenti_ult_id:

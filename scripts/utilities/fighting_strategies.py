@@ -188,6 +188,12 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
+        if all(card.card_type in [CardTypes.GROUND, CardTypes.DISABLED] for card in hand_of_cards):
+            print("We only have ground and disabled cards, let's play the rightmost disabled card...")
+            disabled_ids = np.where([card.card_type == CardTypes.DISABLED for card in hand_of_cards])[0]
+            if len(disabled_ids):
+                return disabled_ids[-1]
+
         # print("We don't meet any of the previous criteria, defaulting to the rightmost index")
         return -1
 
