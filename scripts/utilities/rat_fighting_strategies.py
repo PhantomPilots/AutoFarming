@@ -197,9 +197,9 @@ class RatFightingStrategy(IBattleStrategy):
         # Disable all debuffs and buffs
 
         for card in hand_of_cards:
-            if (
-                find(vio.immortality_buff, screenshot) and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]
-            ) or card.card_type == CardTypes.BUFF:
+            if find(vio.immortality_buff, screenshot) and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
+                card.card_type = CardTypes.DISABLED
+            if card.card_type == CardTypes.BUFF:
                 card.card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
