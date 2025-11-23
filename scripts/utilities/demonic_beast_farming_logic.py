@@ -39,7 +39,7 @@ class States(Enum):
 
 class DemonicBeastFarmer(IFarmer, abc.ABC):
 
-    current_floor = 2
+    current_floor = 1
 
     # Keep track of how many times we've defeated floor 3
     num_floor_3_victories = 0
