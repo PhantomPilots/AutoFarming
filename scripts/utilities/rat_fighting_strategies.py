@@ -146,6 +146,11 @@ class RatFightingStrategy(IBattleStrategy):
                 if (not is_valenti) or (is_valenti and current_stump != 0):
                     card.card_type = CardTypes.DISABLED
 
+        # Disable everything first
+        for i in range(len(hand_of_cards)):
+            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
+                hand_of_cards[i].card_type = CardTypes.DISABLED
+
         if card_turn == 3:
             # Let's try to move the Rat
             picked_ids = []
@@ -166,10 +171,6 @@ class RatFightingStrategy(IBattleStrategy):
 
         for i in valenti_ult_id:
             hand_of_cards[i].card_type = CardTypes.GROUND
-
-        for i in range(len(hand_of_cards)):
-            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
-                hand_of_cards[i].card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
