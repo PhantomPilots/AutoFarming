@@ -176,6 +176,8 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Here, only be careful to 1) Never play a buff, and 2) Only play debuff if we can play the 3 of them"""
+        screenshot, _ = capture_window()
+
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
@@ -193,9 +195,10 @@ class RatFightingStrategy(IBattleStrategy):
                 return poison_ids[-1]
 
         # Disable all debuffs and buffs
-        for card in hand_of_cards:
-            if card.debuff_type != DebuffTypes.NONE or card.card_type == CardTypes.BUFF:
-                card.card_type = CardTypes.DISABLED
+        if find(vio.immortality_buff, screenshot):
+            for card in hand_of_cards:
+                if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK] or card.card_type == CardTypes.BUFF:
+                    card.card_type = CardTypes.DISABLED
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -220,7 +223,7 @@ class RatFightingStrategy(IBattleStrategy):
                 print("Saving Diane strong cards for phase 3...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        if card_turn == 3 and find(vio.rat_hidden, screenshot):
+        if card_turn == 3:
             if len(poison_ids):
                 return poison_ids[-1]
             elif len(bleed_ids) or len(shock_ids):
@@ -230,7 +233,7 @@ class RatFightingStrategy(IBattleStrategy):
         # Disable all debuffs
         for card in hand_of_cards:
             if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.DISABLED
+                card.card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -261,8 +264,8 @@ class RatFightingStrategy(IBattleStrategy):
             return diane_aoe_ids[-1]
 
         for card in hand_of_cards:
-            if card.debuff_type != DebuffTypes.NONE:
-                card.card_type = CardTypes.DISABLED
+            if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
+                card.card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
