@@ -168,7 +168,7 @@ class RatFightingStrategy(IBattleStrategy):
         # Disable everything first
         for i in range(len(hand_of_cards)):
             if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
-                hand_of_cards[i].card_type = CardTypes.DISABLED
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         if card_turn == 3:
             # Let's try to move the Rat
