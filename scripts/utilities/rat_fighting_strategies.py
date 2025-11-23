@@ -49,7 +49,7 @@ class RatFightingStrategy(IBattleStrategy):
         phase: int,
         card_turn: int,
         current_stump: int,
-        **kwargs
+        **kwargs,
     ) -> int:
         """Distinguish between floors and phases"""
 
@@ -77,6 +77,8 @@ class RatFightingStrategy(IBattleStrategy):
     ):
         """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
         screenshot, _ = capture_window()
+
+        print(f"We're in card turn: {card_turn}")
 
         # For bleed IDs, don't play bleeds on phase 2
         bleed_ids = np.where(
@@ -125,7 +127,7 @@ class RatFightingStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         # For bleed IDs, don't play bleeds on phase 2
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
+        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
@@ -133,7 +135,9 @@ class RatFightingStrategy(IBattleStrategy):
         if find(vio.damage_reduction, screenshot):
             print("We gotta disable all ults except Valenti's!")
             for i, card in enumerate(hand_of_cards):
-                if i not in valenti_ult_id and card.card_type == CardTypes.ULTIMATE:
+                if (i not in valenti_ult_id and card.card_type == CardTypes.ULTIMATE) or (
+                    i in valenti_ult_id and current_stump != 0
+                ):
                     card.card_type = CardTypes.DISABLED
 
         if card_turn == 3:
