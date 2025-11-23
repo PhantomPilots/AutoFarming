@@ -113,8 +113,8 @@ class RatFightingStrategy(IBattleStrategy):
                 return picked_ids[-1]
 
         for card in hand_of_cards:
-            if card.debuff_type != DebuffTypes.NONE or (phase == 2 and find(vio.val_ult, card.card_image)):
-                card.card_type = CardTypes.DISABLED
+            if card.debuff_type != DebuffTypes.NONE:
+                card.card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
