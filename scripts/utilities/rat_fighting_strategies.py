@@ -41,6 +41,8 @@ logger = LoggerWrapper("RatFightingStrategies", log_file="rat_AI.log")
 class RatFightingStrategy(IBattleStrategy):
     """The logic behind Rat. It's gonna be complex, brace yourself..."""
 
+    turns_in_f2p2 = 0
+
     def get_next_card_index(
         self,
         hand_of_cards: list[Card],
@@ -76,6 +78,9 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
+        # Reset
+        RatFightingStrategy.turns_in_f2p2 = 0
+
         screenshot, _ = capture_window()
 
         print(f"We're in card turn: {card_turn}")
@@ -228,6 +233,9 @@ class RatFightingStrategy(IBattleStrategy):
     ):
         """Here, we should only"""
         screenshot, _ = capture_window()
+
+        if card_turn == 3:
+            RatFightingStrategy.turns_in_f2p2 += 1
 
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]

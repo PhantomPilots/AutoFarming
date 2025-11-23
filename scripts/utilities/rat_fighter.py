@@ -54,6 +54,10 @@ class RatFighter(IFighter):
                 print("Our hand is fully disabled, let's restart the fight!")
                 self.current_state = FightingStates.EXIT_FIGHT
                 return
+            if self.battle_strategy.turns_in_f2p2 >= 8:
+                print("We've been in F2P2 for too long! I guess we failed... Let's reset")
+                self.current_state = FightingStates.EXIT_FIGHT
+                return
 
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
