@@ -57,6 +57,7 @@ class RatFighter(IFighter):
             if self.battle_strategy.turns_in_f2p2 >= 8:
                 print("We've been in F2P2 for too long! I guess we failed... Let's reset")
                 self.current_state = FightingStates.EXIT_FIGHT
+                self.battle_strategy.turns_in_f2p2 = 0
                 return
 
             # We see empty card slots, it means its our turn
