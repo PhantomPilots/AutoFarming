@@ -172,6 +172,8 @@ class RatFightingStrategy(IBattleStrategy):
                 hand_of_cards[i].card_type = CardTypes.GROUND
             elif card.debuff_type == DebuffTypes.POISON:
                 hand_of_cards[i].card_type = CardTypes.DISABLED  # Lower requirement
+            elif current_stump < 2 and card.card_type == CardTypes.BUFF:
+                hand_of_cards[i].card_type = CardTypes.DISABLED  # Disable Liz's buff, so that we can use it later
 
         if card_turn == 3:
             # Let's try to move the Rat
