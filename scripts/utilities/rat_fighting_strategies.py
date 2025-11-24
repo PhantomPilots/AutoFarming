@@ -135,6 +135,10 @@ class RatFightingStrategy(IBattleStrategy):
                     print("Fully disabling KDiane's AOE since it's disabled")
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
+        if all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
+            # Only super-disabled cards, let's just move one
+            return [-1, -3]
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor1_phase3(
@@ -171,7 +175,7 @@ class RatFightingStrategy(IBattleStrategy):
             elif current_stump == 1:
                 picked_ids = bleed_ids if len(bleed_ids) else shock_ids if len(shock_ids) else []
             elif current_stump == 2:
-                picked_ids = shock_ids if len(shock_ids) else poison_ids if len(poison_ids) else []
+                picked_ids = shock_ids if len(shock_ids) else []
             if len(picked_ids):
                 return picked_ids[-1]
 
