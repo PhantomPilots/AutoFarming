@@ -250,8 +250,8 @@ class RatFightingStrategy(IBattleStrategy):
             for i in diane_aoe_ids:
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
-        if card_turn == 3 and not find(vio.rat_hidden, screenshot):
-            if len(poison_ids):
+        if card_turn == 3:
+            if not find(vio.rat_hidden, screenshot) and len(poison_ids):
                 return poison_ids[-1]
             elif len(bleed_ids) or len(shock_ids):
                 # We cannot make the rat go back to the middle stump, but we *must* make it go somewhere deterministically
