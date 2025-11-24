@@ -61,6 +61,8 @@ class RatFightingStrategy(IBattleStrategy):
         for card in picked_cards:
             card.debuff_type = get_debuff_type(card)
 
+        print(f"We're in card turn: {card_turn}")
+
         if floor == 1 and phase in {1, 2}:
             return self.floor1_phase12(hand_of_cards, picked_cards, phase, card_turn, current_stump)
         if floor == 1 and phase == 3:
@@ -80,8 +82,6 @@ class RatFightingStrategy(IBattleStrategy):
         """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
 
         screenshot, _ = capture_window()
-
-        print(f"We're in card turn: {card_turn}")
 
         # For bleed IDs, don't play bleeds on phase 2
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
@@ -169,10 +169,13 @@ class RatFightingStrategy(IBattleStrategy):
         # Disable everything first
         for i, card in enumerate(hand_of_cards):
             if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
+                print("Fully-disabling a bleed or shock")
                 hand_of_cards[i].card_type = CardTypes.GROUND
             elif card.debuff_type == DebuffTypes.POISON:
+                print("Softly disabling a poison")
                 hand_of_cards[i].card_type = CardTypes.DISABLED  # Lower requirement
             elif current_stump < 2 and card.card_type == CardTypes.BUFF:
+                print("Softly disabling a buff")
                 hand_of_cards[i].card_type = CardTypes.DISABLED  # Disable Liz's buff, so that we can use it later
 
         if card_turn == 3:
@@ -181,7 +184,7 @@ class RatFightingStrategy(IBattleStrategy):
             if current_stump == 0 and len(valenti_ult_id):
                 picked_ids = valenti_ult_id
             elif current_stump == 1:
-                picked_ids = bleed_ids if len(bleed_ids) else shock_ids if len(shock_ids) else []
+                picked_ids = bleed_ids if len(bleed_ids) else []
             elif current_stump == 2:
                 picked_ids = shock_ids if len(shock_ids) else []
             if len(picked_ids):
