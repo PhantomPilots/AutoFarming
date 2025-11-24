@@ -239,6 +239,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         if card_turn == 3:
             RatFightingStrategy.turns_in_f2p2 += 1
+            print(f"We're on turn {RatFightingStrategy.turns_in_f2p2} in F2P2")
 
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
