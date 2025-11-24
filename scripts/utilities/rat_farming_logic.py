@@ -60,8 +60,6 @@ class RatFarmer(DemonicBeastFarmer):
 
         if find(vio.floor2, floor_img_region, threshold=threshold):
             db_floor = 2
-        elif find(vio.floor3, floor_img_region, threshold=threshold):
-            db_floor = 3
         elif find(vio.floor1, floor_img_region, threshold=threshold):
             db_floor = 1
 
