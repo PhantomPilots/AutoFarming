@@ -127,9 +127,11 @@ class RatFightingStrategy(IBattleStrategy):
         diane_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
-        for i in range(len(hand_of_cards)):
-            if hand_of_cards[i].debuff_type != DebuffTypes.NONE or (
-                i in diane_aoe_ids and hand_of_cards[i].card_type == CardTypes.DISABLED
+        for i, card in enumerate(hand_of_cards):
+            if (
+                (phase == 1 and card.debuff_type != DebuffTypes.NONE)
+                or (phase == 2 and card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED])
+                or (i in diane_aoe_ids and card.card_type == CardTypes.DISABLED)
             ):
                 if i in diane_aoe_ids:
                     print("Fully disabling KDiane's AOE since it's disabled")
