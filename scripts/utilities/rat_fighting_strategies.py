@@ -78,10 +78,6 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
-        # Reset
-        if RatFightingStrategy.turns_in_f2p2 > 0:
-            print("Resetting F2P2 counter")
-            RatFightingStrategy.turns_in_f2p2 = 0
 
         screenshot, _ = capture_window()
 
@@ -201,6 +197,11 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Here, only be careful to 1) Never play a buff, and 2) Only play debuff if we can play the 3 of them"""
+        # Reset
+        if RatFightingStrategy.turns_in_f2p2 > 0:
+            print("Resetting F2P2 counter")
+            RatFightingStrategy.turns_in_f2p2 = 0
+
         screenshot, _ = capture_window()
 
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
