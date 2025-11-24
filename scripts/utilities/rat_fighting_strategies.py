@@ -157,7 +157,7 @@ class RatFightingStrategy(IBattleStrategy):
             all_val_ids = np.concatenate((poison_ids, shock_ids))
             if len(all_val_ids) and card_turn >= 2:
                 print("Trying to get Valenti's ult...")
-                return [all_val_ids[-1], all_val_ids[-1] + 1]
+                return [all_val_ids[0], all_val_ids[0] + 1]
 
         if find(vio.damage_reduction, screenshot):
             print("We gotta disable all ults!")
