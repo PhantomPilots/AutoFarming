@@ -153,6 +153,12 @@ class RatFightingStrategy(IBattleStrategy):
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
+        if not len(valenti_ult_id) and current_stump == 2:
+            all_val_ids = np.concatenate((poison_ids, shock_ids))
+            if len(all_val_ids) and card_turn >= 2:
+                print("Trying to get Valenti's ult...")
+                return [all_val_ids[-1], all_val_ids[-1] + 1]
+
         if find(vio.damage_reduction, screenshot):
             print("We gotta disable all ults!")
             for i, card in enumerate(hand_of_cards):
