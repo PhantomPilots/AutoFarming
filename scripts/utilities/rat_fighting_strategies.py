@@ -191,6 +191,10 @@ class RatFightingStrategy(IBattleStrategy):
         for i in valenti_ult_id:
             hand_of_cards[i].card_type = CardTypes.GROUND
 
+        if all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
+            # Only super-disabled cards, let's just move one
+            return [-1, -2]
+
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def floor2_phase1(
