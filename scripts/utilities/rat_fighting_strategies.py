@@ -215,7 +215,9 @@ class RatFightingStrategy(IBattleStrategy):
         for i, card in enumerate(hand_of_cards):
             if immortality and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
                 hand_of_cards[i].card_type = CardTypes.DISABLED
-            if card.card_type == CardTypes.BUFF:
+            if card.card_type == CardTypes.BUFF or find(
+                vio.val_ult, card.card_image  # Let's prevent playing Valenti's ultimate if we don't have to
+            ):
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
