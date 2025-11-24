@@ -158,8 +158,10 @@ class RatFightingStrategy(IBattleStrategy):
 
         # Disable everything first
         for i, card in enumerate(hand_of_cards):
-            if card.debuff_type != DebuffTypes.NONE:
+            if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
                 hand_of_cards[i].card_type = CardTypes.GROUND
+            elif card.debuff_type == DebuffTypes.POISON:
+                hand_of_cards[i].card_type = CardTypes.DISABLED  # Lower requirement
 
         if card_turn == 3:
             # Let's try to move the Rat
@@ -215,7 +217,7 @@ class RatFightingStrategy(IBattleStrategy):
         for i, card in enumerate(hand_of_cards):
             if immortality and card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
                 hand_of_cards[i].card_type = CardTypes.DISABLED
-            if card.card_type == CardTypes.BUFF or find(
+            elif card.card_type == CardTypes.BUFF or find(
                 vio.val_ult, card.card_image  # Let's prevent playing Valenti's ultimate if we don't have to
             ):
                 hand_of_cards[i].card_type = CardTypes.GROUND
