@@ -255,7 +255,7 @@ class RatFightingStrategy(IBattleStrategy):
                 return poison_ids[-1]
             elif len(bleed_ids) or len(shock_ids):
                 # We cannot make the rat go back to the middle stump, but we *must* make it go somewhere deterministically
-                return max(bleed_ids, shock_ids, key=len)[-1]
+                return shock_ids[-1] if len(shock_ids) else bleed_ids[-1]
 
         # Disable all debuffs
         for i, card in enumerate(hand_of_cards):
