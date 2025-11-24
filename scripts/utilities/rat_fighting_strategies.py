@@ -193,7 +193,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         if all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
             # Only super-disabled cards, let's just move one
-            return [-1, -2]
+            return [-1, -3]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
