@@ -150,22 +150,15 @@ class RatFightingStrategy(IBattleStrategy):
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
         if find(vio.damage_reduction, screenshot):
-            print("We gotta disable all ults except Valenti's!")
+            print("We gotta disable all ults!")
             for i, card in enumerate(hand_of_cards):
-
                 if card.card_type != CardTypes.ULTIMATE:
                     continue
-
-                is_valenti = i in valenti_ult_id
-
-                # Disable non-Valenti always
-                # Disable Valenti too unless stump==0
-                if (not is_valenti) or (is_valenti and current_stump != 0):
-                    card.card_type = CardTypes.DISABLED
+                hand_of_cards[i].card_type = CardTypes.DISABLED
 
         # Disable everything first
-        for i in range(len(hand_of_cards)):
-            if hand_of_cards[i].debuff_type != DebuffTypes.NONE:
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type != DebuffTypes.NONE:
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         if card_turn == 3:
@@ -179,14 +172,6 @@ class RatFightingStrategy(IBattleStrategy):
                 picked_ids = shock_ids if len(shock_ids) else poison_ids if len(poison_ids) else []
             if len(picked_ids):
                 return picked_ids[-1]
-        elif current_stump == 1:
-            for i in bleed_ids:
-                print(f"We're on card turn {card_turn}, disabling bleed IDs")
-                hand_of_cards[i].card_type = CardTypes.GROUND
-        elif current_stump == 2:
-            for i in shock_ids:
-                print(f"We're on card turn {card_turn}, disabling shock IDs")
-                hand_of_cards[i].card_type = CardTypes.GROUND
 
         for i in valenti_ult_id:
             hand_of_cards[i].card_type = CardTypes.GROUND
