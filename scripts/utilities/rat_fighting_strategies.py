@@ -167,12 +167,14 @@ class RatFightingStrategy(IBattleStrategy):
                     continue
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        # Disable everything first
+        # Disable one shock and one bleed
+        if len(bleed_ids):
+            hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
+        if len(shock_ids):
+            hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
+        # Disable all buffs too
         for i, card in enumerate(hand_of_cards):
-            if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
-                print("Fully-disabling a bleed or shock")
-                hand_of_cards[i].card_type = CardTypes.GROUND
-            elif current_stump > 0 and card.card_type == CardTypes.BUFF:
+            if current_stump > 0 and card.card_type == CardTypes.BUFF:
                 print("Softly disabling a buff")
                 hand_of_cards[i].card_type = CardTypes.DISABLED  # Disable Liz's buff, so that we can use it later
 
