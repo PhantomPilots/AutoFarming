@@ -230,14 +230,16 @@ class RatFightingStrategy(IBattleStrategy):
         #  GLOBAL LOGIC
         # ------------------
         any_non_ground = False
+        buff_disabled = False
         for i, card in enumerate(hand_of_cards):
 
             if have_damage_reduction and card.card_type == CardTypes.ULTIMATE:
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-            if current_stump > 0 and card.card_type == CardTypes.BUFF:
+            if not buff_disabled and current_stump > 0 and card.card_type == CardTypes.BUFF:
                 print("Softly disabling a buff")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
+                buff_disabled = True
 
             if i in valenti_set:
                 hand_of_cards[i].card_type = CardTypes.GROUND
