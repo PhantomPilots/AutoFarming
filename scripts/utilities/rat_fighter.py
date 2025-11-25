@@ -5,6 +5,7 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
+from utilities.rat_fighting_strategies import RatFightingStrategy
 from utilities.rat_utilities import is_bleed_card, is_poison_card, is_shock_card
 from utilities.utilities import (
     capture_window,
@@ -55,10 +56,10 @@ class RatFighter(IFighter):
                 print("Our hand is fully disabled, let's restart the fight!")
                 self.current_state = FightingStates.EXIT_FIGHT
                 return
-            if self.battle_strategy.turns_in_f2p2 > 10:
+            if RatFightingStrategy.turns_in_f2p2 > 10:
                 print("We've been in F2P2 for too long! I guess we failed... Let's reset")
                 self.current_state = FightingStates.EXIT_FIGHT
-                self.battle_strategy.turns_in_f2p2 = 0
+                RatFightingStrategy.turns_in_f2p2 = 0
                 return
 
             # We see empty card slots, it means its our turn
