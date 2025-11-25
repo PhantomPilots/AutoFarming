@@ -179,62 +179,72 @@ class RatFightingStrategy(IBattleStrategy):
     def floor1_phase3(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
-        """Phase 3, the hardcore one..."""
         screenshot, _ = capture_window()
 
-        # For bleed IDs, don't play bleeds on phase 2
+        # Precompute IDs
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
-        if not len(valenti_ult_id) and current_stump == 2:
-            if card_turn >= 2 and len(all_val_ids := np.concatenate((poison_ids, shock_ids))):
-                print("Trying to get Valenti's ult...")
-                return [all_val_ids[0], all_val_ids[0] + 1]
-            # Also, set debuffs to "ground", we don't want them to move the rat
-            for id in bleed_ids:
-                hand_of_cards[id].card_type = CardTypes.GROUND
-            for id in poison_ids:
-                hand_of_cards[id].card_type = CardTypes.GROUND
-            for id in shock_ids:
-                hand_of_cards[id].card_type = CardTypes.GROUND
+        valenti_set = set(valenti_ult_id)
 
-        if find(vio.damage_reduction, screenshot):
-            print("We gotta disable all ults!")
-            for i, card in enumerate(hand_of_cards):
-                if card.card_type != CardTypes.ULTIMATE:
-                    continue
+        have_damage_reduction = find(vio.damage_reduction, screenshot)
+
+        # Disable one bleed + one shock (consistent with your original logic)
+        if bleed_ids.size:
+            hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
+        if shock_ids.size:
+            hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
+
+        # ------------------
+        #  STUMP-SPECIFIC LOGIC
+        # ------------------
+        if current_stump == 1:
+            if card_turn == 3 and bleed_ids.size:
+                return bleed_ids[-1]
+
+            if not bleed_ids.size:
+                for i in shock_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+
+        elif current_stump == 2:
+            if card_turn == 3 and valenti_ult_id.size and shock_ids.size:
+                return shock_ids[-1]
+
+            if not valenti_ult_id.size:
+                all_val_ids = np.concatenate((poison_ids, shock_ids))
+                if card_turn >= 2 and all_val_ids.size:
+                    print("Trying to get Valenti's ult...")
+                    return [all_val_ids[0], all_val_ids[0] + 1]
+
+                for i in np.concatenate((shock_ids, poison_ids)):
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+
+        elif current_stump == 3:
+            if card_turn == 3 and valenti_ult_id.size:
+                return valenti_ult_id[-1]
+
+        # ------------------
+        #  GLOBAL LOGIC
+        # ------------------
+        any_non_ground = False
+        for i, card in enumerate(hand_of_cards):
+
+            if have_damage_reduction and card.card_type == CardTypes.ULTIMATE:
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        # Disable one shock and one bleed
-        if len(bleed_ids):
-            hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
-        if len(shock_ids):
-            hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
-        # Disable all buffs too
-        for i, card in enumerate(hand_of_cards):
             if current_stump > 0 and card.card_type == CardTypes.BUFF:
                 print("Softly disabling a buff")
-                hand_of_cards[i].card_type = CardTypes.DISABLED  # Disable Liz's buff, so that we can use it later
+                hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        if card_turn == 3:
-            # Let's try to move the Rat
-            picked_ids = []
-            if current_stump == 0 and len(valenti_ult_id):
-                picked_ids = valenti_ult_id
-            elif current_stump == 1:
-                picked_ids = bleed_ids if len(bleed_ids) else []
-            elif current_stump == 2:
-                picked_ids = shock_ids if len(shock_ids) else []
-            if len(picked_ids):
-                return picked_ids[-1]
+            if i in valenti_set:
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
-        for i in valenti_ult_id:
-            hand_of_cards[i].card_type = CardTypes.GROUND
+            if hand_of_cards[i].card_type != CardTypes.GROUND:
+                any_non_ground = True
 
-        if all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
-            # Only super-disabled cards, let's just move one
+        if not any_non_ground:
             return [-1, -3]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
