@@ -154,7 +154,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         # Now disable all debuffs
         for id in np.concatenate((bleed_ids, shock_ids, poison_ids)):
-            hand_of_cards[id].card_typye == CardTypes.DISABLED
+            hand_of_cards[id].card_type == CardTypes.DISABLED
 
         # Remove buffs
         num_rat_buffs = count_rat_buffs(screenshot)
