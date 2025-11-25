@@ -144,11 +144,13 @@ class RatFightingStrategy(IBattleStrategy):
             print("Disabling Valenti's ultimate...")
             hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
 
-        # Phase-2 specific: save single shock card for next round
-        if len(shock_ids) == 1:
-            print("We have a single shock card, let's save it for next round...")
-            hand_of_cards[shock_ids[-1]].card_type = CardTypes.GROUND
-            shock_ids = np.array([])
+        # Disable one bleed + one shock
+        if bleed_ids.size:
+            hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
+            bleed_ids = bleed_ids[1:]
+        if shock_ids.size:
+            hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
+            shock_ids = shock_ids[1:]
 
         # Remove buffs
         num_rat_buffs = count_rat_buffs(screenshot)
