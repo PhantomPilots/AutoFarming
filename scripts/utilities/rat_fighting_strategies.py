@@ -306,12 +306,7 @@ class RatFightingStrategy(IBattleStrategy):
                 print("Saving Diane strong cards...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        if (
-            card_turn == 3
-            and not find(vio.rat_hidden)
-            and len(poison_ids)
-            and RatFightingStrategy.next_turn_random_stump
-        ):
+        if card_turn == 3 and not rat_hidden and len(poison_ids) and RatFightingStrategy.next_turn_random_stump:
             print("Trying to make the Rat go back to the center...")
             RatFightingStrategy.next_turn_random_stump = False
             return poison_ids[-1]
