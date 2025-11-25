@@ -129,7 +129,7 @@ class RatFighter(IFighter):
             elif RatFighter.next_stump == 2:
                 click_im(Coordinates.get_coordinates("right_log"), window_location)
             RatFighter.current_stump = RatFighter.next_stump
-            time.sleep(0.3)
+            time.sleep(0.5)
 
         # And click on the talent!
         if find(vio.talent_kd, screenshot):
