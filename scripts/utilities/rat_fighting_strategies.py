@@ -133,7 +133,7 @@ class RatFightingStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         # Bleeds disabled in phase 2
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
+        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
         buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
@@ -154,7 +154,7 @@ class RatFightingStrategy(IBattleStrategy):
 
         # Now disable all debuffs
         for id in np.concatenate((bleed_ids, shock_ids, poison_ids)):
-            hand_of_cards[id].card_type == CardTypes.DISABLED
+            hand_of_cards[id].card_type = CardTypes.DISABLED
 
         # Remove buffs
         num_rat_buffs = count_rat_buffs(screenshot)
