@@ -134,7 +134,7 @@ class RatFighter(IFighter):
         # And click on the talent!
         if find(vio.talent_kd, screenshot):
             print("Activating talent and waiting...")
-            click_and_sleep(vio.talent_kd, screenshot, window_location, threshold=0.7, sleep_time=2.5)
+            click_and_sleep(vio.talent_kd, screenshot, window_location, threshold=0.6, sleep_time=2.5)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
