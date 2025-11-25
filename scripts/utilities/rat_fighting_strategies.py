@@ -152,6 +152,10 @@ class RatFightingStrategy(IBattleStrategy):
             hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
             shock_ids = shock_ids[1:]
 
+        # Now disable all debuffs
+        for id in np.concatenate((bleed_ids, shock_ids, poison_ids)):
+            hand_of_cards[id].card_typye == CardTypes.DISABLED
+
         # Remove buffs
         num_rat_buffs = count_rat_buffs(screenshot)
         if num_rat_buffs >= 2 and len(buff_removal_ids) and card_turn == 0:
@@ -161,19 +165,14 @@ class RatFightingStrategy(IBattleStrategy):
         # Movement logic
         if card_turn == 3:
 
-            def enabled_ids(id_list):
-                return [i for i in id_list if hand_of_cards[i].card_type not in [CardTypes.DISABLED, CardTypes.GROUND]]
-
             if current_stump == 0:
-                opts = (enabled_ids(poison_ids), enabled_ids(bleed_ids))
+                opts = ((poison_ids), (bleed_ids))
             elif current_stump == 1:
-                opts = (enabled_ids(bleed_ids), enabled_ids(shock_ids))
+                opts = ((bleed_ids), (shock_ids))
             else:
-                opts = (enabled_ids(shock_ids), enabled_ids(poison_ids))
+                opts = ((shock_ids), (poison_ids))
 
-            picked_ids = max(opts, key=len)
-
-            if picked_ids:
+            if picked_ids := max(opts, key=len):
                 return picked_ids[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
