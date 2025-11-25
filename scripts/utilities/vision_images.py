@@ -312,6 +312,7 @@ val_ult = Vision("rat\\val_ult.png")
 jorm_buff_rem = Vision("rat\\jorm_buff_rem.png")
 kdiane_aoe = Vision("rat\\kdiane_aoe.png")
 kdiane_ult = Vision("rat\\kdiane_ult.png")
+talent_kd = Vision("rat\\talent_kd.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")

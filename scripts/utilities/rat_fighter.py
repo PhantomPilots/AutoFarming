@@ -8,6 +8,7 @@ from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.rat_utilities import is_bleed_card, is_poison_card, is_shock_card
 from utilities.utilities import (
     capture_window,
+    click_and_sleep,
     click_im,
     find,
     find_and_click,
@@ -77,7 +78,7 @@ class RatFighter(IFighter):
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
             print(f"Current stump: {RatFighter.next_stump}")
-            self.update_stump(window_location)
+            self.update_stump(screenshot, window_location)
             self.current_state = FightingStates.MY_TURN
 
     def check_for_bleed(self):
@@ -117,7 +118,7 @@ class RatFighter(IFighter):
                 RatFighter.next_stump = 0
                 return
 
-    def update_stump(self, window_location):
+    def update_stump(self, screenshot, window_location):
         """Click on a new stump if applicable, and activate the talent"""
 
         if RatFighter.next_stump != RatFighter.current_stump:
@@ -131,7 +132,9 @@ class RatFighter(IFighter):
             time.sleep(0.3)
 
         # And click on the talent!
-        click_im(Coordinates.get_coordinates("talent"), window_location)
+        if find(vio.talent_kd, screenshot):
+            print("Activating talent and waiting...")
+            click_and_sleep(vio.talent_kd, screenshot, window_location, threshold=0.7, sleep_time=2.5)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
