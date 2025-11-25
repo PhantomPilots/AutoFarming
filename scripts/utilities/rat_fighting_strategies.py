@@ -43,6 +43,8 @@ class RatFightingStrategy(IBattleStrategy):
 
     turns_in_f2p2 = 0
 
+    next_turn_random_stump = False
+
     def get_next_card_index(
         self,
         hand_of_cards: list[Card],
@@ -63,8 +65,10 @@ class RatFightingStrategy(IBattleStrategy):
 
         print(f"We're in card turn: {card_turn}")
 
-        if floor == 1 and phase in {1, 2}:
-            return self.floor1_phase12(hand_of_cards, picked_cards, phase, card_turn, current_stump)
+        if floor == 1 and phase == 1:
+            return self.floor1_phase1(hand_of_cards, picked_cards, phase, card_turn, current_stump)
+        if floor == 1 and phase == 2:
+            return self.floor1_phase2(hand_of_cards, picked_cards, phase, card_turn, current_stump)
         if floor == 1 and phase == 3:
             return self.floor1_phase3(hand_of_cards, picked_cards, phase, card_turn, current_stump)
         if floor == 2 and phase == 1:
@@ -76,38 +80,19 @@ class RatFightingStrategy(IBattleStrategy):
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def floor1_phase12(
+    def floor1_phase1(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
-        """Make sure we're always rotating the Rat... And *always* save one bleed card if possible"""
+        """Phase 1 logic for floor 1 — duplicated from old floor1_phase12"""
 
-        screenshot, _ = capture_window()
-
-        # For bleed IDs, don't play bleeds on phase 2
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
+        # For bleed IDs, don't play bleeds on phase 2 (phase 1 → always allowed)
+        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
-        valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
-        if phase == 2 and len(valenti_ult_id):
-            # Disable valenti's ultimate entirely
-            print("Disabling Valenti's ultimate...")
-            hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
-        if phase == 2 and len(shock_ids) == 1:
-            print("We have a single shock card, let's save it for next round...")
-            hand_of_cards[shock_ids[-1]].card_type = CardTypes.GROUND
-            shock_ids = np.array([])
-
-        # First, if we see too many buffs on the Rat, let's try to remove them
-        num_rat_buffs = count_rat_buffs(screenshot)
-        if num_rat_buffs >= 2 and len(buff_removal_ids) and card_turn == 0:
-            # Play a buff removal card
-            print("Playing a buff removal card!")
-            return buff_removal_ids[-1]
-
+        # Movement logic
         if card_turn == 3:
-            # Let's try to move the Rat
+
             def enabled_ids(id_list):
                 return [i for i in id_list if hand_of_cards[i].card_type not in [CardTypes.DISABLED, CardTypes.GROUND]]
 
@@ -115,7 +100,7 @@ class RatFightingStrategy(IBattleStrategy):
                 opts = (enabled_ids(poison_ids), enabled_ids(bleed_ids))
             elif current_stump == 1:
                 opts = (enabled_ids(bleed_ids), enabled_ids(shock_ids))
-            else:  # current_stump == 2
+            else:
                 opts = (enabled_ids(shock_ids), enabled_ids(poison_ids))
 
             picked_ids = max(opts, key=len)
@@ -123,23 +108,71 @@ class RatFightingStrategy(IBattleStrategy):
             if picked_ids:
                 return picked_ids[-1]
 
-        # Diane AOEs
+        # Diane AOE logic — phase 1: disable ANY debuffed card, plus disabled KDiane AOE
         diane_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
+
         for i, card in enumerate(hand_of_cards):
-            if (
-                (phase == 1 and card.debuff_type != DebuffTypes.NONE)
-                or (phase == 2 and card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED])
-                or (i in diane_aoe_ids and card.card_type == CardTypes.DISABLED)
-            ):
+            if (card.debuff_type != DebuffTypes.NONE) or (i in diane_aoe_ids and card.card_type == CardTypes.DISABLED):
                 if i in diane_aoe_ids:
                     print("Fully disabling KDiane's AOE since it's disabled")
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
+        # If everything is ground, return a move
         if all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
-            # Only super-disabled cards, let's just move one
             return [-1, -3]
+
+        return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+
+    def floor1_phase2(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
+    ):
+        """Phase 2 logic for floor 1 — duplicated from old floor1_phase12"""
+
+        screenshot, _ = capture_window()
+
+        # Bleeds disabled in phase 2
+        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED and phase != 2 for card in hand_of_cards])[0]
+        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
+        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
+        buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
+        valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
+
+        # Phase-2 specific disable: Valenti ult
+        if len(valenti_ult_id):
+            print("Disabling Valenti's ultimate...")
+            hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
+
+        # Phase-2 specific: save single shock card for next round
+        if len(shock_ids) == 1:
+            print("We have a single shock card, let's save it for next round...")
+            hand_of_cards[shock_ids[-1]].card_type = CardTypes.GROUND
+            shock_ids = np.array([])
+
+        # Remove buffs
+        num_rat_buffs = count_rat_buffs(screenshot)
+        if num_rat_buffs >= 2 and len(buff_removal_ids) and card_turn == 0:
+            print("Playing a buff removal card!")
+            return buff_removal_ids[-1]
+
+        # Movement logic
+        if card_turn == 3:
+
+            def enabled_ids(id_list):
+                return [i for i in id_list if hand_of_cards[i].card_type not in [CardTypes.DISABLED, CardTypes.GROUND]]
+
+            if current_stump == 0:
+                opts = (enabled_ids(poison_ids), enabled_ids(bleed_ids))
+            elif current_stump == 1:
+                opts = (enabled_ids(bleed_ids), enabled_ids(shock_ids))
+            else:
+                opts = (enabled_ids(shock_ids), enabled_ids(poison_ids))
+
+            picked_ids = max(opts, key=len)
+
+            if picked_ids:
+                return picked_ids[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
@@ -256,36 +289,39 @@ class RatFightingStrategy(IBattleStrategy):
             RatFightingStrategy.turns_in_f2p2 += 1
             print(f"We're on turn {RatFightingStrategy.turns_in_f2p2} in F2P2")
 
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
+
+        rat_hidden = find(vio.rat_hidden, screenshot)
+        has_immortality = find(vio.immortality_buff, screenshot)
 
         # Diane AOEs
         diane_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
 
-        # If no immortality anymore, let's save all good KDiane cards
-        if not find(vio.immortality_buff, screenshot):
+        # If no immortality anymore or rat hidden, let's save all good KDiane cards
+        if not has_immortality or rat_hidden:
+            RatFightingStrategy.next_turn_random_stump = True
             for i in diane_aoe_ids:
-                print("Saving Diane strong cards for phase 3...")
+                print("Saving Diane strong cards...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        # If we're not in the middle stump, disable diane AOEs
-        if current_stump != 1:
-            for i in diane_aoe_ids:
-                hand_of_cards[i].card_type = CardTypes.GROUND
+        if (
+            card_turn == 3
+            and not find(vio.rat_hidden)
+            and len(poison_ids)
+            and RatFightingStrategy.next_turn_random_stump
+        ):
+            print("Trying to make the Rat go back to the center...")
+            RatFightingStrategy.next_turn_random_stump = False
+            return poison_ids[-1]
 
-        if card_turn == 3:
-            if not find(vio.rat_hidden, screenshot) and len(poison_ids):
-                return poison_ids[-1]
-            elif len(bleed_ids) or len(shock_ids):
-                # We cannot make the rat go back to the middle stump, but we *must* make it go somewhere deterministically
-                return shock_ids[-1] if len(shock_ids) else bleed_ids[-1]
-
-        # Disable all debuffs
         for i, card in enumerate(hand_of_cards):
-            if card.debuff_type != DebuffTypes.NONE:
+            if not rat_hidden and card.debuff_type != DebuffTypes.NONE:
+                # Disable all debuffs if we see the rat
+                hand_of_cards[i].card_type = CardTypes.GROUND
+            elif rat_hidden and card.debuff_type == DebuffTypes.POISON:
+                # Only disable POISON if rat is hidden
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
