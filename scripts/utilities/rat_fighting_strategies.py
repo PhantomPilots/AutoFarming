@@ -156,8 +156,7 @@ class RatFightingStrategy(IBattleStrategy):
         valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
 
         if not len(valenti_ult_id) and current_stump == 2:
-            all_val_ids = np.concatenate((poison_ids, shock_ids))
-            if len(all_val_ids) and card_turn >= 2:
+            if card_turn >= 2 and len(all_val_ids := np.concatenate((poison_ids, shock_ids))):
                 print("Trying to get Valenti's ult...")
                 return [all_val_ids[0], all_val_ids[0] + 1]
 
@@ -173,10 +172,7 @@ class RatFightingStrategy(IBattleStrategy):
             if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
                 print("Fully-disabling a bleed or shock")
                 hand_of_cards[i].card_type = CardTypes.GROUND
-            elif card.debuff_type == DebuffTypes.POISON:
-                print("Softly disabling a poison")
-                hand_of_cards[i].card_type = CardTypes.DISABLED  # Lower requirement
-            elif current_stump < 2 and card.card_type == CardTypes.BUFF:
+            elif current_stump > 0 and card.card_type == CardTypes.BUFF:
                 print("Softly disabling a buff")
                 hand_of_cards[i].card_type = CardTypes.DISABLED  # Disable Liz's buff, so that we can use it later
 
