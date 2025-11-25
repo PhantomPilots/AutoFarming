@@ -61,7 +61,7 @@ class RatFighter(IFighter):
                 return
 
             # We see empty card slots, it means its our turn
-            self.available_card_slots = 4  # Let's always assume 4 available card slots!
+            self.available_card_slots = available_card_slots
             # Update the current phase
             if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"MOVING TO PHASE {new_phase}!")
