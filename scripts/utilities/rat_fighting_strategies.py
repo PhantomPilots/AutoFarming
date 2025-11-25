@@ -253,10 +253,11 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Here, only be careful to 1) Never play a buff, and 2) Only play debuff if we can play the 3 of them"""
-        # Reset
+        # Reset static variables
         if RatFightingStrategy.turns_in_f2p2 > 0:
             print("Resetting F2P2 counter")
             RatFightingStrategy.turns_in_f2p2 = 0
+        RatFightingStrategy.next_turn_random_stump = False
 
         screenshot, _ = capture_window()
 
