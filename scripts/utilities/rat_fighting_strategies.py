@@ -159,6 +159,13 @@ class RatFightingStrategy(IBattleStrategy):
             if card_turn >= 2 and len(all_val_ids := np.concatenate((poison_ids, shock_ids))):
                 print("Trying to get Valenti's ult...")
                 return [all_val_ids[0], all_val_ids[0] + 1]
+            # Also, set debuffs to "ground", we don't want them to move the rat
+            for id in bleed_ids:
+                hand_of_cards[id].card_type = CardTypes.GROUND
+            for id in poison_ids:
+                hand_of_cards[id].card_type = CardTypes.GROUND
+            for id in shock_ids:
+                hand_of_cards[id].card_type = CardTypes.GROUND
 
         if find(vio.damage_reduction, screenshot):
             print("We gotta disable all ults!")
