@@ -4,6 +4,7 @@ from numbers import Integral
 import numpy as np
 import utilities.vision_images as vio
 from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import (
     IBattleStrategy,
     SmarterBattleStrategy,
@@ -19,6 +20,7 @@ from utilities.rat_utilities import (
 )
 from utilities.utilities import (
     capture_window,
+    click_im,
     count_immortality_buffs,
     determine_card_merge,
     find,
@@ -297,7 +299,7 @@ class RatFightingStrategy(IBattleStrategy):
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
         """Here, we should only"""
-        screenshot, _ = capture_window()
+        screenshot, window_location = capture_window()
 
         if card_turn == 3:
             RatFightingStrategy.turns_in_f2p2 += 1
@@ -322,6 +324,10 @@ class RatFightingStrategy(IBattleStrategy):
         if rat_hidden:
             # Rat will show up randomly...
             RatFightingStrategy.next_turn_random_stump = True
+
+            if card_turn == 0:
+                print("Forcefully clicking on a non-center stump, to avoid damaging it too much...")
+                click_im(Coordinates.get_coordinates("left_log"), window_location)
 
             if len(debuff_ids):
                 return debuff_ids[-1]
