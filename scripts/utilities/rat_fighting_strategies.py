@@ -224,9 +224,9 @@ class RatFightingStrategy(IBattleStrategy):
                 for i in shock_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
 
-            # ALWAYS disable poison IDs
-            for i in poison_ids:
-                hand_of_cards[i].card_type = CardTypes.GROUND
+                if not shock_ids.size:
+                    for i in poison_ids:
+                        hand_of_cards[i].card_type = CardTypes.GROUND
 
         elif current_stump == 0:
             if card_turn == 3 and valenti_ult_id.size:
