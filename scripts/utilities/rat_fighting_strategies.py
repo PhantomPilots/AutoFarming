@@ -369,7 +369,7 @@ class RatFightingStrategy(IBattleStrategy):
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
         # But if we've played a debuff card AND it's the 3rd card and we have a poison, let's play it
-        if card_turn == 3:
+        if card_turn == 3 and not rat_hidden:
             if (
                 debuff_played := any(
                     card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED] for card in picked_cards
