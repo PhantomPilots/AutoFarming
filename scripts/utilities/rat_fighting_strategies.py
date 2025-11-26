@@ -207,6 +207,9 @@ class RatFightingStrategy(IBattleStrategy):
             if card_turn == 3 and bleed_ids.size:
                 return bleed_ids[-1]
 
+            elif card_turn == 3 and shock_ids.size and valenti_ult_id.size:
+                return shock_ids[-1]
+
             if not bleed_ids.size:
                 for i in shock_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
