@@ -324,8 +324,10 @@ class RatFightingStrategy(IBattleStrategy):
 
         if (rat_hidden or RatFightingStrategy.next_turn_random_stump) and card_turn == 0:
             print("Forcefully clicking on a non-center stump, to avoid damaging it too much...")
-            click_im(Coordinates.get_coordinates("left_log"), window_location, sleep_after_click=0.5)
-            click_im(Coordinates.get_coordinates("right_log"), window_location, sleep_after_click=0.3)
+            click_im(Coordinates.get_coordinates("left_log"), window_location)
+            time.sleep(0.5)
+            click_im(Coordinates.get_coordinates("right_log"), window_location)
+            time.sleep(0.3)
 
         if rat_hidden:
             # Rat will show up randomly...
