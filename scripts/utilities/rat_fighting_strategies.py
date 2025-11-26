@@ -227,6 +227,10 @@ class RatFightingStrategy(IBattleStrategy):
         elif current_stump == 0:
             if card_turn == 3 and valenti_ult_id.size:
                 return valenti_ult_id[-1]
+            # Disable all Diane AoE cards, since they do no damage
+            for i, card in enumerate(hand_of_cards):
+                if find(vio.kdiane_aoe, card.card_image):
+                    hand_of_cards[i].card_type = CardTypes.DISABLED
 
         # ------------------
         #  GLOBAL LOGIC
