@@ -168,13 +168,13 @@ class RatFightingStrategy(IBattleStrategy):
         if card_turn == 3:
 
             if current_stump == 0:
-                opts = ((poison_ids), (bleed_ids))
+                opts = (poison_ids, bleed_ids)
             elif current_stump == 1:
-                opts = ((bleed_ids), (shock_ids))
+                opts = (bleed_ids, shock_ids)
             else:
-                opts = ((shock_ids), (poison_ids))
+                opts = (shock_ids, poison_ids)
 
-            if picked_ids := max(opts, key=len):
+            if (picked_ids := max(opts, key=len)).size:
                 return picked_ids[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
