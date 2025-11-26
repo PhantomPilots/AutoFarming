@@ -321,13 +321,15 @@ class RatFightingStrategy(IBattleStrategy):
         # 2) Rat shows up (randomly): We should use non-Diane cards and a Poison debuff
         # 3) Rat is up and known: If at the center, use strong stuff
         debuff_ids = np.concatenate((shock_ids, bleed_ids))
+
+        if (rat_hidden or RatFightingStrategy.next_turn_random_stump) and card_turn == 0:
+            print("Forcefully clicking on a non-center stump, to avoid damaging it too much...")
+            click_im(Coordinates.get_coordinates("left_log"), window_location, sleep_after_click=0.5)
+            click_im(Coordinates.get_coordinates("right_log"), window_location, sleep_after_click=0.3)
+
         if rat_hidden:
             # Rat will show up randomly...
             RatFightingStrategy.next_turn_random_stump = True
-
-            if card_turn == 0:
-                print("Forcefully clicking on a non-center stump, to avoid damaging it too much...")
-                click_im(Coordinates.get_coordinates("left_log"), window_location)
 
             if len(debuff_ids):
                 return debuff_ids[-1]
