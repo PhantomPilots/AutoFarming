@@ -221,8 +221,12 @@ class RatFightingStrategy(IBattleStrategy):
                     print("Trying to get Valenti's ult...")
                     return [all_val_ids[0], all_val_ids[0] + 1]
 
-                for i in np.concatenate((shock_ids, poison_ids)):
+                for i in shock_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
+
+            # ALWAYS disable poison IDs
+            for i in poison_ids:
+                hand_of_cards[i].card_type = CardTypes.GROUND
 
         elif current_stump == 0:
             if card_turn == 3 and valenti_ult_id.size:
