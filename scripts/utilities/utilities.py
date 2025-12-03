@@ -797,7 +797,7 @@ def type_word(word: str):
         pyautogui.sleep(delay)  # Sleep for the given delay before typing the next character
 
 
-def re_open_7ds_window():
+def re_open_7ds_window() -> bool:
     """Re-open the 7DS window"""
     # Maybe the 7DS window is closed, so we need to re-open it
     if not is_7ds_window_open():
@@ -809,6 +809,8 @@ def re_open_7ds_window():
         if find_and_click(vio.run_game, entire_screen):
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
+            return True
+    return False
 
 
 def load_yaml_config(file_path: str) -> dict:

@@ -35,7 +35,9 @@ class FarmingFactory:
                 # Recover the current state the bird farmer was in, and restart from there
                 starting_state = farmer_instance.current_state
                 # Re-open the 7DS window if it has been closed
-                re_open_7ds_window()
+                if game_opened := re_open_7ds_window():
+                    print("Re-opened the game, we'll try to login immediately!")
+                    IFarmer.first_login = True
 
             finally:
                 print("FINALLY:")
