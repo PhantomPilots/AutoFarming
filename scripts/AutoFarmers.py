@@ -290,7 +290,7 @@ FARMERS = [
     {
         "name": "Reroll Constellation",
         "script": "RerollConstellation.py",
-        "args": [],
+        "args": [{"name": "--max-rerolls", "label": "Max rerolls", "type": "text", "default": "50"}],
     },
 ]
 
