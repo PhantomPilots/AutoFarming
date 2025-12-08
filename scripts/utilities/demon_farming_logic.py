@@ -206,16 +206,16 @@ class IDemonFarmer(IFarmer):
             # Now, verify if this is a valid invite
             if self.demon_to_farm == vio.indura_demon:
                 time.sleep(2)
-                screenshot, window_location = capture_window()
-                if not self._is_indura_team_valid(screenshot, debug=False):
-                    print("The inviting team is not good enough for Indura! Canceling invitation...")
-                    # display_image(screenshot, "valid team?")
-                    time.sleep(1)
-                    find_and_click(vio.cancel_realtime, screenshot, window_location)
-                    # Stop the sleeping thread!
-                    IDemonFarmer.sleeper.set()
-                    sleep_thread.join()
-                    return
+                # screenshot, window_location = capture_window()
+                # if not self._is_indura_team_valid(screenshot, debug=False):
+                #     print("The inviting team is not good enough for Indura! Canceling invitation...")
+                #     # display_image(screenshot, "valid team?")
+                #     time.sleep(1)
+                #     find_and_click(vio.cancel_realtime, screenshot, window_location)
+                #     # Stop the sleeping thread!
+                #     IDemonFarmer.sleeper.set()
+                #     sleep_thread.join()
+                #     return
 
             sleep_thread.join()  # Wait for the sleeping thread to finish
 
