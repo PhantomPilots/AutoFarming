@@ -61,6 +61,11 @@ class IDemonFarmer(IFarmer):
     # To control the sleeping time
     sleeper = threading.Event()
 
+    # For indura
+    total_non_fairies = 0
+    wins_non_fairies = 0
+    current_team_non_fairy = False
+
     def __init__(
         self,
         battle_strategy: IBattleStrategy = None,
@@ -204,10 +209,12 @@ class IDemonFarmer(IFarmer):
             sleep_thread.start()
 
             # Now, verify if this is a valid invite
+            IDemonFarmer.current_team_non_fairy = False
             if self.demon_to_farm == vio.indura_demon:
                 time.sleep(2)
-                # screenshot, window_location = capture_window()
-                # if not self._is_indura_team_valid(screenshot, debug=False):
+                screenshot, window_location = capture_window()
+                if not self._is_indura_team_valid(screenshot, debug=False):
+                    IDemonFarmer.current_team_non_fairy = True
                 #     print("The inviting team is not good enough for Indura! Canceling invitation...")
                 #     # display_image(screenshot, "valid team?")
                 #     time.sleep(1)
@@ -231,6 +238,10 @@ class IDemonFarmer(IFarmer):
                 print(f"We missed the invite :( {IDemonFarmer.missed_invites} invites so far.")
                 # And let's save the screenshot we tried to accept on, to see what happened
                 logger.save_image(accept_screenshot, subdir="demons")
+
+            if IDemonFarmer.current_team_non_fairy:
+                IDemonFarmer.total_non_fairies += 1
+                print(f"We've seen a total of {IDemonFarmer.total_non_fairies} non-fairy teams")
 
             return
 
@@ -335,19 +346,31 @@ class IDemonFarmer(IFarmer):
             if find(vio.victory, screenshot, threshold=0.6):
                 print("Demon destroyed!")
                 IDemonFarmer.demons_destroyed += 1
+                if IDemonFarmer.current_team_non_fairy:
+                    IDemonFarmer.wins_non_fairies += 1
             else:
                 print("Couldn't defeat this demon :(")
+
+            # Reset current non-fairy team
+            IDemonFarmer.current_team_non_fairy = False
 
             IDemonFarmer.auto = False
             self.current_state = States.GOING_TO_DEMONS
 
             percent = IDemonFarmer.demons_destroyed / IDemonFarmer.num_tries * 100 if IDemonFarmer.num_tries > 0 else 0
+            non_fairies_percent = (
+                IDemonFarmer.wins_non_fairies / IDemonFarmer.total_non_fairies * 100
+                if IDemonFarmer.total_non_fairies > 0
+                else 0
+            )
             demon_label = " Indura" if "indura" in self.demon_to_farm.image_name.lower() else ""
 
             msg = (
                 f"We've destroyed {IDemonFarmer.demons_destroyed}/"
                 f"{IDemonFarmer.num_tries}{demon_label} demons "
-                f"({percent:.2f}%)."
+                f"({percent:.2f}%).\n"
+                f"Non-fairy win ratio: {IDemonFarmer.wins_non_fairies}/{IDemonFarmer.total_non_fairies} "
+                f"({non_fairies_percent:.2f}%)"
             )
 
             print(msg)
