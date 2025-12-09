@@ -239,7 +239,7 @@ class IDemonFarmer(IFarmer):
                 # And let's save the screenshot we tried to accept on, to see what happened
                 logger.save_image(accept_screenshot, subdir="demons")
 
-            if IDemonFarmer.current_team_non_fairy:
+            elif IDemonFarmer.current_team_non_fairy:
                 IDemonFarmer.total_non_fairies += 1
                 print(f"We've seen a total of {IDemonFarmer.total_non_fairies} non-fairy teams")
 
