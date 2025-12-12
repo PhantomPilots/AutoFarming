@@ -133,7 +133,7 @@ FARMERS = [
                 "choices": ["indura_demon", "og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
                 "default": ["indura_demon"],
             },
-            {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.25"},
+            {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
         ],
     },
