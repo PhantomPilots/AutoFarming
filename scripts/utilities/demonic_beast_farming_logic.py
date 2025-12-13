@@ -380,7 +380,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             elif self.current_state == GlobalStates.LOGIN_SCREEN:
                 self.login_screen_state(initial_state=States.GOING_TO_DB)
 
-            elif self.current_floor == States.EXIT_FARMER:
+            elif self.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()
 
             time.sleep(0.6)

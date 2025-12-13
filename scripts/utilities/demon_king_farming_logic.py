@@ -35,6 +35,7 @@ class States(Enum):
     OPEN_DK = auto()
     PREPARE_FIGHT = auto()
     FIGHTING = auto()
+    EXIT_FARMER = auto()
 
 
 class DemonKingFarmer(IFarmer):
@@ -176,7 +177,9 @@ class DemonKingFarmer(IFarmer):
                 DemonKingFarmer.num_clears += 1
                 print(f"Fight complete! Cleared DK {DemonKingFarmer.num_clears} times.")
                 if DemonKingFarmer.num_clears >= self.max_clears:
-                    raise KeyboardInterrupt("We've cleared the DK enough times, stopping the farming.")
+                    print("We've cleared the DK enough times, stopping the farming.")
+                    self.current_state = States.EXIT_FARMER
+                    return
             else:
                 print("We lost :(")
 
@@ -205,6 +208,9 @@ class DemonKingFarmer(IFarmer):
 
             elif self.current_state == States.FIGHTING:
                 self.fighting_state()
+
+            elif self.current_state == States.EXIT_FARMER:
+                self.exit_farmer_state()
 
             # We need the loop to run very fast
             time.sleep(0.5)
