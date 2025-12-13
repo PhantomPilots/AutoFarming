@@ -132,6 +132,8 @@ class DemonKingFighter(IFighter):
 
             if self.exit_thread:
                 print("Closing DK fighter thread!")
+                # And let's reset the one important variable
+                DemonKingFighter.first_turn = False
                 return
 
             time.sleep(0.7)
