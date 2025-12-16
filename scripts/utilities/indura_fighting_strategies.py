@@ -135,6 +135,12 @@ class InduraBattleStrategy(IBattleStrategy):
         elif phase == 3:
             print(f"We're on turn {InduraBattleStrategy._fight_turn} of phase 3")
 
+            if InduraBattleStrategy._fight_turn == 0:
+                ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+                print("Disabling all Ultimates for first turn!")
+                for id in ult_ids:
+                    hand_of_cards[id].card_type = CardTypes.DISABLED
+
             if find(vio.mini_heal, six_empty_slots_image):
                 # Disabled all heal cards
                 for idx in heal_card_ids:
