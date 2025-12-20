@@ -94,9 +94,7 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for floors 1-3 of Dogs.
 - [X] Farmer for floors 1-3 of Snake.
 - [X] Bot for all daily missions.
-- [X] Farmer for Indura Extreme.
-- [X] Farmer for Indura Hell.
-- [X] Farmer for Indura Chaos.
+- [X] Farmer for Indura Extreme/Hell/Chaos.
 - [X] Unify all farmers in a single GUI.
 - [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
