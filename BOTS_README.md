@@ -11,13 +11,12 @@ So far, it only accepts the "Hell" difficulty (except for Indura, which accepts 
 
 ## Demon King farmer
 
-Farms the Demon King fight. You're responsible for in-game pre-setting what coins to use.
+Farms the Demon King fight (hard mode, it's the most efficient one!).<br>
+You're responsible for in-game pre-setting what coins to use.
 
 **Requirements**:
-* Team A: DK Meli (att/crit), LR Cusack (att/crit), G Gelda (HP/lifesteal), any 4th
-* Team B: Skuld (att/crit), any 3 boosters
-
-**Disclaimer**: The rules on phase 2 are not well understood yet, work in progress.
+* Team A: Skuld (att/crit), any 3 boosters. Try having all 3 colors (red/green/blue).
+* Team B: Won't be used.
 
 ## Guild Boss farmer
 
@@ -25,18 +24,22 @@ It farms Guild Boss uninterruptedly. Should be used during stsamina reduction da
 
 **Requirement:** Start the bot from within a fight already.
 
+## Rat Farmer
+
+Only farms floors 1 and 2 (rinse and repeat).<br>
+
+**Requirements**
+* Team (in this order): LR Liz, Blue Valenti, Red Jorm, King-Diane
+
 ## Floor 4 of Bird
 
-The bot we've all been waiting for: The automatic Floor 4 farmer, in `scripts/BirdFloor4Farmer.py`. It assumes the following team (with all the relics):
-* Traitor Meli (recommended) / Freyr
+You can use any team, but recommended:
+* Traitor Meli / Green Tyr
 * Thor
 * Blue Megellda
-* Shion (recommended) / Green Diane
+* Shion
 
-Requirements:
-1. **Important**: If you use Diane, place her on the rightmost position in the team.
-2. 13M+ box CC (preferably).
-3. Constellation 6 (preferably).
+**Important**: If you use Diane, place her on the rightmost position in the team.
 
 ## Floor 4 of Deer
 
