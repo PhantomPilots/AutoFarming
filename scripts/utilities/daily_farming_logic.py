@@ -113,7 +113,7 @@ class DailyFarmer:
         print("In EXIT FARMER state, trying to exit...")
 
         # First, ensure we're back on the tavern
-        if find(vio.back, screenshot, window_location):
+        if find(vio.back, screenshot):
             press_key("esc")
 
         if find(vio.tavern, screenshot) or DailyFarmer.manual_kill:
