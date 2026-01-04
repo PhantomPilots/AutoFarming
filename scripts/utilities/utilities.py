@@ -385,7 +385,7 @@ def close_game():
     win32gui.SetForegroundWindow(hwnd)
 
     # Optional: give a moment for the window to become active
-    time.sleep(0.5)
+    time.sleep(1.0)
 
     # Send the hotkey
     pyautogui.hotkey("alt", "f4")
