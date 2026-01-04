@@ -213,7 +213,7 @@ class IFarmer:
         """Open the fortune card"""
         screenshot, window_location = capture_window()
 
-        if find(vio.ok_main_button, screenshot, threshold=0.6):
+        if find(vio.ok_main_button, screenshot, threshold=0.8):
             print("Got a good fortune? Going back to daily reset state")
             self.current_state = States.DAILY_RESET
             return
