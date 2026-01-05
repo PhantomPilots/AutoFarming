@@ -164,7 +164,7 @@ class IDemonFarmer(IFarmer):
         if "red" not in self.demon_to_farm.image_name.lower():
             click_and_sleep(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
 
-        if "indura" in self.demon_to_farm.image_name.lower():
+        if self.demon_to_farm == vio.indura_demon:
             if self.indura_difficulty == "extreme":
                 if find(vio.demon_normal_diff, screenshot):
                     find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
@@ -363,15 +363,20 @@ class IDemonFarmer(IFarmer):
                 if IDemonFarmer.total_non_fairies > 0
                 else 0
             )
-            demon_label = " Indura" if "indura" in self.demon_to_farm.image_name.lower() else ""
+            demon_label = " Indura" if self.demon_to_farm == vio.indura_demon else ""
 
             msg = (
                 f"We've destroyed {IDemonFarmer.demons_destroyed}/"
                 f"{IDemonFarmer.num_tries}{demon_label} demons "
-                f"({percent:.2f}%).\n"
-                f"Non-fairy win ratio: {IDemonFarmer.wins_non_fairies}/{IDemonFarmer.total_non_fairies} "
-                f"({non_fairies_percent:.2f}%)"
+                f"({percent:.2f}%)."
             )
+
+            if self.demon_to_farm == vio.indura_demon:
+                msg += (
+                    f"\nNon-fairy win ratio: {IDemonFarmer.wins_non_fairies}/"
+                    f"{IDemonFarmer.total_non_fairies} "
+                    f"({non_fairies_percent:.2f}%)"
+                )
 
             print(msg)
             print(f"We've missed {IDemonFarmer.missed_invites} invites.")
