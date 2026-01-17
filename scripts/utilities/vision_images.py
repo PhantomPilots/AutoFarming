@@ -476,6 +476,8 @@ battle_brawl = Vision("dailies\\battle_brawl.png")
 search_pvp_match = Vision("dailies\\search_pvp_match.png")
 tier_up_failed = Vision("dailies\\tier_up_failed.png")
 tier_up_successful = Vision("dailies\\tier_up_successful.png")
+# Whales
+membership_perk = Vision("dailies\\membership_perk.png")
 
 # For weeklies
 kh_boss_battle = Vision("weeklies\\kh_boss_battle.png")

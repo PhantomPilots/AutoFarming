@@ -243,6 +243,10 @@ class IFarmer:
         # We may be receiving the daily rewards now
         click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
 
+        # We may be receiving the monthly subscription too
+        if find(vio.membership_perk, screenshot):
+            press_key("esc")
+
         # Go to CHECK IN state
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
             print("Going to CHECK IN state")
