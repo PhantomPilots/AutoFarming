@@ -47,12 +47,6 @@ class InduraBattleStrategy(IBattleStrategy):
             # Reset the oxidize count
             InduraBattleStrategy.oxidize_count = 0
 
-            # If it's the first turn literally, play a debuff card first and foremost
-            if IBattleStrategy._fight_turn == 0:
-                debuff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ATTACK_DEBUFF]
-                if debuff_ids:
-                    return debuff_ids[-1]
-
             # Disable all heal cards if someone has played one already OR it's the first fight turn!
             if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy._fight_turn == 0:
                 # Disabled all heal cards, unless it's 3rd card and not 1st turn
@@ -80,6 +74,12 @@ class InduraBattleStrategy(IBattleStrategy):
             )
             if not len(played_king_debuf_cards) and len(heal_card_ids):
                 return heal_card_ids[-1]
+
+            # If it's the first turn literally, play a debuff card first and foremost
+            if IBattleStrategy._fight_turn == 0:
+                debuff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ATTACK_DEBUFF]
+                if debuff_ids:
+                    return debuff_ids[-1]
 
         elif phase == 2:
             # On phase 2, evaluate if Indura has multi-tiers activated
