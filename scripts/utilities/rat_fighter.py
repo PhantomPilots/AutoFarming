@@ -153,12 +153,7 @@ class RatFighter(IFighter):
         print("Finished my turn! Identifying where Rat will move next...")
         self.identify_stump_position()
 
-        # Increment to the next fight turn
-        self.battle_strategy.increment_fight_turn()
-        # Reset variables
-        self._reset_instance_variables()
-
-        return 1
+        return super().finish_turn()
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""
