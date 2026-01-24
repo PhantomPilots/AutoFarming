@@ -105,15 +105,15 @@ class RatFighter(IFighter):
         check the last bleed/poison/shock card played
         """
         for card in reversed(self.picked_cards):
-            if is_bleed_card(card) and card.card_type != CardTypes.DISABLED:
+            if card.card_type != CardTypes.DISABLED and is_bleed_card(card):
                 print("Rat moving to the right!")
                 RatFighter.next_stump = 2
                 return
-            if is_poison_card(card) and card.card_type != CardTypes.DISABLED:
+            if card.card_type != CardTypes.DISABLED and is_poison_card(card):
                 print("Rat moving to the center!")
                 RatFighter.next_stump = 1
                 return
-            if is_shock_card(card) and card.card_type != CardTypes.DISABLED:
+            if card.card_type != CardTypes.DISABLED and is_shock_card(card):
                 print("Rat moving to the left!")
                 RatFighter.next_stump = 0
                 return
