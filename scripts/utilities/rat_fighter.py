@@ -131,10 +131,12 @@ class RatFighter(IFighter):
             RatFighter.current_stump = RatFighter.next_stump
             time.sleep(0.5)
 
-        # And click on the talent!
-        if find(vio.talent_kd, screenshot):
-            print("Activating talent and waiting...")
-            click_and_sleep(vio.talent_kd, screenshot, window_location, threshold=0.6, sleep_time=2.5)
+        if talent := next(
+            (t for t in (vio.talent_kd, vio.talent_escalin) if find(t, screenshot)),
+            None,
+        ):
+            print(f"Activating {talent.image_name} and waiting...")
+            click_and_sleep(talent, screenshot, window_location, threshold=0.6, sleep_time=2.5)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
