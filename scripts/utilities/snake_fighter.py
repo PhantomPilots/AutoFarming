@@ -10,6 +10,7 @@ from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.utilities import (
     capture_window,
+    click_and_sleep,
     click_im,
     draw_rectangles,
     find,
@@ -66,6 +67,8 @@ class SnakeFighter(IFighter):
                 print(f"Moving to phase {phase}!")
                 IFighter.current_phase = phase
 
+            self.activate_talent(screenshot, window_location)
+
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, debug=False):
         """Count how many empty card slots are there for SNAKE"""
@@ -97,6 +100,25 @@ class SnakeFighter(IFighter):
 
         return 4 if find(vio.skill_locked, screenshot, threshold=0.6) else len(rectangles)
 
+    def activate_talent(self, screenshot, window_location):
+        """Check if we can activate a talent"""
+
+        talents = [
+            vio.talent_trist,
+        ]
+
+        for talent in talents:
+            if find(talent, screenshot):
+                print(f"Activating {talent.image_name} and waiting...")
+                click_and_sleep(
+                    talent,
+                    screenshot,
+                    window_location,
+                    threshold=0.7,
+                    sleep_time=2.5,
+                )
+                break
+
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
 
@@ -120,9 +142,6 @@ class SnakeFighter(IFighter):
     def fight_complete_state(self):
 
         screenshot, window_location = capture_window()
-
-        # if find(vio.guaranteed_reward, screenshot):
-        #     SnakeFighter.floor_defeated = 3
 
         find_and_click(vio.daily_quest_info, screenshot, window_location)
 
