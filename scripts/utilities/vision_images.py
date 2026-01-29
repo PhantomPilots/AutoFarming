@@ -8,7 +8,7 @@ run_game = MultiVision(
     "run_game_2.png",
     image_name="Run game",
 )
-update_game_ok = Vision("outside\\update_game_ok.png")
+update_game_ok = Vision("outside\\ok_update_game.png")
 password = Vision("password.png")
 sync_code = Vision("sync_code.png")
 server_cancel = MultiVision(
