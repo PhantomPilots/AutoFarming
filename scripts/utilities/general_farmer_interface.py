@@ -234,7 +234,7 @@ class IFarmer:
             return
 
         # If we see a "cross", click it before clicking the OK button
-        if find_and_click(vio.cross, screenshot, window_location):
+        if click_and_sleep(vio.cross, screenshot, window_location):
             screenshot, window_location = capture_window()
 
         # Cancel the demon search
@@ -277,6 +277,9 @@ class IFarmer:
     def check_in_state(self):
         """Check in, and go back to"""
         screenshot, window_location = capture_window()
+
+        # In case some random GW popup appears
+        find_and_click(vio.cross, screenshot, window_location)
 
         if find(vio.search_for_a_kh, screenshot):
             print("We're not in any KH, we cannot check in...")
