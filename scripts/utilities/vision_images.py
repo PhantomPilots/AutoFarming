@@ -93,7 +93,11 @@ duplicate_connection = MultiVision(
     "simultaneous_logins.png",
     image_name="duplicate_connection",
 )
-cross = Vision("cross.png")
+cross = MultiVision(
+    "cross.png",
+    "big_cross.png",
+    image_name="cross",
+)
 pause_fight = Vision("pause_fight.png")
 episode_clear = Vision("episode_clear.png")
 continue_fight = Vision("continue.png")
