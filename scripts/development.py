@@ -40,7 +40,7 @@ def development():
     """Some development function calls"""
     screenshot, window_location = capture_window()
     print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.talent_kd, threshold=0.7)
+    screenshot_testing(screenshot, vision_image=vio.cross, threshold=0.7)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 

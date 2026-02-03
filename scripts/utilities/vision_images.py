@@ -95,7 +95,7 @@ duplicate_connection = MultiVision(
 )
 cross = MultiVision(
     "cross.png",
-    "big_cross.png",
+    "dailies\\big_cross.png",
     image_name="cross",
 )
 pause_fight = Vision("pause_fight.png")
