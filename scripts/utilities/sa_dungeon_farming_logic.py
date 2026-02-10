@@ -223,7 +223,7 @@ class SADungeonFarmer(IFarmer):
                     + 5  # Add buffer
                 )
                 # Total remaining time on the clock
-                remaining_time = 30 * 60 + SADungeonFarmer.start_dungeon_time - time.time()
+                remaining_time = 24 * 60 * 60 + SADungeonFarmer.start_dungeon_time - time.time()
 
                 if remaining_time_fighting < remaining_time:
                     # Basically, if we do one more reset, can we still complete the remaining number of runs?
