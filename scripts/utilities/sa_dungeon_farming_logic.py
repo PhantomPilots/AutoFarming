@@ -211,34 +211,36 @@ class SADungeonFarmer(IFarmer):
             # Let's decide if we use a timer or if we use max resets
             print("We don't see a chest, can we restart the fight?")
 
-            if (
-                SADungeonFarmer.start_dungeon_time is not None
-                and SADungeonFarmer.longest_run_time > 0
-                and SADungeonFarmer.max_time_for_reset > 0
-            ):
-                # Required total remaining fighting time to complete everything
-                remaining_time_fighting = (
-                    (12 - SADungeonFarmer.num_runs_complete) * SADungeonFarmer.longest_run_time
-                    + SADungeonFarmer.max_time_for_reset  # Add time required for one more reset
-                    + 5  # Add buffer
-                )
-                # Total remaining time on the clock
-                remaining_time = 24 * 60 * 60 + SADungeonFarmer.start_dungeon_time - time.time()
+            # if (
+            #     SADungeonFarmer.start_dungeon_time is not None
+            #     and SADungeonFarmer.longest_run_time > 0
+            #     and SADungeonFarmer.max_time_for_reset > 0
+            # ):
+            #     # Required total remaining fighting time to complete everything
+            #     remaining_time_fighting = (
+            #         (12 - SADungeonFarmer.num_runs_complete) * SADungeonFarmer.longest_run_time
+            #         + SADungeonFarmer.max_time_for_reset  # Add time required for one more reset
+            #         + 5  # Add buffer
+            #     )
+            #     # Total remaining time on the clock
+            #     remaining_time = 24 * 60 * 60 + SADungeonFarmer.start_dungeon_time - time.time()
 
-                if remaining_time_fighting < remaining_time:
-                    # Basically, if we do one more reset, can we still complete the remaining number of runs?
-                    print(
-                        f"We have {remaining_time/60:.2f} mins left and need to fight {remaining_time_fighting/60:.2f} more mins.\n"
-                        f"Enough time to restart the fight once more!"
-                    )
-                    self.lets_restart_fight(screenshot)
+            #     if remaining_time_fighting < remaining_time:
+            #         # Basically, if we do one more reset, can we still complete the remaining number of runs?
+            #         print(
+            #             f"We have {remaining_time/60:.2f} mins left and need to fight {remaining_time_fighting/60:.2f} more mins.\n"
+            #             f"Enough time to restart the fight once more!"
+            #         )
+            #         self.lets_restart_fight(screenshot)
 
-            # If we cannot use a timer
-            elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
-                self.lets_restart_fight(screenshot)
+            # # If we cannot use a timer
+            # elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
+            #     self.lets_restart_fight(screenshot)
 
-            else:
-                print("Nope, we don't have enough time left for more resets! Gotta speedrun.")
+            # else:
+            #     print("Nope, we don't have enough time left for more resets! Gotta speedrun.")
+
+            self.lets_restart_fight(screenshot)
 
     def lets_restart_fight(self, screenshot: np.ndarray):
         """Common logic to restart the fight"""
