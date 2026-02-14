@@ -68,14 +68,31 @@ REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
     """,
+    "Bird Floor 4": """
+<p><strong>Requirements:</strong><br>
+• Any team, but best: Thor, G Tyr, Xion, Merlin/Milim Hel</p>
+    """,
     "Deer Farmer": """
 <p><strong>Requirements:</strong><br>
 • Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
 • NO SKULD</p>
     """,
+    "Deer Floor 4": """
+<p><strong>Requirements:</strong><br>
+• Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
+• NO SKULD</p>
+    """,
+    "Dogs Farmer": """
+<p><strong>Requirements:</strong><br>
+• Any team works</p>
+    """,
+    "Snake Farmer": """
+<p><strong>Requirements:</strong><br>
+• Old Mael/Tristan, LR Liz, Freyja with relic, Red Marg</p>
+    """,
     "Rat Farmer": """
 <p><strong>Requirements:</strong><br>
-• Red Jorm, LR Liz, Blue Valenti, any strong 4th (King-Diane recommended)<br>
+• Red Jorm, LR Liz, Blue Valenti, King-Diane/EscaMerlin<br>
 • If using King-Diane, place them to the very right</p>
     """,
     "Deer Whale": """
@@ -103,12 +120,28 @@ REQUIREMENTS = {
     """,
     "Guild Boss Farmer": """
 <p><strong>Requirements:</strong><br>
-• Start the bot from within the fight itself</p>
+• Start the bot from within the fight itself<br>
+• Nasiens, Sigurd, SJW, Light Escanor (this order)<br>
+• Sariel link on SJW and Mael link on Light Escanor</p>
     """,
     "Demon King Farmer": """
 <p><strong>Requirements:</strong><br>
 • Team A: Skuld (att/crit), any 3 boosters<br>
 • Team B: Anything, won't be used</p>
+    """,
+    "Reroll Constellation": """
+<p><strong>Requirements:</strong><br>
+• Start from after having already rerolled the attribute you want at least once</p>
+    """,
+    "Accounts Farmer": """
+<p>This bot is for people who pilot multiple accounts.<br>
+In <code>config\\accounts.yaml</code>, fill the fields with the sync and passwords of each account.
+The <code>name</code> field can be any account identifier.
+The bot will then rotate through the multiple accounts by closing and re-opening the game.</p>
+<strong></p>Requirement:</strong><br>
+In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> button, and replace
+the file <code>run_game.png</code> by it.
+</p>
     """,
 }
 
@@ -284,7 +317,7 @@ FARMERS = [
         "name": "Accounts Farmer",
         "script": "AccountsFarmer.py",
         "args": [
-            {"name": "--do-weeklies", "label": "Do Weeklies", "type": "checkbox", "default": False},
+            # {"name": "--do-weeklies", "label": "Do Weeklies", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -629,7 +662,7 @@ class FarmerTab(QWidget):
             req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
             req_label.setText(REQUIREMENTS[self.farmer["name"]])
             req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
-            req_label.setMaximumHeight(120)
+            req_label.setMaximumHeight(180)
             req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
             left_panel.addWidget(req_label)
             left_panel.addSpacing(4)
