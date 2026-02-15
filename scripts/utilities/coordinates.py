@@ -81,12 +81,16 @@ class Coordinates:
         "left_log": (148, 390),
         "middle_log": (242, 377),
         "right_log": (330, 380),
+        # Rat stump door ROIs — (x1, y1, x2, y2) bounding boxes for darkness detection.
+        # TODO: Calibrate these placeholder regions from real fight screenshots.
+        "rat_door_left": (120, 360, 175, 420),
+        "rat_door_center": (215, 347, 270, 407),
+        "rat_door_right": (303, 350, 358, 410),
     }
 
     @staticmethod
     def get_coordinates(event: str):
-        x, y = Coordinates.__coordinates[event]
-        return x, y
+        return Coordinates.__coordinates[event]
 
         # # Adjust their size based on the window!
         # screenshot, _ = capture_window()

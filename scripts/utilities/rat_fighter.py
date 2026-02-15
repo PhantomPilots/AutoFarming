@@ -6,7 +6,12 @@ from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.rat_fighting_strategies import RatFightingStrategy
-from utilities.rat_utilities import is_bleed_card, is_poison_card, is_shock_card
+from utilities.rat_utilities import (
+    detect_stump_from_screen,
+    is_bleed_card,
+    is_poison_card,
+    is_shock_card,
+)
 from utilities.utilities import (
     capture_window,
     click_and_sleep,
@@ -71,21 +76,17 @@ class RatFighter(IFighter):
                 RatFighter.current_stump = -1
                 IFighter.current_phase = new_phase
 
-                # if IFighter.current_floor == 1 and IFighter.current_phase == 3 and not self.check_for_bleed():
-                #     print("We're entering F1P3 without a bleed card... Gotta restart the fight.")
-                #     self.current_state = FightingStates.EXIT_FIGHT
-                #     return
+            # Detect rat stump from screen (vision-first, card-fallback)
+            # TODO: Uncomment once ROI rectangles in coordinates.py are calibrated.
+            # detected = detect_stump_from_screen(screenshot)
+            # if detected is not None:
+            #     RatFighter.next_stump = detected
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
-            print(f"Current stump: {RatFighter.next_stump}")
+            print(f"Target stump: {RatFighter.next_stump}")
             self.update_stump(screenshot, window_location)
             self.current_state = FightingStates.MY_TURN
-
-    def check_for_bleed(self):
-        """If we go to F1P3 without a bleed, let's reset"""
-        hand_of_cards = get_hand_cards()
-        return any(find(vio.jorm_bleed, card.card_image) for card in hand_of_cards)
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -100,21 +101,27 @@ class RatFighter(IFighter):
         # Default to phase 1 in case we don't see anything
         return 1
 
-    def identify_stump_position(self):  # sourcery skip: extract-duplicate-method
-        """We need to find a way to identify what stump Rat is on... Because of this, we need to
-        check the last bleed/poison/shock card played
+    # ------------------------------------------------------------------
+    #  Legacy fallback: infer stump from last debuff card played
+    # ------------------------------------------------------------------
+
+    def _identify_stump_from_cards(self):
+        """Fallback: infer next stump from the last debuff card in picked_cards.
+
+        This is kept as a safety net while the vision ROIs are placeholder/uncalibrated.
+        Once ROIs are tuned and vision detection is reliable, this can be removed.
         """
         for card in reversed(self.picked_cards):
             if card.card_type != CardTypes.DISABLED and is_bleed_card(card):
-                print("Rat moving to the right!")
+                print("[StumpFallback] Rat moving to the right!")
                 RatFighter.next_stump = 2
                 return
             if card.card_type != CardTypes.DISABLED and is_poison_card(card):
-                print("Rat moving to the center!")
+                print("[StumpFallback] Rat moving to the center!")
                 RatFighter.next_stump = 1
                 return
             if card.card_type != CardTypes.DISABLED and is_shock_card(card):
-                print("Rat moving to the left!")
+                print("[StumpFallback] Rat moving to the left!")
                 RatFighter.next_stump = 0
                 return
 
@@ -149,11 +156,11 @@ class RatFighter(IFighter):
         self.play_cards(current_stump=RatFighter.current_stump)
 
     def finish_turn(self):
-        """This function is used within `self.play_cards()`.
-        For the Rat Fighter, we need to read what's the last played card that'll move the Rat!"""
+        """Called at end of card play. Sets a preliminary next_stump via the card-based
+        fallback so there's a reasonable default before the next turn's vision check."""
 
-        print("Finished my turn! Identifying where Rat will move next...")
-        self.identify_stump_position()
+        print("Finished my turn! Pre-setting stump from cards as fallback...")
+        self._identify_stump_from_cards()
 
         return super().finish_turn()
 
