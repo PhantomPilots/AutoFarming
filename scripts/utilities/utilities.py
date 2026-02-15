@@ -244,6 +244,22 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
     rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
     return bool(rectangle.size) if rectangle is not None else False
 
+def find_rect(
+    vision_image: Vision,
+    screenshot: np.ndarray | None,
+    threshold=0.7,
+    method=cv2.TM_CCOEFF_NORMED,
+) -> np.ndarray | None:
+    """Return matched rectangle [x, y, w, h], or None if not found."""
+    if screenshot is None:
+        return None
+
+    rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
+    if rectangle is None:
+        return None
+
+    return rectangle if rectangle.size else None
+
 
 def find_and_click(
     vision_image: Vision,
