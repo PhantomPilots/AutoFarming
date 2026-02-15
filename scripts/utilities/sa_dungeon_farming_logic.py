@@ -56,8 +56,9 @@ class SADungeonFarmer(IFarmer):
     # How many chests we've collected so far
     collected_chests: dict[ChestTier, int]
 
-    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, min_chest_type="bronze", **kwargs):
+    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=2, **kwargs):
         self.current_state = starting_state
+        self.num_image_detection_retries = chest_detection_count
 
         # Chest filtering settings
         min_chest_type = str(min_chest_type).strip().lower()

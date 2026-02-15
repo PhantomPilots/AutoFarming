@@ -315,6 +315,12 @@ FARMERS = [
                 "type": "dropdown",
                 "choices": ["bronze", "silver", "gold"],
                 "default": "bronze"
+            },
+            {
+                "name": "--chest-detection-count",
+                "label": "Chest Detection Retry Count",
+                "type": "text",
+                "default": "2"
             }
         ],
     },
