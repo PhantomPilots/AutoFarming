@@ -109,13 +109,13 @@ class RatFightingStrategy(IBattleStrategy):
                 return picked_ids[-1]
 
         # Diane AOE logic — phase 1: disable ANY debuffed card, plus disabled KDiane AOE
-        diane_aoe_ids = np.where(
+        strong_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
 
         for i, card in enumerate(hand_of_cards):
-            if (card.debuff_type != DebuffTypes.NONE) or (i in diane_aoe_ids and card.card_type == CardTypes.DISABLED):
-                if i in diane_aoe_ids:
+            if (card.debuff_type != DebuffTypes.NONE) or (i in strong_aoe_ids and card.card_type == CardTypes.DISABLED):
+                if i in strong_aoe_ids:
                     print("Fully disabling KDiane's AOE since it's disabled")
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
@@ -318,7 +318,7 @@ class RatFightingStrategy(IBattleStrategy):
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        diane_aoe_ids = np.where(
+        strong_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
 
@@ -338,14 +338,14 @@ class RatFightingStrategy(IBattleStrategy):
             if len(debuff_ids):
                 return debuff_ids[-1]
 
-            for i in diane_aoe_ids:
+            for i in strong_aoe_ids:
                 hand_of_cards[i].card_type = CardTypes.GROUND
             for i in poison_ids:
                 hand_of_cards[i].card_type = CardTypes.GROUND
         else:
             # Rat is visible — react to current_stump from vision detection
-            if current_stump == 1 and len(diane_aoe_ids) and has_immortality:
-                return diane_aoe_ids[-1]
+            if current_stump == 1 and len(strong_aoe_ids) and has_immortality:
+                return strong_aoe_ids[-1]
 
             if current_stump != 1:
                 # Reposition to center: play poison on last card, burn debuffs to set it up
@@ -355,14 +355,14 @@ class RatFightingStrategy(IBattleStrategy):
                 if len(debuff_ids) and len(poison_ids):
                     return debuff_ids[-1]
 
-                for i in diane_aoe_ids:
+                for i in strong_aoe_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
                 for i in poison_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
 
         # Save Diane cards if no immortality
         if not has_immortality:
-            for i in diane_aoe_ids:
+            for i in strong_aoe_ids:
                 print("Saving Diane strong cards...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
@@ -375,9 +375,9 @@ class RatFightingStrategy(IBattleStrategy):
 
         # If at center and a debuff was played this turn, play poison to maintain position
         if card_turn == 3 and not rat_hidden:
-            if any(
-                card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED] for card in picked_cards
-            ) and len(poison_ids):
+            if any(card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED] for card in picked_cards) and len(
+                poison_ids
+            ):
                 print("We gotta play a poison to keep Rat in the center...")
                 return poison_ids[-1]
 
@@ -398,7 +398,7 @@ class RatFightingStrategy(IBattleStrategy):
         poison_ids = np.where([c.debuff_type == DebuffTypes.POISON for c in hand_of_cards])[0]
 
         # Diane AOEs
-        diane_aoe_ids = np.where(
+        strong_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
 
@@ -406,8 +406,8 @@ class RatFightingStrategy(IBattleStrategy):
             print("We need to move the Rat back to the middle!")
             return poison_ids[-1]
 
-        if find(vio.immortality_buff, screenshot) and len(diane_aoe_ids) and current_stump == 1:
-            return diane_aoe_ids[-1]
+        if find(vio.immortality_buff, screenshot) and len(strong_aoe_ids) and current_stump == 1:
+            return strong_aoe_ids[-1]
 
         for i, card in enumerate(hand_of_cards):
             if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:

@@ -23,7 +23,15 @@ import sys
 import time
 
 from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, QUrl
-from PyQt5.QtGui import QColor, QDesktopServices, QFont, QPalette, QPixmap, QTextCharFormat, QTextCursor
+from PyQt5.QtGui import (
+    QColor,
+    QDesktopServices,
+    QFont,
+    QPalette,
+    QPixmap,
+    QTextCharFormat,
+    QTextCursor,
+)
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -48,6 +56,9 @@ from PyQt5.QtWidgets import (
 # Import the window resize function
 from utilities.capture_window import capture_window, resize_7ds_window
 from utilities.utilities import get_pause_flag_path
+
+# Precompiled regex for color tag parsing (used by FarmerTab._parse_color_segments)
+_COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
@@ -594,6 +605,8 @@ class FarmerTab(QWidget):
         self.process = None
         self.output_lines = []
         self.paused = False
+        self._default_fmt = QTextCharFormat()
+        self._default_fmt.setForeground(QColor("#eeeeee"))
         self.init_ui()
 
     def init_ui(self):
@@ -818,36 +831,42 @@ class FarmerTab(QWidget):
     def handle_stdout(self):
         if self.process is None:
             return
+        lines = []
         while self.process.canReadLine():
-            line = bytes(self.process.readLine()).decode("utf-8", errors="replace")
-            self.append_terminal(line)
+            lines.append(bytes(self.process.readLine()).decode("utf-8", errors="replace"))
+        if lines:
+            self.append_terminal("".join(lines))
 
     def handle_stderr(self):
         if self.process is None:
             return
+        lines = []
         while self.process.canReadLine():
-            line = bytes(self.process.readLine()).decode("utf-8", errors="replace")
-            self.append_terminal(line)
+            lines.append(bytes(self.process.readLine()).decode("utf-8", errors="replace"))
+        if lines:
+            self.append_terminal("".join(lines))
 
     def append_terminal(self, text):
-        # Output limiting
-        self.output_lines.extend(text.splitlines(True))
+        new_lines = text.splitlines(True)
+        self.output_lines.extend(new_lines)
+
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
+            # Trimmed: must rebuild entire document
+            self.terminal.clear()
+            self._render_lines(self.output_lines)
+        else:
+            # Append only the new lines (no clear/rebuild)
+            self._render_lines(new_lines)
 
-        # Re-render with optional inline color tags, e.g.:
-        # print("<color=green>Green log text</color>")
-        # print("<color=#ff5555>Yellow log text</color>")
-        self.terminal.clear()
+    def _render_lines(self, lines):
+        """Render the given lines at the end of the terminal widget."""
         cursor = self.terminal.textCursor()
         cursor.movePosition(QTextCursor.End)
 
-        default_fmt = QTextCharFormat()
-        default_fmt.setForeground(QColor("#eeeeee"))
-
-        for line in self.output_lines:
+        for line in lines:
             for segment_text, segment_color in self._parse_color_segments(line):
-                fmt = QTextCharFormat(default_fmt)
+                fmt = QTextCharFormat(self._default_fmt)
                 if segment_color is not None:
                     fmt.setForeground(segment_color)
                 cursor.insertText(segment_text, fmt)
@@ -857,11 +876,13 @@ class FarmerTab(QWidget):
 
     def _parse_color_segments(self, text):
         """Parse <color=...>...</color> tags into (text, QColor|None) segments."""
-        tag_pattern = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
+        if "<color=" not in text.lower():
+            return [(text, None)]
+
         segments = []
         cursor = 0
 
-        for match in tag_pattern.finditer(text):
+        for match in _COLOR_TAG_RE.finditer(text):
             start, end = match.span()
             if start > cursor:
                 segments.append((text[cursor:start], None))
