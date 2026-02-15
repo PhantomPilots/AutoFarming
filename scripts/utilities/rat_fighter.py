@@ -2,16 +2,11 @@ import time
 
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardTypes
+from utilities.card_data import CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.rat_fighting_strategies import RatFightingStrategy
-from utilities.rat_utilities import (
-    detect_stump_from_screen,
-    is_bleed_card,
-    is_poison_card,
-    is_shock_card,
-)
+from utilities.rat_utilities import detect_stump_from_screen
 from utilities.utilities import (
     capture_window,
     click_and_sleep,
@@ -76,11 +71,10 @@ class RatFighter(IFighter):
                 RatFighter.current_stump = -1
                 IFighter.current_phase = new_phase
 
-            # Detect rat stump from screen (vision-first, card-fallback)
-            # TODO: Uncomment once ROI rectangles in coordinates.py are calibrated.
-            # detected = detect_stump_from_screen(screenshot)
-            # if detected is not None:
-            #     RatFighter.next_stump = detected
+            # Detect rat stump from screen
+            detected = detect_stump_from_screen(screenshot)
+            if detected is not None:
+                RatFighter.next_stump = detected
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -100,30 +94,6 @@ class RatFighter(IFighter):
 
         # Default to phase 1 in case we don't see anything
         return 1
-
-    # ------------------------------------------------------------------
-    #  Legacy fallback: infer stump from last debuff card played
-    # ------------------------------------------------------------------
-
-    def _identify_stump_from_cards(self):
-        """Fallback: infer next stump from the last debuff card in picked_cards.
-
-        This is kept as a safety net while the vision ROIs are placeholder/uncalibrated.
-        Once ROIs are tuned and vision detection is reliable, this can be removed.
-        """
-        for card in reversed(self.picked_cards):
-            if card.card_type != CardTypes.DISABLED and is_bleed_card(card):
-                print("[StumpFallback] Rat moving to the right!")
-                RatFighter.next_stump = 2
-                return
-            if card.card_type != CardTypes.DISABLED and is_poison_card(card):
-                print("[StumpFallback] Rat moving to the center!")
-                RatFighter.next_stump = 1
-                return
-            if card.card_type != CardTypes.DISABLED and is_shock_card(card):
-                print("[StumpFallback] Rat moving to the left!")
-                RatFighter.next_stump = 0
-                return
 
     def update_stump(self, screenshot, window_location):
         """Click on a new stump if applicable, and activate the talent"""
@@ -154,15 +124,6 @@ class RatFighter(IFighter):
 
         # Then, play the cards
         self.play_cards(current_stump=RatFighter.current_stump)
-
-    def finish_turn(self):
-        """Called at end of card play. Sets a preliminary next_stump via the card-based
-        fallback so there's a reasonable default before the next turn's vision check."""
-
-        print("Finished my turn! Pre-setting stump from cards as fallback...")
-        self._identify_stump_from_cards()
-
-        return super().finish_turn()
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""

@@ -10,7 +10,6 @@ from utilities.coordinates import Coordinates
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
 from utilities.rat_fighter import RatFighter
-from utilities.rat_utilities import detect_stump_from_screen
 from utilities.utilities import (
     capture_hand_image,
     capture_screen,
@@ -42,12 +41,8 @@ def development():
     screenshot, window_location = capture_window()
     # determine_relative_coordinates(screenshot)
 
-    # -- Rat stump vision calibration --
-    # Once ROIs are set in coordinates.py, uncomment to test detection scores.
-    # detect_stump_from_screen(screenshot)
-
-    print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.cross, threshold=0.7)
+    # print("Screenshot shape:", screenshot.shape)
+    # screenshot_testing(screenshot, vision_image=vio.cross, threshold=0.7)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 

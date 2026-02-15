@@ -73,10 +73,9 @@ class Coordinates:
         "middle_log": (242, 377),
         "right_log": (330, 380),
         # Rat stump door ROIs — (x1, y1, x2, y2) bounding boxes for darkness detection.
-        # TODO: Calibrate these placeholder regions from real fight screenshots.
-        "rat_door_left": (120, 360, 175, 420),
-        "rat_door_center": (215, 347, 270, 407),
-        "rat_door_right": (303, 350, 358, 410),
+        "rat_door_left": (63, 248, 99, 293),
+        "rat_door_center": (258, 244, 286, 283),
+        "rat_door_right": (446, 258, 484, 309),
     }
 
     @staticmethod

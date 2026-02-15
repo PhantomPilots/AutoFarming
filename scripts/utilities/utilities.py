@@ -90,6 +90,12 @@ def draw_rectangles(
     return haystack_img
 
 
+def draw_regions(image: np.ndarray, *regions: tuple[int, int, int, int], line_color=(0, 255, 0)) -> np.ndarray:
+    """Draw one or more (x1, y1, x2, y2) region bounding boxes on a copy of the image."""
+    rects = np.array([[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in regions])
+    return draw_rectangles(image.copy(), rects, line_color=line_color)
+
+
 def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
 
