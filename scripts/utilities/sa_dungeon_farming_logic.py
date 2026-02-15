@@ -207,7 +207,11 @@ class SADungeonFarmer(IFarmer):
             # Start the run timer
             SADungeonFarmer.run_start_time = time.time()
 
-        if find(vio.sa_boss, screenshot, threshold=0.7) and not find(vio.chest, screenshot, threshold=0.6):
+        if (
+            find(vio.sa_boss, screenshot, threshold=0.7)
+            and find(vio.pause, screenshot)
+            and not find(vio.chest, screenshot, threshold=0.6)
+        ):
             # Let's decide if we use a timer or if we use max resets
             print("We don't see a chest, can we restart the fight?")
 
