@@ -426,6 +426,11 @@ def crop_image(image: np.ndarray, top_left: tuple, bottom_right: tuple) -> np.nd
     return image[y1:y2, x1:x2]
 
 
+def crop_region(image: np.ndarray, region: tuple[int, int, int, int]) -> np.ndarray:
+    """Crop an image given a region tuple (x1, y1, x2, y2)"""
+    return crop_image(image, (region[0], region[1]), (region[2], region[3]))
+
+
 def increment_if_condition(value: Integral | list[Integral], thresh: Integral, condition: Callable, operator=1):
     """Increments a value if it meets the given condition.
 
@@ -458,23 +463,13 @@ def increment_in_place(lst: list[Integral], thresh: Integral, condition: Callabl
 def capture_hand_image() -> np.ndarray:
     """Capture the hand image"""
     screenshot, _ = capture_window()
-
-    return crop_image(
-        screenshot,
-        Coordinates.get_coordinates("4_cards_top_left"),
-        Coordinates.get_coordinates("4_cards_bottom_right"),
-    )
+    return crop_region(screenshot, Coordinates.get_coordinates("4_cards_region"))
 
 
 def capture_hand_image_3_cards() -> np.ndarray:
     """Capture the hand image"""
     screenshot, _ = capture_window()
-
-    return crop_image(
-        screenshot,
-        Coordinates.get_coordinates("3_cards_top_left"),
-        Coordinates.get_coordinates("3_cards_bottom_right"),
-    )
+    return crop_region(screenshot, Coordinates.get_coordinates("3_cards_region"))
 
 
 def get_card_type_image(card: np.ndarray, num_units=4) -> np.ndarray:
@@ -582,22 +577,14 @@ def set_card_colors(hand_of_cards: list[Card], list_of_colors: list[CardColors] 
 
 def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
     """Get the sub-image where the card slots are"""
-    return crop_image(
-        screenshot,
-        Coordinates.get_coordinates("top_left_card_slots"),
-        Coordinates.get_coordinates("bottom_right_card_slots"),
-    )
+    return crop_region(screenshot, Coordinates.get_coordinates("card_slots_region"))
 
 
 def extract_units_types() -> list[np.ndarray]:
     """Get a of images corresponding to the unit types, in order"""
     screenshot, _ = capture_window()
 
-    units_window = crop_image(
-        screenshot,
-        Coordinates.get_coordinates("top_left_4_units"),
-        Coordinates.get_coordinates("bottom_right_4_units"),
-    )
+    units_window = crop_region(screenshot, Coordinates.get_coordinates("4_units_region"))
 
     # Determine the width of each column
     _, width = units_window.shape[:2]

@@ -4,7 +4,7 @@ from utilities.card_data import Card, CardColors, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
 from utilities.pattern_match_strategies import TemplateMatchingStrategy
-from utilities.utilities import capture_window, count_needle_image, crop_image, find
+from utilities.utilities import capture_window, count_needle_image, crop_region, find
 
 
 class DemonKingBattleStrategy(IBattleStrategy):
@@ -64,11 +64,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         if its_rules_time := find(vio.dk_empty_slot, screenshot):
             print("Let's try to follow the rules!")
 
-            rules_window = crop_image(
-                screenshot,
-                Coordinates.get_coordinates("rules_window_top"),
-                Coordinates.get_coordinates("rules_window_bottom"),
-            )
+            rules_window = crop_region(screenshot, Coordinates.get_coordinates("rules_window_region"))
             rules_width = int(rules_window.shape[1] / 3)
             first_rule_window = rules_window[:, :rules_width, ...]
             second_rule_window = rules_window[:, rules_width : 2 * rules_width, ...]

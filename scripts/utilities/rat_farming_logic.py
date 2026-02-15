@@ -7,7 +7,7 @@ from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
 from utilities.logging_utils import LoggerWrapper
 from utilities.rat_fighter import IFighter, RatFighter
-from utilities.utilities import crop_image, find, screenshot_testing
+from utilities.utilities import crop_region, find, screenshot_testing
 
 logger = LoggerWrapper(name="RatLogger", log_file="rat_logger.log")
 
@@ -46,11 +46,7 @@ class RatFarmer(DemonicBeastFarmer):
     def determine_db_floor(self, screenshot: np.ndarray, threshold=0.8) -> int:
         """Determine the Demonic Beast floor"""
         # sourcery skip: assign-if-exp, reintroduce-else
-        floor_img_region = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("floor_top_left"),
-            Coordinates.get_coordinates("floor_bottom_right"),
-        )
+        floor_img_region = crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
 
         # display_image(floor_img_region)
         # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)

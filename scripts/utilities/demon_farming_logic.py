@@ -20,7 +20,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
-    crop_image,
+    crop_region,
     display_image,
     find,
     find_and_click,
@@ -267,11 +267,7 @@ class IDemonFarmer(IFarmer):
             return True
 
         # Crop the image to the region of the team invite
-        team_invite_region = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("team_invite_top_left"),
-            Coordinates.get_coordinates("team_invite_bottom_right"),
-        )
+        team_invite_region = crop_region(screenshot, Coordinates.get_coordinates("team_invite_region"))
         valid = find(vio.lancelot_unit, team_invite_region, threshold=0.7) and find(
             vio.alpha_unit, team_invite_region, threshold=0.7
         )  # or find(vio.new_freyr_unit, team_invite_region, threshold=0.7)

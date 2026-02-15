@@ -9,7 +9,7 @@ from utilities.utilities import (
     capture_hand_image,
     capture_hand_image_3_cards,
     capture_window,
-    crop_image,
+    crop_region,
     display_image,
     find,
     find_and_click,
@@ -60,11 +60,7 @@ class InduraFighter(IFighter):
         screenshot, window_location = capture_window()
 
         # First, identify if we have to quit because a unit has died :(
-        six_empty_slots_image = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("6_cards_top_left"),
-            Coordinates.get_coordinates("6_cards_bottom_right"),
-        )
+        six_empty_slots_image = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
         if find(vio.mini_beta_buf, six_empty_slots_image):
             print("We are doing really bad... We have to quit :(")
             press_key("esc")

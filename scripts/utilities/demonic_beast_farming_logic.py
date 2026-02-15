@@ -17,7 +17,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    crop_image,
+    crop_region,
     drag_im,
     find,
     find_and_click,
@@ -175,11 +175,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
     def determine_db_floor(self, screenshot: np.ndarray, threshold=0.9) -> int:
         """Determine the Demonic Beast floor"""
         # sourcery skip: assign-if-exp, reintroduce-else
-        floor_img_region = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("floor_top_left"),
-            Coordinates.get_coordinates("floor_bottom_right"),
-        )
+        floor_img_region = crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
 
         # display_image(floor_img_region)
         # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)

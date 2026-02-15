@@ -82,8 +82,8 @@ class DeerFighter(IFighter):
             translated_rectangles = np.array(
                 [
                     [
-                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
-                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
+                        r[0] + Coordinates.get_coordinates("card_slots_region")[0],
+                        r[1] + Coordinates.get_coordinates("card_slots_region")[1],
                         r[2],
                         r[3],
                     ]

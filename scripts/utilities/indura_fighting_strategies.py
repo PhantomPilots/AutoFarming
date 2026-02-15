@@ -3,7 +3,7 @@ import utilities.vision_images as vio
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
-from utilities.utilities import capture_window, count_needle_image, crop_image, find
+from utilities.utilities import capture_window, count_needle_image, crop_region, find
 
 
 class InduraBattleStrategy(IBattleStrategy):
@@ -33,11 +33,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 for card in picked_cards
             ]
         )[0]
-        six_empty_slots_image = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("6_cards_top_left"),
-            Coordinates.get_coordinates("6_cards_bottom_right"),
-        )
+        six_empty_slots_image = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
         heal_card_ids: list[int] = sorted(
             np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
             key=lambda idx: card_ranks[idx],
@@ -233,9 +229,5 @@ class InduraBattleStrategy(IBattleStrategy):
 
     def _count_alpha_buffs(self, screenshot: np.ndarray):
         """Count how manny Alpha buffs we have currently. Doesn't consider played ST cards in the same turn"""
-        half_screenshot = crop_image(
-            screenshot,
-            Coordinates.get_coordinates("half_screen_top_left"),
-            Coordinates.get_coordinates("half_screen_bottom_right"),
-        )
+        half_screenshot = crop_region(screenshot, Coordinates.get_coordinates("half_screen_region"))
         return count_needle_image(vio.alpha_buff, half_screenshot, threshold=0.6)
