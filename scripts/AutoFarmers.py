@@ -299,14 +299,7 @@ FARMERS = [
     {
         "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
-        "args": [
-            {
-                "name": "--max-resets",
-                "label": "Max resets",
-                "type": "text",
-                "default": "10",
-            }
-        ],
+        "args": [],
     },
     {
         "name": "Tower Trials",
