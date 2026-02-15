@@ -279,6 +279,8 @@ class SADungeonFarmer(IFarmer):
             SADungeonFarmer.collected_chests[self.last_collected_chest_tier] += 1
             print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in self.collected_chests.items())}", color=Color.GREEN)
 
+        find_and_click(vio.startbutton, screenshot, window_location)
+
         # Check if we can see the boss, if so, it means we are done with the first wave and we should start looking for the chest
         # Make sure that the UI is visible, otherwise we see the boss, but no UI so can't see chests
         if find(vio.sa_boss, screenshot, threshold=0.7) and find(vio.pause, screenshot, threshold=0.7):
