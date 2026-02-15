@@ -15,7 +15,7 @@ def main():
     parser.add_argument(
         "--chest-detection-count",
         type=int,
-        default=2,
+        default=3,
         help="How many times to retry detecting chests when no chest is detected (default: 2)",
     )
     args = parser.parse_args()

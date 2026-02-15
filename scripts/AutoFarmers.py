@@ -320,7 +320,7 @@ FARMERS = [
                 "name": "--chest-detection-count",
                 "label": "Chest Detection Retry Count",
                 "type": "text",
-                "default": "2"
+                "default": "3"
             }
         ],
     },

@@ -56,9 +56,10 @@ class SADungeonFarmer(IFarmer):
     # How many chests we've collected so far
     collected_chests: dict[ChestTier, int]
 
-    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=2, **kwargs):
+    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=3, **kwargs):
         self.current_state = starting_state
         self.num_image_detection_retries = chest_detection_count
+        self.finished_run_lockout_until = 0.0
 
         # Chest filtering settings
         min_chest_type = str(min_chest_type).strip().lower()
@@ -74,7 +75,6 @@ class SADungeonFarmer(IFarmer):
         }[min_chest_type]
 
         SADungeonFarmer.collected_chests = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
-        self.last_collected_chest_tier = ChestTier.BRONZE
 
         self.chest_templates = self.load_chest_templates()
         self.retry_count = 0
@@ -82,6 +82,7 @@ class SADungeonFarmer(IFarmer):
         self.chest_found = False
 
         print(f"Chest filter: keep >= {self.min_chest_type.upper()}")
+        print(f"Chest detection retries: {self.num_image_detection_retries}")
 
     def load_chest_templates(self) -> dict[str, np.ndarray]:
         templates = {
@@ -153,7 +154,8 @@ class SADungeonFarmer(IFarmer):
         if chest_tier.value < self.min_chest_tier.value:
             return True, f"{label} < {self.min_chest_type}"
 
-        self.last_collected_chest_tier = chest_tier
+        SADungeonFarmer.collected_chests[chest_tier] += 1
+        print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in self.collected_chests.items())}", color=Color.GREEN)
         return False, f"{label} >= {self.min_chest_type}"
 
     def going_to_dungeon_state(self):
@@ -215,14 +217,14 @@ class SADungeonFarmer(IFarmer):
 
             return
 
-        if find(vio.sa_coin, screenshot, threshold=0.8):
+        if find(vio.sa_coin, screenshot, threshold=0.7):
             # Let's try to access/open the tower
-            rectangle = vio.sa_coin.find(screenshot, threshold=0.8)
+            rectangle = vio.sa_coin.find(screenshot, threshold=0.7)
             find_and_click(
                 vio.sa_coin,
                 screenshot,
                 window_location,
-                threshold=0.8,
+                threshold=0.7,
                 point_coordinates=(Coordinates.get_coordinates("center_screen")[0], rectangle[1] + rectangle[-1] / 2),
             )
 
@@ -272,13 +274,12 @@ class SADungeonFarmer(IFarmer):
             return
 
         # If we've finished a fight in the auto-repeat, count it
-        if find(vio.finished_auto_repeat_fight, screenshot):
+        now = time.monotonic()
+        if now >= self.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
             SADungeonFarmer.num_runs_complete += 1
+            self.finished_run_lockout_until = now + 5.0
             self.reset_retry_flags()
             print(f"We've completed {SADungeonFarmer.num_runs_complete}/12 runs")
-
-            SADungeonFarmer.collected_chests[self.last_collected_chest_tier] += 1
-            print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in self.collected_chests.items())}", color=Color.GREEN)
 
         find_and_click(vio.startbutton, screenshot, window_location)
 
