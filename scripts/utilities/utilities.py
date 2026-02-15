@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 from ctypes import windll
+from enum import Enum
 from numbers import Integral
 from typing import Callable, Union
 
@@ -172,6 +173,28 @@ def determine_relative_coordinates(img: np.ndarray):
 def clear_console():
     os.system("cls")
 
+class Color(str, Enum):
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    YELLOW = "yellow"
+    ORANGE = "orange"
+    PURPLE = "purple"
+    CYAN = "cyan"
+    WHITE = "white"
+    GRAY = "gray"
+
+
+def print_clr(*values, color: Color | str = Color.WHITE, sep: str = " ", end: str = "\n", file=None, flush: bool = False):
+    """Print text wrapped in a GUI color tag: <color=...>...</color>."""
+    text = sep.join(str(v) for v in values)
+
+    color_value = color.value if isinstance(color, Color) else str(color).strip()
+    if not color_value:
+        print(text, end=end, file=file, flush=flush)
+        return
+
+    print(f"<color={color_value}>{text}</color>", end=end, file=file, flush=flush)
 
 def get_click_point_from_rectangle(rectangle):
     """Return the middle point of the rectangle to click on"""

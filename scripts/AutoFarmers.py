@@ -17,12 +17,13 @@
 
 import contextlib
 import os
+import re
 import signal
 import sys
 import time
 
 from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, QUrl
-from PyQt5.QtGui import QColor, QDesktopServices, QFont, QPalette, QPixmap
+from PyQt5.QtGui import QColor, QDesktopServices, QFont, QPalette, QPixmap, QTextCharFormat, QTextCursor
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -833,8 +834,51 @@ class FarmerTab(QWidget):
         self.output_lines.extend(text.splitlines(True))
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
-        self.terminal.setPlainText("".join(self.output_lines))
-        self.terminal.moveCursor(self.terminal.textCursor().End)
+
+        # Re-render with optional inline color tags, e.g.:
+        # print("<color=green>Green log text</color>")
+        # print("<color=#ff5555>Yellow log text</color>")
+        self.terminal.clear()
+        cursor = self.terminal.textCursor()
+        cursor.movePosition(QTextCursor.End)
+
+        default_fmt = QTextCharFormat()
+        default_fmt.setForeground(QColor("#eeeeee"))
+
+        for line in self.output_lines:
+            for segment_text, segment_color in self._parse_color_segments(line):
+                fmt = QTextCharFormat(default_fmt)
+                if segment_color is not None:
+                    fmt.setForeground(segment_color)
+                cursor.insertText(segment_text, fmt)
+
+        self.terminal.setTextCursor(cursor)
+        self.terminal.ensureCursorVisible()
+
+    def _parse_color_segments(self, text):
+        """Parse <color=...>...</color> tags into (text, QColor|None) segments."""
+        tag_pattern = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
+        segments = []
+        cursor = 0
+
+        for match in tag_pattern.finditer(text):
+            start, end = match.span()
+            if start > cursor:
+                segments.append((text[cursor:start], None))
+
+            color_value = match.group(1).strip()
+            colored_text = match.group(2)
+            color = QColor(color_value)
+            if not color.isValid():
+                color = None
+
+            segments.append((colored_text, color))
+            cursor = end
+
+        if cursor < len(text):
+            segments.append((text[cursor:], None))
+
+        return segments
 
     def process_finished(self):
         # Clean up pause flag when process finishes
