@@ -45,8 +45,6 @@ class RatFightingStrategy(IBattleStrategy):
 
     turns_in_f2p2 = 0
 
-    next_turn_random_stump = False
-
     def get_next_card_index(
         self,
         hand_of_cards: list[Card],
@@ -275,7 +273,6 @@ class RatFightingStrategy(IBattleStrategy):
         if RatFightingStrategy.turns_in_f2p2 > 0:
             print("Resetting F2P2 counter")
             RatFightingStrategy.turns_in_f2p2 = 0
-        RatFightingStrategy.next_turn_random_stump = False
 
         screenshot, _ = capture_window()
 
@@ -311,7 +308,7 @@ class RatFightingStrategy(IBattleStrategy):
     def floor2_phase2(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn: int, current_stump: int
     ):
-        """Here, we should only"""
+        """Floor 2 phase 2: reactive strategy using vision-based stump detection."""
         screenshot, window_location = capture_window()
 
         if card_turn == 3:
@@ -321,30 +318,22 @@ class RatFightingStrategy(IBattleStrategy):
         shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
         bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
         poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        # Diane AOEs
         diane_aoe_ids = np.where(
             [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
         )[0]
 
         rat_hidden = find(vio.rat_hidden, screenshot)
         has_immortality = find(vio.immortality_buff, screenshot)
-
-        # We have 3 cases:
-        # 1) Rat is hidden: We should waste all non-Poison debuff cards and save Diane strong cards
-        # 2) Rat shows up (randomly): We should use non-Diane cards and a Poison debuff
-        # 3) Rat is up and known: If at the center, use strong stuff
         debuff_ids = np.concatenate((shock_ids, bleed_ids))
 
-        if (rat_hidden or RatFightingStrategy.next_turn_random_stump) and card_turn == 0:
-            print("Forcefully clicking on a non-center stump, to avoid damaging it too much...")
-            click_im(Coordinates.get_coordinates("left_log"), window_location)
-            time.sleep(0.5)
-            click_im(Coordinates.get_coordinates("right_log"), window_location)
-            time.sleep(0.3)
-
         if rat_hidden:
-            # Rat will show up randomly...
-            RatFightingStrategy.next_turn_random_stump = True
+            # Rat is hidden — avoid damaging center, burn low-value debuffs
+            if card_turn == 0:
+                print("Rat hidden: clicking non-center stump to avoid wasting damage...")
+                click_im(Coordinates.get_coordinates("left_log"), window_location)
+                time.sleep(0.5)
+                click_im(Coordinates.get_coordinates("right_log"), window_location)
+                time.sleep(0.3)
 
             if len(debuff_ids):
                 return debuff_ids[-1]
@@ -353,44 +342,41 @@ class RatFightingStrategy(IBattleStrategy):
                 hand_of_cards[i].card_type = CardTypes.GROUND
             for i in poison_ids:
                 hand_of_cards[i].card_type = CardTypes.GROUND
-        elif RatFightingStrategy.next_turn_random_stump:
-            # Rat just showed up, but we can't guarantee where
-            if card_turn == 3 and len(poison_ids):
-                # Next turn, it'll be at the center for sure!
-                RatFightingStrategy.next_turn_random_stump = False
-                return poison_ids[-1]
-            elif len(poison_ids) and len(debuff_ids):
-                # Let's force playing debuff cards:
-                return debuff_ids[-1]
-
-            for i in diane_aoe_ids:
-                hand_of_cards[i].card_type = CardTypes.GROUND
-            for i in poison_ids:
-                hand_of_cards[i].card_type = CardTypes.GROUND
-        elif not rat_hidden and not RatFightingStrategy.next_turn_random_stump:
+        else:
+            # Rat is visible — react to current_stump from vision detection
             if current_stump == 1 and len(diane_aoe_ids) and has_immortality:
                 return diane_aoe_ids[-1]
 
-        # If no immortality anymore or rat hidden, let's save all good KDiane cards
+            if current_stump != 1:
+                # Reposition to center: play poison on last card, burn debuffs to set it up
+                if card_turn == 3 and len(poison_ids):
+                    print("Playing poison to move Rat to center...")
+                    return poison_ids[-1]
+                if len(debuff_ids) and len(poison_ids):
+                    return debuff_ids[-1]
+
+                for i in diane_aoe_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+                for i in poison_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+
+        # Save Diane cards if no immortality
         if not has_immortality:
             for i in diane_aoe_ids:
                 print("Saving Diane strong cards...")
                 hand_of_cards[i].card_type = CardTypes.DISABLED
 
-        # Let's disable all debuff cards...
+        # Disable all non-poison debuffs, ground poisons
         for i, card in enumerate(hand_of_cards):
             if card.debuff_type in [DebuffTypes.BLEED, DebuffTypes.SHOCK]:
-                # Disable all debuffs if we see the rat
                 hand_of_cards[i].card_type = CardTypes.DISABLED
             elif card.debuff_type == DebuffTypes.POISON:
                 hand_of_cards[i].card_type = CardTypes.GROUND
 
-        # But if we've played a debuff card AND it's the 3rd card and we have a poison, let's play it
+        # If at center and a debuff was played this turn, play poison to maintain position
         if card_turn == 3 and not rat_hidden:
-            if (
-                debuff_played := any(
-                    card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED] for card in picked_cards
-                )
+            if any(
+                card.debuff_type in [DebuffTypes.SHOCK, DebuffTypes.BLEED] for card in picked_cards
             ) and len(poison_ids):
                 print("We gotta play a poison to keep Rat in the center...")
                 return poison_ids[-1]
