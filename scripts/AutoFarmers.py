@@ -57,9 +57,6 @@ from PyQt5.QtWidgets import (
 from utilities.capture_window import capture_window, resize_7ds_window
 from utilities.utilities import get_pause_flag_path
 
-# Precompiled regex for color tag parsing (used by FarmerTab._parse_color_segments)
-_COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
-
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
                            🆓 FREE SOFTWARE 🆓
@@ -599,6 +596,8 @@ class AboutTab(QWidget):
 
 
 class FarmerTab(QWidget):
+    _COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
+
     def __init__(self, farmer, parent=None):
         super().__init__(parent)
         self.farmer = farmer
@@ -882,7 +881,7 @@ class FarmerTab(QWidget):
         segments = []
         cursor = 0
 
-        for match in _COLOR_TAG_RE.finditer(text):
+        for match in self._COLOR_TAG_RE.finditer(text):
             start, end = match.span()
             if start > cursor:
                 segments.append((text[cursor:start], None))

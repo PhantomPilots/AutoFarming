@@ -42,6 +42,18 @@ from utilities.models import (
 from utilities.vision import Vision
 
 
+class Color(str, Enum):
+    RED = "red"
+    GREEN = "green"
+    BLUE = "blue"
+    YELLOW = "yellow"
+    ORANGE = "orange"
+    PURPLE = "purple"
+    CYAN = "cyan"
+    WHITE = "white"
+    GRAY = "gray"
+
+
 def get_pause_flag_path(pid: int | None = None) -> str:
     """Get the path to the pause flag file for a given process ID"""
     if pid is None:
@@ -172,18 +184,6 @@ def determine_relative_coordinates(img: np.ndarray):
 
 def clear_console():
     os.system("cls")
-
-
-class Color(str, Enum):
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
-    YELLOW = "yellow"
-    ORANGE = "orange"
-    PURPLE = "purple"
-    CYAN = "cyan"
-    WHITE = "white"
-    GRAY = "gray"
 
 
 def print_clr(
