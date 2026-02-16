@@ -15,6 +15,8 @@ from utilities.utilities import (
     find,
     find_and_click,
     find_rect,
+    crop_roi_from_rect,
+    score_template,
     press_key,
     print_clr,
 )
@@ -50,16 +52,21 @@ class SADungeonFarmer(IFarmer):
     # How many runs we've done?
     num_runs_complete = 0
 
-    # The number of retries for image detection
-    num_image_detection_retries = 3
-
     # How many chests we've collected so far
     collected_chests: dict[ChestTier, int]
+
+    # To avoid counting multiple finished runs if the "finished_auto_repeat_fight" image is detected for multiple consecutive frames
+    finished_run_lockout_until: float
+
+    # Detection flags
+    chest_found: bool
+    first_wave_done: bool
+    retry_count: int
 
     def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=3, **kwargs):
         self.current_state = starting_state
         self.num_image_detection_retries = chest_detection_count
-        self.finished_run_lockout_until = 0.0
+        SADungeonFarmer.finished_run_lockout_until = 0.0
 
         # Chest filtering settings
         min_chest_type = str(min_chest_type).strip().lower()
@@ -77,9 +84,9 @@ class SADungeonFarmer(IFarmer):
         SADungeonFarmer.collected_chests = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
 
         self.chest_templates = self.load_chest_templates()
-        self.retry_count = 0
-        self.first_wave_done = False
-        self.chest_found = False
+        SADungeonFarmer.retry_count = 0
+        SADungeonFarmer.first_wave_done = False
+        SADungeonFarmer.chest_found = False
 
         print(f"Chest filter: keep >= {self.min_chest_type.upper()}")
         print(f"Chest detection retries: {self.num_image_detection_retries}")
@@ -95,26 +102,7 @@ class SADungeonFarmer(IFarmer):
         if not templates:
             print_clr("[WARN] No chest templates loaded from vision_images.", color=Color.YELLOW)
         return templates
-
-    def score_template(self, haystack_bgr: np.ndarray, needle_bgr: np.ndarray) -> tuple[float, tuple[int, int]]:
-        res = cv2.matchTemplate(haystack_bgr, needle_bgr, cv2.TM_CCOEFF_NORMED)
-        _, max_val, _, max_loc = cv2.minMaxLoc(res)
-        return float(max_val), max_loc
-
-    def crop_roi_from_rect(self, screenshot_bgr: np.ndarray, rect: np.ndarray) -> np.ndarray | None:
-        if rect is None or len(rect) < 4:
-            return None
-
-        x, y, w, h = [int(v) for v in rect[:4]]
-
-        x1 = max(0, x - 6)
-        y1 = max(0, y - 6)
-        x2 = min(screenshot_bgr.shape[1], x + w + 6)
-        y2 = min(screenshot_bgr.shape[0], y + h + 6)
-
-        roi = screenshot_bgr[y1:y2, x1:x2]
-        return roi if roi.size else None
-
+    
     def classify_chest_type(self, chest_roi_bgr: np.ndarray) -> tuple[str, float]:
         best_label = "unknown"
         best_score = -1.0
@@ -125,7 +113,7 @@ class SADungeonFarmer(IFarmer):
         for label, tpl in self.chest_templates.items():
             if chest_roi_bgr.shape[0] < tpl.shape[0] or chest_roi_bgr.shape[1] < tpl.shape[1]:
                 continue
-            score, _ = self.score_template(chest_roi_bgr, tpl)
+            score, _ = score_template(chest_roi_bgr, tpl)
             if score > best_score:
                 best_score = score
                 best_label = label
@@ -137,8 +125,8 @@ class SADungeonFarmer(IFarmer):
         if rect is None or len(rect) == 0:
             return True, "no chest"
 
-        self.chest_found = True  # We found the chest, let's set the flag to avoid re-checking until next fight
-        roi = self.crop_roi_from_rect(screenshot, rect)
+        SADungeonFarmer.chest_found = True  # We found the chest, let's set the flag to avoid re-checking until next fight
+        roi = crop_roi_from_rect(screenshot, rect)
         label, score = self.classify_chest_type(roi)
 
         if label == "unknown" or score < 0.70:
@@ -155,7 +143,7 @@ class SADungeonFarmer(IFarmer):
             return True, f"{label} < {self.min_chest_type}"
 
         SADungeonFarmer.collected_chests[chest_tier] += 1
-        print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in self.collected_chests.items())}", color=Color.GREEN)
+        print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in SADungeonFarmer.collected_chests.items())}", color=Color.GREEN)
         return False, f"{label} >= {self.min_chest_type}"
 
     def going_to_dungeon_state(self):
@@ -275,9 +263,9 @@ class SADungeonFarmer(IFarmer):
 
         # If we've finished a fight in the auto-repeat, count it
         now = time.monotonic()
-        if now >= self.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
+        if now >= SADungeonFarmer.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
             SADungeonFarmer.num_runs_complete += 1
-            self.finished_run_lockout_until = now + 5.0
+            SADungeonFarmer.finished_run_lockout_until = now + 5.0
             self.reset_retry_flags()
             print(f"We've completed {SADungeonFarmer.num_runs_complete}/12 runs")
 
@@ -286,18 +274,18 @@ class SADungeonFarmer(IFarmer):
         # Check if we can see the boss, if so, it means we are done with the first wave and we should start looking for the chest
         # Make sure that the UI is visible, otherwise we see the boss, but no UI so can't see chests
         if find(vio.sa_boss, screenshot, threshold=0.7) and find(vio.pause, screenshot, threshold=0.7):
-            self.first_wave_done = True
+            SADungeonFarmer.first_wave_done = True
 
         # Keep rechecking for the chest after the first wave is done, until we find it or decide to restart
-        if self.first_wave_done and not self.chest_found:
+        if SADungeonFarmer.first_wave_done and not SADungeonFarmer.chest_found:
             should_restart, reason = self.should_restart_for_chest(screenshot)
             if not should_restart:
                 print_clr(f"Keeping run: {reason}", color=Color.GREEN)
             elif reason == "no chest":
-                self.retry_count += 1
-                if self.retry_count <= SADungeonFarmer.num_image_detection_retries:
+                SADungeonFarmer.retry_count += 1
+                if SADungeonFarmer.retry_count <= self.num_image_detection_retries:
                     print(
-                        f"[RETRY {self.retry_count}/{SADungeonFarmer.num_image_detection_retries}] "
+                        f"[RETRY {SADungeonFarmer.retry_count}/{self.num_image_detection_retries}] "
                         f"No chest detected yet, retrying image detection before restarting."
                     )
                 else:
@@ -309,9 +297,9 @@ class SADungeonFarmer(IFarmer):
 
     def reset_retry_flags(self):
         """Reset flags related to retrying after not finding a chest"""
-        self.retry_count = 0
-        self.first_wave_done = False
-        self.chest_found = False
+        SADungeonFarmer.retry_count = 0
+        SADungeonFarmer.first_wave_done = False
+        SADungeonFarmer.chest_found = False
 
     def lets_restart_fight(self, screenshot: np.ndarray):
         """Common logic to restart the fight"""
