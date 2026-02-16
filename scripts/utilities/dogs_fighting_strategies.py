@@ -1,4 +1,3 @@
-import numpy as np
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
 
@@ -23,7 +22,7 @@ class DogsBattleStrategy(IBattleStrategy):
         """Keep at least 2 ultimates in hand!"""
 
         # Identify the IDs that contain an ultimate
-        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
 
         # Disable the first 2 ultimates
         for i, id in enumerate(ult_ids[::-1]):

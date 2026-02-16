@@ -157,14 +157,14 @@ class SmarterBattleStrategy(IBattleStrategy):
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if (
             len(recovery_ids)
-            and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+            and not any(v == CardTypes.RECOVERY.value for v in picked_card_types)
+            and not any(v == CardTypes.STANCE.value for v in picked_card_types)
         ):
             return recovery_ids[-1]
 
         # BUFF CARDS
         buff_ids = sorted(np.where(card_types == CardTypes.BUFF.value)[0], key=lambda idx: card_ranks[idx])
-        if len(buff_ids) and not np.where(picked_card_types == CardTypes.BUFF.value)[0].size:
+        if len(buff_ids) and not any(v == CardTypes.BUFF.value for v in picked_card_types):
             return buff_ids[-1]
 
         # CARD MERGE -- If there's a card that generates a merge (and not disabled), pick it!
@@ -178,7 +178,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
         # Sort them based on card ranks
         att_debuff_ids: np.ndarray = np.array(sorted(att_debuff_ids, key=lambda idx: card_ranks[idx], reverse=False))
-        if att_debuff_ids.size and not np.where(picked_card_types == CardTypes.ATTACK_DEBUFF.value)[0].size:
+        if att_debuff_ids.size and not any(v == CardTypes.ATTACK_DEBUFF.value for v in picked_card_types):
             return att_debuff_ids[-1]
 
         # ATTACK CARDS
@@ -190,7 +190,7 @@ class SmarterBattleStrategy(IBattleStrategy):
 
         if all(card.card_type in [CardTypes.GROUND, CardTypes.DISABLED] for card in hand_of_cards):
             print("We only have ground and disabled cards, let's play the rightmost disabled card...")
-            disabled_ids = np.where([card.card_type == CardTypes.DISABLED for card in hand_of_cards])[0]
+            disabled_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.DISABLED]
             if len(disabled_ids):
                 return disabled_ids[-1]
 
@@ -207,7 +207,7 @@ def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray, card
         stance_ids = sorted(stance_ids, key=lambda idx: card_ranks[idx], reverse=False)
     if (
         len(stance_ids)
-        and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+        and not any(v == CardTypes.STANCE.value for v in picked_card_types)
         and not find(vio.stance_active, screenshot, threshold=0.5)
     ):
         print("We don't have a stance up, we need to enable it!")

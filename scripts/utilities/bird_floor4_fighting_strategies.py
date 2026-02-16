@@ -64,15 +64,15 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
             print("We have a block-skill debuff, we need to cleanse!")
 
             # Play Meli's AOE card if we have it
-            if not np.any([find(vio.meli_aoe, card.card_image) for card in picked_cards]):
-                meli_aoe_ids = np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])[0]
+            if not any(find(vio.meli_aoe, card.card_image) for card in picked_cards):
+                meli_aoe_ids = [i for i, card in enumerate(hand_of_cards) if find(vio.meli_aoe, card.card_image)]
                 if len(meli_aoe_ids):
                     print("Playing Meli's AOE")
                     return sorted(meli_aoe_ids, reverse=True, key=lambda idx: card_ranks[idx])[-1]
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids) and not np.any([picked_card_types == CardTypes.RECOVERY.value]):
+            if len(recovery_ids) and not any(v == CardTypes.RECOVERY.value for v in picked_card_types):
                 print("Playing recovery at index", recovery_ids[-1])
                 # Sort them in descending order of card ranks, and pick a bronze one if possible
                 return sorted(recovery_ids, key=lambda idx: card_ranks[idx], reverse=True)[-1]
@@ -89,7 +89,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         stance_ids = np.where((card_types == CardTypes.STANCE.value) & (card_ranks != CardRanks.SILVER.value))[0]
         if (
             len(stance_ids)
-            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
+            and not any(v == CardTypes.STANCE.value for v in picked_card_types)
             and not find(vio.stance_active, screenshot, threshold=0.5)
         ):
             print("We don't have a stance up, we need to enable it!")
@@ -161,12 +161,12 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
         print("We have a shield, GOING HAM ON THE BIRD!")
         # First pick ultimates, to save amplify cards for phase 3 if we can
-        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
         if len(ult_ids):
             return ult_ids[-1]
 
         # First try to pick a hard-hitting card
-        ham_card_ids = np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]
+        ham_card_ids = [i for i, card in enumerate(hand_of_cards) if is_hard_hitting_card(card)]
         # Use bronze cards first
         ham_card_ids = sorted(ham_card_ids, key=lambda idx: card_ranks[idx], reverse=True)
         return ham_card_ids[-1] if len(ham_card_ids) else None
@@ -209,7 +209,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         ### DISABLED
         # If we have any disabled card here but also recoveries available...
         if (
-            np.any([card_types == CardTypes.DISABLED.value])
+            any(v == CardTypes.DISABLED.value for v in card_types)
             and len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) > 0
         ):
             print("We're fully disabled but re-enabling cards")
@@ -277,7 +277,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+        if len(recovery_ids) and not any(v == CardTypes.RECOVERY.value for v in picked_card_types):
             return recovery_ids[-1]
 
         # Now just click on a bronze card if we have one
@@ -323,13 +323,13 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
             # RECOVERY CARDS
             recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-            if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+            if len(recovery_ids) and not any(v == CardTypes.RECOVERY.value for v in picked_card_types):
                 print("Playing recovery at index", recovery_ids[-1])
                 return recovery_ids[-1]
 
             # Play Meli's AOE card if we don't have a cleanse, AND if we haven't played a Meli AOE yet
-            elif not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size and not np.any(
-                [find(vio.meli_aoe, card.card_image) for card in picked_cards]
+            elif not any(v == CardTypes.RECOVERY.value for v in picked_card_types) and not any(
+                find(vio.meli_aoe, card.card_image) for card in picked_cards
             ):
                 for i, card in enumerate(hand_of_cards):
                     if find(vio.meli_aoe, card.card_image):
@@ -360,7 +360,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
         # RECOVERY CARDS
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
-        if len(recovery_ids) and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size:
+        if len(recovery_ids) and not any(v == CardTypes.RECOVERY.value for v in picked_card_types):
             return recovery_ids[-1]
 
         # ATTACK CARDS
@@ -369,17 +369,18 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
             return attack_ids[-1]
 
         # ULTIMATE CARDS, but DON'T use Meli's ultimate!
-        ult_ids = np.where(
-            (card_types == CardTypes.ULTIMATE.value)
-            & np.array([not find(vio.meli_ult, card.card_image) for card in hand_of_cards])
-        )[0]
+        ult_ids = [
+            i for i, card in enumerate(hand_of_cards)
+            if card_types[i] == CardTypes.ULTIMATE.value and not find(vio.meli_ult, card.card_image)
+        ]
         if len(ult_ids):
             return ult_ids[-1]
 
         # If everything is DISABLED, GROUND or NONE except one card, play it (even if it's Meli's ult)
-        not_disabled_ids = np.where(
-            [card.card_type not in [CardTypes.NONE, CardTypes.DISABLED, CardTypes.GROUND] for card in hand_of_cards]
-        )[0]
+        not_disabled_ids = [
+            i for i, card in enumerate(hand_of_cards)
+            if card.card_type not in [CardTypes.NONE, CardTypes.DISABLED, CardTypes.GROUND]
+        ]
         if len(not_disabled_ids) == 1:
             print("We ONLY have one card available! Playing it even if it's Meli's ultimate")
             return not_disabled_ids[-1]
@@ -428,14 +429,14 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
                     return i
 
             # Now, if we DON'T HAVE meli's ult, we should NOT play HAM cards
-            if not np.any([find(vio.meli_ult, card.card_image) for card in picked_cards]):
+            if not any(find(vio.meli_ult, card.card_image) for card in picked_cards):
                 print("We cannot remove evasion, playing non-HAM cards...")
                 # RECOVERY: Play as many as we have!
                 if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]):
                     return recovery_ids[-1]
 
                 # All Meli's AOE first
-                if len(meli_aoes := np.where([find(vio.meli_aoe, card.card_image) for card in hand_of_cards])[0]):
+                if len(meli_aoes := [i for i, card in enumerate(hand_of_cards) if find(vio.meli_aoe, card.card_image)]):
                     return meli_aoes[-1]
 
                 # ULTS
@@ -444,23 +445,21 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
                 # Regular non-HAM cards:
                 elif len(
-                    non_ham_ids := np.where(
-                        [
-                            not is_hard_hitting_card(card) and card.card_type not in [CardTypes.GROUND, CardTypes.NONE]
-                            for card in hand_of_cards
-                        ]
-                    )[0]
+                    non_ham_ids := [
+                        i for i, card in enumerate(hand_of_cards)
+                        if not is_hard_hitting_card(card) and card.card_type not in [CardTypes.GROUND, CardTypes.NONE]
+                    ]
                 ):
                     return non_ham_ids[-1]
 
         # RECOVERY
-        if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not np.any(
-            [card.card_type == CardTypes.RECOVERY for card in picked_cards]
+        if len(recovery_ids := np.where(card_types == CardTypes.RECOVERY.value)[0]) and not any(
+            card.card_type == CardTypes.RECOVERY for card in picked_cards
         ):
             return recovery_ids[-1]
 
         # Go HAM on the fricking bird
-        if len(ham_card_ids := np.where([is_hard_hitting_card(card) for card in hand_of_cards])[0]):
+        if len(ham_card_ids := [i for i, card in enumerate(hand_of_cards) if is_hard_hitting_card(card)]):
             # print(f"These HAM cards: {ham_card_ids}")
             print("Picking HAM index:", self._pick_HAM_cards(hand_of_cards, ham_card_ids))
             return self._pick_HAM_cards(hand_of_cards, ham_card_ids)
@@ -475,20 +474,22 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
         return next_idx
 
-    def _pick_HAM_cards(self, hand_of_cards: list[Card], ham_card_ids: np.ndarray) -> int | None:
+    def _pick_HAM_cards(self, hand_of_cards: list[Card], ham_card_ids: list[int]) -> int | None:
         """Pick HAM cards to play. Ensure that a thunderstorm Thor card is picked last, if possible"""
-        thor_thunder_ids = np.where([find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards])[0]
-        thor_ids = np.where(
-            [is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image) for card in hand_of_cards]
-        )[0]
+        thor_thunder_ids = [i for i, card in enumerate(hand_of_cards) if find(vio.thor_thunderstorm, card.card_image)]
+        thor_ids = [
+            i for i, card in enumerate(hand_of_cards)
+            if is_Thor_card(card) and not find(vio.thor_thunderstorm, card.card_image)
+        ]
         # print("These THOR IDs:", thor_ids)
 
         # Re-order the thor IDs by combining the two and setting the thunderstorm cards last
-        thor_ids = np.concatenate((thor_thunder_ids, thor_ids))
+        thor_ids = thor_thunder_ids + thor_ids
 
-        non_thor_ham_ids = np.setdiff1d(ham_card_ids, thor_ids)
+        thor_set = set(thor_ids)
+        non_thor_ham_ids = [x for x in ham_card_ids if x not in thor_set]
         # Re-order the array of HAM IDs, with the thor_ids in the last position
-        ham_card_ids = np.concatenate([thor_ids[:1], non_thor_ham_ids, thor_ids[1:]])
+        ham_card_ids = thor_ids[:1] + non_thor_ham_ids + thor_ids[1:]
         return (
             thor_ids[0]  # So we use the thunderstorm if we have it
             if len(thor_ids) and BirdFloor4BattleStrategy.card_turn == 3
@@ -503,9 +504,9 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         picked_amplify_cards = sum(is_amplify_card(card) for card in picked_cards)
         print("These many immortalities:", num_immortalities - picked_amplify_cards)
         if num_immortalities - picked_amplify_cards > 0 and len(
-            amplify_ids := np.where([is_amplify_card(card) for card in hand_of_cards])[0]
+            amplify_ids := [i for i, card in enumerate(hand_of_cards) if is_amplify_card(card)]
         ):
-            print("Amplify IDs:", np.where([is_amplify_card(card) for card in hand_of_cards])[0])
+            print("Amplify IDs:", amplify_ids)
             return amplify_ids[-1]
         elif num_immortalities - picked_amplify_cards <= 0:
             print("No need to select more amplify cards!")

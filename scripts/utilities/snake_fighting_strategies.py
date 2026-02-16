@@ -39,7 +39,7 @@ class SnakeBattleStrategy(IBattleStrategy):
     def floor_13_phase_1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """Use all high-hitting cards"""
 
-        ham_ids = np.where([is_hard_hitting_snake_card(card) for card in hand_of_cards])[0]
+        ham_ids = [i for i, card in enumerate(hand_of_cards) if is_hard_hitting_snake_card(card)]
         if len(ham_ids):
             return ham_ids[-1]
 
@@ -52,19 +52,17 @@ class SnakeBattleStrategy(IBattleStrategy):
         # If it's the last card to play, use Liz's AOE:
         if card_turn == 3:
             # print("Can we use Liz's AOE card?")
-            liz_aoe_ids = np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]
+            liz_aoe_ids = [i for i, card in enumerate(hand_of_cards) if find(vio.lr_liz_aoe, card.card_image)]
             if len(liz_aoe_ids):
                 return liz_aoe_ids[-1]
 
         # Default strategy: Simply use HAM cards to one-turn it
-        ham_ids = np.where(
-            [
-                find(vio.freyja_st, card.card_image)
-                or find(vio.mael_aoe, card.card_image)
-                or find(vio.mael_st, card.card_image)
-                for card in hand_of_cards
-            ]
-        )[0]
+        ham_ids = [
+            i for i, card in enumerate(hand_of_cards)
+            if find(vio.freyja_st, card.card_image)
+            or find(vio.mael_aoe, card.card_image)
+            or find(vio.mael_st, card.card_image)
+        ]
         if len(ham_ids):
             return ham_ids[-1]
 
@@ -79,28 +77,24 @@ class SnakeBattleStrategy(IBattleStrategy):
         # Card ranks for sorting
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
 
-        played_freyja_ids = np.where(
-            [
-                find(vio.freyja_aoe, card.card_image)
-                or find(vio.freyja_st, card.card_image)
-                or find(vio.freyja_ult, card.card_image)
-                for card in picked_cards
-            ]
-        )[0]
-        played_stance_cancel_ids = np.where(
-            [
-                find(vio.freyja_st, card.card_image)
-                or find(vio.mael_ult, card.card_image)
-                or find(vio.margaret_st, card.card_image)
-                for card in picked_cards
-            ]
-        )[0]
+        played_freyja_ids = [
+            i for i, card in enumerate(picked_cards)
+            if find(vio.freyja_aoe, card.card_image)
+            or find(vio.freyja_st, card.card_image)
+            or find(vio.freyja_ult, card.card_image)
+        ]
+        played_stance_cancel_ids = [
+            i for i, card in enumerate(picked_cards)
+            if find(vio.freyja_st, card.card_image)
+            or find(vio.mael_ult, card.card_image)
+            or find(vio.margaret_st, card.card_image)
+        ]
 
         # First, play a buff if possible
-        buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]
+        buff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.BUFF]
         # Sort the buff IDs based on card ranks
         buff_ids = sorted(buff_ids, key=lambda idx: card_ranks[idx])
-        played_buff_ids = np.where([card.card_type == CardTypes.BUFF for card in picked_cards])[0]
+        played_buff_ids = [i for i, card in enumerate(picked_cards) if card.card_type == CardTypes.BUFF]
         if len(buff_ids) and not len(played_buff_ids):
             return buff_ids[-1]
 
@@ -108,13 +102,13 @@ class SnakeBattleStrategy(IBattleStrategy):
         if (
             find(vio.extort, screenshot)
             and not len(played_buff_ids)
-            and not np.any([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards])
+            and not any(find(vio.lr_liz_aoe, card.card_image) for card in picked_cards)
         ):
-            if len(liz_aoe_ids := np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]):
+            if len(liz_aoe_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.lr_liz_aoe, card.card_image)]):
                 # print("We need to remove the extort!")
                 return liz_aoe_ids[-1]
 
-        mael_ult_id: list[int] = np.where([find(vio.mael_ult, card.card_image) for card in hand_of_cards])[0]
+        mael_ult_id = [i for i, card in enumerate(hand_of_cards) if find(vio.mael_ult, card.card_image)]
         # If enemy has stance/damage increase, gotta remove it:
         if find(vio.snake_f3p2_counter, screenshot, threshold=0.6) or find(
             vio.damage_increase, screenshot, threshold=0.8
@@ -123,7 +117,7 @@ class SnakeBattleStrategy(IBattleStrategy):
                 # print("Removing counter/damage increase with Mael's ultimate!")
                 return mael_ult_id[-1]
             elif len(
-                freyja_st_ids := np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
+                freyja_st_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.freyja_st, card.card_image)]
             ) and not len(played_stance_cancel_ids):
                 # print("Playing a Freyja ST to remove damage increase or counter.")
                 return freyja_st_ids[-1]
@@ -131,7 +125,7 @@ class SnakeBattleStrategy(IBattleStrategy):
             elif (
                 find(vio.damage_increase, screenshot, threshold=0.8)
                 and len(
-                    margaret_st_ids := np.where([find(vio.margaret_st, card.card_image) for card in hand_of_cards])[0]
+                    margaret_st_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.margaret_st, card.card_image)]
                 )
                 and not len(played_stance_cancel_ids)
             ):
@@ -146,14 +140,14 @@ class SnakeBattleStrategy(IBattleStrategy):
         # Play a Freyja card to avoid getting darkness!
         if not len(played_freyja_ids):
             # Try to play the ult
-            if len(freyja_ult_id := np.where([find(vio.freyja_ult, card.card_image) for card in hand_of_cards])[0]):
+            if len(freyja_ult_id := [i for i, card in enumerate(hand_of_cards) if find(vio.freyja_ult, card.card_image)]):
                 return freyja_ult_id[-1]
             # If not, try to play an AOE
-            if len(freyja_aoe_ids := np.where([find(vio.freyja_aoe, card.card_image) for card in hand_of_cards])[0]):
+            if len(freyja_aoe_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.freyja_aoe, card.card_image)]):
                 return freyja_aoe_ids[-1]
             # If not, try to play a single target IF we are not playing any buff this turn (arbitrary)
             if not len(played_buff_ids) and len(
-                freyja_st_ids := np.where([find(vio.freyja_st, card.card_image) for card in hand_of_cards])[0]
+                freyja_st_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.freyja_st, card.card_image)]
             ):
                 return freyja_st_ids[-1]
 
@@ -171,8 +165,8 @@ class SnakeBattleStrategy(IBattleStrategy):
             return ult_ids[-1]
 
         # Liz AOE card
-        liz_aoe_ids = np.where([find(vio.lr_liz_aoe, card.card_image) for card in hand_of_cards])[0]
-        if len(liz_aoe_ids) and not np.any([find(vio.lr_liz_aoe, card.card_image) for card in picked_cards]):
+        liz_aoe_ids = [i for i, card in enumerate(hand_of_cards) if find(vio.lr_liz_aoe, card.card_image)]
+        if len(liz_aoe_ids) and not any(find(vio.lr_liz_aoe, card.card_image) for card in picked_cards):
             return liz_aoe_ids[-1]
 
         # ATTACK CARDS
@@ -203,10 +197,10 @@ class SnakeBattleStrategy(IBattleStrategy):
             # print("The snake has a stance! Can we cancel it?")
 
             # Cancel the stance and also play a buff if possible
-            buff_ids = np.where([card.card_type == CardTypes.BUFF for card in hand_of_cards])[0]
-            played_buff_ids = np.where([card.card_type == CardTypes.BUFF for card in picked_cards])[0]
-            stance_ids = np.where([is_stance_cancel_card(card) for card in hand_of_cards])[0]
-            played_stance_ids = np.where([is_stance_cancel_card(card) for card in picked_cards])[0]
+            buff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.BUFF]
+            played_buff_ids = [i for i, card in enumerate(picked_cards) if card.card_type == CardTypes.BUFF]
+            stance_ids = [i for i, card in enumerate(hand_of_cards) if is_stance_cancel_card(card)]
+            played_stance_ids = [i for i, card in enumerate(picked_cards) if is_stance_cancel_card(card)]
 
             if len(stance_ids) and not len(played_stance_ids):
                 return stance_ids[-1]

@@ -36,22 +36,22 @@ class DeerBattleStrategy(IBattleStrategy):
 
         # Get all card types
         red_card_ids = sorted(
-            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
         )
         blue_card_ids = sorted(
-            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
         )
-        green_card_ids: list[int] = sorted(
-            np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+        green_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
 
         # Place buff removal card at the beginning of the list, to save it if necessary
         green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
 
         # First of all, if the beast has an evasion and we haven't played one yet:
-        buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
+        buff_removal_ids = [i for i, card in enumerate(hand_of_cards) if is_buff_removal_card(card)]
         if find(vio.evasion, screenshot, threshold=0.7) and (
-            len(buff_removal_ids) and not np.any([is_buff_removal_card(card) for card in picked_cards])
+            len(buff_removal_ids) and not any(is_buff_removal_card(card) for card in picked_cards)
         ):
             # print("Deer has an evasion, let's remove it")
             return buff_removal_ids[-1]
@@ -103,17 +103,17 @@ class DeerBattleStrategy(IBattleStrategy):
 
         # Play a buff card first, if we have it and haven't played it yet
         buff_ids = sorted(np.where(card_types == CardTypes.BUFF.value)[0], key=lambda idx: card_ranks[idx])
-        if len(buff_ids) and not np.where(picked_card_types == CardTypes.BUFF.value)[0].size:
+        if len(buff_ids) and not any(v == CardTypes.BUFF.value for v in picked_card_types):
             return buff_ids[-1]
 
         red_card_ids = sorted(
-            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
         )
         blue_card_ids = sorted(
-            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
         )
         green_card_ids = sorted(
-            np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
 
         # Place buff removal card at the beginning of the list, to save it if necessary

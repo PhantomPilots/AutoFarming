@@ -21,21 +21,17 @@ class InduraBattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
-        king_debuf_card_ids: list[int] = np.where(
-            [
-                find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
-                for card in hand_of_cards
-            ]
-        )[0]
-        played_king_debuf_cards: list[int] = np.where(
-            [
-                find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
-                for card in picked_cards
-            ]
-        )[0]
+        king_debuf_card_ids = [
+            i for i, card in enumerate(hand_of_cards)
+            if find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
+        ]
+        played_king_debuf_cards = [
+            i for i, card in enumerate(picked_cards)
+            if find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
+        ]
         six_empty_slots_image = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
-        heal_card_ids: list[int] = sorted(
-            np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
+        heal_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.RECOVERY.value],
             key=lambda idx: card_ranks[idx],
         )
 
@@ -64,8 +60,8 @@ class InduraBattleStrategy(IBattleStrategy):
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
             # Re-collection heal IDs in case we've disabled them
-            heal_card_ids: list[int] = sorted(
-                np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
+            heal_card_ids = sorted(
+                [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.RECOVERY.value],
                 key=lambda idx: card_ranks[idx],
             )
             if not len(played_king_debuf_cards) and len(heal_card_ids):
@@ -138,7 +134,7 @@ class InduraBattleStrategy(IBattleStrategy):
             print(f"We're on turn {InduraBattleStrategy._fight_turn} of phase 3")
 
             if InduraBattleStrategy._fight_turn == 0:
-                ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+                ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
                 print("Disabling all Ultimates for first turn!")
                 for id in ult_ids:
                     hand_of_cards[id].card_type = CardTypes.DISABLED
@@ -150,23 +146,21 @@ class InduraBattleStrategy(IBattleStrategy):
 
             # Play a heal if we can, only on odd turns!
             heal_card_ids = sorted(
-                np.where([card.card_type.value == CardTypes.RECOVERY.value for card in hand_of_cards])[0],
+                [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.RECOVERY.value],
                 key=lambda idx: card_ranks[idx],
             )
             if len(heal_card_ids):  # and InduraBattleStrategy._fight_turn % 2 == 0:
                 return heal_card_ids[-1]
 
             # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card first
-            if np.any([find(vio.alpha_ult, card.card_image) for card in hand_of_cards]):
+            if any(find(vio.alpha_ult, card.card_image) for card in hand_of_cards):
                 # Check if we have a King's attack card
-                king_att_card_ids: list[int] = sorted(
-                    np.where([find(vio.king_att, card.card_image) for card in hand_of_cards])[0],
+                king_att_card_ids = sorted(
+                    [i for i, card in enumerate(hand_of_cards) if find(vio.king_att, card.card_image)],
                     key=lambda idx: card_ranks[idx],
                 )
-                played_heal_ids = np.where([card.card_type.value == CardTypes.RECOVERY.value for card in picked_cards])[
-                    0
-                ]
-                played_king_att_card = np.where([find(vio.king_att, card.card_image) for card in picked_cards])[0]
+                played_heal_ids = [i for i, card in enumerate(picked_cards) if card.card_type.value == CardTypes.RECOVERY.value]
+                played_king_att_card = [i for i, card in enumerate(picked_cards) if find(vio.king_att, card.card_image)]
                 num_alpha_buffs = self._count_alpha_buffs(screenshot)
                 if (
                     num_alpha_buffs < 2
@@ -184,18 +178,16 @@ class InduraBattleStrategy(IBattleStrategy):
         self._disable_alpha_att_cards(screenshot, hand_of_cards, picked_cards)
 
         # Try to play an ultimate
-        ult_ids = np.where([card.card_type == CardTypes.ULTIMATE for card in hand_of_cards])[0]
+        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
         if len(ult_ids):
             return ult_ids[-1]
 
         # Try to play attack cards only if we can
         attack_card_ids = sorted(
-            np.where(
-                [
-                    card.card_type == CardTypes.ATTACK and not find(vio.king_att, card.card_image)
-                    for card in hand_of_cards
-                ]
-            )[0],
+            [
+                i for i, card in enumerate(hand_of_cards)
+                if card.card_type == CardTypes.ATTACK and not find(vio.king_att, card.card_image)
+            ],
             key=lambda idx: card_ranks[idx],
         )
         if len(attack_card_ids):
@@ -209,10 +201,11 @@ class InduraBattleStrategy(IBattleStrategy):
 
         num_buffs = self._count_alpha_buffs(screenshot)
 
-        played_single_targets = np.where(
-            [find(vio.king_att, card.card_image) or find(vio.lance_att, card.card_image) for card in picked_cards]
-        )[0]
-        played_alpha_att = np.where([find(vio.alpha_att, card.card_image) for card in picked_cards])[0]
+        played_single_targets = [
+            i for i, card in enumerate(picked_cards)
+            if find(vio.king_att, card.card_image) or find(vio.lance_att, card.card_image)
+        ]
+        played_alpha_att = [i for i, card in enumerate(picked_cards) if find(vio.alpha_att, card.card_image)]
 
         num_buffs += len(played_single_targets)
         num_buffs = max(0, min(3, num_buffs))

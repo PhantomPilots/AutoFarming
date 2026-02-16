@@ -104,14 +104,14 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         # All unit cards sorted
         thor_cards = sorted(
-            np.where([is_Thor_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_Thor_card(card)], key=lambda idx: card_ranks[idx]
         )
         tyr_hel_cards = sorted(
-            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
             key=lambda idx: card_ranks[idx],
         )
         jorm_cards = sorted(
-            np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
         )
 
         if DeerFloor4BattleStrategy.turn == 0:
@@ -168,20 +168,20 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         # All unit cards sorted
         tyr_hel_cards = sorted(
-            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
             key=lambda idx: card_ranks[idx],
         )
         jorm_cards = sorted(
-            np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
         )
         green_card_ids = sorted(
-            np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
         red_card_ids = sorted(
-            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
         )
         blue_card_ids = sorted(
-            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
         )
         # Reorder heal cards
         green_card_ids = reorder_jorms_heal(hand_of_cards, green_card_ids)
@@ -223,7 +223,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if card_turn == 2 and DeerFloor4BattleStrategy._color_cards_picked_p3 == "green":
                 # Check if we have a heal
                 heal_ids = sorted(
-                    np.where([find(vio.jorm_1, card.card_image) for card in hand_of_cards])[0],
+                    [i for i, card in enumerate(hand_of_cards) if find(vio.jorm_1, card.card_image)],
                     key=lambda idx: card_ranks[idx],
                 )
                 if len(heal_ids):
@@ -251,14 +251,14 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         green_card_ids = sorted(
-            np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
         red_card_ids = sorted(  # Disable Freyr's ult, to have it for phase 4!
-            np.where([is_red_card(card) and not find(vio.freyr_ult, card.card_image) for card in hand_of_cards])[0],
+            [i for i, card in enumerate(hand_of_cards) if is_red_card(card) and not find(vio.freyr_ult, card.card_image)],
             key=lambda idx: card_ranks[idx],
         )
         blue_card_ids = sorted(
-            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
         )
         # Reorder green card IDs, so the buff removal is the last one we pick
         green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
@@ -309,25 +309,25 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         # Get all card types
         red_card_ids = sorted(
-            np.where([is_red_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
         )
         blue_card_ids = sorted(
-            np.where([is_blue_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
         )
-        green_card_ids: list[int] = sorted(
-            np.where([is_green_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+        green_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
         tyr_hel_cards = sorted(
-            np.where([is_Tyr_card(card) or is_Hel_card(card) for card in hand_of_cards])[0],
+            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
             key=lambda idx: card_ranks[idx],
         )
         jorm_cards = sorted(
-            np.where([is_Jorm_card(card) for card in hand_of_cards])[0], key=lambda idx: card_ranks[idx]
+            [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
         )
 
         # First of all, if Deer has a counter, use Hel ult if we have it
         if find(vio.snake_f3p2_counter, screenshot):
-            if len(hel_ult_ids := np.where([find(vio.hel_ult, card.card_image) for card in hand_of_cards])[0]):
+            if len(hel_ult_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.hel_ult, card.card_image)]):
                 return hel_ult_ids[-1]
 
         if DeerFloor4BattleStrategy.turn < 3:
@@ -396,7 +396,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             # First, if it's turn 2, use Jorm's buff card if it exists
             if DeerFloor4BattleStrategy.turn == 2:
                 print("Can we use a buff removal??")
-            buff_removal_ids = np.where([is_buff_removal_card(card) for card in hand_of_cards])[0]
+            buff_removal_ids = [i for i, card in enumerate(hand_of_cards) if is_buff_removal_card(card)]
             return (
                 buff_removal_ids[-1]
                 if len(buff_removal_ids) and DeerFloor4BattleStrategy.turn == 2
@@ -410,7 +410,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         # If the above doesn't happen...
         print("Couldn't find the right card, defaulting while avoiding ultimates...")
         # But let's disable the ults, just in case
-        ult_ids: list[int] = np.where([card.card_type.value == CardTypes.ULTIMATE.value for card in hand_of_cards])[0]
+        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.ULTIMATE.value]
         for id in ult_ids:
             hand_of_cards[id].card_type = CardTypes.DISABLED
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

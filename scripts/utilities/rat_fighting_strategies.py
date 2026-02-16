@@ -1,7 +1,6 @@
 import time
 from enum import Enum, auto
 
-import numpy as np
 import utilities.vision_images as vio
 from utilities.card_data import Card, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
@@ -86,9 +85,14 @@ class RatFightingStrategy(IBattleStrategy):
         """Phase 1 logic for floor 1 — duplicated from old floor1_phase12"""
 
         # For bleed IDs, don't play bleeds on phase 2 (phase 1 → always allowed)
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
+        bleed_ids, shock_ids, poison_ids = [], [], []
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type == DebuffTypes.BLEED:
+                bleed_ids.append(i)
+            elif card.debuff_type == DebuffTypes.SHOCK:
+                shock_ids.append(i)
+            elif card.debuff_type == DebuffTypes.POISON:
+                poison_ids.append(i)
 
         # Movement logic
         if card_turn == 3:
@@ -109,9 +113,10 @@ class RatFightingStrategy(IBattleStrategy):
                 return picked_ids[-1]
 
         # Diane AOE logic — phase 1: disable ANY debuffed card, plus disabled KDiane AOE
-        strong_aoe_ids = np.where(
-            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
-        )[0]
+        strong_aoe_ids = [
+            i for i, c in enumerate(hand_of_cards)
+            if find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image)
+        ]
 
         for i, card in enumerate(hand_of_cards):
             if (card.debuff_type != DebuffTypes.NONE) or (i in strong_aoe_ids and card.card_type == CardTypes.DISABLED):
@@ -133,11 +138,16 @@ class RatFightingStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         # Bleeds disabled in phase 2
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        buff_removal_ids = np.where([is_buff_removal(card) for card in hand_of_cards])[0]
-        valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
+        bleed_ids, shock_ids, poison_ids = [], [], []
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type == DebuffTypes.BLEED:
+                bleed_ids.append(i)
+            elif card.debuff_type == DebuffTypes.SHOCK:
+                shock_ids.append(i)
+            elif card.debuff_type == DebuffTypes.POISON:
+                poison_ids.append(i)
+        buff_removal_ids = [i for i, card in enumerate(hand_of_cards) if is_buff_removal(card)]
+        valenti_ult_id = [i for i, card in enumerate(hand_of_cards) if find(vio.val_ult, card.card_image)]
 
         # Phase-2 specific disable: Valenti ult
         if len(valenti_ult_id):
@@ -145,15 +155,15 @@ class RatFightingStrategy(IBattleStrategy):
             hand_of_cards[valenti_ult_id[-1]].card_type = CardTypes.GROUND
 
         # Disable one bleed + one shock
-        if bleed_ids.size:
+        if len(bleed_ids):
             hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
             bleed_ids = bleed_ids[1:]
-        if shock_ids.size:
+        if len(shock_ids):
             hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
             shock_ids = shock_ids[1:]
 
         # Now disable all debuffs
-        for id in np.concatenate((bleed_ids, shock_ids, poison_ids)):
+        for id in bleed_ids + shock_ids + poison_ids:
             hand_of_cards[id].card_type = CardTypes.DISABLED
 
         # Remove buffs
@@ -172,7 +182,7 @@ class RatFightingStrategy(IBattleStrategy):
             else:
                 opts = (shock_ids, poison_ids)
 
-            if (picked_ids := max(opts, key=len)).size:
+            if len(picked_ids := max(opts, key=len)):
                 return picked_ids[-1]
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
@@ -183,56 +193,61 @@ class RatFightingStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         # Precompute IDs
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        valenti_ult_id = np.where([find(vio.val_ult, card.card_image) for card in hand_of_cards])[0]
+        bleed_ids, shock_ids, poison_ids = [], [], []
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type == DebuffTypes.BLEED:
+                bleed_ids.append(i)
+            elif card.debuff_type == DebuffTypes.SHOCK:
+                shock_ids.append(i)
+            elif card.debuff_type == DebuffTypes.POISON:
+                poison_ids.append(i)
+        valenti_ult_id = [i for i, card in enumerate(hand_of_cards) if find(vio.val_ult, card.card_image)]
 
         valenti_set = set(valenti_ult_id)
 
         have_damage_reduction = find(vio.damage_reduction, screenshot)
 
         # Disable one bleed + one shock (consistent with your original logic)
-        if bleed_ids.size:
+        if len(bleed_ids):
             hand_of_cards[bleed_ids[0]].card_type = CardTypes.GROUND
-        if shock_ids.size:
+        if len(shock_ids):
             hand_of_cards[shock_ids[0]].card_type = CardTypes.GROUND
 
         # ------------------
         #  STUMP-SPECIFIC LOGIC
         # ------------------
         if current_stump == 1:
-            if card_turn == 3 and bleed_ids.size:
+            if card_turn == 3 and len(bleed_ids):
                 return bleed_ids[-1]
 
-            elif card_turn == 3 and shock_ids.size and valenti_ult_id.size:
+            elif card_turn == 3 and len(shock_ids) and len(valenti_ult_id):
                 return shock_ids[-1]
 
-            if not bleed_ids.size:
+            if not len(bleed_ids):
                 for i in shock_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
 
         elif current_stump == 2:
-            if card_turn == 3 and valenti_ult_id.size and shock_ids.size:
+            if card_turn == 3 and len(valenti_ult_id) and len(shock_ids):
                 return shock_ids[-1]
 
-            if not valenti_ult_id.size:
+            if not len(valenti_ult_id):
                 for i in shock_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
 
                 if have_damage_reduction:
                     # We still need to go to the leftmost stump!
-                    all_val_ids = np.concatenate((poison_ids, shock_ids))
-                    if card_turn >= 2 and all_val_ids.size:
+                    all_val_ids = poison_ids + shock_ids
+                    if card_turn >= 2 and len(all_val_ids):
                         print("Trying to get Valenti's ult...")
                         return [all_val_ids[0], all_val_ids[0] + 1]
 
-                    if not shock_ids.size:
+                    if not len(shock_ids):
                         for i in poison_ids:
                             hand_of_cards[i].card_type = CardTypes.GROUND
 
         elif current_stump == 0:
-            if card_turn == 3 and valenti_ult_id.size:
+            if card_turn == 3 and len(valenti_ult_id):
                 return valenti_ult_id[-1]
             # Disable all Diane AoE cards, since they do no damage
             for i, card in enumerate(hand_of_cards):
@@ -276,11 +291,16 @@ class RatFightingStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        picked_bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in picked_cards])[0]
-        picked_shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in picked_cards])[0]
+        bleed_ids, shock_ids, poison_ids = [], [], []
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type == DebuffTypes.BLEED:
+                bleed_ids.append(i)
+            elif card.debuff_type == DebuffTypes.SHOCK:
+                shock_ids.append(i)
+            elif card.debuff_type == DebuffTypes.POISON:
+                poison_ids.append(i)
+        picked_bleed_ids = [i for i, card in enumerate(picked_cards) if card.debuff_type == DebuffTypes.BLEED]
+        picked_shock_ids = [i for i, card in enumerate(picked_cards) if card.debuff_type == DebuffTypes.SHOCK]
 
         if card_turn == 0:
             if len(bleed_ids) and len(shock_ids) and len(poison_ids):
@@ -315,16 +335,22 @@ class RatFightingStrategy(IBattleStrategy):
             RatFightingStrategy.turns_in_f2p2 += 1
             print(f"We're on turn {RatFightingStrategy.turns_in_f2p2} in F2P2")
 
-        shock_ids = np.where([card.debuff_type == DebuffTypes.SHOCK for card in hand_of_cards])[0]
-        bleed_ids = np.where([card.debuff_type == DebuffTypes.BLEED for card in hand_of_cards])[0]
-        poison_ids = np.where([card.debuff_type == DebuffTypes.POISON for card in hand_of_cards])[0]
-        strong_aoe_ids = np.where(
-            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
-        )[0]
+        bleed_ids, shock_ids, poison_ids = [], [], []
+        for i, card in enumerate(hand_of_cards):
+            if card.debuff_type == DebuffTypes.BLEED:
+                bleed_ids.append(i)
+            elif card.debuff_type == DebuffTypes.SHOCK:
+                shock_ids.append(i)
+            elif card.debuff_type == DebuffTypes.POISON:
+                poison_ids.append(i)
+        strong_aoe_ids = [
+            i for i, c in enumerate(hand_of_cards)
+            if find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image)
+        ]
 
         rat_hidden = find(vio.rat_hidden, screenshot)
         has_immortality = find(vio.immortality_buff, screenshot)
-        debuff_ids = np.concatenate((shock_ids, bleed_ids))
+        debuff_ids = shock_ids + bleed_ids
 
         if rat_hidden:
             # Rat is hidden — avoid damaging center, burn low-value debuffs
@@ -395,12 +421,13 @@ class RatFightingStrategy(IBattleStrategy):
 
         screenshot, _ = capture_window()
 
-        poison_ids = np.where([c.debuff_type == DebuffTypes.POISON for c in hand_of_cards])[0]
+        poison_ids = [i for i, c in enumerate(hand_of_cards) if c.debuff_type == DebuffTypes.POISON]
 
         # Diane AOEs
-        strong_aoe_ids = np.where(
-            [find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image) for c in hand_of_cards]
-        )[0]
+        strong_aoe_ids = [
+            i for i, c in enumerate(hand_of_cards)
+            if find(vio.kdiane_aoe, c.card_image) or find(vio.kdiane_ult, c.card_image)
+        ]
 
         if card_turn == 3 and current_stump != 1 and len(poison_ids):
             print("We need to move the Rat back to the middle!")
