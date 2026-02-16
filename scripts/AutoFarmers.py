@@ -89,6 +89,7 @@ REQUIREMENTS = {
     "Deer Floor 4": """
 <p><strong>Requirements:</strong><br>
 • Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
+• <strong>IMPORTANT</strong>: Green Tyr must have attack less than 22k. Otherwise, it kills the deer too fast<br>
 • NO SKULD</p>
     """,
     "Dogs Farmer": """
@@ -314,14 +315,9 @@ FARMERS = [
                 "label": "Min chest type",
                 "type": "dropdown",
                 "choices": ["bronze", "silver", "gold"],
-                "default": "bronze"
+                "default": "bronze",
             },
-            {
-                "name": "--chest-detection-count",
-                "label": "Chest Detection Retry Count",
-                "type": "text",
-                "default": "3"
-            }
+            {"name": "--chest-detection-count", "label": "Chest Detection Retry Count", "type": "text", "default": "3"},
         ],
     },
     {
