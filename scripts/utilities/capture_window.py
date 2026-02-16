@@ -1,10 +1,44 @@
+import ctypes
 import time
+from ctypes import wintypes
 
 import numpy as np
 import win32api
 import win32con
 import win32gui
 import win32ui
+
+
+class _RECT(ctypes.Structure):
+    _fields_ = [
+        ("left", ctypes.c_long),
+        ("top", ctypes.c_long),
+        ("right", ctypes.c_long),
+        ("bottom", ctypes.c_long),
+    ]
+
+
+def _get_required_window_size_for_client(
+    hwnd: int, client_width: int, client_height: int, style: int, ex_style: int
+) -> tuple[int, int]:
+    """Compute required outer window size for a desired client area, DPI-aware when available."""
+    rect = _RECT(0, 0, client_width, client_height)
+
+    user32 = ctypes.windll.user32
+    adjusted = False
+
+    try:
+        if hasattr(user32, "GetDpiForWindow") and hasattr(user32, "AdjustWindowRectExForDpi"):
+            dpi = user32.GetDpiForWindow(wintypes.HWND(hwnd))
+            adjusted = bool(user32.AdjustWindowRectExForDpi(ctypes.byref(rect), style, False, ex_style, dpi))
+    except Exception:
+        adjusted = False
+
+    if not adjusted:
+        if not bool(user32.AdjustWindowRectEx(ctypes.byref(rect), style, False, ex_style)):
+            raise ctypes.WinError()
+
+    return rect.right - rect.left, rect.bottom - rect.top
 
 
 def get_window_size():
@@ -80,20 +114,10 @@ def resize_7ds_window(width=540, height=960):
         print(f"[DEBUG] Current window style: {hex(current_style)}")
         print(f"[DEBUG] Current extended style: {hex(current_ex_style)}")
 
-        # Calculate the exact border sizes
-        # border_width, border_height = calculate_exact_border_sizes()
-        border_width, border_height = 18, 47
-        if border_width is None or border_height is None:
-            # Fallback to estimated values
-            border_width = 8
-            border_height = 31
-            print(f"[WARNING] Using fallback border sizes: {border_width}x{border_height}")
-        else:
-            print(f"[INFO] Using calculated border sizes: {border_width}x{border_height}")
-
-        # Calculate the total window size needed to achieve the desired client size
-        total_width = width + border_width
-        total_height = height + border_height
+        # Calculate the required outer window size for the target client size (DPI-aware)
+        total_width, total_height = _get_required_window_size_for_client(
+            hwnd_target, width, height, current_style, current_ex_style
+        )
 
         print(f"[DEBUG] Attempting aggressive resize to: {total_width}x{total_height}")
 
@@ -182,6 +206,35 @@ def resize_7ds_window(width=540, height=960):
             )
         except Exception as e:
             print(f"[WARNING] Could not restore window style: {e}")
+
+        # Correction loop: measure actual client size and nudge if DWM/invisible-frame caused drift
+        for attempt in range(3):
+            final_client_rect = win32gui.GetClientRect(hwnd_target)
+            final_client_width = final_client_rect[2] - final_client_rect[0]
+            final_client_height = final_client_rect[3] - final_client_rect[1]
+
+            width_diff = width - final_client_width
+            height_diff = height - final_client_height
+
+            if width_diff == 0 and height_diff == 0:
+                break
+
+            final_rect = win32gui.GetWindowRect(hwnd_target)
+            corrected_width = (final_rect[2] - final_rect[0]) + width_diff
+            corrected_height = (final_rect[3] - final_rect[1]) + height_diff
+
+            print(f"[DEBUG] Correction pass {attempt + 1}: adjusting by {width_diff}x{height_diff}")
+
+            win32gui.SetWindowPos(
+                hwnd_target,
+                win32con.HWND_TOP,
+                current_x,
+                current_y,
+                corrected_width,
+                corrected_height,
+                win32con.SWP_SHOWWINDOW,
+            )
+            time.sleep(0.2)
 
         # Final check
         final_rect = win32gui.GetWindowRect(hwnd_target)
