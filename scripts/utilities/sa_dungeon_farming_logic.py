@@ -52,28 +52,27 @@ class SADungeonFarmer(IFarmer):
     # How many runs we've done?
     num_runs_complete = 0
 
-    # How many chests we've collected so far
-    collected_chests: dict[ChestTier, int]
-
     # To avoid counting multiple finished runs if the "finished_auto_repeat_fight" image is detected for multiple consecutive frames
-    finished_run_lockout_until: float
+    finished_run_lockout_until: float = 0.0
+
+    # How many chests we've collected so far
+    collected_chests: dict[ChestTier, int] = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
 
     # Detection flags
-    chest_found: bool
-    first_wave_done: bool
-    retry_count: int
+    chest_found: bool = False
+    first_wave_done: bool = False
+    # How many times we've retried detecting a chest before deciding to restart
+    retry_count: int = 0
 
     def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=3, **kwargs):
         self.current_state = starting_state
-        self.num_image_detection_retries = chest_detection_count
-        SADungeonFarmer.finished_run_lockout_until = 0.0
 
-        # Chest filtering settings
+        # Chest filtering config
+        self.num_image_detection_retries = chest_detection_count
         min_chest_type = str(min_chest_type).strip().lower()
         if min_chest_type not in {"bronze", "silver", "gold"}:
             print_clr(f"[WARN] Invalid min_chest_type='{min_chest_type}', defaulting to 'bronze'", color=Color.YELLOW)
             min_chest_type = "bronze"
-
         self.min_chest_type = min_chest_type
         self.min_chest_tier = {
             "bronze": ChestTier.BRONZE,
@@ -81,12 +80,7 @@ class SADungeonFarmer(IFarmer):
             "gold": ChestTier.GOLD,
         }[min_chest_type]
 
-        SADungeonFarmer.collected_chests = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
-
         self.chest_templates = self.load_chest_templates()
-        SADungeonFarmer.retry_count = 0
-        SADungeonFarmer.first_wave_done = False
-        SADungeonFarmer.chest_found = False
 
         print(f"Chest filter: keep >= {self.min_chest_type.upper()}")
         print(f"Chest detection retries: {self.num_image_detection_retries}")
@@ -174,6 +168,9 @@ class SADungeonFarmer(IFarmer):
             print("Opening the floor, resetting counters")
             SADungeonFarmer.num_resets = 0
             SADungeonFarmer.num_runs_complete = 0
+            SADungeonFarmer.collected_chests = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
+            SADungeonFarmer.finished_run_lockout_until = 0.0
+            self.reset_retry_flags()
             return
 
         if not find(vio.sa_coin, screenshot) and find(vio.back, screenshot):
