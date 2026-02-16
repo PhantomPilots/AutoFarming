@@ -11,14 +11,14 @@ from utilities.utilities import (
     Color,
     capture_window,
     check_for_reconnect,
+    crop_roi_from_rect,
     drag_im,
     find,
     find_and_click,
     find_rect,
-    crop_roi_from_rect,
-    score_template,
     press_key,
     print_clr,
+    score_template,
 )
 
 logger = LoggerWrapper("sa_dungeon_logger", level=logging.INFO, log_to_file=False)
@@ -37,6 +37,7 @@ class States(Enum):
 class Scrolling(Enum):
     DOWN = auto()
     UP = auto()
+
 
 class ChestTier(Enum):
     BRONZE = 0
@@ -64,7 +65,15 @@ class SADungeonFarmer(IFarmer):
     # How many times we've retried detecting a chest before deciding to restart
     retry_count: int = 0
 
-    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, min_chest_type="bronze", chest_detection_count=3, **kwargs):
+    def __init__(
+        self,
+        *,
+        starting_state=States.GOING_TO_DUNGEON,
+        battle_strategy=None,
+        min_chest_type="bronze",
+        chest_detection_count=3,
+        **kwargs,
+    ):
         self.current_state = starting_state
 
         # Chest filtering config
@@ -96,7 +105,7 @@ class SADungeonFarmer(IFarmer):
         if not templates:
             print_clr("[WARN] No chest templates loaded from vision_images.", color=Color.YELLOW)
         return templates
-    
+
     def classify_chest_type(self, chest_roi_bgr: np.ndarray) -> tuple[str, float]:
         best_label = "unknown"
         best_score = -1.0
@@ -119,7 +128,9 @@ class SADungeonFarmer(IFarmer):
         if rect is None or len(rect) == 0:
             return True, "no chest"
 
-        SADungeonFarmer.chest_found = True  # We found the chest, let's set the flag to avoid re-checking until next fight
+        SADungeonFarmer.chest_found = (
+            True  # We found the chest, let's set the flag to avoid re-checking until next fight
+        )
         roi = crop_roi_from_rect(screenshot, rect)
         label, score = self.classify_chest_type(roi)
 
@@ -137,7 +148,10 @@ class SADungeonFarmer(IFarmer):
             return True, f"{label} < {self.min_chest_type}"
 
         SADungeonFarmer.collected_chests[chest_tier] += 1
-        print_clr(f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in SADungeonFarmer.collected_chests.items())}", color=Color.GREEN)
+        print_clr(
+            f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in SADungeonFarmer.collected_chests.items())}",
+            color=Color.GREEN,
+        )
         return False, f"{label} >= {self.min_chest_type}"
 
     def going_to_dungeon_state(self):
@@ -166,9 +180,6 @@ class SADungeonFarmer(IFarmer):
         if find_and_click(vio.ok_main_button, screenshot, window_location):
             # We're re-opening the floor!
             print("Opening the floor, resetting counters")
-            SADungeonFarmer.num_resets = 0
-            SADungeonFarmer.num_runs_complete = 0
-            SADungeonFarmer.collected_chests = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
             SADungeonFarmer.finished_run_lockout_until = 0.0
             self.reset_retry_flags()
             return
@@ -264,7 +275,7 @@ class SADungeonFarmer(IFarmer):
             SADungeonFarmer.num_runs_complete += 1
             SADungeonFarmer.finished_run_lockout_until = now + 5.0
             self.reset_retry_flags()
-            print(f"We've completed {SADungeonFarmer.num_runs_complete}/12 runs")
+            print(f"We've completed {SADungeonFarmer.num_runs_complete} runs so far")
 
         find_and_click(vio.startbutton, screenshot, window_location)
 
