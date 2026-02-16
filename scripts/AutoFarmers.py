@@ -308,7 +308,21 @@ FARMERS = [
     {
         "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
-        "args": [],
+        "args": [
+            {
+                "name": "--min-chest-type",
+                "label": "Min chest type",
+                "type": "dropdown",
+                "choices": ["bronze", "silver", "gold"],
+                "default": "bronze"
+            },
+            {
+                "name": "--chest-detection-count",
+                "label": "Chest Detection Retry Count",
+                "type": "text",
+                "default": "3"
+            }
+        ],
     },
     {
         "name": "Tower Trials",
@@ -604,6 +618,7 @@ class FarmerTab(QWidget):
         self.process = None
         self.output_lines = []
         self.paused = False
+        self.sa_chest_warning_label = None
         self._default_fmt = QTextCharFormat()
         self._default_fmt.setForeground(QColor("#eeeeee"))
         self.init_ui()
@@ -656,8 +671,21 @@ class FarmerTab(QWidget):
                         widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget
                 args_layout.addRow(arg["label"] + ":", widget)
+
+                if self.farmer["name"] == "SA Coin Dungeon Farmer" and arg["name"] == "--min-chest-type":
+                    widget.currentTextChanged.connect(self.update_sa_chest_warning)
             args_group.setLayout(args_layout)
             left_panel.addWidget(args_group)
+
+            if self.farmer["name"] == "SA Coin Dungeon Farmer":
+                self.sa_chest_warning_label = QLabel()
+                self.sa_chest_warning_label.setWordWrap(True)
+                self.sa_chest_warning_label.setStyleSheet(
+                    "font-size: 12px; color: #8B0000; border: 1px solid #8B0000; padding: 6px;"
+                )
+                self.sa_chest_warning_label.hide()
+                left_panel.addWidget(self.sa_chest_warning_label)
+                self.update_sa_chest_warning(self.arg_widgets["--min-chest-type"].currentText())
         else:
             self.arg_widgets = {}
 
@@ -715,6 +743,30 @@ class FarmerTab(QWidget):
 
         # Display free software message in terminal
         self.append_terminal(FREE_SOFTWARE_MESSAGE)
+
+    def update_sa_chest_warning(self, chest_type):
+        if self.sa_chest_warning_label is None:
+            return
+
+        normalized_type = (chest_type or "").strip().lower()
+
+        if normalized_type == "silver":
+            self.sa_chest_warning_label.setText(
+                "Warning: Selecting silver minimum is expected to use many stamina pots for a full run.\n"
+                "5% silver + 2% gold: ~15 retries or ~7 pots per chest!\nExpect over 150 pots for a full run!"
+            )
+            self.sa_chest_warning_label.show()
+            return
+
+        if normalized_type == "gold":
+            self.sa_chest_warning_label.setText(
+                "Warning: Selecting gold minimum is extremely costly.\n"
+                "2% gold: ~50 retries or ~23 pots per chest!\nExpect over 600 pots for a full run!"
+            )
+            self.sa_chest_warning_label.show()
+            return
+
+        self.sa_chest_warning_label.hide()
 
     def get_args(self):
         args = []
