@@ -260,12 +260,12 @@ def find_rect(
 
     return rectangle if rectangle.size else None
 
-def score_template(self, haystack_bgr: np.ndarray, needle_bgr: np.ndarray) -> tuple[float, tuple[int, int]]:
+def score_template(haystack_bgr: np.ndarray, needle_bgr: np.ndarray) -> tuple[float, tuple[int, int]]:
     res = cv2.matchTemplate(haystack_bgr, needle_bgr, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, max_loc = cv2.minMaxLoc(res)
     return float(max_val), max_loc
 
-def crop_roi_from_rect(self, screenshot_bgr: np.ndarray, rect: np.ndarray) -> np.ndarray | None:
+def crop_roi_from_rect(screenshot_bgr: np.ndarray, rect: np.ndarray) -> np.ndarray | None:
     if rect is None or len(rect) < 4:
         return None
 
