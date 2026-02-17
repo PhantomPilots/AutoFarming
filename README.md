@@ -100,9 +100,8 @@ For detailed information on all the bots available, go to the [bots README file]
 
 ## Longer-term features
 
-- [ ] Allow starting the scripts from ANYWHERE.
-- [ ] Make the scripts independent of the window size (i.e., scale-invariant).
-- [ ] Make them work in 4k monitors.
+- [X] Auto-size the game automatically when starting/stopping/resuming bots.
+- [X] Make them work in 4k monitors.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
