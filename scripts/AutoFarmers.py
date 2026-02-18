@@ -338,6 +338,11 @@ FARMERS = [
         "script": "RerollConstellation.py",
         "args": [{"name": "--max-rerolls", "label": "Max rerolls", "type": "text", "default": "50"}],
     },
+    {
+        "name": "Boss Battle Farmer",
+        "script": "BossBattleFarmer.py",
+        "args": [],
+    },
 ]
 
 
@@ -1055,6 +1060,7 @@ class FarmerTab(QWidget):
             "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
             "Guild Boss Farmer": "guild_boss_farmer.jpg",
             "Demon King Farmer": "dk_farmer.jpg",
+            "Boss Battle Farmer": "boss_battle_farmer.png",
         }
 
         # Check if this farmer has a specific image
