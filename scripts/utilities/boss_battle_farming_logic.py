@@ -28,17 +28,6 @@ class States(Enum):
     RUN_ENDED = auto()
 
 
-class Scrolling(Enum):
-    DOWN = auto()
-    UP = auto()
-
-
-class ChestTier(Enum):
-    BRONZE = 0
-    SILVER = 1
-    GOLD = 2
-
-
 class BossBattleFarmer(IFarmer):
     """Boss battle farmer"""
 
