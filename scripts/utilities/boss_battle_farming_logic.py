@@ -123,7 +123,7 @@ class BossBattleFarmer(IFarmer):
         if now >= BossBattleFarmer.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
             BossBattleFarmer.num_runs_complete += 1
             BossBattleFarmer.finished_run_lockout_until = now + 5.0
-            print(f"We've completed {BossBattleFarmer.num_runs_complete} runs so far")
+            print(f"We've completed {BossBattleFarmer.num_runs_complete} runs so far and used {IFarmer.stamina_pots} stamina pots")
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
