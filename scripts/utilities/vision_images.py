@@ -436,7 +436,9 @@ daily_friendship_coins = MultiVision(
 )
 daily_patrol = MultiVision("dailies\\daily_patrol.png", "dailies\\daily_patrol_new.png", image_name="daily_patrol")
 daily_vanya_ale = MultiVision(
-    "dailies\\daily_vanya_ale.png", "dailies\\daily_vanya_ale_new.png", image_name="daily_vanya_ale"
+    "dailies\\daily_vanya_ale.png",
+    # "dailies\\daily_vanya_ale_new.png",
+    image_name="daily_vanya_ale",
 )
 take_all_rewards = Vision("dailies\\take_all.png")
 tasks = Vision("dailies\\tasks.png")
