@@ -494,6 +494,14 @@ membership_perk = Vision("dailies\\membership_perk.png")
 # For weeklies
 kh_boss_battle = Vision("weeklies\\kh_boss_battle.png")
 
+# Boss Battles
+sim_clear_on = Vision("boss_battle\\sim_clear_on.png")
+activate_all_on = Vision("boss_battle\\activate_all_on.png")
+boss_one_star = Vision("boss_battle\\boss_one_star.png")
+stage_melee_of_phantasms = Vision("boss_battle\\stage_melee_of_phantasms.png")
+boss_floor_extreme = Vision("boss_battle\\boss_floor_extreme.png")
+death_match_vanya = Vision("boss_battle\\death_match_vanya.png")
+boss_battle_loading_screen = Vision("boss_battle\\boss_battle_loading_screen.png")
 
 # Create a single OkVision instance for all OK buttons
 ok_main_button = MultiVision(
