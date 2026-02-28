@@ -68,7 +68,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # In case we want to do dailies at the specified hour
-        self.do_dailies = do_dailies
+        IFarmer.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming DemonicBeast at {CHECK_IN_HOUR} PT to do our dailies!")
 

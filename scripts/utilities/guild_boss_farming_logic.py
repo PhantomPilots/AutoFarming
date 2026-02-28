@@ -54,7 +54,7 @@ class GuildBossFarmer(IFarmer):
         # Set specific properties of our DailyFarmer
         IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
-        self.do_dailies = do_dailies
+        IFarmer.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 

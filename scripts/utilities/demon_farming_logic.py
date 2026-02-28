@@ -111,7 +111,7 @@ class IDemonFarmer(IFarmer):
         if self.demon_to_farm == vio.indura_demon:
             print(f"We'll farm {self.indura_difficulty} Indura!")
 
-        self.do_dailies = do_dailies
+        IFarmer.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
