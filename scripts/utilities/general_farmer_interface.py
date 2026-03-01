@@ -151,9 +151,12 @@ class IFarmer:
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
-            print("We're seeing a daily reset!")
-            self.current_state = States.DAILY_RESET
+        if find_and_click(vio.skip, screenshot, window_location, threshold=0.6) or find(
+            vio.fortune_card, screenshot, threshold=0.8
+        ):
+            if IFarmer.do_dailies:
+                print("We're seeing a daily reset!")
+                self.current_state = States.DAILY_RESET
             login_attempted = True
 
         # In case the game needs to update
