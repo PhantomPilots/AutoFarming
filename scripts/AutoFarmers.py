@@ -156,6 +156,32 @@ the file <code>run_game.png</code> by it.
     """,
 }
 
+# Maps base farmer names to their whale-mode requirement key and image filename.
+WHALE_MODE_CONFIG = {
+    "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
+    "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
+    "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
+}
+
+FARMER_IMAGES = {
+    "Demon Farmer": "demon_farmer.jpg",
+    "Bird Farmer": "bird_farmer.jpg",
+    "Bird Floor 4": "bird_floor_4.jpeg",
+    "Deer Farmer": "deer_farmer.png",
+    "Deer Floor 4": "deer_floor_4.png",
+    "Tower Trials": "tower_trials_farmer.jpg",
+    "Dogs Farmer": "dogs_farmer.jpeg",
+    "Snake Farmer": "snake_farmer.png",
+    "Rat Farmer": "rat_farmer.jpg",
+    "Final Boss": "final_boss.png",
+    "Accounts Farmer": "accounts_farmer.jpg",
+    "Reroll Constellation": "reroll_constellation_whale.jpg",
+    "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
+    "Guild Boss Farmer": "guild_boss_farmer.jpg",
+    "Demon King Farmer": "dk_farmer.jpg",
+    "Boss Battle Farmer": "boss_battle_farmer.png",
+}
+
 # Farmer script definitions (argument structure)
 FARMERS = [
     {
@@ -214,6 +240,7 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -232,6 +259,7 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -241,38 +269,12 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
         "name": "Rat Farmer",
         "script": "RatFarmer.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-        ],
-    },
-    {
-        "name": "Deer Whale",
-        "script": "DeerFarmerWhale.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-        ],
-    },
-    {
-        "name": "Dogs Whale",
-        "script": "DogsFarmerWhale.py",
-        "args": [
-            {"name": "--password", "label": "Password", "type": "text", "default": ""},
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-        ],
-    },
-    {
-        "name": "Snake Whale",
-        "script": "SnakeFarmerWhale.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
@@ -633,17 +635,16 @@ class FarmerTab(QWidget):
         title = QLabel(f"{self.farmer['name']}")
         title.setFont(QFont("Arial", 12, QFont.Bold))
         left_panel.addWidget(title)
-        # Image placeholder
-        image_size = (400, 250)
-        img = QLabel(f"[Image Placeholder]\n{image_size[0]}x{image_size[1]}")
-        img.setAlignment(Qt.AlignCenter)
-        img.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666;")
-        img.setFixedSize(*image_size)
+        # Image
+        self.image_size = (400, 250)
+        self.image_label = QLabel(f"[Image Placeholder]\n{self.image_size[0]}x{self.image_size[1]}")
+        self.image_label.setAlignment(Qt.AlignCenter)
+        self.image_label.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666;")
+        self.image_label.setFixedSize(*self.image_size)
 
-        # Load farmer-specific image
-        self.load_farmer_image(img, image_size)
+        self.load_farmer_image()
 
-        left_panel.addWidget(img)
+        left_panel.addWidget(self.image_label)
         # Arguments
         if self.farmer["args"]:
             args_group = QGroupBox("Arguments")
@@ -676,6 +677,8 @@ class FarmerTab(QWidget):
 
                 if self.farmer["name"] == "SA Coin Dungeon Farmer" and arg["name"] == "--min-chest-type":
                     widget.currentTextChanged.connect(self.update_sa_chest_warning)
+                if arg["name"] == "--whale":
+                    widget.stateChanged.connect(self._refresh_whale_mode)
             args_group.setLayout(args_layout)
             left_panel.addWidget(args_group)
 
@@ -691,16 +694,17 @@ class FarmerTab(QWidget):
         else:
             self.arg_widgets = {}
 
-        # Add whale farmer requirements if applicable
-        if self.farmer["name"] in REQUIREMENTS:
-            req_label = QLabel()
-            req_label.setWordWrap(True)
-            req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            req_label.setText(REQUIREMENTS[self.farmer["name"]])
-            req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
-            req_label.setMaximumHeight(180)
-            req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-            left_panel.addWidget(req_label)
+        # Requirements text (dynamically updated for whale-capable farmers)
+        self.req_label = None
+        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG:
+            self.req_label = QLabel()
+            self.req_label.setWordWrap(True)
+            self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            self.req_label.setText(REQUIREMENTS.get(self.farmer["name"], ""))
+            self.req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
+            self.req_label.setMaximumHeight(180)
+            self.req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            left_panel.addWidget(self.req_label)
             left_panel.addSpacing(4)
 
         # Start/Stop buttons
@@ -1038,48 +1042,39 @@ class FarmerTab(QWidget):
             except Exception as e:
                 self.append_terminal(f"[ERROR] Failed to remove pause flag: {e}\n")
 
-    def load_farmer_image(self, img, image_size):
-        """Load and display farmer-specific images"""
-        # Map farmer names to their image files
-        farmer_images = {
-            "Demon Farmer": "demon_farmer.jpg",
-            "Bird Farmer": "bird_farmer.jpg",
-            "Bird Floor 4": "bird_floor_4.jpeg",
-            "Deer Farmer": "deer_farmer.png",
-            "Deer Floor 4": "deer_floor_4.png",
-            "Deer Whale": "deer_whale.jpg",
-            "Tower Trials": "tower_trials_farmer.jpg",
-            "Dogs Farmer": "dogs_farmer.jpeg",
-            "Dogs Whale": "dogs_whale_farmer.jpg",
-            "Snake Farmer": "snake_farmer.png",
-            "Rat Farmer": "rat_farmer.jpg",
-            "Snake Whale": "snake_whale_farmer.png",
-            "Final Boss": "final_boss.png",
-            "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
-            "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
-            "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
-            "Guild Boss Farmer": "guild_boss_farmer.jpg",
-            "Demon King Farmer": "dk_farmer.jpg",
-            "Boss Battle Farmer": "boss_battle_farmer.png",
-        }
+    def load_farmer_image(self, image_filename=None):
+        """Load and display a farmer image into self.image_label."""
+        if image_filename is None:
+            image_filename = FARMER_IMAGES.get(self.farmer["name"])
+        if image_filename is None:
+            return
 
-        # Check if this farmer has a specific image
-        if self.farmer["name"] in farmer_images:
-            image_filename = farmer_images[self.farmer["name"]]
-            image_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", image_filename)
-
-            if os.path.exists(image_path):
-                pixmap = QPixmap(image_path)
-                if not pixmap.isNull():
-                    # Scale the image to fit the specified size while maintaining aspect ratio
-                    scaled_pixmap = pixmap.scaled(*image_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                    img.setPixmap(scaled_pixmap)
-                    img.setStyleSheet("border: 1px solid #aaa;")
-                else:
-                    img.setText(f"Failed to load image:\n{image_filename}")
+        image_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", image_filename)
+        if os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                scaled = pixmap.scaled(*self.image_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                self.image_label.setPixmap(scaled)
+                self.image_label.setStyleSheet("border: 1px solid #aaa;")
             else:
-                img.setText(f"Image not found:\n{image_filename}")
-        # If no specific image is defined, keep the placeholder
+                self.image_label.setText(f"Failed to load image:\n{image_filename}")
+        else:
+            self.image_label.setText(f"Image not found:\n{image_filename}")
+
+    def _refresh_whale_mode(self):
+        """Update image and requirements when whale-mode checkbox changes."""
+        whale_config = WHALE_MODE_CONFIG.get(self.farmer["name"])
+        if not whale_config:
+            return
+
+        whale_enabled = "--whale" in self.arg_widgets and self.arg_widgets["--whale"].isChecked()
+
+        if self.req_label is not None:
+            key = whale_config["requirements_key"] if whale_enabled else self.farmer["name"]
+            self.req_label.setText(REQUIREMENTS.get(key, ""))
+
+        image = whale_config["image"] if whale_enabled else FARMER_IMAGES.get(self.farmer["name"])
+        self.load_farmer_image(image)
 
 
 class MainWindow(QMainWindow):

@@ -63,29 +63,23 @@ Requirements:
 
 ## Eikthyrnir (Deer) Floors 1-3 farming script
 
-The script is named `scripts/DeerFarmer.py`. 
+The script is named `scripts/DeerFarmer.py`. Pass `--whale` for the whale strategy.
 
 Required team:
-* LR Lostvayne Meli
-* Jormungandr
-* Blue crazy Roxy
-* UR Escanor
-
-<b>Update</b>: With the new Deer Floor 4, the bot has been updated to the new team:
 * Green Jorm
 * Freyr
-* Thor Whale-mode 
+* Thor
 * Red Megelda / Green Hel (recommended)
 
 Other requirements:
 1. Start the script from within the Deer floor selection screen.
 2. Have the team ready with proper gear.
 
-## Whale-mode Eikthyrnir (Deer) Floors 1-3 farming script
+### Whale mode (`--whale`)
 
-The script is named `scripts/DeerFarmerWhale.py`. It uses a very fast but risky strategy.
+Uses a very fast but risky strategy.
 
-Team order in this EXACT positioning (left to right): 
+Team order in this EXACT positioning (left to right):
 * Green Jorm (left) 1st slot
 * Loli Merlin (center left) 2nd slot
 * Freyr (center right) 3rd slot
@@ -105,7 +99,7 @@ Minimum Requirements:
 
 ## Skoll and Hati (Dogs) farming script
 
-The script is in `scripts/DogsFarmer.py`.
+The script is in `scripts/DogsFarmer.py`. Pass `--whale` for the whale strategy.
 
 Recommended team (in this order):
 * UR Escanor
@@ -116,9 +110,9 @@ Recommended team (in this order):
 Requirements:
 1. Start the script from within the Dogs floor selection screen.
 
-## Whale-mode Skoll and Hati (Dogs) Floors 1-3 farming script
+### Whale mode (`--whale`)
 
-The script is named `scripts/DogsFarmerWhale.py`. It uses a very fast but more risky strategy (will likely lose with a Freeze debuff at the wrong time). 
+Uses a very fast but more risky strategy (will likely lose with a Freeze debuff at the wrong time).
 
 Required team:
 * Milim LR - !!!IMPORTANT Green or Blue Ludociel of Flash 6/6 link
@@ -127,7 +121,7 @@ Required team:
 * Green Hel - OG Light Mael 4/6+ link
 
 Artifact set/s:
-* Use Set №37 or №29 (Maxed). 
+* Use Set №37 or №29 (Maxed).
 
 Minimum Unit Requirements:
 * 14M-16M+ Box CC (14M+ you lose more runs, from 16M+ you're going to be fine most of the times)
@@ -136,14 +130,14 @@ Minimum Unit Requirements:
 * Loli Merlin LR + Relic
 * Milim LR + Relic
 * Thor UR built good
-* Green Hel built decently 
+* Green Hel built decently
 * Sabunak 4/6 Minimum Link
 * OG Red Sariel 6/6 Link
 * OG Light Mael 4/6 Minimum Link
 
 ## Nidhoggr (Snake) farming script
 
-Can be found in `scripts/SnakeFarmer.py`. 
+Can be found in `scripts/SnakeFarmer.py`. Pass `--whale` for the whale strategy.
 
 Recommended team:
 * Mael
@@ -154,18 +148,18 @@ Recommended team:
 Requirements:
 1. Start the script from within the Snake floor selection screen.
 
-## Whale-mode Nidhoggr (Snake) Floors 1-3 farming script
+### Whale mode (`--whale`)
 
-The script is named `scripts/SnakeFarmerWhale.py`. It uses a very fast but more risky strategy (can lose if your account/units aren't strong enough to one shot him each phase). 
+Uses a very fast but more risky strategy (can lose if your account/units aren't strong enough to one shot him each phase).
 
 Required team:
 * Sung Jinwoo - Roxy of Frenzy (either one) 6/6 link
-* Nasiens - UR Escanor or Skuld 3/6+ link 
+* Nasiens - UR Escanor or Skuld 3/6+ link
 * Cha Hae-In - !!!IMPORTANT She has to have the LOWEST HP of the team. Red Tarmiel 6/6 link
 * Urek Mazino - Sabunak 4/6+ link
 
 Artifact set/s:
-* Use Set №37 or №29 (Maxed). 
+* Use Set №37 or №29 (Maxed).
 
 Food (not necessary at all):
 * Crit Chance if you're using Red Tarmiel link, Lifesteal or ATK if you use Mage Merlin.
@@ -182,9 +176,6 @@ Minimum Unit Requirements:
 * Sabunak 4/6 Minimum Link
 * OG Roxy of Frenzy or the Christmas one 6/6 Link
 * UR Escanor or Skuld 3/6 Minimum Link
-
-Requirements:
-1. Start the script from within the Snake floor selection screen.
 
 ## Final Boss farming script
 
