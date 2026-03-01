@@ -104,7 +104,7 @@ class SnakeFighter(IFighter):
         """Check if we can activate a talent"""
 
         talents = [
-            vio.talent_trist,
+            # vio.talent_trist,
         ]
 
         for talent in talents:
