@@ -136,7 +136,7 @@ class DemonKingFarmer(IFarmer):
 
     def store_unit_types(self):
         """Let's store the colors for each unit in our dictionary..."""
-        unit_colors_team_a = determine_unit_types()
+        unit_colors_team_a = determine_unit_types(team_count=2)
         DemonKingFarmer.unit_colors = unit_colors_team_a
         print(f"Stored these unit types: {[utype.name for utype in DemonKingFarmer.unit_colors]}")
 

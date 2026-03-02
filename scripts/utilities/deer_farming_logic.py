@@ -51,7 +51,7 @@ class DeerFarmer(DemonicBeastFarmer):
         """Detect unit colors right before we press start (once per session)."""
         screenshot, _ = capture_window()
         if find(vio.startbutton, screenshot) and not DeerFarmer.unit_colors:
-            DeerFarmer.unit_colors = determine_unit_types()
+            DeerFarmer.unit_colors = determine_unit_types(team_count=1)
             print(f"[DeerFarmer] Stored unit types: {[c.name for c in DeerFarmer.unit_colors]}")
         super().proceed_to_floor_state()
 

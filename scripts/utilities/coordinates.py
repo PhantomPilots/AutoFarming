@@ -67,7 +67,6 @@ class Coordinates:
         "extreme": (279, 710),
         "hard": (111, 710),
         "rules_window_region": (145, 259, 403, 400),
-        "4_units_region": (58, 239, 507, 408),
         # Rat
         "left_log": (148, 390),
         "middle_log": (242, 377),
