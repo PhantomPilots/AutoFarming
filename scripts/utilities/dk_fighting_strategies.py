@@ -1,10 +1,10 @@
 import numpy as np
 import utilities.vision_images as vio
+from utilities.card_color_mapper import CardColorMapper
 from utilities.card_data import Card, CardColors, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
-from utilities.pattern_match_strategies import TemplateMatchingStrategy
-from utilities.utilities import capture_window, count_needle_image, crop_region, find
+from utilities.utilities import capture_window, crop_region, find
 
 
 class DemonKingBattleStrategy(IBattleStrategy):
@@ -17,7 +17,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         *,
         phase: int = 1,
         card_turn=0,
-        color_cards_dict: dict[CardColors, list[np.ndarray]] = {},
+        color_mapper: CardColorMapper | None = None,
         **kwargs,
     ) -> int:
         """Extract the next card index based on the hand and picked cards information,
@@ -27,7 +27,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         return (
             self.get_next_card_index_phase1(hand_of_cards, picked_cards)
             if phase == 1
-            else self.get_next_card_index_phase2(hand_of_cards, picked_cards, card_turn, color_cards_dict)
+            else self.get_next_card_index_phase2(hand_of_cards, picked_cards, card_turn, color_mapper)
         )
 
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
@@ -48,7 +48,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         hand_of_cards: list[Card],
         picked_cards: list[Card],
         card_turn: int,
-        color_cards_dict: dict[CardColors, list[np.ndarray]],
+        color_mapper: CardColorMapper | None,
     ) -> int:
         """We should be able to 1-turn it!"""
         screenshot, _ = capture_window()
@@ -70,7 +70,6 @@ class DemonKingBattleStrategy(IBattleStrategy):
             second_rule_window = rules_window[:, rules_width : 2 * rules_width, ...]
             third_rule_window = rules_window[:, 2 * rules_width :, ...]
 
-            # Evaluate all windows
             color_rules: list[CardColors] = []
             for rule_window in (first_rule_window, second_rule_window, third_rule_window):
                 rule, _ = self._best_rule_for_window(rule_window)
@@ -78,19 +77,12 @@ class DemonKingBattleStrategy(IBattleStrategy):
 
             print(f"Detected color rules: {[rule.name for rule in color_rules]}")
 
-            if card_turn <= 2:
+            if card_turn <= 2 and color_mapper and color_mapper.is_calibrated:
                 target_rule = color_rules[card_turn]
-
-                # Retrieve all images corresponding to the target_rule color from the given color_cards_dict
-                potential_cards = color_cards_dict[target_rule]
-                # Try to find a card corresponding to this color
-                for idx, card in enumerate(hand_of_cards):
-                    for pot_card in potential_cards:
-                        best_rect = TemplateMatchingStrategy.find(card.card_image, pot_card)
-                        if best_rect is not None and best_rect.size > 0:
-                            return idx
-
-            else:
+                matching_ids = color_mapper.get_color_card_ids(hand_of_cards, target_rule)
+                if matching_ids:
+                    return matching_ids[-1]
+            elif card_turn > 2:
                 print(f"[WARN] Card turn is {card_turn}>2, wierdly, so we cannot follow any rule.")
 
         elif find(vio.corrosion_stance, screenshot) and not len(picked_stance_removal_ids):

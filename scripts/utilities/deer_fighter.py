@@ -4,7 +4,8 @@ from typing import Callable
 import cv2
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card
+from utilities.card_data import Card, CardColors
+from utilities.card_color_mapper import CardColorMapper
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_fighter_interface import FightingStates, IFighter
@@ -15,6 +16,7 @@ from utilities.utilities import (
     find,
     find_and_click,
     get_card_slot_region_image,
+    get_hand_cards,
 )
 from utilities.vision import Vision
 
@@ -28,6 +30,9 @@ class DeerFighter(IFighter):
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
+        self.color_mapper = CardColorMapper()
+        self._unit_colors: list[CardColors] = []
+        self._first_turn = True
 
     def fighting_state(self):
 
@@ -46,17 +51,14 @@ class DeerFighter(IFighter):
         find_and_click(vio.creature_destroyed, screenshot, window_location)
 
         if find(vio.defeat, screenshot):
-            # I may have lost though...
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
 
         elif find(vio.db_victory, screenshot, threshold=0.7):
-            # Fight is complete
             print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
         elif (available_card_slots := DeerFighter.count_empty_card_slots(screenshot, threshold=0.7)) > 0:
-            # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
@@ -65,6 +67,11 @@ class DeerFighter(IFighter):
             if (phase := self._identify_phase(screenshot)) != IFighter.current_phase:
                 print(f"Moving to phase {phase}!")
                 IFighter.current_phase = phase
+
+            if self._first_turn and self._unit_colors:
+                hand = get_hand_cards(num_units=3)
+                self.color_mapper.calibrate(hand, self._unit_colors)
+                self._first_turn = False
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -78,7 +85,6 @@ class DeerFighter(IFighter):
 
         if plot and len(rectangles):
             print(f"We have {len(rectangles)} empty slots.")
-            # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
             translated_rectangles = np.array(
                 [
                     [
@@ -99,21 +105,17 @@ class DeerFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-
-        # This function alone will take care of updating the current hand and state if necessary
-        self.play_cards()
+        self.play_cards(color_mapper=self.color_mapper)
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
         if find(vio.phase_4, screenshot, threshold=0.8):
-            # Phase 4 first, because it can be misread as a 1
             return 4
         elif find(vio.phase_2, screenshot, threshold=0.8):
             return 2
         elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
         return 1
 
     def fight_complete_state(self):
@@ -122,10 +124,8 @@ class DeerFighter(IFighter):
 
         find_and_click(vio.daily_quest_info, screenshot, window_location)
 
-        # Click on the OK button to end the fight
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        # Only consider the fight complete if we see the loading screen, in case we need to click OK multiple times
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
             self.complete_callback(victory=True)
             self.exit_thread = True
@@ -139,15 +139,20 @@ class DeerFighter(IFighter):
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if find(vio.db_loading_screen, screenshot) or find(vio.tavern_loading_screen, screenshot):
-            # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
 
     @IFighter.run_wrapper
-    def run(self, floor_num=1):
+    def run(self, floor_num=1, unit_colors: list[CardColors] | None = None):
 
-        # First, set the floor number
         IFighter.current_floor = floor_num
+
+        self._unit_colors = unit_colors or []
+        self._first_turn = True
+        self.color_mapper.reset()
+
+        if self._unit_colors:
+            print(f"[DeerFighter] Received unit colors: {[c.name for c in self._unit_colors]}")
 
         print(f"Fighting very hard on floor {IFighter.current_floor}...")
 
@@ -167,6 +172,7 @@ class DeerFighter(IFighter):
 
             if self.exit_thread:
                 print("Closing Fighter thread!")
+                self.color_mapper.reset()
                 return
 
             time.sleep(0.75)

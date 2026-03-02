@@ -1,19 +1,15 @@
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import Card, CardRanks, CardTypes
+from utilities.card_data import Card, CardColors, CardRanks, CardTypes
+from utilities.card_color_mapper import CardColorMapper
 from utilities.deer_utilities import (
-    count_cards,
     has_ult,
-    is_blue_card,
     is_buff_removal_card,
-    is_Freyr_card,
-    is_green_card,
     is_Hel_card,
     is_Jorm_card,
-    is_red_card,
     is_Thor_card,
     is_Tyr_card,
-    reorder_buff_removal_card,
+    reorder_debuff_cards_to_front,
     reorder_jorms_heal,
 )
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
@@ -22,23 +18,22 @@ from utilities.utilities import capture_window, find
 
 logger = LoggerWrapper("BirdFloor4FightingStrategies", log_file="deer_floor4_AI.log")
 
+ADVANCING_TYPES = {CardTypes.ATTACK, CardTypes.ATTACK_DEBUFF, CardTypes.ULTIMATE}
+
+_COLOR_WHEEL = {
+    CardColors.GREEN: CardColors.BLUE,
+    CardColors.BLUE: CardColors.RED,
+    CardColors.RED: CardColors.GREEN,
+}
+
 
 class DeerFloor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for Floor 4"""
 
-    # Keep track of the turn within a phase
     turn = 0
-
-    # To keep track of what phases have been initialized
     _phase_initialized = set()
-
-    # Did we use red or blue cards in phase 1 turn 0?
     _color_cards_used_p2t0 = None
-
-    # Keep track of the last phase we've seen
     _last_phase_seen = None
-
-    # What color cards we're running on phase 3
     _color_cards_picked_p3 = None
 
     def _initialize_static_variables(self):
@@ -50,36 +45,40 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     def get_next_card_index(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn=0, **kwargs
     ) -> int:
-        """Extract the indices based on the list of cards and the current phase"""
+        color_mapper: CardColorMapper | None = kwargs.get("color_mapper")
 
-        # If we're entering phase 1 after being in any other phase, reset
         if phase == 1 and DeerFloor4BattleStrategy._last_phase_seen != 1:
             self._initialize_static_variables()
 
-        # Update last seen phase
         DeerFloor4BattleStrategy._last_phase_seen = phase
 
         if phase == 1:
             card_index = self.get_next_card_index_phase1(hand_of_cards, picked_cards, card_turn=card_turn)
         elif phase == 2:
-            card_index = self.get_next_card_index_phase2(hand_of_cards, picked_cards, card_turn=card_turn)
+            card_index = self.get_next_card_index_phase2(
+                hand_of_cards, picked_cards, card_turn=card_turn, color_mapper=color_mapper
+            )
         elif phase == 3:
-            card_index = self.get_next_card_index_phase3(hand_of_cards, picked_cards, card_turn=card_turn)
+            card_index = self.get_next_card_index_phase3(
+                hand_of_cards, picked_cards, card_turn=card_turn, color_mapper=color_mapper
+            )
         elif phase == 4:
-            card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards, card_turn=card_turn)
+            card_index = self.get_next_card_index_phase4(
+                hand_of_cards, picked_cards, card_turn=card_turn, color_mapper=color_mapper
+            )
 
         if card_turn == 3:
-            # Increment the next round!
             DeerFloor4BattleStrategy.turn += 1
 
         return card_index
 
     def _maybe_reset(self, phase_id: str):
-        """Reset the turn counter if we're in a new phase"""
         if phase_id not in DeerFloor4BattleStrategy._phase_initialized:
             print("Resetting turn counter for phase", phase_id)
             DeerFloor4BattleStrategy.turn = 0
             DeerFloor4BattleStrategy._phase_initialized.add(phase_id)
+
+    # -- Phase 1: purely unit-specific, no color mapper needed --
 
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
         # sourcery skip: merge-duplicate-blocks
@@ -96,13 +95,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         Turn 3 - (With extra thor card) - move thor once and use her card to kill, then move tyr or freyr card 2 times (u want tyr and freyr to be close to their ults. ideally u want tyr to have 3 ult points)
         """
 
-        self._maybe_reset("phase_1")  # Not needed, but whatever
+        self._maybe_reset("phase_1")
 
         if card_turn == 0:
             print(f"TURN {DeerFloor4BattleStrategy.turn}:")
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
-        # All unit cards sorted
         thor_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Thor_card(card)], key=lambda idx: card_ranks[idx]
         )
@@ -120,13 +118,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                     raise ValueError(
                         "Something's very wrong with your bot, no Hel/Tyr cards detected. Resize the 7DS window and try again."
                     )
-                return tyr_hel_cards[0]  # tyr first card, or hel debuf
+                return tyr_hel_cards[0]
             elif card_turn == 1:
-                return jorm_cards[-1]  # Jorm buff removal, save heal for p2
+                return jorm_cards[-1]
             elif card_turn == 2:
-                return thor_cards[0]  # Thor crit chance
+                return thor_cards[0]
 
-            return tyr_hel_cards[-1]  # tyr attack
+            return tyr_hel_cards[-1]
 
         elif DeerFloor4BattleStrategy.turn == 1 and len(thor_cards):
             if card_turn <= 2:
@@ -139,34 +137,31 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 return [cards_to_move[0], cards_to_move[0] + 1]
             if card_turn == 2:
                 if len(thor_cards) > 1:
-                    # Play a Thor card to be safe
                     return thor_cards[0]
                 else:
-                    # Just move a card...
                     return [cards_to_move[0], cards_to_move[0] + 1]
-            # In the last turn, use Thor's card
             if len(thor_cards):
-                return thor_cards[0]  # Better to NOT play the ult, in case we can do the double hit
+                return thor_cards[0]
 
         print("[WARN] We couldn't finish in 3 turns...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def get_next_card_index_phase2(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
-        # sourcery skip: extract-method
-        """Extract the indices based on the list of cards and the current phase"""
+    # -- Phase 2: color mapper for color groups, unit-specific for unit detection --
 
+    def get_next_card_index_phase2(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int, color_mapper: CardColorMapper | None
+    ) -> int:
+        # sourcery skip: extract-method
         self._maybe_reset("phase_2")
 
         if card_turn == 0:
             print(f"TURN {DeerFloor4BattleStrategy.turn}:")
 
-        # Set ultimates as last to use
         card_ranks = [
             card.card_rank.value if card.card_type != CardTypes.ULTIMATE else -card.card_rank.value
             for card in hand_of_cards
         ]
 
-        # All unit cards sorted
         tyr_hel_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
             key=lambda idx: card_ranks[idx],
@@ -174,39 +169,25 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         jorm_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
         )
-        green_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
+
+        green_card_ids, red_card_ids, blue_card_ids = self._get_color_groups(
+            hand_of_cards, card_ranks, color_mapper
         )
-        red_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
-        )
-        blue_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
-        )
-        # Reorder heal cards
         green_card_ids = reorder_jorms_heal(hand_of_cards, green_card_ids)
 
-        # Turn 1, use 2 Freyr cards
-        num_red_cards = count_cards(hand_of_cards + picked_cards, is_red_card)
+        num_red_cards = color_mapper.count_color_cards(hand_of_cards + picked_cards, CardColors.RED) if color_mapper else 0
         if DeerFloor4BattleStrategy.turn == 0 and num_red_cards > 1:
             if card_turn == 0:
-                # First play one card to avoid accidentally merging
                 return red_card_ids[0]
-
             if card_turn <= 2:
-                # Move Freyr cards
                 return [red_card_ids[0], red_card_ids[0] + 1]
-
             return red_card_ids[0]
 
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
         if card_turn == 0 or DeerFloor4BattleStrategy._color_cards_picked_p3 is None:
-            # Pick what color to play this round
-            card_colors = ["green", "blue"]  # Priority order
-            # Roll the colors to change the priority
+            card_colors = ["green", "blue"]
             n = DeerFloor4BattleStrategy.turn - 1
             rolled_colors = card_colors[-n % len(card_colors) :] + card_colors[: -n % len(card_colors)]
-            # Set 'red' as the last color, since it's not guaranteed we can use it
             rolled_colors.append("red")
             print("Current priority order:", rolled_colors)
             for color in rolled_colors:
@@ -214,14 +195,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                     DeerFloor4BattleStrategy._color_cards_picked_p3 = color
                     break
             else:
-                # Fallback if none have 3 or more cards — Get the group with the max number of cards
                 DeerFloor4BattleStrategy._color_cards_picked_p3 = max(card_colors, key=lambda k: len(card_groups[k]))
 
         print(f"Setting '{DeerFloor4BattleStrategy._color_cards_picked_p3}' as the color type for this round!")
         picked_card_ids = card_groups[DeerFloor4BattleStrategy._color_cards_picked_p3]
         if card_turn <= 2 and len(picked_card_ids):
             if card_turn == 2 and DeerFloor4BattleStrategy._color_cards_picked_p3 == "green":
-                # Check if we have a heal
                 heal_ids = sorted(
                     [i for i, card in enumerate(hand_of_cards) if find(vio.jorm_1, card.card_image)],
                     key=lambda idx: card_ranks[idx],
@@ -232,7 +211,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
             return picked_card_ids[-1]
 
-        # Move a card of someone that doesn't have an ult
         return self._move_card_for_ult(
             hand_of_cards + picked_cards,
             tyr_hel_cards=tyr_hel_cards,
@@ -241,41 +219,35 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             thor_cards=blue_card_ids,
         )
 
-    def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
-        """Extract the indices based on the list of cards and the current phase"""
+    # -- Phase 3: mapper color groups --
 
+    def get_next_card_index_phase3(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int, color_mapper: CardColorMapper | None
+    ) -> int:
         self._maybe_reset("phase_3")
 
         if card_turn == 0:
             print(f"TURN {DeerFloor4BattleStrategy.turn}:")
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
-        green_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
+        green_card_ids, red_card_ids, blue_card_ids = self._get_color_groups(
+            hand_of_cards, card_ranks, color_mapper
         )
-        red_card_ids = sorted(  # Disable Freyr's ult, to have it for phase 4!
-            [i for i, card in enumerate(hand_of_cards) if is_red_card(card) and not find(vio.freyr_ult, card.card_image)],
-            key=lambda idx: card_ranks[idx],
-        )
-        blue_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
-        )
-        # Reorder green card IDs, so the buff removal is the last one we pick
-        green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
 
-        # Group them by their name
+        # Exclude Freyr's ult from red to save it for phase 4
+        red_card_ids = [i for i in red_card_ids if not find(vio.freyr_ult, hand_of_cards[i].card_image)]
+
+        green_card_ids = reorder_debuff_cards_to_front(hand_of_cards, green_card_ids)
+
         card_groups = {"green": green_card_ids, "red": red_card_ids, "blue": blue_card_ids}
 
-        # On turn 0, use green cards to try to heal with Jorm
-        num_green_cards = count_cards(hand_of_cards + picked_cards, is_green_card)
+        num_green_cards = color_mapper.count_color_cards(hand_of_cards + picked_cards, CardColors.GREEN) if color_mapper else 0
         if DeerFloor4BattleStrategy.turn == 0 and card_turn <= 2 and num_green_cards >= 3:
             DeerFloor4BattleStrategy._color_cards_picked_p3 = "green"
             return green_card_ids[-1]
 
-        # Otherwise, use any card color
         if card_turn == 0:
-            # Pick what color to play this round
-            card_colors = ["red", "green", "blue"]  # or whatever order you want
+            card_colors = ["red", "green", "blue"]
             DeerFloor4BattleStrategy._color_cards_picked_p3 = max(card_colors, key=lambda k: len(card_groups[k]))
             print(f"Setting '{DeerFloor4BattleStrategy._color_cards_picked_p3}' as the color type for this round!")
 
@@ -284,7 +256,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             return picked_card_ids[-1]
 
         if card_turn > 2:
-            # Let's pick a card from the color that has the most
             picked_color_ids = max(green_card_ids, red_card_ids, blue_card_ids, key=len)
             idx = -1
             if not len(picked_color_ids):
@@ -296,9 +267,11 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
-    def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
-        """Extract the indices based on the list of cards and the current phase"""
+    # -- Phase 4: mapper color groups + roulette + unit-specific --
 
+    def get_next_card_index_phase4(
+        self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int, color_mapper: CardColorMapper | None
+    ) -> int:
         self._maybe_reset("phase_4")
 
         if card_turn == 0:
@@ -307,15 +280,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
 
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
-        # Get all card types
-        red_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
-        )
-        blue_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_blue_card(card)], key=lambda idx: card_ranks[idx]
-        )
-        green_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
+        green_card_ids, red_card_ids, blue_card_ids = self._get_color_groups(
+            hand_of_cards, card_ranks.tolist(), color_mapper
         )
         tyr_hel_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
@@ -325,22 +291,19 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
         )
 
-        # First of all, if Deer has a counter, use Hel ult if we have it
+        # If Deer has a counter, use Hel ult if we have it
         if find(vio.snake_f3p2_counter, screenshot):
             if len(hel_ult_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.hel_ult, card.card_image)]):
                 return hel_ult_ids[-1]
 
         if DeerFloor4BattleStrategy.turn < 3:
-            # Let's set the ults to be the last cards to use
             print("DISABLING ULTS!")
             blue_card_ids = blue_card_ids[::-1]
             green_card_ids = green_card_ids[::-1]
             if DeerFloor4BattleStrategy.turn < 2:
-                # Only disable red up to turn 2
                 red_card_ids = red_card_ids[::-1]
 
             if card_turn == 3 and not find(vio.hel_ult, picked_cards[0].card_image):
-                # Move a card of someone that doesn't have an ult AND if we haven't played a Hel's ult at the beginning
                 return self._move_card_for_ult(
                     hand_of_cards + picked_cards,
                     tyr_hel_cards=tyr_hel_cards,
@@ -349,13 +312,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                     thor_cards=blue_card_ids,
                 )
 
-        # Place buff removal card at the beginning of the list, to save it if necessary
-        green_card_ids = reorder_buff_removal_card(hand_of_cards, green_card_ids)
+        green_card_ids = reorder_debuff_cards_to_front(hand_of_cards, green_card_ids)
 
-        # --- Regular Deer roulette ---
+        # --- Roulette ---
+
+        color_groups = {CardColors.RED: red_card_ids, CardColors.BLUE: blue_card_ids, CardColors.GREEN: green_card_ids}
 
         if card_turn == 0 and DeerFloor4BattleStrategy.turn == 0:
-            # Select the starting card
             if len(red_card_ids):
                 print("Initializing with red card!")
                 return red_card_ids[-1]
@@ -367,33 +330,30 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 return blue_card_ids[-1]
         elif card_turn == 0:
             if find(vio.blue_buff, screenshot) and len(blue_card_ids):
-                # Pick blue card
                 print("We're starting the round with a BLUE card!")
                 return blue_card_ids[-1]
             if find(vio.red_buff, screenshot) and len(red_card_ids):
-                # Pick red card
                 print("We're starting the round with a RED card!")
                 return red_card_ids[-1]
             if find(vio.green_buff, screenshot) and len(green_card_ids):
                 print("We're starting the round with a GREEN card!")
                 return green_card_ids[-1]
 
-        # Get the last picked card (from previous turn)
-        last_card = picked_cards[card_turn - 1] if card_turn > 0 else Card()
+        last_advancing_card = Card()
+        for i in range(card_turn - 1, -1, -1):
+            if picked_cards[i].card_type in ADVANCING_TYPES:
+                last_advancing_card = picked_cards[i]
+                break
 
-        # Special case: If we played Hel's ult as the previous card but no green buff appeared,
-        # reset the last_card to restart the color wheel
-        if card_turn == 1 and find(vio.hel_ult, last_card.card_image) and not find(vio.green_buff, screenshot):
+        # Special case: Hel's ult didn't trigger green buff
+        if card_turn == 1 and find(vio.hel_ult, last_advancing_card.card_image) and not find(vio.green_buff, screenshot):
             print("Last card is Hel's ult, but no green buff! Re-starting the wheel.")
-            last_card = Card()
+            last_advancing_card = Card()
 
-        if is_green_card(last_card) and len(blue_card_ids):
-            print("Last card green! Picking blue")
-            # Gotta pick a blue card
-            return blue_card_ids[-1]
-        if is_red_card(last_card) and len(green_card_ids):
+        last_color = color_mapper.get_card_color(last_advancing_card) if color_mapper else CardColors.NONE
+
+        if last_color == CardColors.RED and len(green_card_ids):
             print("Last card red! Picking green")
-            # First, if it's turn 2, use Jorm's buff card if it exists
             if DeerFloor4BattleStrategy.turn == 2:
                 print("Can we use a buff removal??")
             buff_removal_ids = [i for i, card in enumerate(hand_of_cards) if is_buff_removal_card(card)]
@@ -402,18 +362,42 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 if len(buff_removal_ids) and DeerFloor4BattleStrategy.turn == 2
                 else green_card_ids[-1]
             )
-        if is_blue_card(last_card) and len(red_card_ids):
-            print("Last card blue! Picking red")
-            # Gotta pick a red card
-            return red_card_ids[-1]
 
-        # If the above doesn't happen...
+        if last_color in _COLOR_WHEEL:
+            next_color = _COLOR_WHEEL[last_color]
+            if len(color_groups[next_color]):
+                print(f"Last card {last_color.name}! Picking {next_color.name}")
+                return color_groups[next_color][-1]
+
         print("Couldn't find the right card, defaulting while avoiding ultimates...")
-        # But let's disable the ults, just in case
-        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.ULTIMATE.value]
-        for id in ult_ids:
-            hand_of_cards[id].card_type = CardTypes.DISABLED
+        ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
+        for uid in ult_ids:
+            hand_of_cards[uid].card_type = CardTypes.DISABLED
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
+
+    # -- Helpers --
+
+    @staticmethod
+    def _get_color_groups(
+        hand_of_cards: list[Card], card_ranks: list, color_mapper: CardColorMapper | None
+    ) -> tuple[list[int], list[int], list[int]]:
+        """Return (green_ids, red_ids, blue_ids) sorted by card_ranks."""
+        if color_mapper and color_mapper.is_calibrated:
+            green = sorted(
+                [i for i, c in enumerate(hand_of_cards) if color_mapper.get_card_color(c) == CardColors.GREEN],
+                key=lambda idx: card_ranks[idx],
+            )
+            red = sorted(
+                [i for i, c in enumerate(hand_of_cards) if color_mapper.get_card_color(c) == CardColors.RED],
+                key=lambda idx: card_ranks[idx],
+            )
+            blue = sorted(
+                [i for i, c in enumerate(hand_of_cards) if color_mapper.get_card_color(c) == CardColors.BLUE],
+                key=lambda idx: card_ranks[idx],
+            )
+        else:
+            green, red, blue = [], [], []
+        return green, red, blue
 
     def _move_card_for_ult(
         self,
