@@ -28,11 +28,32 @@ class DeerFighter(IFighter):
     # Keep track of what floor we're fighting
     current_floor = -1
 
+    color_mapper = CardColorMapper()
+    _unit_colors: list[CardColors] = []
+    _first_turn = True
+    _color_context_key: tuple = ()
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
-        self.color_mapper = CardColorMapper()
-        self._unit_colors: list[CardColors] = []
-        self._first_turn = True
+
+    @classmethod
+    def _update_context(cls, unit_colors: list[CardColors]):
+        """Update cached unit colors; reset mapper only if context actually changed."""
+        new_key = tuple(c.value for c in unit_colors)
+        if new_key != cls._color_context_key:
+            print(f"[DeerFighter] Color context changed, resetting mapper cache.")
+            cls.color_mapper.reset()
+            cls._first_turn = True
+            cls._color_context_key = new_key
+        cls._unit_colors = unit_colors
+
+    @classmethod
+    def reset_mapper_state(cls):
+        """Explicit invalidation hook for external callers (e.g. party change)."""
+        cls.color_mapper.reset()
+        cls._first_turn = True
+        cls._color_context_key = ()
+        cls._unit_colors = []
 
     def fighting_state(self):
 
@@ -68,10 +89,10 @@ class DeerFighter(IFighter):
                 print(f"Moving to phase {phase}!")
                 IFighter.current_phase = phase
 
-            if self._first_turn and self._unit_colors:
-                hand = get_hand_cards(num_units=3)
-                self.color_mapper.calibrate(hand, self._unit_colors)
-                self._first_turn = False
+            if DeerFighter._first_turn and DeerFighter._unit_colors:
+                hand = get_hand_cards()
+                DeerFighter.color_mapper.calibrate(hand, DeerFighter._unit_colors)
+                DeerFighter._first_turn = False
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -105,7 +126,7 @@ class DeerFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
-        self.play_cards(color_mapper=self.color_mapper)
+        self.play_cards(color_mapper=DeerFighter.color_mapper)
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -147,12 +168,9 @@ class DeerFighter(IFighter):
 
         IFighter.current_floor = floor_num
 
-        self._unit_colors = unit_colors or []
-        self._first_turn = True
-        self.color_mapper.reset()
-
-        if self._unit_colors:
-            print(f"[DeerFighter] Received unit colors: {[c.name for c in self._unit_colors]}")
+        if unit_colors:
+            DeerFighter._update_context(unit_colors)
+            print(f"[DeerFighter] Received unit colors: {[c.name for c in DeerFighter._unit_colors]}")
 
         print(f"Fighting very hard on floor {IFighter.current_floor}...")
 
@@ -172,7 +190,6 @@ class DeerFighter(IFighter):
 
             if self.exit_thread:
                 print("Closing Fighter thread!")
-                self.color_mapper.reset()
                 return
 
             time.sleep(0.75)

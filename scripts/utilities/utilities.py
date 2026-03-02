@@ -244,6 +244,7 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
     rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
     return bool(rectangle.size) if rectangle is not None else False
 
+
 def find_rect(
     vision_image: Vision,
     screenshot: np.ndarray | None,
@@ -260,10 +261,12 @@ def find_rect(
 
     return rectangle if rectangle.size else None
 
+
 def score_template(haystack_bgr: np.ndarray, needle_bgr: np.ndarray) -> tuple[float, tuple[int, int]]:
     res = cv2.matchTemplate(haystack_bgr, needle_bgr, cv2.TM_CCOEFF_NORMED)
     _, max_val, _, max_loc = cv2.minMaxLoc(res)
     return float(max_val), max_loc
+
 
 def crop_roi_from_rect(screenshot_bgr: np.ndarray, rect: np.ndarray) -> np.ndarray | None:
     if rect is None or len(rect) < 4:
@@ -674,6 +677,7 @@ def determine_unit_types() -> list[CardColors]:
     unit_colors_im = extract_units_types()
     unit_types = []
     for color_im in unit_colors_im:
+        display_image(color_im)
         u_type = UnitTypePredictor.predict_unit_type(color_im)
         unit_types.append(u_type)
     return unit_types

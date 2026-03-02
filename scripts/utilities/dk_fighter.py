@@ -20,11 +20,32 @@ class DemonKingFighter(IFighter):
 
     current_team = 0
 
+    color_mapper = CardColorMapper()
+    _unit_colors: list[CardColors] = []
+    _first_turn = True
+    _color_context_key: tuple = ()
+
     def __init__(self, battle_strategy, callback=None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
-        self.color_mapper = CardColorMapper()
-        self._unit_colors: list[CardColors] = []
-        self._first_turn = True
+
+    @classmethod
+    def _update_context(cls, unit_colors: list[CardColors]):
+        """Update cached unit colors; reset mapper only if context actually changed."""
+        new_key = tuple(c.value for c in unit_colors)
+        if new_key != cls._color_context_key:
+            print(f"[DemonKingFighter] Color context changed, resetting mapper cache.")
+            cls.color_mapper.reset()
+            cls._first_turn = True
+            cls._color_context_key = new_key
+        cls._unit_colors = unit_colors
+
+    @classmethod
+    def reset_mapper_state(cls):
+        """Explicit invalidation hook for external callers (e.g. party change)."""
+        cls.color_mapper.reset()
+        cls._first_turn = True
+        cls._color_context_key = ()
+        cls._unit_colors = []
 
     def fighting_state(self):
         screenshot, _ = capture_window()
@@ -41,10 +62,10 @@ class DemonKingFighter(IFighter):
                 print(f"MOVING TO PHASE {new_phase}!")
                 IFighter.current_phase = new_phase
 
-            if self._first_turn and self._unit_colors:
+            if DemonKingFighter._first_turn and DemonKingFighter._unit_colors:
                 hand = get_hand_cards()
-                self.color_mapper.calibrate(hand, self._unit_colors)
-                self._first_turn = False
+                DemonKingFighter.color_mapper.calibrate(hand, DemonKingFighter._unit_colors)
+                DemonKingFighter._first_turn = False
 
     @staticmethod
     def _identify_phase(screenshot: np.ndarray):
@@ -55,7 +76,7 @@ class DemonKingFighter(IFighter):
         return 1
 
     def my_turn_state(self):
-        self.play_cards(dk_team=DemonKingFighter.current_team, color_mapper=self.color_mapper)
+        self.play_cards(dk_team=DemonKingFighter.current_team, color_mapper=DemonKingFighter.color_mapper)
 
     def exit_fight_state(self):
         screenshot, _ = capture_window()
@@ -84,9 +105,7 @@ class DemonKingFighter(IFighter):
     def run(self, unit_colors: list[CardColors]):
 
         print("[Fighter] Successfully received these unit colors: ", [utype.name for utype in unit_colors])
-        self._unit_colors = unit_colors
-        self._first_turn = True
-        self.color_mapper.reset()
+        DemonKingFighter._update_context(unit_colors)
 
         while True:
 
@@ -101,7 +120,6 @@ class DemonKingFighter(IFighter):
 
             if self.exit_thread:
                 print("Closing DK fighter thread!")
-                self.color_mapper.reset()
                 return
 
             time.sleep(0.7)
