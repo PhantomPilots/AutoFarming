@@ -652,31 +652,31 @@ def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
     return crop_region(screenshot, Coordinates.get_coordinates("card_slots_region"))
 
 
-def determine_unit_types(team_count: int = 1) -> list[CardColors]:
+def extract_units_types(team_count: int) -> list[np.ndarray]:
+    """Get a list of images corresponding to the unit types, in order."""
+    if team_count == 2:
+        units_region = (58, 239, 507, 408)
+        badge_tl, badge_br = (84, 5), (97, 15)
+    elif team_count == 1:
+        # TODO: Replace with real 1-team region and badge crop once captured/calibrated.
+        units_region = (58, 239, 507, 408)
+        badge_tl, badge_br = (84, 5), (97, 15)
+    else:
+        raise ValueError(f"Unsupported team_count={team_count}. Expected 1 or 2.")
+
+    screenshot, _ = capture_window()
+    units_window = crop_region(screenshot, units_region)
+
+    _, width = units_window.shape[:2]
+    column_width = int(width / 4)
+
+    units = [units_window[:, column_width * i : column_width * (i + 1)] for i in range(4)]
+    return [crop_image(unit, badge_tl, badge_br) for unit in units]
+
+
+def determine_unit_types(team_count: int) -> list[CardColors]:
     """Return a list of unit colors (types) for the given team layout."""
-
-    def _extract_units_types(team_count: int) -> list[np.ndarray]:
-        """Get a list of images corresponding to the unit types, in order."""
-        if team_count == 2:
-            units_region = (58, 239, 507, 408)
-            badge_tl, badge_br = (84, 5), (97, 15)
-        elif team_count == 1:
-            # TODO: Replace with real 1-team region and badge crop once captured/calibrated.
-            units_region = (58, 239, 507, 408)
-            badge_tl, badge_br = (84, 5), (97, 15)
-        else:
-            raise ValueError(f"Unsupported team_count={team_count}. Expected 1 or 2.")
-
-        screenshot, _ = capture_window()
-        units_window = crop_region(screenshot, units_region)
-
-        _, width = units_window.shape[:2]
-        column_width = int(width / 4)
-
-        units = [units_window[:, column_width * i : column_width * (i + 1)] for i in range(4)]
-        return [crop_image(unit, badge_tl, badge_br) for unit in units]
-
-    return [UnitTypePredictor.predict_unit_type(im) for im in _extract_units_types(team_count)]
+    return [UnitTypePredictor.predict_unit_type(im) for im in extract_units_types(team_count)]
 
 
 def determine_card_type(card: np.ndarray | None, three_cards: bool = False) -> CardTypes:
