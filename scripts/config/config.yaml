@@ -1,0 +1,5 @@
+ntfy_private_channel: ""
+heartbeat_interval: 300 # in seconds. if we don't receive a heartbeat within this time, we will assume the script has stopped working and send a notification
+repeated_messages_threshold: 20 # if we receive the same message this many times in a row, we will assume the script has stopped working and send a notification
+unrecoverable_error_messages:
+  - "Failed to re-open the game."

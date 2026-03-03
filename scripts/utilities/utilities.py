@@ -8,17 +8,17 @@ import time
 from ctypes import windll
 from enum import Enum
 from numbers import Integral
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import cv2
 import dill as pickle
 import numpy as np
 import pyautogui
+import requests
 import utilities.vision_images as vio
 import win32api
 import win32con
 import win32gui
-import win32ui
 import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -41,6 +41,35 @@ from utilities.models import (
 )
 from utilities.vision import Vision
 
+CONFIG_PATH = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config"), "config.yaml")
+_global_config: dict[str, Any] | None = None
+_global_config_lock = threading.Lock()
+
+def load_config(force_reload: bool = False) -> dict:
+    """Load the global config from scripts/config.yaml and cache it."""
+    global _global_config
+
+    with _global_config_lock:
+        if _global_config is None or force_reload:
+            config = {}
+            try:
+                loaded = load_yaml_config(CONFIG_PATH)
+                config.update(loaded)
+            except FileNotFoundError:
+                print(f"[WARNING] Config file not found at {CONFIG_PATH}.")
+            except (yaml.YAMLError, ValueError) as error:
+                print(f"[WARNING] Failed to parse config file at {CONFIG_PATH}: {error}.")
+
+            _global_config = config
+            for key, value in _global_config.items():
+                print(f"Config '{key}': {value}")
+
+        return _global_config
+
+
+def get_config(key: str, default=None):
+    """Get a value from the global configuration."""
+    return load_config().get(key, default)
 
 class Color(str, Enum):
     RED = "red"
@@ -866,11 +895,33 @@ def re_open_7ds_window() -> bool:
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
             return True
+    print("Failed to re-open the game.")
     return False
-
 
 def load_yaml_config(file_path: str) -> dict:
     """Load a YAML configuration file and return its contents as a dictionary."""
     with open(file_path, "r") as file:
         config = yaml.safe_load(file)
     return config
+
+def send_push_notification(message: str):
+    """Send a push notification via ntfy.sh"""
+    private_channel = get_config("ntfy_private_channel")
+    if not private_channel:
+        return
+
+    url = f"https://ntfy.sh/{private_channel}"
+
+    def _send_notification():
+        try:
+            response = requests.post(url, data=message.encode(encoding="utf-8"))
+            response.raise_for_status()
+            print(f"Push notification sent successfully: {message}")
+        except requests.RequestException as e:
+            print(f"Failed to send push notification: {e}")
+
+    threading.Thread(target=_send_notification, daemon=True).start()
+
+def send_manual_heartbeat():
+    """Manually send a heartbeat notification to indicate the bot is alive"""
+    print("[Heartbeat]")
