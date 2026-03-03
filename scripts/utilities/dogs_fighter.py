@@ -137,6 +137,9 @@ class DogsFighter(IFighter):
             IFighter.current_phase = 3
             print("Clicking on dark dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
+            if find_and_click(vio.talent_escalin, screenshot, window_location, threshold=0.6):
+                print("Phase 3 entry: activating talent_escalin")
+                time.sleep(2.5)
 
     def fight_complete_state(self):
 
