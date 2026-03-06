@@ -55,7 +55,7 @@ from PyQt5.QtWidgets import (
 
 # Import the window resize function
 from utilities.capture_window import capture_window, resize_7ds_window
-from utilities.utilities import get_pause_flag_path, load_config
+from utilities.utilities import get_pause_flag_path
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
@@ -1101,8 +1101,6 @@ class MainWindow(QMainWindow):
 
 
 def main():
-    load_config()
-
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

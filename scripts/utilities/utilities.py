@@ -65,8 +65,6 @@ def load_config(force_reload: bool = False) -> dict:
                 print(f"[WARNING] Failed to parse config file at {CONFIG_PATH}: {error}.")
 
             _global_config = config
-            for key, value in _global_config.items():
-                print(f"Config '{key}': {value}")
 
         return _global_config
 
