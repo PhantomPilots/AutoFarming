@@ -1,5 +1,6 @@
 ntfy_private_channel: ""
-heartbeat_interval: 300 # in seconds. if we don't receive a heartbeat within this time, we will assume the script has stopped working and send a notification
-repeated_messages_threshold: 20 # if we receive the same message this many times in a row, we will assume the script has stopped working and send a notification
-unrecoverable_error_messages:
-  - "Failed to re-open the game."
+state_stagnation_timeout_minutes: 1 # if state does not change for this long, we'll send a stuck-loop alert
+click_idle_timeout_minutes: 0.5 # if no successful click happens for this long, we'll send an idle/frozen alert
+stuck_notification_cooldown_minutes: 5 # minimum delay between repeated stuck/idle alerts
+runtime_watchdog_poll_interval_seconds: 1.0 # state/click monitor polling interval
+repeated_click_same_image_threshold: 30 # if same image is clicked this many times in a row (with stagnant state), trigger stuck alert

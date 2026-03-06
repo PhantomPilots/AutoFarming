@@ -44,6 +44,10 @@ from utilities.vision import Vision
 CONFIG_PATH = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config"), "config.yaml")
 _global_config: dict[str, Any] | None = None
 _global_config_lock = threading.Lock()
+_click_activity_lock = threading.Lock()
+_last_click_time: float | None = None
+_last_clicked_image_name: str | None = None
+_consecutive_same_image_clicks: int = 0
 
 def load_config(force_reload: bool = False) -> dict:
     """Load the global config from scripts/config.yaml and cache it."""
@@ -70,6 +74,58 @@ def load_config(force_reload: bool = False) -> dict:
 def get_config(key: str, default=None):
     """Get a value from the global configuration."""
     return load_config().get(key, default)
+
+
+def update_last_click_time() -> float:
+    """Store and return the latest successful click timestamp."""
+    global _last_click_time
+    with _click_activity_lock:
+        _last_click_time = time.time()
+        return _last_click_time
+
+
+def get_last_click_time() -> float | None:
+    """Get the latest successful click timestamp, if any."""
+    with _click_activity_lock:
+        return _last_click_time
+
+
+def reset_last_click_time(value: float | None = None):
+    """Reset click activity timestamp (or set to a specific time)."""
+    global _last_click_time
+    with _click_activity_lock:
+        _last_click_time = value
+
+
+def track_clicked_image(image_name: str) -> int:
+    """Track consecutive successful clicks on the same image and return the current streak count."""
+    global _last_clicked_image_name
+    global _consecutive_same_image_clicks
+
+    with _click_activity_lock:
+        if image_name == _last_clicked_image_name:
+            _consecutive_same_image_clicks += 1
+        else:
+            _last_clicked_image_name = image_name
+            _consecutive_same_image_clicks = 1
+
+        return _consecutive_same_image_clicks
+
+
+def get_consecutive_click_info() -> tuple[str | None, int]:
+    """Return the last clicked image name and its consecutive successful click count."""
+    with _click_activity_lock:
+        return _last_clicked_image_name, _consecutive_same_image_clicks
+
+
+def reset_click_pattern_tracking():
+    """Reset consecutive click pattern tracking."""
+    global _last_clicked_image_name
+    global _consecutive_same_image_clicks
+
+    with _click_activity_lock:
+        _last_clicked_image_name = None
+        _consecutive_same_image_clicks = 0
 
 class Color(str, Enum):
     RED = "red"
@@ -328,6 +384,8 @@ def find_and_click(
             click_im(rectangle, window_location)
 
         print(f"Clicked on '{vision_image.image_name}'")
+        update_last_click_time()
+        track_clicked_image(vision_image.image_name)
 
         time.sleep(0.5)
 

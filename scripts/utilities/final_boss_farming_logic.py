@@ -31,6 +31,7 @@ class FinalBossFarmer(IFarmer):
     num_fights = 0
 
     def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_FB, **kwargs):
+        super().__init__()
 
         # Initialize the current state
         self.current_state = starting_state

@@ -57,8 +57,6 @@ from PyQt5.QtWidgets import (
 from utilities.capture_window import capture_window, resize_7ds_window
 from utilities.utilities import get_pause_flag_path, load_config
 
-from RuntimeWatchdog import RuntimeWatchdog
-
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
                            🆓 FREE SOFTWARE 🆓
@@ -618,7 +616,7 @@ class AboutTab(QWidget):
 class FarmerTab(QWidget):
     _COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
 
-    def __init__(self, farmer, parent=None, runtime_watchdog=None):
+    def __init__(self, farmer, parent=None):
         super().__init__(parent)
         self.farmer = farmer
         self.process = None
@@ -627,7 +625,6 @@ class FarmerTab(QWidget):
         self.sa_chest_warning_label = None
         self._default_fmt = QTextCharFormat()
         self._default_fmt.setForeground(QColor("#eeeeee"))
-        self.watchdog = runtime_watchdog
         self.init_ui()
 
     def init_ui(self):
@@ -861,11 +858,6 @@ class FarmerTab(QWidget):
         self.output_timer.timeout.connect(self.check_output)
         self.output_timer.start(100)  # Check every 100ms
 
-        self.watchdog_timer = QTimer(self)
-        self.watchdog_timer.timeout.connect(self.watchdog.check_heartbeat)
-        self.watchdog_timer.start(1000)  # Check every seconds
-        self.watchdog.start()
-
     def stop_farmer(self):
         if self.process is not None:
             # Clean up pause flag before stopping
@@ -913,8 +905,6 @@ class FarmerTab(QWidget):
 
     def append_terminal(self, text):
         new_lines = text.splitlines(True)
-
-        self.watchdog.terminal_heartbeat(new_lines)
         self.output_lines.extend(new_lines)
 
         if len(self.output_lines) > 1000:
@@ -986,19 +976,12 @@ class FarmerTab(QWidget):
             self.output_timer.deleteLater()
             self.output_timer = None
 
-        # Stop the watchdog timer
-        if hasattr(self, "watchdog_timer") and self.watchdog_timer is not None:
-            self.watchdog_timer.stop()
-            self.watchdog_timer.deleteLater()
-            self.watchdog_timer = None
-
         self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
         self.pause_btn.setEnabled(False)
         self.pause_btn.setText("PAUSE")
         self.paused = False
-        self.watchdog.stop()
         self.append_terminal("\nProcess finished.\n")
 
     def check_output(self):
@@ -1105,11 +1088,10 @@ class MainWindow(QMainWindow):
         # Add About tab as the first tab
         about_tab = AboutTab()
         self.tabs.addTab(about_tab, "About")
-        self.watchdog = RuntimeWatchdog()
 
         # Add farmer tabs
         for farmer in FARMERS:
-            tab = FarmerTab(farmer, runtime_watchdog=self.watchdog)
+            tab = FarmerTab(farmer)
             self.tabs.addTab(tab, farmer["name"])
 
         # Set About tab as the default
