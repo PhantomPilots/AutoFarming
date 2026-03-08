@@ -1,6 +1,4 @@
 ntfy_private_channel: ""
-state_stagnation_timeout_minutes: 10 # if state does not change for this long, we'll send a stuck-loop alert
-click_idle_timeout_minutes: 3 # if no successful click happens for this long, we'll send an idle/frozen alert
-stuck_notification_cooldown_minutes: 5 # minimum delay between repeated stuck/idle alerts
-runtime_watchdog_poll_interval_seconds: 1.0 # state/click monitor polling interval
-repeated_click_same_image_threshold: 30 # if same image is clicked this many times in a row (with stagnant state), trigger stuck alert
+stuck_timeout_minutes: 10 # time without state change AND click activity before alerting
+notification_cooldown_minutes: 5 # minimum delay between repeated stuck alerts
+max_notifications_per_incident: 5 # hard cap on alerts per stuck incident

@@ -18,7 +18,6 @@ from utilities.utilities import (
     drag_im,
     find,
     find_and_click,
-    get_config,
     press_key,
     type_word,
 )
