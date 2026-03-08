@@ -67,6 +67,13 @@ Now, simply via the `Update` button in the "About" tab of the GUI!
 
 You can PAUSE/RESUME the bot at any time with the corresponding button.
 
+### Push Notifications
+It is possible to receive push notifications on your mobile if we detect that the bot is stuck or idle.
+To do this, all you have to do is:
+1. Install [ntfy](https://ntfy.sh/) to your mobile phone
+2. Once installed, open the app, press the '+' icon and enter a topic name. This can be anything, but it should be something completely unique to you and hard to guess (ex. 7ds_farmer_myname_randomnumbersandletters)
+3. Open `scripts/config/config.yaml` and fill in the `ntfy_private_channel` with the topic you created in the previous step
+
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 
 The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.

@@ -18,6 +18,7 @@ from utilities.utilities import (
     drag_im,
     find,
     find_and_click,
+    get_config,
     press_key,
     type_word,
 )
@@ -65,13 +66,38 @@ class IFarmer:
     # To keep track of whether we're doing dailies
     doing_dailies = False
 
+    # Manual keepalive support for long-running operations with no state/click changes
+    _keepalive_until: float = 0.0
+    _keepalive_reason: str | None = None
+
     def __init__(self):
         """Just to initialize the Daily Farmer"""
+        self._keepalive_until = 0.0
+        self._keepalive_reason = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
             do_daily_pvp=False,
             complete_callback=None,
         )
+
+    def keep_alive(self, duration_seconds: float = 120, reason: str | None = None):
+        """Emit a manual keepalive to temporarily suppress runtime stuck alerts.
+
+        Use this in farmer logic for known long-running phases where state and click activity
+        are legitimately quiet (for example, long animation, loading, or battle waits).
+        """
+        keepalive_seconds = max(0.0, float(duration_seconds))
+        keepalive_until = time.time() + keepalive_seconds
+
+        with IFarmer._lock:
+            self._keepalive_until = max(self._keepalive_until, keepalive_until)
+            if reason is not None:
+                self._keepalive_reason = reason
+
+    def get_keepalive_deadline(self) -> float:
+        """Return the keepalive deadline timestamp (epoch seconds)."""
+        with IFarmer._lock:
+            return self._keepalive_until
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""

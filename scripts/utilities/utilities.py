@@ -8,17 +8,17 @@ import time
 from ctypes import windll
 from enum import Enum
 from numbers import Integral
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import cv2
 import dill as pickle
 import numpy as np
 import pyautogui
+import requests
 import utilities.vision_images as vio
 import win32api
 import win32con
 import win32gui
-import win32ui
 import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -41,6 +41,89 @@ from utilities.models import (
 )
 from utilities.vision import Vision
 
+CONFIG_PATH = os.path.join(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config"), "config.yaml")
+_global_config: dict[str, Any] | None = None
+_global_config_lock = threading.Lock()
+_click_activity_lock = threading.Lock()
+_last_click_time: float | None = None
+_last_clicked_image_name: str | None = None
+_consecutive_same_image_clicks: int = 0
+
+def load_config(force_reload: bool = False) -> dict:
+    """Load the global config from scripts/config.yaml and cache it."""
+    global _global_config
+
+    with _global_config_lock:
+        if _global_config is None or force_reload:
+            config = {}
+            try:
+                loaded = load_yaml_config(CONFIG_PATH)
+                config.update(loaded)
+            except FileNotFoundError:
+                print(f"[WARNING] Config file not found at {CONFIG_PATH}.")
+            except (yaml.YAMLError, ValueError) as error:
+                print(f"[WARNING] Failed to parse config file at {CONFIG_PATH}: {error}.")
+
+            _global_config = config
+
+        return _global_config
+
+
+def get_config(key: str, default=None):
+    """Get a value from the global configuration."""
+    return load_config().get(key, default)
+
+
+def update_last_click_time() -> float:
+    """Store and return the latest successful click timestamp."""
+    global _last_click_time
+    with _click_activity_lock:
+        _last_click_time = time.time()
+        return _last_click_time
+
+
+def get_last_click_time() -> float | None:
+    """Get the latest successful click timestamp, if any."""
+    with _click_activity_lock:
+        return _last_click_time
+
+
+def reset_last_click_time(value: float | None = None):
+    """Reset click activity timestamp (or set to a specific time)."""
+    global _last_click_time
+    with _click_activity_lock:
+        _last_click_time = value
+
+
+def track_clicked_image(image_name: str) -> int:
+    """Track consecutive successful clicks on the same image and return the current streak count."""
+    global _last_clicked_image_name
+    global _consecutive_same_image_clicks
+
+    with _click_activity_lock:
+        if image_name == _last_clicked_image_name:
+            _consecutive_same_image_clicks += 1
+        else:
+            _last_clicked_image_name = image_name
+            _consecutive_same_image_clicks = 1
+
+        return _consecutive_same_image_clicks
+
+
+def get_consecutive_click_info() -> tuple[str | None, int]:
+    """Return the last clicked image name and its consecutive successful click count."""
+    with _click_activity_lock:
+        return _last_clicked_image_name, _consecutive_same_image_clicks
+
+
+def reset_click_pattern_tracking():
+    """Reset consecutive click pattern tracking."""
+    global _last_clicked_image_name
+    global _consecutive_same_image_clicks
+
+    with _click_activity_lock:
+        _last_clicked_image_name = None
+        _consecutive_same_image_clicks = 0
 
 class Color(str, Enum):
     RED = "red"
@@ -299,6 +382,8 @@ def find_and_click(
             click_im(rectangle, window_location)
 
         print(f"Clicked on '{vision_image.image_name}'")
+        update_last_click_time()
+        track_clicked_image(vision_image.image_name)
 
         time.sleep(0.5)
 
@@ -866,11 +951,33 @@ def re_open_7ds_window() -> bool:
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
             return True
+    print("Failed to re-open the game.")
     return False
-
 
 def load_yaml_config(file_path: str) -> dict:
     """Load a YAML configuration file and return its contents as a dictionary."""
     with open(file_path, "r") as file:
         config = yaml.safe_load(file)
     return config
+
+def send_push_notification(message: str):
+    """Send a push notification via ntfy.sh"""
+    private_channel = get_config("ntfy_private_channel")
+    if not private_channel:
+        return
+
+    url = f"https://ntfy.sh/{private_channel}"
+
+    def _send_notification():
+        try:
+            response = requests.post(url, data=message.encode(encoding="utf-8"))
+            response.raise_for_status()
+            print(f"Push notification sent successfully: {message}")
+        except requests.RequestException as e:
+            print(f"Failed to send push notification: {e}")
+
+    threading.Thread(target=_send_notification, daemon=True).start()
+
+def send_manual_heartbeat():
+    """Manually send a heartbeat notification to indicate the bot is alive"""
+    print("[Heartbeat]")

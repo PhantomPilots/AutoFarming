@@ -74,6 +74,7 @@ class SADungeonFarmer(IFarmer):
         chest_detection_count=3,
         **kwargs,
     ):
+        super().__init__()
         self.current_state = starting_state
 
         # Chest filtering config

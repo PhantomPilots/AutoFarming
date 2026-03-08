@@ -975,6 +975,7 @@ class FarmerTab(QWidget):
             self.output_timer.stop()
             self.output_timer.deleteLater()
             self.output_timer = None
+
         self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
