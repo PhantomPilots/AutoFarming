@@ -44,7 +44,7 @@ class DemonKingFarmer(IFarmer):
 
     num_clears = 0
 
-    dk_difficulty = "hell"
+    dk_difficulty = "hard"
 
     unit_colors: list[CardColors] = []
 
@@ -52,7 +52,7 @@ class DemonKingFarmer(IFarmer):
         self,
         starting_state=States.GOING_TO_DK,
         battle_strategy: IBattleStrategy = None,  # No need
-        dk_difficulty: str = "hell",  # Demon King difficulty
+        dk_difficulty: str = "hard",  # Demon King difficulty
         num_clears: str | float | int = 20,  # How many coins to use at most
         **kwargs,
     ):
@@ -61,9 +61,6 @@ class DemonKingFarmer(IFarmer):
 
         self.current_state = starting_state
 
-        if dk_difficulty != "hard":
-            print("[WARN] Sorry, `hard` difficulty is the most efficient one! So the only one supported.")
-            dk_difficulty = "hard"
         DemonKingFarmer.dk_difficulty = dk_difficulty
 
         self.max_clears = float(num_clears)

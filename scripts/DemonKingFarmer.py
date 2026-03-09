@@ -13,9 +13,9 @@ def main():
         "--dk-diff",
         "-d",
         type=str,
-        choices=["hard", "extreme", "hell"],
+        choices=["hard"],
         default="hard",
-        help="Difficulty (choices: hard, extreme, hell)",
+        help="Difficulty (only hard is supported — best rewards per coin)",
     )
     parser.add_argument(
         "--num-clears", default=float("inf"), type=str, help="How many times to clear the Demon King fight."

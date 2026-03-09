@@ -139,6 +139,7 @@ Play with your gears to guarantee this.<br>
 <p><strong>Requirements:</strong><br>
 • Team A: Skuld (att/crit), any 3 boosters<br>
 • Team B: Anything, won't be used</p>
+<p><em>Note: Only Hard mode is enabled — it offers the best rewards per coin.</em></p>
     """,
     "Reroll Constellation": """
 <p><strong>Requirements:</strong><br>
@@ -289,7 +290,7 @@ FARMERS = [
                 "name": "--dk-diff",
                 "label": "Difficulty",
                 "type": "dropdown",
-                "choices": ["hard", "extreme", "hell"],
+                "choices": ["hard"],
                 "default": "hard",
             },
             {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "10"},
