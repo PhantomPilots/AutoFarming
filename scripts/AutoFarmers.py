@@ -175,6 +175,7 @@ FARMER_IMAGES = {
     "Snake Farmer": "snake_farmer.png",
     "Rat Farmer": "rat_farmer.jpg",
     "Final Boss": "final_boss.png",
+    "Legendary Boss": "legendary_boss.png",
     "Accounts Farmer": "accounts_farmer.jpg",
     "Reroll Constellation": "reroll_constellation_whale.jpg",
     "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
@@ -305,6 +306,20 @@ FARMERS = [
                 "label": "Difficulty",
                 "type": "dropdown",
                 "choices": ["hard", "extreme", "hell", "challenge"],
+                "default": "hell",
+            },
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "20"},
+        ],
+    },
+    {
+        "name": "Legendary Boss",
+        "script": "LegendaryBossFarmer.py",
+        "args": [
+            {
+                "name": "--difficulty",
+                "label": "Difficulty",
+                "type": "dropdown",
+                "choices": ["extreme", "hell", "challenge"],
                 "default": "hell",
             },
             {"name": "--clears", "label": "Clears", "type": "text", "default": "20"},
