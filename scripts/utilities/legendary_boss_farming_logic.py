@@ -89,6 +89,10 @@ class LegendaryBossFarmer(IFarmer):
         elif (difficulty_rect := find_rect(vio.legendary_boss_challenge, screenshot)) is not None:
             difficulty_on_screen = "challenge"
 
+        if difficulty_rect is None or difficulty_on_screen is None:
+            print("Couldn't find the current difficulty on screen, retry...")
+            return
+
         selected_difficulty = str(self.difficulty).strip().lower()
         order = ["extreme", "hell", "challenge"]
         if selected_difficulty not in order:
