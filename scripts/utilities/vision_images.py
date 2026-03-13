@@ -338,6 +338,17 @@ showdown = Vision("final_boss\\showdown.png")
 fb_aut_off = Vision("final_boss\\auto_off.png")
 failed = Vision("final_boss\\failed.png")
 
+# For Legendary Boss
+legendary_boss_menu = Vision("legendary_boss\\legendary_boss_menu.png")
+legendary_boss_roxy = Vision("legendary_boss\\lb_roxy.png")
+legendary_boss_extreme = Vision("legendary_boss\\lb_extreme.png")
+legendary_boss_hell = Vision("legendary_boss\\lb_hell.png")
+legendary_boss_challenge = Vision("legendary_boss\\lb_challenge.png")
+legendary_boss_left_arrow = Vision("legendary_boss\\lb_left.png")
+legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
+legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")
+legendary_boss_final_score = Vision("legendary_boss\\lb_final_score.png")
+
 
 # For demon farming
 boss_menu = Vision("demons\\demons.jpg")
