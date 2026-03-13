@@ -124,6 +124,7 @@ class LegendaryBossFarmer(IFarmer):
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
+            print(f"We've used {IFarmer.stamina_pots} stamina pots so far")
             return
 
         # Click on the "Min." button to remove extra challenges, we don't need for farming
