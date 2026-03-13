@@ -145,15 +145,7 @@ class LegendaryBossFarmer(IFarmer):
         # If we've ended the fight...
         find_and_click(vio.legendary_boss_final_score, screenshot, window_location, threshold=0.7)
         find_and_click(vio.episode_clear, screenshot, window_location)
-        if find_and_click(vio.boss_mission, screenshot, window_location):
-            LegendaryBossFarmer.num_fights += 1
-            print(f"LB cleared! {LegendaryBossFarmer.num_fights} times so far.")
-
-            # Now, exit the fight if we've reached the desired number of runs
-            if LegendaryBossFarmer.num_fights >= self.max_num_runs:
-                print("Reached the desired number of runs, exiting the farmer...")
-                self.current_state = States.EXIT_FARMER
-                return
+        find_and_click(vio.boss_mission, screenshot, window_location)
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location):
@@ -161,18 +153,29 @@ class LegendaryBossFarmer(IFarmer):
             return
 
         # Click 'again'
-        if find_and_click(vio.again, screenshot, window_location):
-            return
+        if find(vio.again, screenshot):
+            LegendaryBossFarmer.num_fights += 1
+            print(f"LB cleared! {LegendaryBossFarmer.num_fights} times so far.")
 
-        # Skip to the fight
-        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
+            # Now, exit the fight if we've reached the desired number of runs
+            if LegendaryBossFarmer.num_fights >= self.max_num_runs:
+                print("Reached the desired number of runs, exiting the farmer...")
+                find_and_click(vio.ok_main_button, screenshot, window_location)
+                self.current_state = States.EXIT_FARMER
+                return
 
-        # Ensure AUTO is on
-        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
+            find_and_click(vio.again, screenshot, window_location)
 
-        if find(vio.failed, screenshot):
+        elif find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
             self.current_state = States.IN_LEGENDARY_BOSS_MENU
+
+        else:
+            # Skip to the fight
+            find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
+
+            # Ensure AUTO is on
+            find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 
     def run(self):
 
