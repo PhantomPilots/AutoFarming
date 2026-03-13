@@ -11,10 +11,10 @@ from utilities.general_farmer_interface import IFarmer
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
+    click,
     find,
     find_and_click,
     find_rect,
-    click
 )
 
 
@@ -125,7 +125,7 @@ class LegendaryBossFarmer(IFarmer):
         if find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
-        
+
         # Click on the "Min." button to remove extra challenges, we don't need for farming
         find_and_click(vio.legendary_boss_min_button, screenshot, window_location, threshold=0.8)
 
@@ -144,6 +144,7 @@ class LegendaryBossFarmer(IFarmer):
 
         # If we've ended the fight...
         find_and_click(vio.legendary_boss_final_score, screenshot, window_location, threshold=0.7)
+        find_and_click(vio.episode_clear, screenshot, window_location)
         if find_and_click(vio.boss_mission, screenshot, window_location):
             LegendaryBossFarmer.num_fights += 1
             print(f"LB cleared! {LegendaryBossFarmer.num_fights} times so far.")
@@ -167,7 +168,7 @@ class LegendaryBossFarmer(IFarmer):
         find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
 
         # Ensure AUTO is on
-        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.9)
+        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 
         if find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")

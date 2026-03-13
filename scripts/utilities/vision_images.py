@@ -99,7 +99,6 @@ cross = MultiVision(
     image_name="cross",
 )
 pause_fight = Vision("pause_fight.png")
-episode_clear = Vision("episode_clear.png")
 continue_fight = Vision("continue.png")
 annoying_chat_popup = Vision("annoying_chat_popup.png")
 change_stats = MultiVision(
