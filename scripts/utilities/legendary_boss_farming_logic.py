@@ -11,7 +11,7 @@ from utilities.general_farmer_interface import IFarmer
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    click,
+    click_im,
     find,
     find_and_click,
     find_rect,
@@ -104,7 +104,7 @@ class LegendaryBossFarmer(IFarmer):
 
         # Already on target: click middle
         if difficulty_on_screen == selected_difficulty:
-            click(window_location[0] + center_x_local, window_location[1] + click_y_local)
+            click_im((center_x_local, click_y_local), window_location)
             self.current_state = States.READY_TO_FIGHT
             return
 
