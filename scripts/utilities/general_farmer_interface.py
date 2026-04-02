@@ -65,38 +65,13 @@ class IFarmer:
     # To keep track of whether we're doing dailies
     doing_dailies = False
 
-    # Manual keepalive support for long-running operations with no state/click changes
-    _keepalive_until: float = 0.0
-    _keepalive_reason: str | None = None
-
     def __init__(self):
         """Just to initialize the Daily Farmer"""
-        self._keepalive_until = 0.0
-        self._keepalive_reason = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
             do_daily_pvp=False,
             complete_callback=None,
         )
-
-    def keep_alive(self, duration_seconds: float = 120, reason: str | None = None):
-        """Emit a manual keepalive to temporarily suppress runtime stuck alerts.
-
-        Use this in farmer logic for known long-running phases where state and click activity
-        are legitimately quiet (for example, long animation, loading, or battle waits).
-        """
-        keepalive_seconds = max(0.0, float(duration_seconds))
-        keepalive_until = time.time() + keepalive_seconds
-
-        with IFarmer._lock:
-            self._keepalive_until = max(self._keepalive_until, keepalive_until)
-            if reason is not None:
-                self._keepalive_reason = reason
-
-    def get_keepalive_deadline(self) -> float:
-        """Return the keepalive deadline timestamp (epoch seconds)."""
-        with IFarmer._lock:
-            return self._keepalive_until
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
@@ -176,12 +151,9 @@ class IFarmer:
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find_and_click(vio.skip, screenshot, window_location, threshold=0.6) or find(
-            vio.fortune_card, screenshot, threshold=0.8
-        ):
-            if IFarmer.do_dailies:
-                print("We're seeing a daily reset!")
-                self.current_state = States.DAILY_RESET
+        if find(vio.skip, screenshot, threshold=0.6) or find(vio.fortune_card, screenshot, threshold=0.8):
+            print("We're seeing a daily reset!")
+            self.current_state = States.DAILY_RESET
             login_attempted = True
 
         # In case the game needs to update

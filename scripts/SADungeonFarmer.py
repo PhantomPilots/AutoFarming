@@ -8,24 +8,17 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--min-chest-type",
-        default="bronze",
-        choices=["bronze", "silver", "gold"],
-        help="Minimum chest type to keep the run (bronze < silver < gold)",
-    )
-    parser.add_argument(
-        "--chest-detection-count",
+        "--max-resets",
+        default=10,
         type=int,
-        default=3,
-        help="How many times to retry detecting chests when no chest is detected (default: 3)",
+        help="How many times we'll allow to reset if we don't see a chest on phase 1",
     )
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
         farmer=SADungeonFarmer,
-        starting_state=States.GOING_TO_DUNGEON,
-        min_chest_type=args.min_chest_type,  # Minimum chest type to keep the run
-        chest_detection_count=args.chest_detection_count,  # How many times to retry detecting chests
+        starting_state=States.GOING_TO_DUNGEON,  # Should be 'GOING_TO_DUNGEON'
+        max_resets=args.max_resets,  # How many times we'll allow to reset
     )
 
 

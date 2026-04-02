@@ -7,5 +7,3 @@ debug*
 logs/
 cython_build/
 *original.py
-.venv/
-.cursor/

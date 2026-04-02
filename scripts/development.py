@@ -2,119 +2,95 @@ import time
 
 import cv2
 import numpy as np
-import pyautogui
 import utilities.vision_images as vio
-from utilities.bird_fighter import BirdFighter
-from utilities.card_data import CardTypes
-from utilities.coordinates import Coordinates
-from utilities.dk_fighter import DemonKingFighter
-from utilities.dogs_fighter import DogsFighter
-from utilities.rat_fighter import RatFighter
-from utilities.utilities import (
-    capture_hand_image,
-    capture_screen,
-    capture_window,
-    click_and_drag,
-    close_game,
-    count_needle_image,
-    crop_image,
-    determine_card_merge,
-    determine_relative_coordinates,
-    determine_unit_types,
-    display_image,
-    extract_units_types,
-    find,
-    find_and_click,
-    get_card_interior_image,
-    get_card_slot_region_image,
-    get_card_type_image,
-    get_hand_cards,
-    is_amplify_card,
-    is_Meli_card,
-    move_to_location,
-    screenshot_testing,
-)
+from utilities.utilities import capture_window
+
+
+def detect_template_hits(screenshot, vision_image, side: str, threshold=0.8) -> list[dict]:
+    template = vision_image.needle_img
+    if template is None:
+        return []
+
+    result = cv2.matchTemplate(screenshot, template, cv2.TM_CCOEFF_NORMED)
+    match_locations = np.where(result >= threshold)
+    template_height, template_width = template.shape[:2]
+
+    rectangles = []
+    for x, y in zip(match_locations[1], match_locations[0]):
+        rectangles.append([int(x), int(y), int(template_width), int(template_height)])
+        rectangles.append([int(x), int(y), int(template_width), int(template_height)])
+
+    if not rectangles:
+        return []
+
+    grouped_rectangles, grouped_weights = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
+    if len(grouped_rectangles) == 0:
+        return []
+
+    hits = []
+    for rect, weight in zip(grouped_rectangles, grouped_weights):
+        x, y, width, height = rect
+        hits.append(
+            {
+                "x": int(x),
+                "y": int(y),
+                "w": int(width),
+                "h": int(height),
+                "side": side,
+                "weight": int(weight),
+            }
+        )
+
+    hits.sort(key=lambda hit: (hit["x"], hit["y"]))
+    return hits
 
 
 def development():
-    """Some development function calls"""
-    screenshot, window_location = capture_window()
-    # determine_relative_coordinates(screenshot)
+    print("Watching for Escalin talent variants. Press CTRL+C to stop.")
+    last_state = None
 
-    # print("Screenshot shape:", screenshot.shape)
-    # screenshot_testing(screenshot, vision_image=vio.cross, threshold=0.7)
+    talent_templates = [
+        ("dogs_escalin_talent", vio.dogs_escalin_talent),
+        ("dogs_escalin_talent_min1", vio.dogs_escalin_talent_min1),
+        ("dogs_escalin_talent_min2", vio.dogs_escalin_talent_min2),
+    ]
 
-    # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
+    while True:
+        screenshot, _ = capture_window()
 
-    # if find(vio.connection_confrm_expired, screenshot):
-    #     close_game()
-    # if find_and_click(vio.password, screenshot, window_location):
-    #     close_game()
+        detected_name = None
+        detected_hits = []
 
-    # full_screenshot = capture_screen()
-    # screenshot_testing(full_screenshot, vio.server_cancel)
+        for template_name, template_obj in talent_templates:
+            hits = detect_template_hits(
+                screenshot,
+                template_obj,
+                side=template_name,
+                threshold=0.8
+            )
 
-    # units = determine_unit_types()
-    # for unit in units:
-    #     print("We saw this unit type:", unit)
+            if hits:
+                detected_name = template_name
+                detected_hits = hits
+                break
 
-    # available_slots = RatFighter.count_empty_card_slots(screenshot)
-    # print(f"These many empty slots: {available_slots}")
-    # phase = DemonKingFighter._identify_phase(screenshot)
-    # print(f"We're in phase {phase}")
+        state = detected_name
 
-    # while True:
-    #     screenshot, _ = capture_window()
-    #     DogsFighter.count_empty_card_slots(screenshot, threshold=0.6, plot=True)
-    #     time.sleep(0.5)
+        if state != last_state:
+            if detected_name is None:
+                print("escalin talent detection -> none")
+            else:
+                print(
+                    "escalin talent detection -> "
+                    f"seeing={detected_name}"
+                )
+            last_state = state
 
-    # # Get card slots image
-    # card_slots = get_card_slot_region_image(screenshot)
-    # display_image(card_slots)
-
-    # # Test the 'move to location'
-    # move_to_location(Coordinates.get_coordinates("fifth_slot"), window_location)
-    # screenshot, window_location = capture_window()
-    # # display_image(screenshot)
-    # screenshot_testing(vision_image=vio.card_slot, threshold=0.9)
-
-    # print(f"We have {count_empty_card_slots_2()} empty card slots")
-
-    # hand_image = capture_hand_image()
-    # display_image(hand_image)
-    # empty_slots = count_empty_card_slots(screenshot)
-    # print("We have these many empty slots:", empty_slots)
-
-    # cards = get_hand_cards(num_units=3)
-    # for i, card in enumerate(cards, start=0):
-    #     card_interior = get_card_type_image(card.card_image, num_units=3)
-
-    #     print(f"Is {card.card_type.name} Meli's?", is_Meli_card(card))
-    #     print(card.card_type.name, card.card_rank.name)
-
-    #     # print(card.card_image.shape)
-
-    #     # border = 8
-    #     # new_image = crop_image(
-    #     #     card.card_image,
-    #     #     (border, border + 4),
-    #     #     (card.card_image.shape[1] - border, card.card_image.shape[0] - border - 12),
-    #     # )
-    #     # display_image(new_image)
-
-    #     if i > 0 and i < len(cards) - 1 and determine_card_merge(cards[i - 1], cards[i + 1]):
-    #         print("Card generates a merge!")
-    #         display_image(card.card_image)
-
-    # determine_relative_coordinates(screenshot)
-
-    # _, window_location = capture_window()
-    # start_drag = (window_location[0] + 280, window_location[1] + 810)
-    # end_drag = (window_location[0] + 280, window_location[1] + 550)
-    # click_and_drag(start_drag[0], start_drag[1], end_drag[0], end_drag[1], sleep_after_click=0.01, drag_duration=0.5)
-
-    return
+        time.sleep(0.15)
 
 
 if __name__ == "__main__":
-    development()
+    try:
+        development()
+    except KeyboardInterrupt:
+        print("\nStopped Escalin talent detector.")

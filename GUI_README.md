@@ -30,7 +30,6 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
    - **Demons to Farm**: For Demon Farmer, select which demons to battle
    - **Time to Sleep**: How long to wait between actions (in seconds)
    - **Do Dailies**: Check this box to complete daily missions automatically
-   - **Whale mode**: For Deer, Dogs, and Snake farmers — enables the whale strategy (image and requirements update dynamically)
 3. **Start Farming**: Click the green "START" button
 4. **Monitor Progress**: Watch the real-time output in the terminal window on the right
 5. **Stop Farming**: Click the red "STOP" button when done
@@ -40,10 +39,12 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Demon Farmer**: Battle various demons (Indura, OG, Bell, Red, Gray, Crimson) with difficulty settings
 - **Bird Farmer**: Farm Hraesvelgr floors 1-3 for bird materials
 - **Bird Floor 4**: Farm Hraesvelgr floor 4 (hardest bird content)
-- **Deer Farmer**: Farm Eikthyrnir floors 1-3 for deer materials (whale mode available)
+- **Deer Farmer**: Farm Eikthyrnir floors 1-3 for deer materials
 - **Deer Floor 4**: Farm Eikthyrnir floor 4
-- **Dogs Farmer**: Farm Skoll and Hati floors 1-3 for dog materials (whale mode available)
-- **Snake Farmer**: Farm Nidhogrr floors 1-3 for snake materials (whale mode available)
+- **Deer Whale**: High-risk/high-reward Deer strategy for advanced players
+- **Dogs Farmer**: Farm Skoll and Hati floors 1-3 for dog materials
+- **Dogs Whale**: High-risk/high-reward Dogs strategy for advanced players
+- **Snake Farmer**: Farm Nidhogrr floors 1-3 for snake materials
 - **Final Boss**: Battle final bosses with different difficulty levels
 - **Tower Trials**: Complete tower trial challenges
 

@@ -6,7 +6,6 @@ import tempfile
 import threading
 import time
 from ctypes import windll
-from enum import Enum
 from numbers import Integral
 from typing import Callable, Union
 
@@ -14,11 +13,11 @@ import cv2
 import dill as pickle
 import numpy as np
 import pyautogui
-import requests
 import utilities.vision_images as vio
 import win32api
 import win32con
 import win32gui
+import win32ui
 import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
@@ -40,79 +39,6 @@ from utilities.models import (
     UnitTypePredictor,
 )
 from utilities.vision import Vision
-
-
-class Config:
-    """Thread-safe lazy-loading config accessor for scripts/config/config.yaml."""
-
-    def __init__(self, path: str):
-        self._lock = threading.Lock()
-        self._path = path
-        self._data: dict | None = None
-
-    def get(self, key: str, default=None):
-        with self._lock:
-            if self._data is None:
-                try:
-                    self._data = load_yaml_config(self._path)
-                except (FileNotFoundError, yaml.YAMLError):
-                    self._data = {}
-            return self._data.get(key, default)
-
-
-config = Config(os.path.join(os.path.dirname(os.path.dirname(__file__)), "config", "config.yaml"))
-
-
-class ClickTracker:
-    """Thread-safe tracker for click timestamps and repeated-image-click patterns."""
-
-    def __init__(self):
-        self._lock = threading.Lock()
-        self._last_click_time: float | None = None
-        self._last_image_name: str | None = None
-        self._last_image_click_time: float | None = None
-        self._consecutive_clicks: int = 0
-
-    def record_click(self):
-        with self._lock:
-            self._last_click_time = time.time()
-
-    def record_image_click(self, image_name: str):
-        with self._lock:
-            now = time.time()
-            self._last_click_time = now
-            self._last_image_click_time = now
-            if image_name == self._last_image_name:
-                self._consecutive_clicks += 1
-            else:
-                self._last_image_name = image_name
-                self._consecutive_clicks = 1
-
-    def get_state(self) -> tuple[float | None, str | None, int, float | None]:
-        with self._lock:
-            return self._last_click_time, self._last_image_name, self._consecutive_clicks, self._last_image_click_time
-
-    def reset(self):
-        with self._lock:
-            self._last_click_time = None
-            self._last_image_name = None
-            self._last_image_click_time = None
-            self._consecutive_clicks = 0
-
-
-click_tracker = ClickTracker()
-
-
-class Color(str, Enum):
-    RED = "red"
-    GREEN = "green"
-    BLUE = "blue"
-    YELLOW = "yellow"
-    ORANGE = "orange"
-    PURPLE = "purple"
-    CYAN = "cyan"
-    WHITE = "white"
-    GRAY = "gray"
 
 
 def get_pause_flag_path(pid: int | None = None) -> str:
@@ -162,12 +88,6 @@ def draw_rectangles(
         cv2.rectangle(haystack_img, top_left, bottom_right, line_color, lineType=line_type)
 
     return haystack_img
-
-
-def draw_regions(image: np.ndarray, *regions: tuple[int, int, int, int], line_color=(0, 255, 0)) -> np.ndarray:
-    """Draw one or more (x1, y1, x2, y2) region bounding boxes on a copy of the image."""
-    rects = np.array([[x1, y1, x2 - x1, y2 - y1] for x1, y1, x2, y2 in regions])
-    return draw_rectangles(image.copy(), rects, line_color=line_color)
 
 
 def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
@@ -247,21 +167,6 @@ def clear_console():
     os.system("cls")
 
 
-def print_clr(
-    *values, color: Color | str = Color.WHITE, sep: str = " ", end: str = "\n", file=None, flush: bool = False
-):
-    """Print text wrapped in a GUI color tag: <color=...>...</color>."""
-    text = sep.join(str(v) for v in values)
-
-    color_value = color.value if isinstance(color, Color) else str(color).strip()
-    color_value = color_value.replace(">", "")  # Prevent malformed tags
-    if not color_value:
-        print(text, end=end, file=file, flush=flush)
-        return
-
-    print(f"<color={color_value}>{text}</color>", end=end, file=file, flush=flush)
-
-
 def get_click_point_from_rectangle(rectangle):
     """Return the middle point of the rectangle to click on"""
 
@@ -306,44 +211,6 @@ def find(vision_image: Vision, screenshot: np.ndarray | None, threshold=0.7, met
     return bool(rectangle.size) if rectangle is not None else False
 
 
-def find_rect(
-    vision_image: Vision,
-    screenshot: np.ndarray | None,
-    threshold=0.7,
-    method=cv2.TM_CCOEFF_NORMED,
-) -> np.ndarray | None:
-    """Return matched rectangle [x, y, w, h], or None if not found."""
-    if screenshot is None:
-        return None
-
-    rectangle = vision_image.find(screenshot, threshold=threshold, method=method)
-    if rectangle is None:
-        return None
-
-    return rectangle if rectangle.size else None
-
-
-def score_template(haystack_bgr: np.ndarray, needle_bgr: np.ndarray) -> tuple[float, tuple[int, int]]:
-    res = cv2.matchTemplate(haystack_bgr, needle_bgr, cv2.TM_CCOEFF_NORMED)
-    _, max_val, _, max_loc = cv2.minMaxLoc(res)
-    return float(max_val), max_loc
-
-
-def crop_roi_from_rect(screenshot_bgr: np.ndarray, rect: np.ndarray) -> np.ndarray | None:
-    if rect is None or len(rect) < 4:
-        return None
-
-    x, y, w, h = [int(v) for v in rect[:4]]
-
-    x1 = max(0, x - 6)
-    y1 = max(0, y - 6)
-    x2 = min(screenshot_bgr.shape[1], x + w + 6)
-    y2 = min(screenshot_bgr.shape[0], y + h + 6)
-
-    roi = screenshot_bgr[y1:y2, x1:x2]
-    return roi if roi.size else None
-
-
 def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
@@ -363,7 +230,6 @@ def find_and_click(
             click_im(rectangle, window_location)
 
         print(f"Clicked on '{vision_image.image_name}'")
-        click_tracker.record_image_click(vision_image.image_name)
 
         time.sleep(0.5)
 
@@ -407,7 +273,6 @@ def click(x, y, sleep_after_click=0.01):
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
     time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
-    click_tracker.record_click()
 
 
 def rclick(x, y, sleep_after_click=0.01):
@@ -561,11 +426,6 @@ def crop_image(image: np.ndarray, top_left: tuple, bottom_right: tuple) -> np.nd
     return image[y1:y2, x1:x2]
 
 
-def crop_region(image: np.ndarray, region: tuple[int, int, int, int]) -> np.ndarray:
-    """Crop an image given a region tuple (x1, y1, x2, y2)"""
-    return crop_image(image, (region[0], region[1]), (region[2], region[3]))
-
-
 def increment_if_condition(value: Integral | list[Integral], thresh: Integral, condition: Callable, operator=1):
     """Increments a value if it meets the given condition.
 
@@ -598,13 +458,23 @@ def increment_in_place(lst: list[Integral], thresh: Integral, condition: Callabl
 def capture_hand_image() -> np.ndarray:
     """Capture the hand image"""
     screenshot, _ = capture_window()
-    return crop_region(screenshot, Coordinates.get_coordinates("4_cards_region"))
+
+    return crop_image(
+        screenshot,
+        Coordinates.get_coordinates("4_cards_top_left"),
+        Coordinates.get_coordinates("4_cards_bottom_right"),
+    )
 
 
 def capture_hand_image_3_cards() -> np.ndarray:
     """Capture the hand image"""
     screenshot, _ = capture_window()
-    return crop_region(screenshot, Coordinates.get_coordinates("3_cards_region"))
+
+    return crop_image(
+        screenshot,
+        Coordinates.get_coordinates("3_cards_top_left"),
+        Coordinates.get_coordinates("3_cards_bottom_right"),
+    )
 
 
 def get_card_type_image(card: np.ndarray, num_units=4) -> np.ndarray:
@@ -712,14 +582,22 @@ def set_card_colors(hand_of_cards: list[Card], list_of_colors: list[CardColors] 
 
 def get_card_slot_region_image(screenshot: np.ndarray) -> np.ndarray:
     """Get the sub-image where the card slots are"""
-    return crop_region(screenshot, Coordinates.get_coordinates("card_slots_region"))
+    return crop_image(
+        screenshot,
+        Coordinates.get_coordinates("top_left_card_slots"),
+        Coordinates.get_coordinates("bottom_right_card_slots"),
+    )
 
 
 def extract_units_types() -> list[np.ndarray]:
     """Get a of images corresponding to the unit types, in order"""
     screenshot, _ = capture_window()
 
-    units_window = crop_region(screenshot, Coordinates.get_coordinates("4_units_region"))
+    units_window = crop_image(
+        screenshot,
+        Coordinates.get_coordinates("top_left_4_units"),
+        Coordinates.get_coordinates("bottom_right_4_units"),
+    )
 
     # Determine the width of each column
     _, width = units_window.shape[:2]
@@ -932,7 +810,6 @@ def re_open_7ds_window() -> bool:
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
             return True
-    print("Failed to re-open the game.")
     return False
 
 
@@ -941,28 +818,3 @@ def load_yaml_config(file_path: str) -> dict:
     with open(file_path, "r") as file:
         config = yaml.safe_load(file)
     return config
-
-
-def send_push_notification(message: str, screenshot: np.ndarray | None = None):
-    """Send a push notification via ntfy.sh, optionally with a screenshot attachment."""
-    channel = config.get("ntfy_private_channel")
-    if not channel:
-        return
-
-    def _send():
-        try:
-            url = f"https://ntfy.sh/{channel}"
-            if screenshot is not None:
-                _, jpg_bytes = cv2.imencode(".jpg", screenshot, [cv2.IMWRITE_JPEG_QUALITY, 80])
-                requests.post(
-                    url,
-                    data=jpg_bytes.tobytes(),
-                    headers={"Filename": "stuck_screenshot.jpg", "Title": message},
-                    timeout=10,
-                )
-            else:
-                requests.post(url, data=message.encode("utf-8"), timeout=10)
-        except requests.RequestException as e:
-            print(f"Failed to send push notification: {e}")
-
-    threading.Thread(target=_send, daemon=True).start()

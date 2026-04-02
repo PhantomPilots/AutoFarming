@@ -4,7 +4,7 @@ from utilities.card_data import Card, CardColors, CardRanks, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy, SmarterBattleStrategy
 from utilities.pattern_match_strategies import TemplateMatchingStrategy
-from utilities.utilities import capture_window, count_needle_image, crop_region, find
+from utilities.utilities import capture_window, count_needle_image, crop_image, find
 
 
 class DemonKingBattleStrategy(IBattleStrategy):
@@ -33,11 +33,11 @@ class DemonKingBattleStrategy(IBattleStrategy):
     def get_next_card_index_phase1(self, hand_of_cards: list[Card], picked_cards: list[Card]) -> int:
         """We should be able to 1-turn it!"""
 
-        if len(gelda_card_id := [i for i, card in enumerate(hand_of_cards) if find(vio.gelda_card, card.card_image)]):
+        if len(gelda_card_id := np.where([find(vio.gelda_card, card.card_image) for card in hand_of_cards])[0]):
             return gelda_card_id[-1]
-        if len(cusack_card_id := [i for i, card in enumerate(hand_of_cards) if find(vio.cusack_cleave, card.card_image)]):
+        if len(cusack_card_id := np.where([find(vio.cusack_cleave, card.card_image) for card in hand_of_cards])[0]):
             return cusack_card_id[-1]
-        if len(meli_card_id := [i for i, card in enumerate(hand_of_cards) if find(vio.dk_meli_st, card.card_image)]):
+        if len(meli_card_id := np.where([find(vio.dk_meli_st, card.card_image) for card in hand_of_cards])[0]):
             return meli_card_id[-1]
 
         # Otherwise, we cannot kill it in 1 turns, so let's default to regular strategy
@@ -57,14 +57,18 @@ class DemonKingBattleStrategy(IBattleStrategy):
 
         # To try to remove a stance if needed
         picked_stance_removal_ids = sorted(
-            [i for i, card in enumerate(picked_cards) if find(vio.freyr_1, card.card_image)],
+            np.where([find(vio.freyr_1, card.card_image) for card in picked_cards])[0],
             key=lambda idx: card_ranks[idx],
         )
 
         if its_rules_time := find(vio.dk_empty_slot, screenshot):
             print("Let's try to follow the rules!")
 
-            rules_window = crop_region(screenshot, Coordinates.get_coordinates("rules_window_region"))
+            rules_window = crop_image(
+                screenshot,
+                Coordinates.get_coordinates("rules_window_top"),
+                Coordinates.get_coordinates("rules_window_bottom"),
+            )
             rules_width = int(rules_window.shape[1] / 3)
             first_rule_window = rules_window[:, :rules_width, ...]
             second_rule_window = rules_window[:, rules_width : 2 * rules_width, ...]
@@ -119,7 +123,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
 
         else:
             # Let's disable all Freyr stance-cancel cards
-            freyr_ids = [i for i, card in enumerate(hand_of_cards) if find(vio.freyr_1, card.card_image)]
+            freyr_ids = np.where([find(vio.freyr_1, card.card_image) for card in hand_of_cards])[0]
             if len(freyr_ids):
                 print("Saving Freyr stance cancel cards, just in case!")
             for idx in freyr_ids:
@@ -129,7 +133,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         # Play a Skuld stance if we can
         stance_active = find(vio.stance_counter, screenshot)
         stance_card_ids = sorted(
-            [i for i, card in enumerate(hand_of_cards) if find(vio.skuld_stance, card.card_image)],
+            np.where([find(vio.skuld_stance, card.card_image) for card in hand_of_cards])[0],
             key=lambda idx: card_ranks[idx],
         )
         if len(stance_card_ids) and not stance_active:
@@ -168,7 +172,7 @@ class DemonKingBattleStrategy(IBattleStrategy):
         """Reorder the Freyr stance cancel ids such that they are at the beginning of the list"""
 
         # Add the buff removal ID to the beginning of the list
-        freyr_ids = [i for i, idx in enumerate(list_of_ids) if find(vio.freyr_1, hand_of_cards[idx].card_image)]
+        freyr_ids = np.where([find(vio.freyr_1, hand_of_cards[idx].card_image) for idx in list_of_ids])[0]
         for idx in freyr_ids:
             # print("Setting lowest priority to buff removal card")
             list_of_ids = np.concatenate(([list_of_ids[idx]], np.delete(list_of_ids, idx)))

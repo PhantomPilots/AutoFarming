@@ -38,6 +38,9 @@ def is_green_card(card: Card) -> bool:
         or find(vio.tyr_1, card.card_image)
         or find(vio.tyr_2, card.card_image)
         or find(vio.tyr_ult, card.card_image)
+        or find(vio.skuld_atk, card.card_image)
+        or find(vio.skuld_deer_stance, card.card_image)
+        or find(vio.skuld_ult, card.card_image)
     )
 
 
@@ -52,6 +55,19 @@ def is_blue_card(card: Card) -> bool:
         or find(vio.thor_2, card.card_image)
         or find(vio.thor_ult, card.card_image)
     )
+
+
+def is_Skuld_card(card: Card) -> bool:
+    return (
+        find(vio.skuld_atk, card.card_image)
+        or find(vio.skuld_deer_stance, card.card_image)
+        or find(vio.skuld_ult, card.card_image)
+    )
+
+
+def is_skuld_stance_card(card: Card) -> bool:
+    """Whether this card is Skuld's stance card (NOT an attack, but green colored)"""
+    return find(vio.skuld_deer_stance, card.card_image)
 
 
 def is_Hel_card(card: Card) -> bool:

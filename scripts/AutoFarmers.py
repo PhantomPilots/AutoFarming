@@ -17,21 +17,12 @@
 
 import contextlib
 import os
-import re
 import signal
 import sys
 import time
 
 from PyQt5.QtCore import QProcess, QProcessEnvironment, Qt, QTimer, QUrl
-from PyQt5.QtGui import (
-    QColor,
-    QDesktopServices,
-    QFont,
-    QPalette,
-    QPixmap,
-    QTextCharFormat,
-    QTextCursor,
-)
+from PyQt5.QtGui import QColor, QDesktopServices, QFont, QPalette, QPixmap
 from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -89,9 +80,12 @@ REQUIREMENTS = {
     "Deer Floor 4": """
 <p><strong>Requirements:</strong><br>
 • Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
-• <strong>IMPORTANT</strong>: You must make sure to kill Phase 1 in turn 3. 
-Play with your gears to guarantee this.<br>
 • NO SKULD</p>
+    """,
+    "Dogs Floor 4": """
+<p><strong>Requirements:</strong><br>
+â€¢ Initial structural support only<br>
+â€¢ Add the expected Dogs Floor 4 stage images before running repeated clears</p>
     """,
     "Dogs Farmer": """
 <p><strong>Requirements:</strong><br>
@@ -139,7 +133,6 @@ Play with your gears to guarantee this.<br>
 <p><strong>Requirements:</strong><br>
 • Team A: Skuld (att/crit), any 3 boosters<br>
 • Team B: Anything, won't be used</p>
-<p><em>Note: Only Hard mode is enabled — it offers the best rewards per coin.</em></p>
     """,
     "Reroll Constellation": """
 <p><strong>Requirements:</strong><br>
@@ -155,33 +148,6 @@ In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> butt
 the file <code>run_game.png</code> by it.
 </p>
     """,
-}
-
-# Maps base farmer names to their whale-mode requirement key and image filename.
-WHALE_MODE_CONFIG = {
-    "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
-    "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
-    "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
-}
-
-FARMER_IMAGES = {
-    "Demon Farmer": "demon_farmer.jpg",
-    "Bird Farmer": "bird_farmer.jpg",
-    "Bird Floor 4": "bird_floor_4.jpeg",
-    "Deer Farmer": "deer_farmer.png",
-    "Deer Floor 4": "deer_floor_4.png",
-    "Tower Trials": "tower_trials_farmer.jpg",
-    "Dogs Farmer": "dogs_farmer.jpeg",
-    "Snake Farmer": "snake_farmer.png",
-    "Rat Farmer": "rat_farmer.jpg",
-    "Final Boss": "final_boss.png",
-    "Legendary Boss": "legendary_boss.png",
-    "Accounts Farmer": "accounts_farmer.jpg",
-    "Reroll Constellation": "reroll_constellation_whale.jpg",
-    "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
-    "Guild Boss Farmer": "guild_boss_farmer.jpg",
-    "Demon King Farmer": "dk_farmer.jpg",
-    "Boss Battle Farmer": "boss_battle_farmer.png",
 }
 
 # Farmer script definitions (argument structure)
@@ -242,12 +208,20 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
         "name": "Deer Floor 4",
         "script": "DeerFloor4Farmer.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Dogs Floor 4",
+        "script": "DogsFloor4Farmer.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
@@ -261,7 +235,6 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -271,12 +244,38 @@ FARMERS = [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
         "name": "Rat Farmer",
         "script": "RatFarmer.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Deer Whale",
+        "script": "DeerFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Dogs Whale",
+        "script": "DogsFarmerWhale.py",
+        "args": [
+            {"name": "--password", "label": "Password", "type": "text", "default": ""},
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+        ],
+    },
+    {
+        "name": "Snake Whale",
+        "script": "SnakeFarmerWhale.py",
         "args": [
             {"name": "--password", "label": "Password", "type": "text", "default": ""},
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
@@ -291,7 +290,7 @@ FARMERS = [
                 "name": "--dk-diff",
                 "label": "Difficulty",
                 "type": "dropdown",
-                "choices": ["hard"],
+                "choices": ["hard", "extreme", "hell"],
                 "default": "hard",
             },
             {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "10"},
@@ -312,31 +311,15 @@ FARMERS = [
         ],
     },
     {
-        "name": "Legendary Boss",
-        "script": "LegendaryBossFarmer.py",
-        "args": [
-            {
-                "name": "--difficulty",
-                "label": "Difficulty",
-                "type": "dropdown",
-                "choices": ["extreme", "hell", "challenge"],
-                "default": "hell",
-            },
-            {"name": "--clears", "label": "Clears", "type": "text", "default": "20"},
-        ],
-    },
-    {
         "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
         "args": [
             {
-                "name": "--min-chest-type",
-                "label": "Min chest type",
-                "type": "dropdown",
-                "choices": ["bronze", "silver", "gold"],
-                "default": "bronze",
-            },
-            {"name": "--chest-detection-count", "label": "Chest Detection Retry Count", "type": "text", "default": "3"},
+                "name": "--max-resets",
+                "label": "Max resets",
+                "type": "text",
+                "default": "10",
+            }
         ],
     },
     {
@@ -355,11 +338,6 @@ FARMERS = [
         "name": "Reroll Constellation",
         "script": "RerollConstellation.py",
         "args": [{"name": "--max-rerolls", "label": "Max rerolls", "type": "text", "default": "50"}],
-    },
-    {
-        "name": "Boss Battle Farmer",
-        "script": "BossBattleFarmer.py",
-        "args": [],
     },
 ]
 
@@ -630,17 +608,12 @@ class AboutTab(QWidget):
 
 
 class FarmerTab(QWidget):
-    _COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
-
     def __init__(self, farmer, parent=None):
         super().__init__(parent)
         self.farmer = farmer
         self.process = None
         self.output_lines = []
         self.paused = False
-        self.sa_chest_warning_label = None
-        self._default_fmt = QTextCharFormat()
-        self._default_fmt.setForeground(QColor("#eeeeee"))
         self.init_ui()
 
     def init_ui(self):
@@ -651,16 +624,17 @@ class FarmerTab(QWidget):
         title = QLabel(f"{self.farmer['name']}")
         title.setFont(QFont("Arial", 12, QFont.Bold))
         left_panel.addWidget(title)
-        # Image
-        self.image_size = (400, 250)
-        self.image_label = QLabel(f"[Image Placeholder]\n{self.image_size[0]}x{self.image_size[1]}")
-        self.image_label.setAlignment(Qt.AlignCenter)
-        self.image_label.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666;")
-        self.image_label.setFixedSize(*self.image_size)
+        # Image placeholder
+        image_size = (400, 250)
+        img = QLabel(f"[Image Placeholder]\n{image_size[0]}x{image_size[1]}")
+        img.setAlignment(Qt.AlignCenter)
+        img.setStyleSheet("border: 1px solid #aaa; background: #e0e0e0; color: #666;")
+        img.setFixedSize(*image_size)
 
-        self.load_farmer_image()
+        # Load farmer-specific image
+        self.load_farmer_image(img, image_size)
 
-        left_panel.addWidget(self.image_label)
+        left_panel.addWidget(img)
         # Arguments
         if self.farmer["args"]:
             args_group = QGroupBox("Arguments")
@@ -690,37 +664,21 @@ class FarmerTab(QWidget):
                         widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget
                 args_layout.addRow(arg["label"] + ":", widget)
-
-                if self.farmer["name"] == "SA Coin Dungeon Farmer" and arg["name"] == "--min-chest-type":
-                    widget.currentTextChanged.connect(self.update_sa_chest_warning)
-                if arg["name"] == "--whale":
-                    widget.stateChanged.connect(self._refresh_whale_mode)
             args_group.setLayout(args_layout)
             left_panel.addWidget(args_group)
-
-            if self.farmer["name"] == "SA Coin Dungeon Farmer":
-                self.sa_chest_warning_label = QLabel()
-                self.sa_chest_warning_label.setWordWrap(True)
-                self.sa_chest_warning_label.setStyleSheet(
-                    "font-size: 12px; color: #8B0000; border: 1px solid #8B0000; padding: 6px;"
-                )
-                self.sa_chest_warning_label.hide()
-                left_panel.addWidget(self.sa_chest_warning_label)
-                self.update_sa_chest_warning(self.arg_widgets["--min-chest-type"].currentText())
         else:
             self.arg_widgets = {}
 
-        # Requirements text (dynamically updated for whale-capable farmers)
-        self.req_label = None
-        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG:
-            self.req_label = QLabel()
-            self.req_label.setWordWrap(True)
-            self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            self.req_label.setText(REQUIREMENTS.get(self.farmer["name"], ""))
-            self.req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
-            self.req_label.setMaximumHeight(180)
-            self.req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-            left_panel.addWidget(self.req_label)
+        # Add whale farmer requirements if applicable
+        if self.farmer["name"] in REQUIREMENTS:
+            req_label = QLabel()
+            req_label.setWordWrap(True)
+            req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            req_label.setText(REQUIREMENTS[self.farmer["name"]])
+            req_label.setStyleSheet("font-size: 13px; color: #777; line-height: 1.2;")
+            req_label.setMaximumHeight(180)
+            req_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            left_panel.addWidget(req_label)
             left_panel.addSpacing(4)
 
         # Start/Stop buttons
@@ -765,30 +723,6 @@ class FarmerTab(QWidget):
 
         # Display free software message in terminal
         self.append_terminal(FREE_SOFTWARE_MESSAGE)
-
-    def update_sa_chest_warning(self, chest_type):
-        if self.sa_chest_warning_label is None:
-            return
-
-        normalized_type = (chest_type or "").strip().lower()
-
-        if normalized_type == "silver":
-            self.sa_chest_warning_label.setText(
-                "Warning: Selecting silver minimum is expected to use many stamina pots for a full run.\n"
-                "5% silver + 2% gold: ~15 retries or ~7 pots per chest!\nExpect over 150 pots for a full run!"
-            )
-            self.sa_chest_warning_label.show()
-            return
-
-        if normalized_type == "gold":
-            self.sa_chest_warning_label.setText(
-                "Warning: Selecting gold minimum is extremely costly.\n"
-                "2% gold: ~50 retries or ~23 pots per chest!\nExpect over 600 pots for a full run!"
-            )
-            self.sa_chest_warning_label.show()
-            return
-
-        self.sa_chest_warning_label.hide()
 
     def get_args(self):
         args = []
@@ -904,75 +838,24 @@ class FarmerTab(QWidget):
     def handle_stdout(self):
         if self.process is None:
             return
-        lines = []
         while self.process.canReadLine():
-            lines.append(bytes(self.process.readLine()).decode("utf-8", errors="replace"))
-        if lines:
-            self.append_terminal("".join(lines))
+            line = bytes(self.process.readLine()).decode("utf-8", errors="replace")
+            self.append_terminal(line)
 
     def handle_stderr(self):
         if self.process is None:
             return
-        lines = []
         while self.process.canReadLine():
-            lines.append(bytes(self.process.readLine()).decode("utf-8", errors="replace"))
-        if lines:
-            self.append_terminal("".join(lines))
+            line = bytes(self.process.readLine()).decode("utf-8", errors="replace")
+            self.append_terminal(line)
 
     def append_terminal(self, text):
-        new_lines = text.splitlines(True)
-        self.output_lines.extend(new_lines)
-
+        # Output limiting
+        self.output_lines.extend(text.splitlines(True))
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
-            # Trimmed: must rebuild entire document
-            self.terminal.clear()
-            self._render_lines(self.output_lines)
-        else:
-            # Append only the new lines (no clear/rebuild)
-            self._render_lines(new_lines)
-
-    def _render_lines(self, lines):
-        """Render the given lines at the end of the terminal widget."""
-        cursor = self.terminal.textCursor()
-        cursor.movePosition(QTextCursor.End)
-
-        for line in lines:
-            for segment_text, segment_color in self._parse_color_segments(line):
-                fmt = QTextCharFormat(self._default_fmt)
-                if segment_color is not None:
-                    fmt.setForeground(segment_color)
-                cursor.insertText(segment_text, fmt)
-
-        self.terminal.setTextCursor(cursor)
-        self.terminal.ensureCursorVisible()
-
-    def _parse_color_segments(self, text):
-        """Parse <color=...>...</color> tags into (text, QColor|None) segments."""
-        if "<color=" not in text.lower():
-            return [(text, None)]
-
-        segments = []
-        cursor = 0
-
-        for match in self._COLOR_TAG_RE.finditer(text):
-            start, end = match.span()
-            if start > cursor:
-                segments.append((text[cursor:start], None))
-
-            color_value = match.group(1).strip()
-            colored_text = match.group(2)
-            color = QColor(color_value)
-            if not color.isValid():
-                color = None
-
-            segments.append((colored_text, color))
-            cursor = end
-
-        if cursor < len(text):
-            segments.append((text[cursor:], None))
-
-        return segments
+        self.terminal.setPlainText("".join(self.output_lines))
+        self.terminal.moveCursor(self.terminal.textCursor().End)
 
     def process_finished(self):
         # Clean up pause flag when process finishes
@@ -991,7 +874,6 @@ class FarmerTab(QWidget):
             self.output_timer.stop()
             self.output_timer.deleteLater()
             self.output_timer = None
-
         self.process = None
         self.start_btn.setEnabled(True)
         self.stop_btn.setEnabled(False)
@@ -1059,39 +941,48 @@ class FarmerTab(QWidget):
             except Exception as e:
                 self.append_terminal(f"[ERROR] Failed to remove pause flag: {e}\n")
 
-    def load_farmer_image(self, image_filename=None):
-        """Load and display a farmer image into self.image_label."""
-        if image_filename is None:
-            image_filename = FARMER_IMAGES.get(self.farmer["name"])
-        if image_filename is None:
-            return
+    def load_farmer_image(self, img, image_size):
+        """Load and display farmer-specific images"""
+        # Map farmer names to their image files
+        farmer_images = {
+            "Demon Farmer": "demon_farmer.jpg",
+            "Bird Farmer": "bird_farmer.jpg",
+            "Bird Floor 4": "bird_floor_4.jpeg",
+            "Deer Farmer": "deer_farmer.png",
+            "Deer Floor 4": "deer_floor_4.png",
+            "Dogs Floor 4": "dogs_farmer.jpeg",
+            "Deer Whale": "deer_whale.jpg",
+            "Tower Trials": "tower_trials_farmer.jpg",
+            "Dogs Farmer": "dogs_farmer.jpeg",
+            "Dogs Whale": "dogs_whale_farmer.jpg",
+            "Snake Farmer": "snake_farmer.png",
+            "Rat Farmer": "rat_farmer.jpg",
+            "Snake Whale": "snake_whale_farmer.png",
+            "Final Boss": "final_boss.png",
+            "Accounts Farmer": "accounts_farmer.jpg",  # Placeholder image
+            "Reroll Constellation": "reroll_constellation_whale.jpg",  # Placeholder image
+            "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
+            "Guild Boss Farmer": "guild_boss_farmer.jpg",
+            "Demon King Farmer": "dk_farmer.jpg",
+        }
 
-        image_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", image_filename)
-        if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                scaled = pixmap.scaled(*self.image_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self.image_label.setPixmap(scaled)
-                self.image_label.setStyleSheet("border: 1px solid #aaa;")
+        # Check if this farmer has a specific image
+        if self.farmer["name"] in farmer_images:
+            image_filename = farmer_images[self.farmer["name"]]
+            image_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "gui_images", image_filename)
+
+            if os.path.exists(image_path):
+                pixmap = QPixmap(image_path)
+                if not pixmap.isNull():
+                    # Scale the image to fit the specified size while maintaining aspect ratio
+                    scaled_pixmap = pixmap.scaled(*image_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    img.setPixmap(scaled_pixmap)
+                    img.setStyleSheet("border: 1px solid #aaa;")
+                else:
+                    img.setText(f"Failed to load image:\n{image_filename}")
             else:
-                self.image_label.setText(f"Failed to load image:\n{image_filename}")
-        else:
-            self.image_label.setText(f"Image not found:\n{image_filename}")
-
-    def _refresh_whale_mode(self):
-        """Update image and requirements when whale-mode checkbox changes."""
-        whale_config = WHALE_MODE_CONFIG.get(self.farmer["name"])
-        if not whale_config:
-            return
-
-        whale_enabled = "--whale" in self.arg_widgets and self.arg_widgets["--whale"].isChecked()
-
-        if self.req_label is not None:
-            key = whale_config["requirements_key"] if whale_enabled else self.farmer["name"]
-            self.req_label.setText(REQUIREMENTS.get(key, ""))
-
-        image = whale_config["image"] if whale_enabled else FARMER_IMAGES.get(self.farmer["name"])
-        self.load_farmer_image(image)
+                img.setText(f"Image not found:\n{image_filename}")
+        # If no specific image is defined, keep the placeholder
 
 
 class MainWindow(QMainWindow):

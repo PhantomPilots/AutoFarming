@@ -67,21 +67,6 @@ Now, simply via the `Update` button in the "About" tab of the GUI!
 
 You can PAUSE/RESUME the bot at any time with the corresponding button.
 
-### Push Notifications
-The bot can send push notifications to your phone when it detects a stuck state, including a screenshot for quick diagnosis. Once the bot recovers, you get a recovery alert.
-
-**Setup:**
-1. Install [ntfy](https://ntfy.sh/) on your phone
-2. Open the app, press '+' and enter a unique, hard-to-guess topic name (e.g. `7ds_farmer_myname_abc123`)
-3. Open `scripts/config/config.yaml` and set `ntfy_private_channel` to that topic
-
-**Optional tuning** (all in `config.yaml`):
-| Key | Default | Description |
-|-----|---------|-------------|
-| `stuck_timeout_minutes` | 10 | Minutes without state change *and* click activity before alerting |
-| `notification_cooldown_minutes` | 5 | Minimum gap between repeated stuck alerts |
-| `max_notifications_per_incident` | 5 | Hard cap on alerts per stuck incident |
-
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 
 The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.
@@ -115,8 +100,9 @@ For detailed information on all the bots available, go to the [bots README file]
 
 ## Longer-term features
 
-- [X] Auto-size the game automatically when starting/stopping/resuming bots.
-- [X] Make them work in 4k monitors.
+- [ ] Allow starting the scripts from ANYWHERE.
+- [ ] Make the scripts independent of the window size (i.e., scale-invariant).
+- [ ] Make them work in 4k monitors.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

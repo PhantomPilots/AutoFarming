@@ -41,4 +41,5 @@ class SnakeFarmer(DemonicBeastFarmer):
         self.fighter: IFighter = SnakeFighter(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
+            use_talents=getattr(battle_strategy, 'USE_TALENTS', True),
         )

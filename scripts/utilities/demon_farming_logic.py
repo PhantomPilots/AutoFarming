@@ -20,7 +20,7 @@ from utilities.utilities import (
     capture_window,
     check_for_reconnect,
     click_and_sleep,
-    crop_region,
+    crop_image,
     display_image,
     find,
     find_and_click,
@@ -111,7 +111,7 @@ class IDemonFarmer(IFarmer):
         if self.demon_to_farm == vio.indura_demon:
             print(f"We'll farm {self.indura_difficulty} Indura!")
 
-        IFarmer.do_dailies = do_dailies
+        self.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
@@ -139,13 +139,12 @@ class IDemonFarmer(IFarmer):
 
         # We may be in the 'daily reset' state!
         if (
-            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
+            find(vio.skip, screenshot, threshold=0.6)
             or find(vio.fortune_card, screenshot, threshold=0.8)
-            or find_and_click(vio.cross, screenshot, window_location)
+            or find(vio.cross, screenshot)
         ):
-            if IFarmer.do_dailies:
-                logger.info("We entered the daily reset state!")
-                self.current_state = GlobalStates.DAILY_RESET
+            logger.info("We entered the daily reset state!")
+            self.current_state = GlobalStates.DAILY_RESET
             return
 
         # Click OK if we see it (?)
@@ -268,7 +267,11 @@ class IDemonFarmer(IFarmer):
             return True
 
         # Crop the image to the region of the team invite
-        team_invite_region = crop_region(screenshot, Coordinates.get_coordinates("team_invite_region"))
+        team_invite_region = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("team_invite_top_left"),
+            Coordinates.get_coordinates("team_invite_bottom_right"),
+        )
         valid = find(vio.lancelot_unit, team_invite_region, threshold=0.7) and find(
             vio.alpha_unit, team_invite_region, threshold=0.7
         )  # or find(vio.new_freyr_unit, team_invite_region, threshold=0.7)

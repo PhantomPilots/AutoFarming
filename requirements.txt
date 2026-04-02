@@ -11,4 +11,3 @@ pyyaml
 scikit-learn==1.5.1
 termcolor
 tqdm
-requests

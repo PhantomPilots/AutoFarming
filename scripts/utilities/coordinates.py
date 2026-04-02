@@ -15,16 +15,20 @@ class Coordinates:
         "sync_code": (278, 388),  # Coordinates for the username input field
         "talent": (276, 665),  # Where the Talent button is
         # The region in the screenshot corresponding to the card slots
-        "card_slots_region": (150, 690, 410, 800),
+        "top_left_card_slots": (150, 690),
+        "bottom_right_card_slots": (410, 800),
         # General demonic beasts
-        "floor_region": (344, 122, 459, 175),
+        "floor_top_left": (344, 122),
+        "floor_bottom_right": (459, 175),
         "right_swipe": (361, 466),
         "left_swipe": (177, 463),
         # For bird
-        "4_cards_region": (61, 822, 517, 945),  # Hand region when we can use 4 cards
+        "4_cards_top_left": (61, 822),  # Top-left corner of the hand when we can use 4 cards
+        "4_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 4 cards
         "lazy_weekly_bird_mission": (283, 631),  # Weekly mission popup for demonic beast
         # For 3-team fights
-        "3_cards_region": (52, 822, 517, 945),  # Hand region when we can use 3 cards
+        "3_cards_top_left": (52, 822),  # Top-left corner of the hand when we can use 3 cards
+        "3_cards_bottom_right": (517, 945),  # Bottom-right corner of the hand when we can use 3 cards
         # For equipment farming
         "equipment_menu": (167, 842),
         "free_stage_hard": (280, 600),
@@ -56,31 +60,33 @@ class Coordinates:
         # Demon farming
         "stamp_box": (515, 662),
         "first_stamp": (83, 762),
-        "team_invite_region": (233, 615, 449, 669),
-        "6_cards_region": (75, 693, 471, 793),  # 6 empty card slots region
+        "team_invite_top_left": (233, 615),
+        "team_invite_bottom_right": (449, 669),
+        "6_cards_top_left": (75, 693),  # Top-left corner of the 6 empty slots
+        "6_cards_bottom_right": (471, 793),  # Bottom-right corner of the 6 empty slots
         # For Indura
-        "half_screen_region": (247, 438, 491, 689),  # To detect Alpha buffs only on our side
+        "half_screen_top_left": (247, 438),  # To detect Alpha buffs only on our side
+        "half_screen_bottom_right": (491, 689),
         # Guild Boss
         "change_gb": (50, 451),  # To change to the GB to the left until Belgius is found
         # Demon King
         "hell": (446, 708),
         "extreme": (279, 710),
         "hard": (111, 710),
-        "rules_window_region": (145, 259, 403, 400),
-        "4_units_region": (58, 239, 507, 408),
+        "rules_window_top": (145, 259),
+        "rules_window_bottom": (403, 400),
+        "top_left_4_units": (58, 239),
+        "bottom_right_4_units": (507, 408),
         # Rat
         "left_log": (148, 390),
         "middle_log": (242, 377),
         "right_log": (330, 380),
-        # Rat stump door ROIs — (x1, y1, x2, y2) bounding boxes for darkness detection.
-        "rat_door_left": (63, 248, 99, 293),
-        "rat_door_center": (258, 244, 286, 283),
-        "rat_door_right": (446, 258, 484, 309),
     }
 
     @staticmethod
     def get_coordinates(event: str):
-        return Coordinates.__coordinates[event]
+        x, y = Coordinates.__coordinates[event]
+        return x, y
 
         # # Adjust their size based on the window!
         # screenshot, _ = capture_window()

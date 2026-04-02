@@ -41,7 +41,9 @@ class IBattleStrategy(abc.ABC):
         """Reset the fight turn"""
         IBattleStrategy._fight_turn = 0
 
-    def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:
+    def pick_cards(
+        self, picked_cards: list[Card] = None, num_units=4, hand_of_cards: list[Card] | None = None, **kwargs
+    ) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         if picked_cards is None:
@@ -53,9 +55,11 @@ class IBattleStrategy(abc.ABC):
         IBattleStrategy.picked_cards = deepcopy(picked_cards)
         IBattleStrategy.card_turn = card_turn
 
-        # Extract the hand cards for this specific click
-        hand_of_cards: list[Card] = get_hand_cards(num_units=num_units)
+        # Allow callers to provide a pre-read hand so validation and card selection can use the same snapshot.
+        if hand_of_cards is None:
+            hand_of_cards = get_hand_cards(num_units=num_units)
         original_hand_of_cards = deepcopy(hand_of_cards)
+        hand_of_cards = deepcopy(hand_of_cards)
 
         print("Card types:", [card.card_type.name for card in hand_of_cards])
         # print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
@@ -157,14 +161,14 @@ class SmarterBattleStrategy(IBattleStrategy):
         recovery_ids = np.where(card_types == CardTypes.RECOVERY.value)[0]
         if (
             len(recovery_ids)
-            and not any(v == CardTypes.RECOVERY.value for v in picked_card_types)
-            and not any(v == CardTypes.STANCE.value for v in picked_card_types)
+            and not np.where(picked_card_types == CardTypes.RECOVERY.value)[0].size
+            and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
         ):
             return recovery_ids[-1]
 
         # BUFF CARDS
         buff_ids = sorted(np.where(card_types == CardTypes.BUFF.value)[0], key=lambda idx: card_ranks[idx])
-        if len(buff_ids) and not any(v == CardTypes.BUFF.value for v in picked_card_types):
+        if len(buff_ids) and not np.where(picked_card_types == CardTypes.BUFF.value)[0].size:
             return buff_ids[-1]
 
         # CARD MERGE -- If there's a card that generates a merge (and not disabled), pick it!
@@ -178,7 +182,7 @@ class SmarterBattleStrategy(IBattleStrategy):
         att_debuff_ids = np.where(card_types == CardTypes.ATTACK_DEBUFF.value)[0]
         # Sort them based on card ranks
         att_debuff_ids: np.ndarray = np.array(sorted(att_debuff_ids, key=lambda idx: card_ranks[idx], reverse=False))
-        if att_debuff_ids.size and not any(v == CardTypes.ATTACK_DEBUFF.value for v in picked_card_types):
+        if att_debuff_ids.size and not np.where(picked_card_types == CardTypes.ATTACK_DEBUFF.value)[0].size:
             return att_debuff_ids[-1]
 
         # ATTACK CARDS
@@ -190,7 +194,7 @@ class SmarterBattleStrategy(IBattleStrategy):
 
         if all(card.card_type in [CardTypes.GROUND, CardTypes.DISABLED] for card in hand_of_cards):
             print("We only have ground and disabled cards, let's play the rightmost disabled card...")
-            disabled_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.DISABLED]
+            disabled_ids = np.where([card.card_type == CardTypes.DISABLED for card in hand_of_cards])[0]
             if len(disabled_ids):
                 return disabled_ids[-1]
 
@@ -207,7 +211,7 @@ def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray, card
         stance_ids = sorted(stance_ids, key=lambda idx: card_ranks[idx], reverse=False)
     if (
         len(stance_ids)
-        and not any(v == CardTypes.STANCE.value for v in picked_card_types)
+        and not np.where(picked_card_types == CardTypes.STANCE.value)[0].size
         and not find(vio.stance_active, screenshot, threshold=0.5)
     ):
         print("We don't have a stance up, we need to enable it!")

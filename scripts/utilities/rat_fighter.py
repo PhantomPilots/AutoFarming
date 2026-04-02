@@ -2,11 +2,11 @@ import time
 
 import numpy as np
 import utilities.vision_images as vio
-from utilities.card_data import CardTypes
+from utilities.card_data import Card, CardTypes
 from utilities.coordinates import Coordinates
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.rat_fighting_strategies import RatFightingStrategy
-from utilities.rat_utilities import detect_stump_from_screen
+from utilities.rat_utilities import is_bleed_card, is_poison_card, is_shock_card
 from utilities.utilities import (
     capture_window,
     click_and_sleep,
@@ -71,16 +71,21 @@ class RatFighter(IFighter):
                 RatFighter.current_stump = -1
                 IFighter.current_phase = new_phase
 
-            # Detect rat stump from screen
-            detected = detect_stump_from_screen(screenshot)
-            if detected is not None:
-                RatFighter.next_stump = detected
+                # if IFighter.current_floor == 1 and IFighter.current_phase == 3 and not self.check_for_bleed():
+                #     print("We're entering F1P3 without a bleed card... Gotta restart the fight.")
+                #     self.current_state = FightingStates.EXIT_FIGHT
+                #     return
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
-            print(f"Target stump: {RatFighter.next_stump}")
+            print(f"Current stump: {RatFighter.next_stump}")
             self.update_stump(screenshot, window_location)
             self.current_state = FightingStates.MY_TURN
+
+    def check_for_bleed(self):
+        """If we go to F1P3 without a bleed, let's reset"""
+        hand_of_cards = get_hand_cards()
+        return any(find(vio.jorm_bleed, card.card_image) for card in hand_of_cards)
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -94,6 +99,24 @@ class RatFighter(IFighter):
 
         # Default to phase 1 in case we don't see anything
         return 1
+
+    def identify_stump_position(self):  # sourcery skip: extract-duplicate-method
+        """We need to find a way to identify what stump Rat is on... Because of this, we need to
+        check the last bleed/poison/shock card played
+        """
+        for card in reversed(self.picked_cards):
+            if card.card_type != CardTypes.DISABLED and is_bleed_card(card):
+                print("Rat moving to the right!")
+                RatFighter.next_stump = 2
+                return
+            if card.card_type != CardTypes.DISABLED and is_poison_card(card):
+                print("Rat moving to the center!")
+                RatFighter.next_stump = 1
+                return
+            if card.card_type != CardTypes.DISABLED and is_shock_card(card):
+                print("Rat moving to the left!")
+                RatFighter.next_stump = 0
+                return
 
     def update_stump(self, screenshot, window_location):
         """Click on a new stump if applicable, and activate the talent"""
@@ -124,6 +147,15 @@ class RatFighter(IFighter):
 
         # Then, play the cards
         self.play_cards(current_stump=RatFighter.current_stump)
+
+    def finish_turn(self):
+        """This function is used within `self.play_cards()`.
+        For the Rat Fighter, we need to read what's the last played card that'll move the Rat!"""
+
+        print("Finished my turn! Identifying where Rat will move next...")
+        self.identify_stump_position()
+
+        return super().finish_turn()
 
     def _check_disabled_hand(self):
         """If we have a disabled hand"""

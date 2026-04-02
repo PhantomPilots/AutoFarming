@@ -27,8 +27,9 @@ class SnakeFighter(IFighter):
     # Keep track of what floor we're fighting
     current_floor = -1
 
-    def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
+    def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None, use_talents: bool = True):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
+        self.use_talents = use_talents
 
     def fighting_state(self):
 
@@ -85,8 +86,8 @@ class SnakeFighter(IFighter):
             translated_rectangles = np.array(
                 [
                     [
-                        r[0] + Coordinates.get_coordinates("card_slots_region")[0],
-                        r[1] + Coordinates.get_coordinates("card_slots_region")[1],
+                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
+                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
                         r[2],
                         r[3],
                     ]
@@ -103,8 +104,11 @@ class SnakeFighter(IFighter):
     def activate_talent(self, screenshot, window_location):
         """Check if we can activate a talent"""
 
+        if not self.use_talents:
+            return
+
         talents = [
-            # vio.talent_trist,
+            vio.talent_trist,
         ]
 
         for talent in talents:

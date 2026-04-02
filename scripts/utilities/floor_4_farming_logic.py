@@ -43,6 +43,7 @@ class IFloor4Farmer(IFarmer):
     # Need to be static across instances
     success_count = 0
     total_count = 0
+    reset_count = 0
     dict_of_defeats = defaultdict(int)
 
     def __init__(
@@ -64,7 +65,7 @@ class IFloor4Farmer(IFarmer):
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # In case we want to do dailies at the specified hour
-        IFarmer.do_dailies = do_dailies
+        self.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming Floor4 at {CHECK_IN_HOUR} PT to do our dailies!")
 
@@ -93,6 +94,7 @@ class IFloor4Farmer(IFarmer):
             (IFloor4Farmer.success_count / IFloor4Farmer.total_count) * 100 if IFloor4Farmer.total_count > 0 else 0
         )
         print(f"We beat Floor4 {IFloor4Farmer.success_count}/{IFloor4Farmer.total_count} times ({percent:.2f}%).")
+        print(f"Total Reset Count: {IFloor4Farmer.reset_count}")
         # Log the defeats
         if len(IFloor4Farmer.dict_of_defeats):
             defeat_msg = self._print_defeats()
@@ -202,8 +204,16 @@ class IFloor4Farmer(IFarmer):
 
     def fight_complete_callback(self, victory=True, **kwargs):
         """Called when the fight logic completes."""
+        if kwargs.get("stop_farmer", False):
+            reason = kwargs.get("reason", "Stopping the Floor 4 farmer.")
+            print(reason)
+            self.current_state = States.EXIT_FARMER
+            return
+
         with IFarmer._lock:
             IFloor4Farmer.total_count += 1
+            if kwargs.get("reset", False):
+                IFloor4Farmer.reset_count += 1
             if victory:
                 # Transition to another state or perform clean-up actions
                 IFloor4Farmer.success_count += 1

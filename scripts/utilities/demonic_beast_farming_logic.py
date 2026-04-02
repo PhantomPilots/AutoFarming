@@ -17,7 +17,7 @@ from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
-    crop_region,
+    crop_image,
     drag_im,
     find,
     find_and_click,
@@ -46,9 +46,6 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
     num_victories = 0
     num_losses = 0
 
-    # Beast search swipe counter; class-level to survive FarmingFactory crash recovery (same pattern as num_victories).
-    _swipe_attempts = 0
-
     def __init__(
         self,
         starting_state=States.GOING_TO_DB,
@@ -71,7 +68,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
             print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
 
         # In case we want to do dailies at the specified hour
-        IFarmer.do_dailies = do_dailies
+        self.do_dailies = do_dailies
         if do_dailies:
             print(f"We'll stop farming DemonicBeast at {CHECK_IN_HOUR} PT to do our dailies!")
 
@@ -119,11 +116,6 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         """This should be the original state. Let's go to the Demonic Beast menu"""
         screenshot, window_location = capture_window()
 
-        if DemonicBeastFarmer.current_floor == 1 and find(vio.floor_3_cleared_db, screenshot):
-            print("Detected floor cleared image, moving to RESETTING_DB...")
-            self.current_state = States.RESETTING_DB
-            return
-
         # First of all, check whether it's time to do our dailies!
         if self.check_for_dailies():
             return
@@ -139,28 +131,17 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
         # If we see we're inside the DB selection screen but don't see our DemonicBeast,
-        # swipe right (or left after 4 attempts) and try again
+        # swipe right and try again
         if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
-            DemonicBeastFarmer._swipe_attempts += 1
-            if DemonicBeastFarmer._swipe_attempts > 4:
-                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping left...")
-                drag_im(
-                    Coordinates.get_coordinates("left_swipe"),
-                    Coordinates.get_coordinates("right_swipe"),
-                    window_location,
-                )
-            else:
-                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping right...")
-                drag_im(
-                    Coordinates.get_coordinates("right_swipe"),
-                    Coordinates.get_coordinates("left_swipe"),
-                    window_location,
-                )
+            # Swipe to the right!
+            print("Wrong demonic beast, searching the right one...")
+            drag_im(
+                Coordinates.get_coordinates("right_swipe"),
+                Coordinates.get_coordinates("left_swipe"),
+                window_location,
+            )
             time.sleep(0.5)
             return
-
-        # Reset swipe counter once the beast is found
-        DemonicBeastFarmer._swipe_attempts = 0
 
         # Go into the 'Demonic Beast' section
         find_and_click(self.db_image, screenshot, window_location)
@@ -194,7 +175,11 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
     def determine_db_floor(self, screenshot: np.ndarray, threshold=0.9) -> int:
         """Determine the Demonic Beast floor"""
         # sourcery skip: assign-if-exp, reintroduce-else
-        floor_img_region = crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
+        floor_img_region = crop_image(
+            screenshot,
+            Coordinates.get_coordinates("floor_top_left"),
+            Coordinates.get_coordinates("floor_bottom_right"),
+        )
 
         # display_image(floor_img_region)
         # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
@@ -342,8 +327,6 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
         # Click on the confirmation window...
         if find_and_click(vio.ok_main_button, screenshot, window_location) or find(vio.set_db_party, screenshot):
-            # Scroll down slightly so the floor image becomes detectable again
-            drag_im((530, 530), (530, 430), window_location, sleep_after_click=0.1, drag_duration=0.4)
             print("Moving to the original state, GOING_TO_DB")
             self.current_state = States.GOING_TO_DB
             return

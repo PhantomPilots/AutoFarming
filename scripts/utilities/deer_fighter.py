@@ -82,8 +82,8 @@ class DeerFighter(IFighter):
             translated_rectangles = np.array(
                 [
                     [
-                        r[0] + Coordinates.get_coordinates("card_slots_region")[0],
-                        r[1] + Coordinates.get_coordinates("card_slots_region")[1],
+                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
+                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
                         r[2],
                         r[3],
                     ]
@@ -99,6 +99,14 @@ class DeerFighter(IFighter):
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
+
+        # Check if the battle strategy flagged a Phase 4 forfeit (can't follow R > G > B)
+        # Only act on the flag if we're actually still in phase 4 — on a new fight (phase 1)
+        # the flag is stale and will be reset once the strategy runs.
+        if getattr(self.battle_strategy, '_phase4_should_forfeit', False) and IFighter.current_phase == 4:
+            print("[FORFEIT] Phase 4 cannot follow color cycle! Forfeiting fight...")
+            self.current_state = FightingStates.EXIT_FIGHT
+            return
 
         # This function alone will take care of updating the current hand and state if necessary
         self.play_cards()
@@ -143,6 +151,22 @@ class DeerFighter(IFighter):
             self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
 
+    def exit_fight_state(self):
+        """Forfeit the fight because we can't follow the required Phase 4 gimmick."""
+        screenshot, window_location = capture_window()
+
+        if find(vio.ok_main_button, screenshot):
+            # Defeat confirmation appeared, move to defeat handling
+            self.current_state = FightingStates.DEFEAT
+            return
+
+        # Click on FORFEIT BATTLE
+        if find_and_click(vio.forfeit, screenshot, window_location):
+            return
+
+        # Click the pause icon to open the forfeit menu
+        find_and_click(vio.pause, screenshot, window_location)
+
     @IFighter.run_wrapper
     def run(self, floor_num=1):
 
@@ -162,6 +186,9 @@ class DeerFighter(IFighter):
             elif self.current_state == FightingStates.FIGHTING_COMPLETE:
                 self.fight_complete_state()
 
+            elif self.current_state == FightingStates.EXIT_FIGHT:
+                self.exit_fight_state()
+
             elif self.current_state == FightingStates.DEFEAT:
                 self.defeat_state()
 
@@ -169,4 +196,4 @@ class DeerFighter(IFighter):
                 print("Closing Fighter thread!")
                 return
 
-            time.sleep(0.75)
+            time.sleep(0.5)

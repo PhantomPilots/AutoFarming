@@ -8,6 +8,9 @@ import utilities.vision_images as vio
 class SnakeBattleStrategy(IBattleStrategy):
     """Dedicated Snake strategy handling Floor 1 and Floor 2 with clean turn logic."""
 
+    # Whale team has no talent — disable talent activation in the fighter
+    USE_TALENTS = False
+
     def __init__(self):
         # For tracking turns in F1P3
         self.f1p3_turn_counter = None

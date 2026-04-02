@@ -99,6 +99,7 @@ cross = MultiVision(
     image_name="cross",
 )
 pause_fight = Vision("pause_fight.png")
+episode_clear = Vision("episode_clear.png")
 continue_fight = Vision("continue.png")
 annoying_chat_popup = Vision("annoying_chat_popup.png")
 change_stats = MultiVision(
@@ -112,11 +113,8 @@ change_stats = MultiVision(
 clock_tower = Vision("sa_coin_dungeon\\clock_tower.png")
 clock_tower_floor = Vision("sa_coin_dungeon\\clock_tower_floor.png")
 sa_coin = Vision("sa_coin.png")
-sa_boss = Vision("sa_coin_dungeon\\sa_boss_hp.png")
+sa_boss = Vision("sa_coin_dungeon\\sa_boss.png")
 chest = Vision("sa_coin_dungeon\\chest.png")
-chest_bronze = Vision("sa_coin_dungeon\\chest_bronze.png")
-chest_silver = Vision("sa_coin_dungeon\\chest_silver.png")
-chest_gold = Vision("sa_coin_dungeon\\chest_gold.png")
 fs_loading_screen = Vision("fs_loading_screen.png")
 fs_dungeon_lock = Vision("sa_coin_dungeon\\fs_dungeon_lock.png")
 finished_auto_repeat_fight = Vision("finished_auto_repeat_fight.png")
@@ -155,15 +153,12 @@ floor_3_cleared_db = MultiVision(
     # Bird floor 3 cleared images
     "demonic_beasts\\floor_3_cleared_bird.png",
     "demonic_beasts\\floor_3_cleared_2_bird.png",
-    "demonic_beasts\\floor_3_cleared_bird_2.png",
     # Deer floor 3 cleared images
     "demonic_beasts\\floor_3_cleared_deer.png",
     "demonic_beasts\\floor_3_cleared_2_deer.png",
-    "demonic_beasts\\floor_3_cleared_deer_2.png",
     # Dogs floor 3 cleared images
-    "demonic_beasts\\floor_3_cleared_skollandhati_cleaned.png",
-    "demonic_beasts\\floor_3_cleared_2_skollandhati.png",
-    "demonic_beasts\\floor_3_cleared_skollandhati_cleaned_2.png",
+    "demonic_beasts\\floor_3_cleared_dogs.png",
+    "demonic_beasts\\floor_3_cleared_2_dogs.png",
     image_name="floor_3_cleared_db",
 )
 available_floor = Vision("demonic_beasts\\available_floor.png")
@@ -236,6 +231,9 @@ hel_ult = Vision("deer\\hel_ult.png")
 tyr_1 = Vision("deer\\tyr_1.png")
 tyr_2 = Vision("deer\\tyr_2.png")
 tyr_ult = Vision("deer\\tyr_ult.png")
+skuld_atk = Vision("deer\\skuld_atk.png")
+skuld_deer_stance = Vision("deer\\skuld_stance.png")
+skuld_ult = Vision("deer\\skuld_ult.png")
 
 # For Dogs
 empty_slot_1 = Vision("dogs\\empty_slot_1.png")
@@ -256,6 +254,35 @@ empty_slot_15 = Vision("dogs\\empty_slot_15.png")
 empty_slot_16 = Vision("dogs\\empty_slot_16.png")
 empty_slot_17 = Vision("dogs\\empty_slot_17.png")
 empty_slot_18 = Vision("dogs\\empty_slot_18.png")
+escalin_st = Vision("dogs\\escalin_st.png")
+escalin_aoe = Vision("dogs\\escalin_aoe.png")
+escalin_ult = Vision("dogs\\escalin_ult.png")
+dogs_nasi_heal = Vision("dogs\\nasi_heal.png")
+dogs_nasi_stun = Vision("dogs\\nasi_stun.png")
+dogs_nasi_ult = Vision("dogs\\nasi_ult.png")
+dogs_roxy_st = Vision("dogs\\roxy_st.png")
+dogs_roxy_aoe = Vision("dogs\\roxy_aoe.png")
+dogs_roxy_ult = Vision("dogs\\roxy_ult.png")
+dogs_escalin_talent = Vision("dogs\\escalin_talent.png")
+dogs_escalin_talent_min1 = Vision("dogs\\escalin_talent_min1.png")
+dogs_escalin_talent_min2 = Vision("dogs\\escalin_talent_min2.png")
+dogs_p2t2_dogded = Vision("dogs\\p2t2_dogded.png")
+dogs_floor4_phase1_buff = Vision("dogs\\buffdogsf4p1.png")
+dogs_atk_bronze = Vision("dogs\\dogs_atk_bronze.png")
+dogs_atk_silver = Vision("dogs\\dogs_atk_silver.png")
+dogs_ult = Vision("dogs\\dogs_ult.png")
+dogs_5perc_dmg_limit = Vision("dogs\\5perc_dmg_limit.png")
+dogs_left_target_sel = Vision("dogs\\left_target_sel.png")
+dogs_right_target_sel = Vision("dogs\\right_target_sel.png")
+dogs_right_target_sel2 = Vision("dogs\\right_target_sel2.png")
+dogs_right_buff = Vision("dogs\\dogs_right_buff.png")
+dogs_right_special = Vision("dogs\\dogs_right_special.png")
+dogs_left_debuff1 = Vision("dogs\\dogs_left_debuff1.png")
+dogs_left_debuff2 = Vision("dogs\\dogs_left_debuff2.png")
+thonar_gauge = Vision("dogs\\thonar_gauge.png")
+thonar_stance = Vision("dogs\\thonar_stance.png")
+thonar_ult = Vision("dogs\\thonar_ult.png")
+thonar_gauge_unv = Vision("dogs\\thonar_gauge_unv.png")
 # Dogs whale strat
 freeze_icon = Vision("dogs\\freeze_icon.png")
 lolimerl_aoe = Vision("dogs\\lolimerl_aoe.png")
@@ -343,16 +370,6 @@ showdown = Vision("final_boss\\showdown.png")
 fb_aut_off = Vision("final_boss\\auto_off.png")
 failed = Vision("final_boss\\failed.png")
 
-# For Legendary Boss
-legendary_boss_menu = Vision("legendary_boss\\legendary_boss_menu.png")
-legendary_boss_roxy = Vision("legendary_boss\\lb_roxy.png")
-legendary_boss_extreme = Vision("legendary_boss\\lb_extreme.png")
-legendary_boss_hell = Vision("legendary_boss\\lb_hell.png")
-legendary_boss_challenge = Vision("legendary_boss\\lb_challenge.png")
-legendary_boss_left_arrow = Vision("legendary_boss\\lb_left.png")
-legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
-legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")
-legendary_boss_final_score = Vision("legendary_boss\\lb_final_score.png")
 
 # For demon farming
 boss_menu = Vision("demons\\demons.jpg")
@@ -451,9 +468,7 @@ daily_friendship_coins = MultiVision(
 )
 daily_patrol = MultiVision("dailies\\daily_patrol.png", "dailies\\daily_patrol_new.png", image_name="daily_patrol")
 daily_vanya_ale = MultiVision(
-    "dailies\\daily_vanya_ale.png",
-    # "dailies\\daily_vanya_ale_new.png",
-    image_name="daily_vanya_ale",
+    "dailies\\daily_vanya_ale.png", "dailies\\daily_vanya_ale_new.png", image_name="daily_vanya_ale"
 )
 take_all_rewards = Vision("dailies\\take_all.png")
 tasks = Vision("dailies\\tasks.png")
@@ -509,14 +524,6 @@ membership_perk = Vision("dailies\\membership_perk.png")
 # For weeklies
 kh_boss_battle = Vision("weeklies\\kh_boss_battle.png")
 
-# Boss Battles
-sim_clear_on = Vision("boss_battle\\sim_clear_on.png")
-activate_all_on = Vision("boss_battle\\activate_all_on.png")
-boss_one_star = Vision("boss_battle\\boss_one_star.png")
-stage_melee_of_phantasms = Vision("boss_battle\\stage_melee_of_phantasms.png")
-boss_floor_extreme = Vision("boss_battle\\boss_floor_extreme.png")
-death_match_vanya = Vision("boss_battle\\death_match_vanya.png")
-boss_battle_loading_screen = Vision("boss_battle\\boss_battle_loading_screen.png")
 
 # Create a single OkVision instance for all OK buttons
 ok_main_button = MultiVision(

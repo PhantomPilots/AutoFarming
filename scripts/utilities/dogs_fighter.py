@@ -90,8 +90,8 @@ class DogsFighter(IFighter):
             translated_rectangles = np.array(
                 [
                     [
-                        r[0] + Coordinates.get_coordinates("card_slots_region")[0],
-                        r[1] + Coordinates.get_coordinates("card_slots_region")[1],
+                        r[0] + Coordinates.get_coordinates("top_left_card_slots")[0],
+                        r[1] + Coordinates.get_coordinates("top_left_card_slots")[1],
                         r[2],
                         r[3],
                     ]
@@ -137,9 +137,6 @@ class DogsFighter(IFighter):
             IFighter.current_phase = 3
             print("Clicking on dark dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-            if find_and_click(vio.talent_escalin, screenshot, window_location, threshold=0.6):
-                print("Phase 3 entry: activating talent_escalin")
-                time.sleep(2.5)
 
     def fight_complete_state(self):
 

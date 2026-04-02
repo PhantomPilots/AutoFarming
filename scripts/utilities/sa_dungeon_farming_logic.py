@@ -1,24 +1,18 @@
 import time
 from enum import Enum, auto
 
-import cv2
 import numpy as np
 import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import IFarmer
 from utilities.logging_utils import LoggerWrapper, logging
 from utilities.utilities import (
-    Color,
     capture_window,
     check_for_reconnect,
-    crop_roi_from_rect,
     drag_im,
     find,
     find_and_click,
-    find_rect,
     press_key,
-    print_clr,
-    score_template,
 )
 
 logger = LoggerWrapper("sa_dungeon_logger", level=logging.INFO, log_to_file=False)
@@ -39,121 +33,34 @@ class Scrolling(Enum):
     UP = auto()
 
 
-class ChestTier(Enum):
-    BRONZE = 0
-    SILVER = 1
-    GOLD = 2
-
-
 class SADungeonFarmer(IFarmer):
     """SA dungeon farmer"""
+
+    # How many max resets in total -- Only used in the no-Timer approach
+    MAX_RESETS = 10
 
     # How many resets so far
     num_resets = 0
     # How many runs we've done?
     num_runs_complete = 0
 
-    # To avoid counting multiple finished runs if the "finished_auto_repeat_fight" image is detected for multiple consecutive frames
-    finished_run_lockout_until: float = 0.0
+    # start time since opening the dungeon
+    start_dungeon_time = None
 
-    # How many chests we've collected so far
-    collected_chests: dict[ChestTier, int] = {ChestTier.BRONZE: 0, ChestTier.SILVER: 0, ChestTier.GOLD: 0}
+    # To count how much time resetting takes
+    max_time_for_reset = 0
+    reset_time_start = None
 
-    # Detection flags
-    chest_found: bool = False
-    first_wave_done: bool = False
-    # How many times we've retried detecting a chest before deciding to restart
-    retry_count: int = 0
+    # To compute how long the longest run lasted
+    longest_run_time = 0
+    run_start_time = None
 
-    def __init__(
-        self,
-        *,
-        starting_state=States.GOING_TO_DUNGEON,
-        battle_strategy=None,
-        min_chest_type="bronze",
-        chest_detection_count=3,
-        **kwargs,
-    ):
-        super().__init__()
+    def __init__(self, *, starting_state=States.GOING_TO_DUNGEON, battle_strategy=None, max_resets=10, **kwargs):
         self.current_state = starting_state
 
-        # Chest filtering config
-        self.num_image_detection_retries = chest_detection_count
-        min_chest_type = str(min_chest_type).strip().lower()
-        if min_chest_type not in {"bronze", "silver", "gold"}:
-            print_clr(f"[WARN] Invalid min_chest_type='{min_chest_type}', defaulting to 'bronze'", color=Color.YELLOW)
-            min_chest_type = "bronze"
-        self.min_chest_type = min_chest_type
-        self.min_chest_tier = {
-            "bronze": ChestTier.BRONZE,
-            "silver": ChestTier.SILVER,
-            "gold": ChestTier.GOLD,
-        }[min_chest_type]
+        SADungeonFarmer.MAX_RESETS = max_resets
 
-        self.chest_templates = self.load_chest_templates()
-
-        print(f"Chest filter: keep >= {self.min_chest_type.upper()}")
-        print(f"Chest detection retries: {self.num_image_detection_retries}")
-
-    def load_chest_templates(self) -> dict[str, np.ndarray]:
-        templates = {
-            "bronze": getattr(vio.chest_bronze, "needle_img", None),
-            "silver": getattr(vio.chest_silver, "needle_img", None),
-            "gold": getattr(vio.chest_gold, "needle_img", None),
-        }
-        templates = {k: v for k, v in templates.items() if v is not None}
-
-        if not templates:
-            print_clr("[WARN] No chest templates loaded from vision_images.", color=Color.YELLOW)
-        return templates
-
-    def classify_chest_type(self, chest_roi_bgr: np.ndarray) -> tuple[str, float]:
-        best_label = "unknown"
-        best_score = -1.0
-
-        if chest_roi_bgr is None or chest_roi_bgr.size == 0 or not self.chest_templates:
-            return best_label, best_score
-
-        for label, tpl in self.chest_templates.items():
-            if chest_roi_bgr.shape[0] < tpl.shape[0] or chest_roi_bgr.shape[1] < tpl.shape[1]:
-                continue
-            score, _ = score_template(chest_roi_bgr, tpl)
-            if score > best_score:
-                best_score = score
-                best_label = label
-
-        return best_label, best_score
-
-    def should_restart_for_chest(self, screenshot: np.ndarray) -> tuple[bool, str]:
-        rect = find_rect(vio.chest, screenshot, threshold=0.6)
-        if rect is None or len(rect) == 0:
-            return True, "no chest"
-
-        SADungeonFarmer.chest_found = (
-            True  # We found the chest, let's set the flag to avoid re-checking until next fight
-        )
-        roi = crop_roi_from_rect(screenshot, rect)
-        label, score = self.classify_chest_type(roi)
-
-        if label == "unknown" or score < 0.70:
-            # Conservative keep on low-confidence classification
-            return False, f"unknown chest (score={score:.3f}), keeping run"
-
-        chest_tier = {
-            "bronze": ChestTier.BRONZE,
-            "silver": ChestTier.SILVER,
-            "gold": ChestTier.GOLD,
-        }[label]
-
-        if chest_tier.value < self.min_chest_tier.value:
-            return True, f"{label} < {self.min_chest_type}"
-
-        SADungeonFarmer.collected_chests[chest_tier] += 1
-        print_clr(
-            f"Total collected chests: {', '.join(f'{tier.name}: {count}' for tier, count in SADungeonFarmer.collected_chests.items())}",
-            color=Color.GREEN,
-        )
-        return False, f"{label} >= {self.min_chest_type}"
+        print(f"We'll restart the fight at most {SADungeonFarmer.MAX_RESETS} times.")
 
     def going_to_dungeon_state(self):
         """Let's go to the dungeon"""
@@ -180,9 +87,10 @@ class SADungeonFarmer(IFarmer):
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
             # We're re-opening the floor!
-            print("Opening the floor, resetting counters")
-            SADungeonFarmer.finished_run_lockout_until = 0.0
-            self.reset_retry_flags()
+            print("Opening the floor, let's reset the 'reset count' and start a timer")
+            SADungeonFarmer.num_resets = 0  # Let's reset how many resets we've done
+            SADungeonFarmer.num_runs_complete = 0  # Let's also reset the number of runs we've done
+            SADungeonFarmer.start_dungeon_time = time.time()  # We'll have 30 mins!
             return
 
         if not find(vio.sa_coin, screenshot) and find(vio.back, screenshot):
@@ -214,14 +122,13 @@ class SADungeonFarmer(IFarmer):
 
             return
 
-        if find(vio.sa_coin, screenshot, threshold=0.7):
+        if find(vio.sa_coin, screenshot):
             # Let's try to access/open the tower
-            rectangle = vio.sa_coin.find(screenshot, threshold=0.7)
+            rectangle = vio.sa_coin.find(screenshot)
             find_and_click(
                 vio.sa_coin,
                 screenshot,
                 window_location,
-                threshold=0.7,
                 point_coordinates=(Coordinates.get_coordinates("center_screen")[0], rectangle[1] + rectangle[-1] / 2),
             )
 
@@ -255,6 +162,8 @@ class SADungeonFarmer(IFarmer):
         if find(vio.startbutton, screenshot):
             print("LET'S FIGHT!")
             self.current_state = States.FIGHTING
+            # And let's also reset the beginning of the next run. Not needed, but just in case
+            SADungeonFarmer.run_start_time = None
 
     def fighting_state(self):
         """Fighting!"""
@@ -270,45 +179,68 @@ class SADungeonFarmer(IFarmer):
             IFarmer.stamina_pots += 1
             return
 
-        # If we've finished a fight in the auto-repeat, count it
-        now = time.monotonic()
-        if now >= SADungeonFarmer.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
+        # If we've finished the fight, log how long did it take?
+        if find(vio.finished_auto_repeat_fight, screenshot):
+            this_run_time = time.time() - SADungeonFarmer.run_start_time
+            if this_run_time < 10:
+                return  # We're just waiting to start the next fight!
+
+            if SADungeonFarmer.run_start_time is not None:
+                SADungeonFarmer.longest_run_time = max(SADungeonFarmer.longest_run_time, this_run_time)
+
+            print(f"Longest run time found: {SADungeonFarmer.longest_run_time:.2f} secs.")
+            # Don't add time offset, let's count the total run time including the transition
+            SADungeonFarmer.run_start_time = time.time()
+            # Increase the done total runs
             SADungeonFarmer.num_runs_complete += 1
-            SADungeonFarmer.finished_run_lockout_until = now + 5.0
-            self.reset_retry_flags()
-            print(f"We've completed {SADungeonFarmer.num_runs_complete} runs so far")
+            print(f"We've completed {SADungeonFarmer.num_runs_complete}/12 runs")
 
-        find_and_click(vio.startbutton, screenshot, window_location)
+        if find_and_click(vio.startbutton, screenshot, window_location):
+            # If we come from a reset, let's log how much time has passed
+            if SADungeonFarmer.reset_time_start is not None:
+                SADungeonFarmer.max_time_for_reset = max(
+                    SADungeonFarmer.max_time_for_reset, time.time() - SADungeonFarmer.reset_time_start
+                )
+            print(f"Max reset time found: {SADungeonFarmer.max_time_for_reset:.2f} secs.")
+            # Reset the reset start timer
+            SADungeonFarmer.reset_time_start = None
+            # Start the run timer
+            SADungeonFarmer.run_start_time = time.time()
 
-        # Check if we can see the boss, if so, it means we are done with the first wave and we should start looking for the chest
-        # Make sure that the UI is visible, otherwise we see the boss, but no UI so can't see chests
-        if find(vio.sa_boss, screenshot, threshold=0.7) and find(vio.pause, screenshot, threshold=0.7):
-            SADungeonFarmer.first_wave_done = True
+        if find(vio.sa_boss, screenshot, threshold=0.7) and not find(vio.chest, screenshot, threshold=0.6):
+            # Let's decide if we use a timer or if we use max resets
+            print("We don't see a chest, can we restart the fight?")
 
-        # Keep rechecking for the chest after the first wave is done, until we find it or decide to restart
-        if SADungeonFarmer.first_wave_done and not SADungeonFarmer.chest_found:
-            should_restart, reason = self.should_restart_for_chest(screenshot)
-            if not should_restart:
-                print_clr(f"Keeping run: {reason}", color=Color.GREEN)
-            elif reason == "no chest":
-                SADungeonFarmer.retry_count += 1
-                if SADungeonFarmer.retry_count <= self.num_image_detection_retries:
-                    print(
-                        f"[RETRY {SADungeonFarmer.retry_count}/{self.num_image_detection_retries}] "
-                        f"No chest detected yet, retrying image detection before restarting."
-                    )
-                else:
-                    print_clr("Restarting run: no chest after retry limit", color=Color.RED)
-                    self.lets_restart_fight(screenshot)
-            else:
-                print_clr(f"Restarting run immediately: {reason}", color=Color.RED)
-                self.lets_restart_fight(screenshot)
+            # if (
+            #     SADungeonFarmer.start_dungeon_time is not None
+            #     and SADungeonFarmer.longest_run_time > 0
+            #     and SADungeonFarmer.max_time_for_reset > 0
+            # ):
+            #     # Required total remaining fighting time to complete everything
+            #     remaining_time_fighting = (
+            #         (12 - SADungeonFarmer.num_runs_complete) * SADungeonFarmer.longest_run_time
+            #         + SADungeonFarmer.max_time_for_reset  # Add time required for one more reset
+            #         + 5  # Add buffer
+            #     )
+            #     # Total remaining time on the clock
+            #     remaining_time = 24 * 60 * 60 + SADungeonFarmer.start_dungeon_time - time.time()
 
-    def reset_retry_flags(self):
-        """Reset flags related to retrying after not finding a chest"""
-        SADungeonFarmer.retry_count = 0
-        SADungeonFarmer.first_wave_done = False
-        SADungeonFarmer.chest_found = False
+            #     if remaining_time_fighting < remaining_time:
+            #         # Basically, if we do one more reset, can we still complete the remaining number of runs?
+            #         print(
+            #             f"We have {remaining_time/60:.2f} mins left and need to fight {remaining_time_fighting/60:.2f} more mins.\n"
+            #             f"Enough time to restart the fight once more!"
+            #         )
+            #         self.lets_restart_fight(screenshot)
+
+            # # If we cannot use a timer
+            # elif SADungeonFarmer.num_resets < SADungeonFarmer.MAX_RESETS:
+            #     self.lets_restart_fight(screenshot)
+
+            # else:
+            #     print("Nope, we don't have enough time left for more resets! Gotta speedrun.")
+
+            self.lets_restart_fight(screenshot)
 
     def lets_restart_fight(self, screenshot: np.ndarray):
         """Common logic to restart the fight"""
@@ -318,7 +250,6 @@ class SADungeonFarmer(IFarmer):
 
         # Increase the reset count regardless
         SADungeonFarmer.num_resets += 1
-        self.reset_retry_flags()
         print(f"We've restarted the fight {SADungeonFarmer.num_resets} times")
 
     def restart_fight_state(self):
@@ -336,6 +267,8 @@ class SADungeonFarmer(IFarmer):
             return
 
         press_key("esc")
+        # Let's start the smaller timer that will count how long a reset takes
+        SADungeonFarmer.reset_time_start = time.time()
 
     def run_ended_state(self):
         """We finished a run! Gotta re-open the dungeon, by ESC-ing until we're back into the dungeon"""
