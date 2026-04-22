@@ -9,16 +9,12 @@ import pyautogui as pyautogui
 
 # Import all images
 import utilities.vision_images as vio
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import (
-    CHECK_IN_HOUR,
-    PACIFIC_TIMEZONE,
-    IFarmer,
-)
+from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
-from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
     check_for_reconnect,
@@ -332,4 +328,4 @@ class IFloor4Farmer(IFarmer):
             elif self.current_state == States.EXIT_FARMER:
                 self.exit_farmer_state()
 
-            time.sleep(0.8)
+            time.sleep(0.6)

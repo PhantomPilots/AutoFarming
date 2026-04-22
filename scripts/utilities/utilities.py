@@ -296,7 +296,7 @@ def find_and_click(
         print(f"Clicked on '{vision_image.image_name}'")
         click_tracker.record_image_click(vision_image.image_name)
 
-        time.sleep(0.5)
+        time.sleep(0.1)
 
         return True
 
