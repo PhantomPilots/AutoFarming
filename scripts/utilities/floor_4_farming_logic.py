@@ -102,9 +102,6 @@ class IFloor4Farmer(IFarmer):
         """Keyword arguments passed to ``self.fighter.run`` when starting the Floor 4 fight thread."""
         return {}
 
-    def _needs_extra_mode_before_start(self) -> bool:
-        return self.extra_clears_remaining > 0 and not self._current_fight_extra_mode
-
     def _record_extra_mode_failure(self, message: str) -> bool:
         self.extra_mode_failure_attempts += 1
         print(f"{message} (attempt {self.extra_mode_failure_attempts}/{_EXTRA_MODE_MAX_ATTEMPTS}).")
@@ -119,7 +116,7 @@ class IFloor4Farmer(IFarmer):
 
     def _try_prepare_extra_mode(self, screenshot, window_location) -> bool:
         """Return True when normal Start should wait for extra-mode handling."""
-        if not self._needs_extra_mode_before_start():
+        if not self.extra_clears_remaining > 0 or self._current_fight_extra_mode:
             return False
 
         source_visible = self.extra_mode_source_image is not None and find(
