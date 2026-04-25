@@ -283,14 +283,16 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         if nasiens_ult_id and IBattleStrategy.fight_turn <= 2:
             return nasiens_ult_id[-1]
 
-        # Early turns: prioritize gauge merges, otherwise delegate to Smarter immediately.
-        if IBattleStrategy.fight_turn <= 2 and not DogsFloor4BattleStrategy.lillia_in_team:
-            drag = self._best_merge_drag_indices(
-                hand_of_cards, ST_GAUGE_TEMPLATES, log_label="gauge merge (insufficient gold)"
-            )
-            if drag is not None:
-                self._maybe_activate_escalin_before_gauge_merge(hand_of_cards, drag, card_turn=card_turn)
-                return drag
+        # Early turns: wait before damage-cap removal. Non-Lillia can merge ST gauge cards;
+        # Lillia must not merge those cards, but still must not spend GOLD lillia_aoe before turn 3.
+        if IBattleStrategy.fight_turn <= 2:
+            if not DogsFloor4BattleStrategy.lillia_in_team:
+                drag = self._best_merge_drag_indices(
+                    hand_of_cards, ST_GAUGE_TEMPLATES, log_label="gauge merge (insufficient gold)"
+                )
+                if drag is not None:
+                    self._maybe_activate_escalin_before_gauge_merge(hand_of_cards, drag, card_turn=card_turn)
+                    return drag
 
             return self._smarter_phase3(hand_of_cards, picked_cards)
 
