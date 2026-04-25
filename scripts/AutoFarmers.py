@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 # ╔══════════════════════════════════════════════════════════════════════════╗
 # ║                           🆓 FREE SOFTWARE 🆓                           ║
 # ║                                                                          ║
@@ -380,15 +380,7 @@ Tune your gear so you can guarantee that.<br>
 <p><strong>Requirements:</strong><br>
 • Escalin, Lillia/Cusack/Roxy(recommended), Nasiens, Thonar</p>
     """,
-    "Dogs Floor 4 Whale": """
-<p><strong>Whale mode</strong> (consider this a "beefy acc/units only"):<br>
-• Team: Escalin, Meli3k + Relic, OG B Gowther + Relic, Nasiens<br>
-• Links: Escalin > Roxy LR, Meli3k > Sabunak, OG B Gow > R Tarm, Nasi > NOT Esca UR<br>
-• Esca/Meli ATK Crit<br>
-• NB: Gowther MUST BE ATK DEF with a super set (14.5%+ all around)<br>
-• NB2: Nasi MUST BE HP DEF with 15% DEF rolls AND Orb and Belt MUST NOT HAVE A SINGLE HP ROLL. Put UC pieces.
-</p>
-    """,    "Dogs Farmer": """
+    "Dogs Farmer": """
 <p><strong>Requirements:</strong><br>
 • Any team works</p>
     """,
@@ -459,7 +451,6 @@ the file <code>run_game.png</code> by it.
 WHALE_MODE_CONFIG = {
     "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
     "Deer Floor 4": {"requirements_key": "Deer Floor 4 Whale", "image": "deer_floor_4.png"},
-    "Dogs Floor 4": {"requirements_key": "Dogs Floor 4 Whale", "image": "dogs_floor_4.jpeg"},
     "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
     "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
 }
@@ -538,7 +529,6 @@ FARMERS = [
         "script": "BirdFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
         ],
     },
@@ -556,7 +546,6 @@ FARMERS = [
         "script": "DeerFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
@@ -575,9 +564,7 @@ FARMERS = [
         "script": "DogsFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
-            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -2868,4 +2855,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
