@@ -1703,8 +1703,9 @@ class FarmerTab(QWidget):
                     _vbox.setContentsMargins(8, 6, 8, 6)
                     _vbox.setSpacing(4)
                     widget._checkboxes = []
-                    _labels = arg.get("labels", arg["choices"])
-                    for choice, label in zip(arg["choices"], _labels):
+                    _labels = arg.get("labels") or []
+                    for idx, choice in enumerate(arg["choices"]):
+                        label = _labels[idx] if idx < len(_labels) else choice
                         cb = QCheckBox(label)
                         cb.setProperty("value", choice)
                         cb.setChecked(choice in arg.get("default", []))
@@ -1748,7 +1749,15 @@ class FarmerTab(QWidget):
                 f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
                 f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
             )
-            panel.addWidget(self.req_label)
+            req_scroll = QScrollArea()
+            req_scroll.setWidget(self.req_label)
+            req_scroll.setWidgetResizable(True)
+            req_scroll.setMaximumHeight(180)
+            req_scroll.setStyleSheet(
+                f"QScrollArea {{ background: {C['panel3']}; border-left: 3px solid {C['accent']};"
+                f" border-radius: 0 5px 5px 0; border-top: none; border-right: none; border-bottom: none; }}"
+            )
+            panel.addWidget(req_scroll)
             panel.addSpacing(4)
 
         # Action buttons
@@ -2831,7 +2840,7 @@ def _apply_dark_title_bar(hwnd: int, dark: bool) -> None:
             ctypes.byref(value),
             ctypes.sizeof(value),
         )
-    except OSError:
+    except (AttributeError, OSError):
         pass  # Not supported on older Windows versions
 
 
