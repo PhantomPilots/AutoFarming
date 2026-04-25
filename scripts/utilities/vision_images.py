@@ -433,6 +433,7 @@ blue_stone = Vision("dailies\\blue_stone.png")
 search_for_a_kh = Vision("dailies\\search_for_a_kh.png")
 participate = Vision("dailies\\participate.png")
 daily_complete = Vision("dailies\\daily_complete.png")
+daily_tasks_complete = Vision("dailies\\daily_tasks_complete.png")
 # Daily boss fight
 boss_battle = Vision("dailies\\boss_battle.png")
 normal_diff_boss_battle = Vision("dailies\\normal_difficulty.png")

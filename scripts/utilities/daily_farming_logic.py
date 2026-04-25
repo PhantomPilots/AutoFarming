@@ -605,6 +605,7 @@ class DailyFarmer:
         """Check if we have the Essette shop, and click on it if so to remove the popup"""
         screenshot, window_location = capture_window()
         find_and_click(vio.essette_shop, screenshot, window_location)
+        find_and_click(vio.daily_tasks_complete, screenshot, window_location)
 
         if (
             DailyFarmer.current_state in [States.IN_TAVERN_STATE, States.PVP_STATE]
