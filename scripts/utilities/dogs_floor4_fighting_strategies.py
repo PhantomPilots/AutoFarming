@@ -284,7 +284,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             return nasiens_ult_id[-1]
 
         # Early turns: prioritize gauge merges, otherwise delegate to Smarter immediately.
-        if IBattleStrategy.fight_turn <= 2:
+        if IBattleStrategy.fight_turn <= 2 and not DogsFloor4BattleStrategy.lillia_in_team:
             drag = self._best_merge_drag_indices(
                 hand_of_cards, ST_GAUGE_TEMPLATES, log_label="gauge merge (insufficient gold)"
             )
