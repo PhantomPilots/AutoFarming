@@ -1,4 +1,4 @@
-import os
+﻿import os
 import threading
 import time
 from collections import defaultdict
@@ -23,6 +23,7 @@ from utilities.utilities import (
 )
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
+_EXTRA_MODE_MAX_ATTEMPTS = 10
 
 
 class States(Enum):
@@ -47,8 +48,10 @@ class IFloor4Farmer(IFarmer):
         starting_state: States,
         max_runs="inf",
         demonic_beast_image: vio.Vision | None = None,
+        extra_mode_source_image: vio.Vision | None = None,
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__()
@@ -68,8 +71,23 @@ class IFloor4Farmer(IFarmer):
         if self.max_runs < float("inf"):
             print(f"We're gonna clear Floor4 {int(self.max_runs)} times.")
 
-        # Store internally the image of the DemonicBeast we want to fight (Bird/Deer for now)
+        self.extra_clear_limit = max(0, int(extra_clears))
+        if self.max_runs < float("inf") and self.extra_clear_limit > int(self.max_runs):
+            print(
+                f"Extra clears ({self.extra_clear_limit}) exceed total clears ({int(self.max_runs)}); "
+                f"capping extra clears to {int(self.max_runs)}."
+            )
+            self.extra_clear_limit = int(self.max_runs)
+        self.extra_clears_remaining = self.extra_clear_limit
+        self.extra_mode_failure_attempts = 0
+        self.extra_mode_unavailable = False
+        self.pending_extra_clear_credit = False
+        if self.extra_clear_limit > 0:
+            print(f"We'll try to do {self.extra_clear_limit} Floor 4 clears in extra mode.")
+
+        # Store internally the image of the DemonicBeast we want to fight (Bird/Deer/Dogs)
         self.db_image = demonic_beast_image
+        self.extra_mode_source_image = extra_mode_source_image
 
         # For type helping
         self.current_state = starting_state
@@ -91,6 +109,61 @@ class IFloor4Farmer(IFarmer):
         """Keyword arguments passed to ``self.fighter.run`` when starting the Floor 4 fight thread."""
         return {}
 
+    def _should_try_extra_mode(self) -> bool:
+        return (
+            self.extra_clears_remaining > 0
+            and not self.extra_mode_unavailable
+            and not self.pending_extra_clear_credit
+        )
+
+    def _extra_mode_source_visible(self, screenshot) -> bool:
+        return self.extra_mode_source_image is not None and find(self.extra_mode_source_image, screenshot, threshold=0.7)
+
+    def _stop_trying_extra_mode(self) -> None:
+        self.extra_mode_unavailable = True
+        print(
+            f"Could not open extra mode after {_EXTRA_MODE_MAX_ATTEMPTS} attempts; "
+            "reverting to normal mode for the rest of the run."
+        )
+
+    def _record_extra_mode_failure(self, message: str) -> bool:
+        self.extra_mode_failure_attempts += 1
+        print(f"{message} (attempt {self.extra_mode_failure_attempts}/{_EXTRA_MODE_MAX_ATTEMPTS}).")
+        if self.extra_mode_failure_attempts >= _EXTRA_MODE_MAX_ATTEMPTS:
+            self._stop_trying_extra_mode()
+            return False
+        return True
+
+    def _try_prepare_extra_mode(self, screenshot, window_location) -> bool:
+        """Return True when this loop handled the screen and normal opening should wait."""
+        if not self._should_try_extra_mode():
+            return False
+        if not (self._extra_mode_source_visible(screenshot) or find(vio.extra_mode, screenshot, threshold=0.75)):
+            return False
+
+        attempt = self.extra_mode_failure_attempts + 1
+        if not find_and_click(vio.extra_mode, screenshot, window_location, threshold=0.75):
+            return self._record_extra_mode_failure("Extra mode requested, but 'extra_mode' was not found")
+
+        print(f"Trying to open Floor 4 in extra mode (attempt {attempt}/{_EXTRA_MODE_MAX_ATTEMPTS}).")
+        time.sleep(0.3)
+        screenshot, window_location = capture_window()
+        if not find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7):
+            return self._record_extra_mode_failure("Clicked extra mode, but the confirmation button did not appear")
+
+        time.sleep(0.3)
+        screenshot, _ = capture_window()
+        if find(vio.startbutton, screenshot):
+            self.extra_mode_failure_attempts = 0
+            self.pending_extra_clear_credit = True
+            print(
+                "Extra mode selected and the stage opened. This extra clear will be consumed on the next "
+                "Floor 4 victory (even if this specific run loses first)."
+            )
+            self.current_state = States.READY_TO_FIGHT
+            return True
+
+        return self._record_extra_mode_failure("Clicked extra mode and confirmed it, but the stage did not open")
     def exit_message(self):
         super().exit_message()
         percent = (
@@ -180,16 +253,30 @@ class IFloor4Farmer(IFarmer):
             return
         self.maybe_reset_daily_checkin_flag()
 
-        # In case we need to unlock the floor
-        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
-
-        # Click on floor 4 if it's available
-        find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7)
-
         if find(vio.startbutton, screenshot):
-            # We can move to the next state
             print("Let's GET READY to fight.")
             self.current_state = States.READY_TO_FIGHT
+            return
+
+        if self._try_prepare_extra_mode(screenshot, window_location):
+            return
+
+        # Click on floor 4 if it's available, then wait for the next loop to inspect the resulting screen.
+        if find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7):
+            return
+
+        screenshot, window_location = capture_window()
+
+        if find(vio.startbutton, screenshot):
+            print("Let's GET READY to fight.")
+            self.current_state = States.READY_TO_FIGHT
+            return
+
+        if self._try_prepare_extra_mode(screenshot, window_location):
+            return
+
+        # In case we need to unlock the floor in the normal path.
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
 
     def ready_to_fight_state(self):
         screenshot, window_location = capture_window()
@@ -200,7 +287,8 @@ class IFloor4Farmer(IFarmer):
             # screenshot_testing(screenshot, vio.restore_stamina)
             return
 
-        self.on_ready_to_fight_before_start(screenshot)
+        if self.on_ready_to_fight_before_start(screenshot) is False:
+            return
 
         # Try to start the fight
         find_and_click(vio.startbutton, screenshot, window_location)
@@ -239,7 +327,7 @@ class IFloor4Farmer(IFarmer):
         """Called when the fight logic completes.
 
         If ``stop_farmer`` is True, the farmer exits immediately without taking the lock,
-        incrementing ``total_count``, or updating success/defeat tallies — intentional for
+        incrementing ``total_count``, or updating success/defeat tallies â€” intentional for
         clean shutdown (e.g. a fighter requesting early exit).
         """
         if kwargs.get("stop_farmer", False):
@@ -255,6 +343,10 @@ class IFloor4Farmer(IFarmer):
             if victory:
                 # Transition to another state or perform clean-up actions
                 IFloor4Farmer.success_count += 1
+                if self.pending_extra_clear_credit and self.extra_clears_remaining > 0:
+                    self.extra_clears_remaining -= 1
+                    print(f"Consumed one extra clear on victory. Extra clears remaining: {self.extra_clears_remaining}.")
+                self.pending_extra_clear_credit = False
                 print("FLOOR 4 COMPLETE, WOOO!")
                 print("[CLEAR]")
             else:
@@ -301,3 +393,6 @@ class IFloor4Farmer(IFarmer):
             login_return_state=States.GOING_TO_DB,
             sleep_seconds=0.6,
         )
+
+
+
