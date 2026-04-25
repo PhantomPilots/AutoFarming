@@ -28,6 +28,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
         max_runs="inf",
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__(
@@ -35,8 +36,10 @@ class BirdFloor4Farmer(IFloor4Farmer):
             starting_state=starting_state,
             max_runs=max_runs,
             demonic_beast_image=vio.hraesvelgr,
+            extra_mode_source_image=vio.wind_source,
             do_dailies=do_dailies,
             password=password,
+            extra_clears=extra_clears,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.
@@ -58,6 +61,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
         password: str | None = None,
         *,
         whale: bool = False,
+        extra_clears: int = 0,
     ):
 
         super().__init__(
@@ -65,8 +69,10 @@ class DeerFloor4Farmer(IFloor4Farmer):
             starting_state=starting_state,
             max_runs=max_runs,
             demonic_beast_image=vio.eikthyrnir,
+            extra_mode_source_image=vio.river_source,
             do_dailies=do_dailies,
             password=password,
+            extra_clears=extra_clears,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.
@@ -90,6 +96,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
         max_runs="inf",
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__(
@@ -97,8 +104,10 @@ class DogsFloor4Farmer(IFloor4Farmer):
             starting_state=starting_state,
             max_runs=max_runs,
             demonic_beast_image=vio.skollandhati,
+            extra_mode_source_image=vio.twilight_source,
             do_dailies=do_dailies,
             password=password,
+            extra_clears=extra_clears,
         )
 
         self.fighter: IFighter = DogsFloor4Fighter(
