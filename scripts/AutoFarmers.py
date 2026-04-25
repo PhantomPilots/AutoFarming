@@ -15,6 +15,8 @@
 # AutoFarmers GUI (PyQt5)
 # Dropdown + stacked pages for all farmer scripts, with argument fields, terminal output, and process control.
 
+import ctypes
+import ctypes.wintypes
 import datetime
 import hashlib
 import os
@@ -36,6 +38,7 @@ from PyQt5.QtGui import (
     QColor,
     QDesktopServices,
     QFont,
+    QIcon,
     QImage,
     QPainter,
     QPainterPath,
@@ -189,12 +192,23 @@ _ACTIVE_THEME = _load_theme()
 C = C_LIGHT if _ACTIVE_THEME == "light" else C_DARK
 
 # Action Button Styles
-_BTN = "color: white; font-weight: bold; padding: 7px 4px; border: none; border-radius: 6px;"
-BTN_START = f"background-color: {C['accent']}; {_BTN}"
-BTN_STOP = f"background-color: {C['error']}; {_BTN}"
-BTN_PAUSE = f"background-color: {C['warning']}; {_BTN}"
-BTN_RESIZE = f"background-color: {C['blue']}; {_BTN}"
-BTN_CLEAR = f"background-color: {C['darker']}; color: {C['text']}; font-weight: bold; padding: 7px 4px; border: none; border-radius: 6px;"
+def _action_btn(base: str, hover: str, pressed: str, color: str = "white") -> str:
+    return (
+        f"QPushButton {{ background-color: {base}; color: {color};"
+        f" font-weight: bold; padding: 7px 4px; border: none; border-radius: 6px; }}"
+        f"QPushButton:hover {{ background-color: {hover}; }}"
+        f"QPushButton:pressed {{ background-color: {pressed}; }}"
+        f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['muted']}; }}"
+    )
+
+_START_HOVER   = "#34d399" if _ACTIVE_THEME == "dark" else "#22c55e"
+_START_PRESSED = "#059669" if _ACTIVE_THEME == "dark" else "#15803d"
+
+BTN_START  = _action_btn(C["running"], _START_HOVER, _START_PRESSED)
+BTN_STOP   = _action_btn(C["error"],   "#f87171",    "#dc2626")
+BTN_PAUSE  = _action_btn(C["warning"], "#fbbf24",    "#d97706")
+BTN_RESIZE = _action_btn(C["blue"],    "#60a5fa",    "#2563eb")
+BTN_CLEAR  = _action_btn(C["darker"],  C["dark"],    C["darker"], C["text"])
 
 _GUI_IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gui_images")
 
@@ -356,9 +370,11 @@ Tune your gear so you can guarantee that.<br>
 • NO SKULD</p>
     """,
     "Deer Floor 4 Whale": """
-<p><strong>Whale mode</strong> (aggressive phase-1 opener on the <em>same</em> floor-4 team as normal Deer Floor 4 — not the separate Deer Whale comp):<br>
-• Targets finishing <strong>Phase 1 in 1</strong> player turn; needs the CC/gear to support that opener.<br>
-• With whale mode <strong>off</strong>, expect <strong>Phase 1 in 3</strong> turns instead.</p>
+<p><strong>Requirements (Whale mode):</strong><br>
+• Same team as normal Deer Floor 4 — <em>not</em> the separate Deer Whale comp<br>
+• Targets finishing <strong>Phase 1 in 1</strong> player turn<br>
+• Tune your gear/CC to support the aggressive opener<br>
+• <strong>IMPORTANT</strong>: NO SKULD</p>
     """,
     "Dogs Floor 4": """
 <p><strong>Requirements:</strong><br>
@@ -486,6 +502,7 @@ FARMERS = [
                 "label": "Demons to Farm",
                 "type": "multiselect",
                 "choices": ["indura_demon", "og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
+                "labels":  ["Indura Demon", "OG Demon",  "Bell Demon", "Red Demon",  "Gray Demon",  "Crimson Demon"],
                 "default": ["indura_demon"],
             },
             {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
@@ -1686,8 +1703,10 @@ class FarmerTab(QWidget):
                     _vbox.setContentsMargins(8, 6, 8, 6)
                     _vbox.setSpacing(4)
                     widget._checkboxes = []
-                    for choice in arg["choices"]:
-                        cb = QCheckBox(choice)
+                    _labels = arg.get("labels", arg["choices"])
+                    for choice, label in zip(arg["choices"], _labels):
+                        cb = QCheckBox(label)
+                        cb.setProperty("value", choice)
                         cb.setChecked(choice in arg.get("default", []))
                         _vbox.addWidget(cb)
                         widget._checkboxes.append(cb)
@@ -1729,15 +1748,7 @@ class FarmerTab(QWidget):
                 f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
                 f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
             )
-            req_scroll = QScrollArea()
-            req_scroll.setWidget(self.req_label)
-            req_scroll.setWidgetResizable(True)
-            req_scroll.setMaximumHeight(180)
-            req_scroll.setStyleSheet(
-                f"QScrollArea {{ background: {C['panel3']}; border-left: 3px solid {C['accent']};"
-                f" border-radius: 0 5px 5px 0; border-top: none; border-right: none; border-bottom: none; }}"
-            )
-            panel.addWidget(req_scroll)
+            panel.addWidget(self.req_label)
             panel.addSpacing(4)
 
         # Action buttons
@@ -1917,7 +1928,7 @@ class FarmerTab(QWidget):
             elif arg["type"] == "checkbox":
                 values[arg["name"]] = widget.isChecked()
             elif arg["type"] == "multiselect":
-                values[arg["name"]] = [cb.text() for cb in widget._checkboxes if cb.isChecked()]
+                values[arg["name"]] = [cb.property("value") for cb in widget._checkboxes if cb.isChecked()]
             else:
                 values[arg["name"]] = widget.text()
         return values
@@ -1947,7 +1958,7 @@ class FarmerTab(QWidget):
             for checkbox in widget._checkboxes:
                 checkbox.toggled.connect(
                     lambda _checked, n=name, frame=widget: self.controller.set_arg_value(
-                        n, [cb.text() for cb in frame._checkboxes if cb.isChecked()]
+                        n, [cb.property("value") for cb in frame._checkboxes if cb.isChecked()]
                     )
                 )
         else:
@@ -1974,7 +1985,7 @@ class FarmerTab(QWidget):
                     selected = set(value or [])
                     for checkbox in widget._checkboxes:
                         checkbox.blockSignals(True)
-                        checkbox.setChecked(checkbox.text() in selected)
+                        checkbox.setChecked(checkbox.property("value") in selected)
                         checkbox.blockSignals(False)
                 else:
                     widget.blockSignals(True)
@@ -2181,6 +2192,7 @@ class FarmerTab(QWidget):
         if self.req_label is not None:
             key = whale_config["requirements_key"] if whale_enabled else self.farmer["name"]
             self.req_label.setText(REQUIREMENTS.get(key, ""))
+            self.req_label.adjustSize()
 
         image = whale_config["image"] if whale_enabled else FARMER_IMAGES.get(self.farmer["name"])
         self.load_farmer_image(image)
@@ -2599,9 +2611,12 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("AutoFarmers - 7DS Grand Cross")
         self.setGeometry(100, 100, 1200, 700)
+        _icon_path = os.path.join(os.path.dirname(__file__), "..", "gui_images", "main.ico")
+        self.setWindowIcon(QIcon(_icon_path))
 
         self._detail_views: dict = {}
         self._farmer_by_name = {f["name"]: f for f in FARMERS}
+        self._active_main_view: str = "list"  # "grid" or "list"
 
         self._settings_tab: SettingsTab | None = None
         self._about_tab: AboutTab | None = None
@@ -2773,17 +2788,24 @@ class MainWindow(QMainWindow):
         QApplication.instance().quit()
 
     def _toggle_view(self):
-        if self.stack.currentWidget() is self.list_view:
+        if self._active_main_view == "list":
+            self._active_main_view = "grid"
             self._view_toggle_btn.setText("☰  List")
             self.stack.setCurrentWidget(self.grid_view)
         else:
+            self._active_main_view = "list"
             self._view_toggle_btn.setText("⊞  Grid")
             self.list_view.show_about()
             self.stack.setCurrentWidget(self.list_view)
 
     def _show_grid(self):
-        self.stack.setCurrentWidget(self.grid_view)
-        self._view_toggle_btn.setText("☰  List")
+        """Return to whichever main view (grid or list) the user had selected."""
+        if self._active_main_view == "list":
+            self._view_toggle_btn.setText("⊞  Grid")
+            self.stack.setCurrentWidget(self.list_view)
+        else:
+            self._view_toggle_btn.setText("☰  List")
+            self.stack.setCurrentWidget(self.grid_view)
 
     def _ensure_detail_view(self, name: str) -> "DetailView":
         if name in self._detail_views:
@@ -2798,11 +2820,27 @@ class MainWindow(QMainWindow):
         return any(controller.is_running for controller in self._controllers.values())
 
 
+def _apply_dark_title_bar(hwnd: int, dark: bool) -> None:
+    """Tell Windows to use a dark (or light) title bar for the given window handle."""
+    DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+    value = ctypes.c_int(1 if dark else 0)
+    try:
+        ctypes.windll.dwmapi.DwmSetWindowAttribute(
+            hwnd,
+            DWMWA_USE_IMMERSIVE_DARK_MODE,
+            ctypes.byref(value),
+            ctypes.sizeof(value),
+        )
+    except OSError:
+        pass  # Not supported on older Windows versions
+
+
 def main():
     app = QApplication(sys.argv)
     app.setStyleSheet(APP_STYLESHEET)
     window = MainWindow()
     window.show()
+    _apply_dark_title_bar(int(window.winId()), _ACTIVE_THEME == "dark")
     sys.exit(app.exec_())
 
 
