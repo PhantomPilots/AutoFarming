@@ -1474,13 +1474,13 @@ class AboutTab(QWidget):
         if not self._latest_update_message and self._update_count <= 0:
             return
 
-        parts = ["Latest update:"]
-        parts.append(self._latest_update_message or "Update details were unavailable.")
+        parts = ["What changed most recently:"]
+        parts.append(self._latest_update_message or "No short description was available for this download.")
         if self._update_count > 1:
             parts.append("")
-            parts.append(f"This update included {self._update_count} total updates.")
+            parts.append(f"This download bundled {self._update_count} separate changes.")
 
-        QMessageBox.information(self, "Update Complete", "\n".join(parts))
+        QMessageBox.information(self, "You're up to date", "\n".join(parts))
 
     def _handle_post_pull_completion(self):
         """Handle post-pull decisions, including requirements install and restart."""
