@@ -198,6 +198,13 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 if drag is not None:
                     return drag
 
+        screenshot, _ = capture_window()
+        if find(vio.freeze_icon, screenshot):
+            nasiens_ult_ids = self._matching_card_ids(hand_of_cards, ("nasi_ult",))
+            if len(nasiens_ult_ids) > 0:
+                print("Unfreezing with Nasiens ult.")
+                return nasiens_ult_ids[-1]
+
         # Play one stance-control card on odd turns; otherwise hide them from Smarter.
         if attack_debuff_ids := self._matching_card_ids(hand_of_cards, STANCE_CONTROL_TEMPLATES):
             played_attack_debuff_ids = self._matching_card_ids(picked_cards, STANCE_CONTROL_TEMPLATES)
