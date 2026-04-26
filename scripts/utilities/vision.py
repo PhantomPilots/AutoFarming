@@ -8,6 +8,7 @@ from utilities.pattern_match_strategies import (
     TemplateMatchingStrategy,
 )
 
+# Harmless marker: push this commit, pull in About tab, then `git reset --hard HEAD~1` locally to retest.
 
 class Vision:
     """Class to host a single image template to match"""
