@@ -8,6 +8,7 @@ from utilities.pattern_match_strategies import (
     TemplateMatchingStrategy,
 )
 
+# Dummy: About-tab update smoke test (remove when done).
 
 class Vision:
     """Class to host a single image template to match"""
