@@ -1297,7 +1297,7 @@ class AboutTab(QWidget):
         self.updating = True
         self.update_btn.setEnabled(False)
         self._reset_update_summary()
-        self.status_label.setText("🔄 Reading current version...")
+        self.status_label.setText("🔄 Checking which version you have...")
 
         self.run_process("git", ["rev-parse", "HEAD"], self.after_pre_update_head, capture_output=True)
 
@@ -1345,7 +1345,7 @@ class AboutTab(QWidget):
             self._finish_update()
             return
 
-        self.status_label.setText("🔄 Reading update details...")
+        self.status_label.setText("🔄 Summarizing what you just downloaded...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
     def after_post_update_head(self, exit_code):
@@ -1498,7 +1498,7 @@ class AboutTab(QWidget):
         )
 
         if requirements_changed:
-            self.status_label.setText("🔄 Installing updated requirements...")
+            self.status_label.setText("🔄 Installing updated add-ons (Python packages)...")
             self.run_process(
                 sys.executable,
                 ["-m", "pip", "install", "-r", self.requirements_file_path],
