@@ -1097,6 +1097,38 @@ PASSWORD_CLI_SCRIPTS = frozenset(
 class AboutTab(QWidget):
     update_finished = pyqtSignal()
     _MAX_UPDATE_MESSAGE_CHARS = 1000
+    _MAX_CHANGED_AREAS_SHOWN = 6
+    _UPDATE_AREA_PATTERNS = (
+        ("Dogs Floor 4", ("dogsfloor4farmer.py", "dogs_floor4", "dogs_floor_4")),
+        ("Bird Floor 4", ("birdfloor4farmer.py", "bird_floor4", "bird_floor_4")),
+        ("Deer Floor 4", ("deerfloor4farmer.py", "deer_floor4", "deer_floor_4")),
+        ("Demon King Farmer", ("demonkingfarmer.py", "demon_king", "dk_")),
+        ("Guild Boss Farmer", ("guildbossfarmer.py", "guild_boss")),
+        ("Final Boss Farmer", ("finalbossfarmer.py", "final_boss")),
+        ("Legendary Boss Farmer", ("legendarybossfarmer.py", "legendary_boss")),
+        ("Boss Battle Farmer", ("bossbattlefarmer.py", "boss_battle")),
+        ("SA Coin Dungeon Farmer", ("sadungeonfarmer.py", "sa_dungeon", "sa_coin")),
+        ("Tower Trials", ("towertrialsfarmer.py", "tower_trials")),
+        ("Reroll Constellation", ("rerollconstellation.py", "reroll_constellation")),
+        ("Accounts Farmer", ("accountsfarmer.py", "accounts_farming", "accounts.yaml")),
+        ("Daily Quests Farmer", ("dailyquestsfarmer.py", "daily_farming", "/dailies/")),
+        ("Equipment Farmer", ("equipmentfarmer.py", "equipment")),
+        ("Demon Farmer", ("demonfarmer.py", "demon_farming", "demons/", "indura_")),
+        ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "/dogs/")),
+        ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "/deer/")),
+        ("Bird Farmer", ("birdfarmer.py", "bird_farming", "bird_fighter", "/bird")),
+        ("Snake Farmer", ("snakefarmer.py", "snake_farming", "snake_fighter", "snake_fighting", "/snake/")),
+        ("Rat Farmer", ("ratfarmer.py", "rat_farming", "rat_fighter", "rat_fighting", "rat_utilities", "/rat/")),
+        ("Gold Farmer", ("goldfarmer.py", "gold_farming", "gold_dungeon", "gold_card")),
+        ("Vision Images", ("vision_images.py",)),
+        ("Vision", ("vision.py", "pattern_match_strategies.py", "feature_extractors.py")),
+        ("GUI", ("autofarmers.py", "gui_images/")),
+        ("Configuration", ("scripts/config/", ".yaml")),
+        ("Dependencies", ("requirements.txt",)),
+        ("Utilities", ("scripts/utilities/",)),
+        ("Images", ("scripts/images/",)),
+        ("Documentation", ("readme", ".md")),
+    )
 
     def __init__(self, restart_safe_supplier=None, parent=None):
         super().__init__(parent)
@@ -1116,6 +1148,7 @@ class AboutTab(QWidget):
         self._post_update_head = None
         self._latest_update_message = ""
         self._update_count = 0
+        self._changed_update_areas = []
         self.init_ui()
 
     def init_ui(self):
@@ -1389,6 +1422,24 @@ class AboutTab(QWidget):
         if exit_code == 0:
             self._latest_update_message = self._truncate_update_message(self._last_process_output.strip())
 
+        if not self._pre_update_head or not self._post_update_head:
+            self._handle_post_pull_completion()
+            return
+
+        revision_range = f"{self._pre_update_head}..{self._post_update_head}"
+        self.run_process(
+            "git",
+            ["diff", "--name-only", revision_range],
+            self.after_changed_update_files,
+            capture_output=True,
+        )
+
+    def after_changed_update_files(self, exit_code):
+        """Capture the user-facing areas touched by this update."""
+        if exit_code == 0:
+            changed_paths = [path.strip() for path in self._last_process_output.splitlines() if path.strip()]
+            self._changed_update_areas = self._classify_changed_update_areas(changed_paths)
+
         self._handle_post_pull_completion()
 
     def after_requirements_install(self, exit_code):
@@ -1464,12 +1515,32 @@ class AboutTab(QWidget):
         self._post_update_head = None
         self._latest_update_message = ""
         self._update_count = 0
+        self._changed_update_areas = []
 
     def _truncate_update_message(self, message):
         """Keep verbose update messages from creating oversized dialogs."""
         if len(message) <= self._MAX_UPDATE_MESSAGE_CHARS:
             return message
         return message[: self._MAX_UPDATE_MESSAGE_CHARS].rstrip() + "..."
+
+    def _classify_changed_update_areas(self, changed_paths):
+        """Group changed files into user-facing update areas."""
+        areas = []
+        seen = set()
+        for path in changed_paths:
+            area = self._classify_update_area(path)
+            if area in seen:
+                continue
+            seen.add(area)
+            areas.append(area)
+        return areas
+
+    def _classify_update_area(self, path):
+        normalized_path = path.replace("\\", "/").lower()
+        for area, patterns in self._UPDATE_AREA_PATTERNS:
+            if any(pattern in normalized_path for pattern in patterns):
+                return area
+        return "Other"
 
     def _show_update_summary_dialog(self):
         """Show a compact summary for successful updates."""
@@ -1478,9 +1549,21 @@ class AboutTab(QWidget):
 
         parts = ["What changed most recently:"]
         parts.append(self._latest_update_message or "No short description was available for this download.")
-        if self._update_count > 1:
+
+        if self._changed_update_areas:
             parts.append("")
-            parts.append(f"This download bundled {self._update_count} separate changes.")
+            parts.append("Changed areas:")
+            visible_areas = self._changed_update_areas[: self._MAX_CHANGED_AREAS_SHOWN]
+            parts.extend(f"• {area}" for area in visible_areas)
+            hidden_area_count = len(self._changed_update_areas) - len(visible_areas)
+            if hidden_area_count > 0:
+                plural = "" if hidden_area_count == 1 else "s"
+                parts.append(f"• {hidden_area_count} more area{plural}")
+
+        if self._update_count > 0:
+            parts.append("")
+            update_word = "update" if self._update_count == 1 else "updates"
+            parts.append(f"This download contains {self._update_count} {update_word}.")
 
         QMessageBox.information(self, "You're up to date", "\n".join(parts))
 
