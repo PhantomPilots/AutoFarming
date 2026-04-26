@@ -1095,6 +1095,7 @@ PASSWORD_CLI_SCRIPTS = frozenset(
 
 
 class AboutTab(QWidget):
+    update_started = pyqtSignal()
     update_finished = pyqtSignal()
     _MAX_UPDATE_MESSAGE_CHARS = 1000
     _MAX_CHANGED_AREAS_SHOWN = 6
@@ -1331,6 +1332,7 @@ class AboutTab(QWidget):
         # Start the update process
         self.updating = True
         self.update_btn.setEnabled(False)
+        self.update_started.emit()
         self._reset_update_summary()
         self.status_label.setText("🔄 Checking which version you have...")
 
@@ -2645,10 +2647,11 @@ class DetailView(QWidget):
 class ListView(QWidget):
     """Sidebar list + right content panel (alternative to grid)."""
 
-    def __init__(self, farmers, controllers, parent=None):
+    def __init__(self, farmers, controllers, about_tab_factory=None, parent=None):
         super().__init__(parent)
         self._farmers = farmers
         self._controllers = controllers
+        self._about_tab_factory = about_tab_factory or AboutTab
         self._farmer_tabs: dict = {}
         self._list_rows: dict = {}  # farmer_name → row index in QListWidget
         self._slot_built: list[bool] = []  # parallel to self._stack indices; False = placeholder
@@ -2742,7 +2745,7 @@ class ListView(QWidget):
     def _build_slot(self, row: int) -> None:
         slot = self._stack.widget(row)
         if row == 0:
-            self._about_tab = AboutTab()
+            self._about_tab = self._about_tab_factory()
             about_scroll = QScrollArea()
             about_scroll.setWidgetResizable(True)
             about_scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {C['bg']}; }}")
@@ -2823,6 +2826,7 @@ class MainWindow(QMainWindow):
         self._update_check_process: QProcess | None = None
         self._update_check_output = bytearray()
         self._update_check_timed_out = False
+        self._manual_update_running = False
         self._update_check_timeout_timer = QTimer(self)
         self._update_check_timeout_timer.setSingleShot(True)
         self._update_check_timeout_timer.timeout.connect(self._on_update_check_timeout)
@@ -2899,7 +2903,7 @@ class MainWindow(QMainWindow):
             controller.running_changed.connect(lambda running, pid, n=name: self.grid_view.set_running(n, running))
             self.grid_view.set_running(name, controller.is_running)
 
-        self.list_view = ListView(FARMERS, self._controllers)
+        self.list_view = ListView(FARMERS, self._controllers, about_tab_factory=self._make_about_tab)
 
         self.stack.addWidget(self.grid_view)
         self.stack.addWidget(self.list_view)
@@ -2919,9 +2923,14 @@ class MainWindow(QMainWindow):
     @property
     def about_tab(self) -> "AboutTab":
         if self._about_tab is None:
-            self._about_tab = AboutTab(restart_safe_supplier=lambda: not self._any_farmer_running())
-            self._about_tab.update_finished.connect(self._check_for_update_available)
+            self._about_tab = self._make_about_tab()
         return self._about_tab
+
+    def _make_about_tab(self) -> "AboutTab":
+        about_tab = AboutTab(restart_safe_supplier=lambda: not self._any_farmer_running())
+        about_tab.update_started.connect(self._on_manual_update_started)
+        about_tab.update_finished.connect(self._on_manual_update_finished)
+        return about_tab
 
     @property
     def settings_wrapper(self) -> QWidget:
@@ -2985,21 +2994,35 @@ class MainWindow(QMainWindow):
     def _set_update_available(self, available: bool) -> None:
         self._update_available_label.setVisible(available)
 
+    def _on_manual_update_started(self) -> None:
+        self._manual_update_running = True
+        self._set_update_available(False)
+
+    def _on_manual_update_finished(self) -> None:
+        self._manual_update_running = False
+        self._check_for_update_available()
+
     def _check_for_update_available(self) -> None:
         """Quietly check whether the configured upstream branch is ahead."""
-        if self._update_check_process is not None:
-            return
         self._set_update_available(False)
+        if self._manual_update_running or self._update_check_process is not None:
+            return
         self._run_update_check_command("git", ["fetch", "--quiet"], self._after_update_fetch)
 
     def _after_update_fetch(self, exit_code: int, output: str) -> None:
         del output
+        if self._manual_update_running:
+            self._set_update_available(False)
+            return
         if exit_code != 0:
             self._set_update_available(False)
             return
         self._run_update_check_command("git", ["rev-list", "--count", "HEAD..@{u}"], self._after_update_count)
 
     def _after_update_count(self, exit_code: int, output: str) -> None:
+        if self._manual_update_running:
+            self._set_update_available(False)
+            return
         if exit_code != 0:
             self._set_update_available(False)
             return
