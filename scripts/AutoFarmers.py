@@ -1096,6 +1096,7 @@ PASSWORD_CLI_SCRIPTS = frozenset(
 
 class AboutTab(QWidget):
     update_finished = pyqtSignal()
+    _MAX_UPDATE_MESSAGE_CHARS = 1000
 
     def __init__(self, restart_safe_supplier=None, parent=None):
         super().__init__(parent)
@@ -1108,6 +1109,13 @@ class AboutTab(QWidget):
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
+        self._capture_process_output = False
+        self._process_output = bytearray()
+        self._last_process_output = ""
+        self._pre_update_head = None
+        self._post_update_head = None
+        self._latest_update_message = ""
+        self._update_count = 0
         self.init_ui()
 
     def init_ui(self):
@@ -1288,10 +1296,10 @@ class AboutTab(QWidget):
         # Start the update process
         self.updating = True
         self.update_btn.setEnabled(False)
-        self.status_label.setText("🔄 Running 'git stash'...")
+        self._reset_update_summary()
+        self.status_label.setText("🔄 Reading current version...")
 
-        # Start with git stash
-        self.run_process("git", ["stash"], self.after_stash)
+        self.run_process("git", ["rev-parse", "HEAD"], self.after_pre_update_head, capture_output=True)
 
     def open_url(self, url: str):
         """Open URL in default browser"""
@@ -1308,6 +1316,14 @@ class AboutTab(QWidget):
             QTimer.singleShot(2000, lambda: self.status_label.setText(""))
         except Exception as e:
             self.status_label.setText(f"❌ Failed to open URL: {e}")
+
+    def after_pre_update_head(self, exit_code):
+        """Capture the current revision before applying updates."""
+        if exit_code == 0:
+            self._pre_update_head = self._last_process_output.strip()
+
+        self.status_label.setText("🔄 Running 'git stash'...")
+        self.run_process("git", ["stash"], self.after_stash)
 
     def after_stash(self, exit_code):
         """Handle completion of git stash command"""
@@ -1329,6 +1345,48 @@ class AboutTab(QWidget):
             self._finish_update()
             return
 
+        self.status_label.setText("🔄 Reading update details...")
+        self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
+
+    def after_post_update_head(self, exit_code):
+        """Capture the updated revision and gather a short user-facing summary."""
+        if exit_code != 0:
+            self._handle_post_pull_completion()
+            return
+
+        self._post_update_head = self._last_process_output.strip()
+        if not self._pre_update_head or self._pre_update_head == self._post_update_head:
+            self._handle_post_pull_completion()
+            return
+
+        revision_range = f"{self._pre_update_head}..{self._post_update_head}"
+        self.run_process("git", ["rev-list", "--count", revision_range], self.after_update_count, capture_output=True)
+
+    def after_update_count(self, exit_code):
+        """Capture how many updates were included."""
+        if exit_code == 0:
+            try:
+                self._update_count = int(self._last_process_output.strip())
+            except ValueError:
+                self._update_count = 0
+
+        if not self._pre_update_head or not self._post_update_head:
+            self._handle_post_pull_completion()
+            return
+
+        revision_range = f"{self._pre_update_head}..{self._post_update_head}"
+        self.run_process(
+            "git",
+            ["log", "-1", "--pretty=format:%B", revision_range],
+            self.after_latest_update_message,
+            capture_output=True,
+        )
+
+    def after_latest_update_message(self, exit_code):
+        """Capture the latest update message, bounded for a compact popup."""
+        if exit_code == 0:
+            self._latest_update_message = self._truncate_update_message(self._last_process_output.strip())
+
         self._handle_post_pull_completion()
 
     def after_requirements_install(self, exit_code):
@@ -1342,11 +1400,14 @@ class AboutTab(QWidget):
 
         self._complete_restart_decision()
 
-    def run_process(self, program, args, on_finished):
+    def run_process(self, program, args, on_finished, capture_output=False):
         """Run an external command in the repo root directory."""
         if self.update_process is not None:
             return  # Already running a command
 
+        self._capture_process_output = capture_output
+        self._process_output = bytearray()
+        self._last_process_output = ""
         self.update_process = QProcess(self)
         self.update_process.setWorkingDirectory(self.repo_root)
         self.update_process.setProcessChannelMode(QProcess.MergedChannels)
@@ -1363,18 +1424,25 @@ class AboutTab(QWidget):
         if not self.update_process.waitForStarted(3000):
             self.status_label.setText(f"❌ Failed to start {program}")
             self.update_process = None
+            self._capture_process_output = False
+            self._process_output = bytearray()
             self._finish_update()
 
     def on_git_output(self):
-        """Handle git command output (optional - could be used for detailed logging)"""
+        """Handle command output, capturing only when a caller needs it."""
         if self.update_process is not None:
-            # For now, we'll just read and ignore the output
-            # In the future, this could be logged to a details view
-            self.update_process.readAllStandardOutput()
+            output = self.update_process.readAllStandardOutput()
+            if self._capture_process_output:
+                self._process_output.extend(bytes(output))
 
     def on_git_finished(self, exit_code, callback):
         """Handle git command completion"""
+        if self.update_process is not None and self._capture_process_output:
+            self._process_output.extend(bytes(self.update_process.readAllStandardOutput()))
+            self._last_process_output = self._process_output.decode(errors="replace")
         self.update_process = None
+        self._capture_process_output = False
+        self._process_output = bytearray()
         callback(exit_code)
 
     def _compute_file_hash(self, path):
@@ -1387,6 +1455,32 @@ class AboutTab(QWidget):
             return hasher.hexdigest()
         except OSError:
             return None
+
+    def _reset_update_summary(self):
+        """Clear per-run update summary data."""
+        self._pre_update_head = None
+        self._post_update_head = None
+        self._latest_update_message = ""
+        self._update_count = 0
+
+    def _truncate_update_message(self, message):
+        """Keep verbose update messages from creating oversized dialogs."""
+        if len(message) <= self._MAX_UPDATE_MESSAGE_CHARS:
+            return message
+        return message[: self._MAX_UPDATE_MESSAGE_CHARS].rstrip() + "..."
+
+    def _show_update_summary_dialog(self):
+        """Show a compact summary for successful updates."""
+        if not self._latest_update_message and self._update_count <= 0:
+            return
+
+        parts = ["Latest update:"]
+        parts.append(self._latest_update_message or "Update details were unavailable.")
+        if self._update_count > 1:
+            parts.append("")
+            parts.append(f"This update included {self._update_count} total updates.")
+
+        QMessageBox.information(self, "Update Complete", "\n".join(parts))
 
     def _handle_post_pull_completion(self):
         """Handle post-pull decisions, including requirements install and restart."""
@@ -1416,6 +1510,8 @@ class AboutTab(QWidget):
 
     def _complete_restart_decision(self):
         """Decide whether the update should trigger a GUI restart."""
+        self._show_update_summary_dialog()
+
         if not self._pending_gui_changed:
             self.status_label.setText("✅ Update complete")
             self._finish_update()
@@ -1440,6 +1536,7 @@ class AboutTab(QWidget):
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
+        self._reset_update_summary()
         self.update_finished.emit()
         if clear_status:
             QTimer.singleShot(5000, lambda: self.status_label.setText(""))
