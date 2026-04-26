@@ -15,7 +15,6 @@ from utilities.utilities import (
     find_and_click,
 )
 
-# TODO: delete this line after verifying About-tab "pull then reset" flow (harmless smoke-test marker).
 ESCALIN_TEMPLATES: Final[tuple[str, ...]] = ("escalin_st", "escalin_aoe", "escalin_ult")
 ROXY_TEMPLATES: Final[tuple[str, ...]] = ("roxy_st", "roxy_aoe", "roxy_ult")
 NASI_TEMPLATES: Final[tuple[str, ...]] = ("nasi_heal", "nasi_stun", "nasi_ult")

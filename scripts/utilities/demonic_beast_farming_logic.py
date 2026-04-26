@@ -26,7 +26,6 @@ from utilities.utilities import (
 
 logger = LoggerWrapper("DBLogger", log_file="demonic_beast_logger.log")
 
-# If you see this in `git log`, the disposable test commit landed; safe to remove with the other smoke markers.
 
 class States(Enum):
     GOING_TO_DB = 0
