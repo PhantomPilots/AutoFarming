@@ -1095,6 +1095,8 @@ PASSWORD_CLI_SCRIPTS = frozenset(
 
 
 class AboutTab(QWidget):
+    update_finished = pyqtSignal()
+
     def __init__(self, restart_safe_supplier=None, parent=None):
         super().__init__(parent)
         self.update_process = None
@@ -1438,6 +1440,7 @@ class AboutTab(QWidget):
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
+        self.update_finished.emit()
         if clear_status:
             QTimer.singleShot(5000, lambda: self.status_label.setText(""))
 
@@ -2634,6 +2637,13 @@ class MainWindow(QMainWindow):
         self._about_tab: AboutTab | None = None
         self._settings_wrapper: QWidget | None = None
         self._about_wrapper: QWidget | None = None
+        self._repo_root = os.path.dirname(os.path.dirname(__file__))
+        self._update_check_process: QProcess | None = None
+        self._update_check_output = bytearray()
+        self._update_check_timed_out = False
+        self._update_check_timeout_timer = QTimer(self)
+        self._update_check_timeout_timer.setSingleShot(True)
+        self._update_check_timeout_timer.timeout.connect(self._on_update_check_timeout)
 
         self._controllers = {
             farmer["name"]: FarmerController(
@@ -2664,6 +2674,13 @@ class MainWindow(QMainWindow):
         )
         logo.setTextFormat(Qt.RichText)
         top_lay.addWidget(logo)
+
+        self._update_available_label = QLabel("Update available!")
+        self._update_available_label.setStyleSheet(
+            "color: #10b981; font-size: 11px; font-style: italic; background: transparent;"
+        )
+        self._update_available_label.setVisible(False)
+        top_lay.addWidget(self._update_available_label)
 
         top_lay.addStretch(1)
 
@@ -2709,6 +2726,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central)
 
         self.stack.setCurrentWidget(self.list_view)
+        QTimer.singleShot(1000, self._check_for_update_available)
 
     @property
     def settings_tab(self) -> "SettingsTab":
@@ -2720,6 +2738,7 @@ class MainWindow(QMainWindow):
     def about_tab(self) -> "AboutTab":
         if self._about_tab is None:
             self._about_tab = AboutTab(restart_safe_supplier=lambda: not self._any_farmer_running())
+            self._about_tab.update_finished.connect(self._check_for_update_available)
         return self._about_tab
 
     @property
@@ -2780,6 +2799,81 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(self.settings_wrapper)
         else:
             self._show_grid()
+
+    def _set_update_available(self, available: bool) -> None:
+        self._update_available_label.setVisible(available)
+
+    def _check_for_update_available(self) -> None:
+        """Quietly check whether the configured upstream branch is ahead."""
+        if self._update_check_process is not None:
+            return
+        self._set_update_available(False)
+        self._run_update_check_command("git", ["fetch", "--quiet"], self._after_update_fetch)
+
+    def _after_update_fetch(self, exit_code: int, output: str) -> None:
+        del output
+        if exit_code != 0:
+            self._set_update_available(False)
+            return
+        self._run_update_check_command("git", ["rev-list", "--count", "HEAD..@{u}"], self._after_update_count)
+
+    def _after_update_count(self, exit_code: int, output: str) -> None:
+        if exit_code != 0:
+            self._set_update_available(False)
+            return
+        try:
+            commits_behind_upstream = int(output.strip())
+        except ValueError:
+            self._set_update_available(False)
+            return
+        self._set_update_available(commits_behind_upstream > 0)
+
+    def _run_update_check_command(self, program: str, args: list[str], on_finished) -> None:
+        if self._update_check_process is not None:
+            return
+
+        self._update_check_output = bytearray()
+        self._update_check_timed_out = False
+        self._update_check_process = QProcess(self)
+        self._update_check_process.setWorkingDirectory(self._repo_root)
+        self._update_check_process.setProcessChannelMode(QProcess.MergedChannels)
+        self._update_check_process.readyReadStandardOutput.connect(self._on_update_check_output)
+        self._update_check_process.finished.connect(
+            lambda exit_code, exit_status: self._on_update_check_finished(exit_code, on_finished)
+        )
+        self._update_check_process.start(program, args)
+
+        if not self._update_check_process.waitForStarted(3000):
+            self._update_check_process = None
+            self._set_update_available(False)
+            return
+
+        self._update_check_timeout_timer.start(15000)
+
+    def _on_update_check_output(self) -> None:
+        if self._update_check_process is not None:
+            self._update_check_output.extend(bytes(self._update_check_process.readAllStandardOutput()))
+
+    def _on_update_check_finished(self, exit_code: int, on_finished) -> None:
+        if self._update_check_process is not None:
+            self._update_check_output.extend(bytes(self._update_check_process.readAllStandardOutput()))
+        output = self._update_check_output.decode(errors="replace")
+        self._update_check_process = None
+        self._update_check_output = bytearray()
+        self._update_check_timeout_timer.stop()
+
+        if self._update_check_timed_out:
+            self._update_check_timed_out = False
+            return
+
+        on_finished(exit_code, output)
+
+    def _on_update_check_timeout(self) -> None:
+        if self._update_check_process is None:
+            return
+        self._update_check_timed_out = True
+        self._update_check_process.kill()
+        self._set_update_available(False)
 
     def _toggle_theme(self):
         if self._any_farmer_running():
