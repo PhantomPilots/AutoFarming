@@ -1284,7 +1284,9 @@ class AboutTab(QWidget):
         cta_label = QLabel()
         cta_label.setWordWrap(True)
         cta_label.setAlignment(Qt.AlignCenter)
-        cta_label.setText("<p><em>Pick a farmer tab to configure and start, and join our Discord for help!</em></p>")
+        cta_label.setText(
+            "<p><em>Open a farmer tab to set it up and run it. Questions? Our Discord community can help.</em></p>"
+        )
         cta_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4; font-style: italic;")
         layout.addWidget(cta_label)
 
