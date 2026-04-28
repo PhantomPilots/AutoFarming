@@ -305,10 +305,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             for card in hand_of_cards
         ]
 
-        # All unit cards sorted
-        tyr_hel_cards = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
-            key=lambda idx: card_ranks[idx],
+        # All unit cards sorted (Tyr/Hel separate — they never share a team)
+        tyr_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card)], key=lambda idx: card_ranks[idx]
+        )
+        hel_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_Hel_card(card)], key=lambda idx: card_ranks[idx]
         )
         jorm_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
@@ -375,7 +377,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         # Move a card of someone that doesn't have an ult
         return self._move_card_for_ult(
             hand_of_cards + picked_cards,
-            tyr_hel_cards=tyr_hel_cards,
+            tyr_card_ids=tyr_card_ids,
+            hel_card_ids=hel_card_ids,
             freyr_cards=red_card_ids,
             jorm_cards=jorm_cards,
             thor_cards=blue_card_ids,
@@ -463,9 +466,11 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         green_card_ids = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
-        tyr_hel_cards = sorted(
-            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card) or is_Hel_card(card)],
-            key=lambda idx: card_ranks[idx],
+        tyr_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_Tyr_card(card)], key=lambda idx: card_ranks[idx]
+        )
+        hel_card_ids = sorted(
+            [i for i, card in enumerate(hand_of_cards) if is_Hel_card(card)], key=lambda idx: card_ranks[idx]
         )
         jorm_cards = sorted(
             [i for i, card in enumerate(hand_of_cards) if is_Jorm_card(card)], key=lambda idx: card_ranks[idx]
@@ -490,7 +495,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 # Move a card of someone that doesn't have an ult AND if we haven't played a Hel's ult at the beginning
                 return self._move_card_for_ult(
                     hand_of_cards + picked_cards,
-                    tyr_hel_cards=tyr_hel_cards,
+                    tyr_card_ids=tyr_card_ids,
+                    hel_card_ids=hel_card_ids,
                     freyr_cards=red_card_ids,
                     jorm_cards=jorm_cards,
                     thor_cards=blue_card_ids,
@@ -565,24 +571,26 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     def _move_card_for_ult(
         self,
         list_of_cards: list[Card],
-        tyr_hel_cards: list[Card],
-        freyr_cards: list[Card],
-        jorm_cards: list[Card],
-        thor_cards: list[Card],
+        tyr_card_ids: list[int],
+        hel_card_ids: list[int],
+        freyr_cards: list[int],
+        jorm_cards: list[int],
+        thor_cards: list[int],
     ):
         """Move a card of someone that doesn't have an ult"""
         unit_to_cards = {
-            "tyr": tyr_hel_cards,
-            "hel": tyr_hel_cards,
+            "tyr": tyr_card_ids,
+            "hel": hel_card_ids,
             "freyr": freyr_cards,
             "jorm": jorm_cards,
             "thor": thor_cards,
         }
-        for unit in ["tyr", "hel", "freyr", "jorm", "thor"]:
-            if not has_ult(unit, list_of_cards):
-                cards = unit_to_cards[unit]
-                if len(cards):
-                    print(f"Unit {unit} doesn't have an ult yet!")
-                    return [cards[0], cards[0] + 1]
+        # Tyr/Hel never share a team; only one carry step (prefer Tyr if both lists non-empty, e.g. vision glitch).
+        carry_first = ["tyr"] if len(tyr_card_ids) else ["hel"] if len(hel_card_ids) else []
+        for unit in (*carry_first, "freyr", "jorm", "thor"):
+            cards = unit_to_cards[unit]
+            if not has_ult(unit, list_of_cards) and len(cards):
+                print(f"Unit {unit} doesn't have an ult yet!")
+                return [cards[0], cards[0] + 1]
 
         return [-2, -1]
