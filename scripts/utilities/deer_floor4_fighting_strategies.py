@@ -285,7 +285,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if len(thor_cards):
                 return thor_cards[0]
 
-        print("[WARN] We couldn't finish in 3 turns...")
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase2(
@@ -328,9 +327,13 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         num_red_cards = count_cards(hand_of_cards + picked_cards, is_red_card)
         t = DeerFloor4BattleStrategy.turn
-        double_red = num_red_cards > 1 and len(red_card_ids) and (
-            (not whale and t == 0)
-            or (whale and not DeerFloor4BattleStrategy._phase2_double_red_used and t in (0, 1, 2))
+        double_red = (
+            num_red_cards > 1
+            and len(red_card_ids)
+            and (
+                (not whale and t == 0)
+                or (whale and not DeerFloor4BattleStrategy._phase2_double_red_used and t in (0, 1, 2))
+            )
         )
         if double_red:
             if card_turn == 0:
@@ -397,7 +400,11 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             [i for i, card in enumerate(hand_of_cards) if is_green_card(card)], key=lambda idx: card_ranks[idx]
         )
         red_card_ids = sorted(  # Disable Freyr's ult, to have it for phase 4!
-            [i for i, card in enumerate(hand_of_cards) if is_red_card(card) and not find(vio.freyr_ult, card.card_image)],
+            [
+                i
+                for i, card in enumerate(hand_of_cards)
+                if is_red_card(card) and not find(vio.freyr_ult, card.card_image)
+            ],
             key=lambda idx: card_ranks[idx],
         )
         blue_card_ids = sorted(
@@ -411,12 +418,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         # Phase-3 turn 0: enough greens (hand + picked) → prefer green; len() not `if green_card_ids` (ndarray-safe).
         num_green_cards = count_cards(hand_of_cards + picked_cards, is_green_card)
-        if (
-            DeerFloor4BattleStrategy.turn == 0
-            and card_turn <= 2
-            and num_green_cards >= 3
-            and len(green_card_ids)
-        ):
+        if DeerFloor4BattleStrategy.turn == 0 and card_turn <= 2 and num_green_cards >= 3 and len(green_card_ids):
             DeerFloor4BattleStrategy._color_cards_picked_p3 = "green"
             return green_card_ids[-1]
 
