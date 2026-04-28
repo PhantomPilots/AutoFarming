@@ -26,8 +26,8 @@ logger = LoggerWrapper("DeerFloor4FightingStrategies", log_file="deer_floor4_AI.
 class DeerFloor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for Floor 4"""
 
-    # Keep track of the turn within a phase
-    turn = 0
+    # Per-phase snapshot of IBattleStrategy.fight_turn at first entry (phase turn index = fight_turn - baseline).
+    _fight_turn_baseline: dict[str, int] = {}
 
     # To keep track of what phases have been initialized
     _phase_initialized = set()
@@ -45,7 +45,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     _phase2_double_red_used = False
 
     def _initialize_static_variables(self):
-        DeerFloor4BattleStrategy.turn = 0
+        DeerFloor4BattleStrategy._fight_turn_baseline = {}
         DeerFloor4BattleStrategy._phase_initialized = set()
         DeerFloor4BattleStrategy._color_cards_used_p2t0 = None
         DeerFloor4BattleStrategy._color_cards_picked_p3 = None
@@ -66,6 +66,11 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 print(f"[WARN] {warn_reason}; falling back to SmarterBattleStrategy.")
             return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
         return indices[-1] if prefer == "last" else indices[0]
+
+    @staticmethod
+    def _phase_turn_index(phase_id: str) -> int:
+        """0-based player-turn index within this phase (matches ``finish_turn`` / ``fight_turn``)."""
+        return IBattleStrategy.fight_turn - DeerFloor4BattleStrategy._fight_turn_baseline[phase_id]
 
     def get_next_card_index(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn=0, **kwargs
@@ -92,17 +97,17 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         elif phase == 4:
             card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards, card_turn=card_turn)
 
-        if card_turn == 3:
-            # Increment the next round!
-            DeerFloor4BattleStrategy.turn += 1
-
         return card_index
 
     def _maybe_reset(self, phase_id: str):
-        """Reset the turn counter if we're in a new phase"""
+        """First entry into a phase: record fight_turn baseline so board round restarts at 0."""
         if phase_id not in DeerFloor4BattleStrategy._phase_initialized:
-            print("Resetting turn counter for phase", phase_id)
-            DeerFloor4BattleStrategy.turn = 0
+            DeerFloor4BattleStrategy._fight_turn_baseline[phase_id] = IBattleStrategy.fight_turn
+            print(
+                "Resetting phase counter for",
+                phase_id,
+                f"(fight_turn baseline={DeerFloor4BattleStrategy._fight_turn_baseline[phase_id]})",
+            )
             DeerFloor4BattleStrategy._phase_initialized.add(phase_id)
 
     def _phase1_round0_standard(
@@ -223,7 +228,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         self._maybe_reset("phase_1")  # Not needed, but whatever
 
         if card_turn == 0:
-            print(f"TURN {DeerFloor4BattleStrategy.turn}:")
+            print(f"TURN {self._phase_turn_index('phase_1')}:")
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         thor_cards = sorted(
@@ -243,7 +248,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             [i for i, card in enumerate(hand_of_cards) if is_red_card(card)], key=lambda idx: card_ranks[idx]
         )
 
-        if DeerFloor4BattleStrategy.turn == 0:
+        if self._phase_turn_index("phase_1") == 0:
             if whale:
                 return self._phase1_round0_whale(
                     hand_of_cards,
@@ -266,12 +271,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 red_card_ids,
             )
 
-        elif DeerFloor4BattleStrategy.turn == 1 and len(thor_cards):
+        elif self._phase_turn_index("phase_1") == 1 and len(thor_cards):
             if card_turn <= 2:
                 return [thor_cards[0], thor_cards[0] + 1]
             return thor_cards[-1]
 
-        elif DeerFloor4BattleStrategy.turn == 2:
+        elif self._phase_turn_index("phase_1") == 2:
             cards_to_move = tyr_hel_cards if len(tyr_hel_cards) else jorm_cards
             if not cards_to_move:
                 print("[WARN] No Tyr/Hel/Jorm card to move in phase 1 turn 2.")
@@ -296,7 +301,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         self._maybe_reset("phase_2")
 
         if card_turn == 0:
-            print(f"TURN {DeerFloor4BattleStrategy.turn}:")
+            print(f"TURN {self._phase_turn_index('phase_2')}:")
 
         # Set ultimates as last to use
         card_ranks = [
@@ -326,7 +331,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         green_card_ids = reorder_jorms_heal(hand_of_cards, green_card_ids)
 
         num_red_cards = count_cards(hand_of_cards + picked_cards, is_red_card)
-        t = DeerFloor4BattleStrategy.turn
+        t = self._phase_turn_index("phase_2")
         double_red = (
             num_red_cards > 1
             and len(red_card_ids)
@@ -349,7 +354,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             # Pick what color to play this round
             card_colors = ["green", "blue"]  # Priority order
             # Roll the colors to change the priority
-            n = DeerFloor4BattleStrategy.turn - 1
+            n = self._phase_turn_index("phase_2") - 1
             rolled_colors = card_colors[-n % len(card_colors) :] + card_colors[: -n % len(card_colors)]
             # Set 'red' as the last color, since it's not guaranteed we can use it
             rolled_colors.append("red")
@@ -393,7 +398,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         self._maybe_reset("phase_3")
 
         if card_turn == 0:
-            print(f"TURN {DeerFloor4BattleStrategy.turn}:")
+            print(f"TURN {self._phase_turn_index('phase_3')}:")
 
         card_ranks = [card.card_rank.value for card in hand_of_cards]
         green_card_ids = sorted(
@@ -418,7 +423,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         # Phase-3 turn 0: enough greens (hand + picked) → prefer green; len() not `if green_card_ids` (ndarray-safe).
         num_green_cards = count_cards(hand_of_cards + picked_cards, is_green_card)
-        if DeerFloor4BattleStrategy.turn == 0 and card_turn <= 2 and num_green_cards >= 3 and len(green_card_ids):
+        if self._phase_turn_index("phase_3") == 0 and card_turn <= 2 and num_green_cards >= 3 and len(green_card_ids):
             DeerFloor4BattleStrategy._color_cards_picked_p3 = "green"
             return green_card_ids[-1]
 
@@ -453,7 +458,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         self._maybe_reset("phase_4")
 
         if card_turn == 0:
-            print(f"TURN {DeerFloor4BattleStrategy.turn}:")
+            print(f"TURN {self._phase_turn_index('phase_4')}:")
 
         screenshot, _ = capture_window()
 
@@ -483,12 +488,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             if len(hel_ult_ids := [i for i, card in enumerate(hand_of_cards) if find(vio.hel_ult, card.card_image)]):
                 return hel_ult_ids[-1]
 
-        if DeerFloor4BattleStrategy.turn < 3:
+        if self._phase_turn_index("phase_4") < 3:
             # Let's set the ults to be the last cards to use
             print("DISABLING ULTS!")
             blue_card_ids = blue_card_ids[::-1]
             green_card_ids = green_card_ids[::-1]
-            if DeerFloor4BattleStrategy.turn < 2:
+            if self._phase_turn_index("phase_4") < 2:
                 # Only disable red up to turn 2
                 red_card_ids = red_card_ids[::-1]
 
@@ -509,7 +514,7 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         # --- Regular Deer roulette ---
 
-        if card_turn == 0 and DeerFloor4BattleStrategy.turn == 0:
+        if card_turn == 0 and self._phase_turn_index("phase_4") == 0:
             # Select the starting card
             if len(red_card_ids):
                 print("Initializing with red card!")
@@ -549,12 +554,12 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         if is_red_card(last_card) and len(green_card_ids):
             print("Last card red! Picking green")
             # First, if it's turn 2, use Jorm's buff card if it exists
-            if DeerFloor4BattleStrategy.turn == 2:
+            if self._phase_turn_index("phase_4") == 2:
                 print("Can we use a buff removal??")
             buff_removal_ids = [i for i, card in enumerate(hand_of_cards) if is_buff_removal_card(card)]
             return (
                 buff_removal_ids[-1]
-                if len(buff_removal_ids) and DeerFloor4BattleStrategy.turn == 2
+                if len(buff_removal_ids) and self._phase_turn_index("phase_4") == 2
                 else green_card_ids[-1]
             )
         if is_blue_card(last_card) and len(red_card_ids):

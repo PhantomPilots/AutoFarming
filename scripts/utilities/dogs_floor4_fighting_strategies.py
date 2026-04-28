@@ -28,7 +28,6 @@ GAUGE_REMOVAL_TEMPLATES: Final[tuple[str, ...]] = (*ST_GAUGE_TEMPLATES, "lillia_
 class DogsFloor4BattleStrategy(IBattleStrategy):
     """Dogs Floor 4: per-phase hooks; default card picks from SmarterBattleStrategy."""
 
-    turn = 0
     _phase_initialized = set()
     _last_phase_seen = None
     lillia_in_team = False
