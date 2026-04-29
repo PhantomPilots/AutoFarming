@@ -1805,6 +1805,7 @@ class SettingsTab(QWidget):
             config.reload()
             self.status_label.setText("Saved.")
             self.status_label.setStyleSheet("color: #10b981;")
+            QTimer.singleShot(5000, lambda: self.status_label.setText(""))
         except Exception as e:
             self.status_label.setText(f"Save failed: {e}")
             self.status_label.setStyleSheet("color: #ef4444;")
