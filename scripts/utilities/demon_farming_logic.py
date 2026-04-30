@@ -121,7 +121,7 @@ class IDemonFarmer(IFarmer):
         )
 
     def _resolve_indura_strategy(self) -> type[IBattleStrategy]:
-        """Resolve the configured Indura strategy, falling back to fairies when humans is unavailable."""
+        """Resolve the configured Indura strategy, falling back to fairies if humans cannot load."""
         if self.indura_team == "fairies":
             return InduraBattleStrategy
 
@@ -132,8 +132,8 @@ class IDemonFarmer(IFarmer):
                 )
 
                 return InduraHumanBattleStrategy
-            except Exception:
-                print("[WARN] Human Indura strategy is not implemented yet. Falling back to fairies.")
+            except Exception as exc:
+                print(f"[WARN] Human Indura strategy could not be loaded ({exc}). Falling back to fairies.")
                 self.indura_team = "fairies"
                 return InduraBattleStrategy
 
