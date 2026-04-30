@@ -72,7 +72,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 from utilities.app_config import (
     APP_CONFIG_DEFAULTS,
     config,
@@ -191,6 +190,7 @@ def _restart_application() -> bool:
 _ACTIVE_THEME = _load_theme()
 C = C_LIGHT if _ACTIVE_THEME == "light" else C_DARK
 
+
 # Action Button Styles
 def _action_btn(base: str, hover: str, pressed: str, color: str = "white") -> str:
     return (
@@ -201,14 +201,15 @@ def _action_btn(base: str, hover: str, pressed: str, color: str = "white") -> st
         f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['muted']}; }}"
     )
 
-_START_HOVER   = "#34d399" if _ACTIVE_THEME == "dark" else "#22c55e"
+
+_START_HOVER = "#34d399" if _ACTIVE_THEME == "dark" else "#22c55e"
 _START_PRESSED = "#059669" if _ACTIVE_THEME == "dark" else "#15803d"
 
-BTN_START  = _action_btn(C["running"], _START_HOVER, _START_PRESSED)
-BTN_STOP   = _action_btn(C["error"],   "#f87171",    "#dc2626")
-BTN_PAUSE  = _action_btn(C["warning"], "#fbbf24",    "#d97706")
-BTN_RESIZE = _action_btn(C["blue"],    "#60a5fa",    "#2563eb")
-BTN_CLEAR  = _action_btn(C["darker"],  C["dark"],    C["darker"], C["text"])
+BTN_START = _action_btn(C["running"], _START_HOVER, _START_PRESSED)
+BTN_STOP = _action_btn(C["error"], "#f87171", "#dc2626")
+BTN_PAUSE = _action_btn(C["warning"], "#fbbf24", "#d97706")
+BTN_RESIZE = _action_btn(C["blue"], "#60a5fa", "#2563eb")
+BTN_CLEAR = _action_btn(C["darker"], C["dark"], C["darker"], C["text"])
 
 _GUI_IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gui_images")
 
@@ -352,6 +353,8 @@ APP_STYLESHEET = _make_stylesheet()
 REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
+<p><strong>Indura Humans:</strong><br>
+• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th (Mikasa preferred)<br>
     """,
     "Bird Floor 4": """
 <p><strong>Requirements:</strong><br>
@@ -502,7 +505,7 @@ FARMERS = [
                 "label": "Demons to Farm",
                 "type": "multiselect",
                 "choices": ["indura_demon", "og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
-                "labels":  ["Indura Demon", "OG Demon",  "Bell Demon", "Red Demon",  "Gray Demon",  "Crimson Demon"],
+                "labels": ["Indura Demon", "OG Demon", "Bell Demon", "Red Demon", "Gray Demon", "Crimson Demon"],
                 "default": ["indura_demon"],
             },
             {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
@@ -1115,7 +1118,10 @@ class AboutTab(QWidget):
         ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "dogs_whale", "/dogs/")),
         ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "deer_whale", "/deer/")),
         ("Bird Farmer", ("birdfarmer.py", "bird_farming", "bird_fighter", "/bird")),
-        ("Snake Farmer", ("snakefarmer.py", "snake_farming", "snake_fighter", "snake_fighting", "snake_whale", "/snake/")),
+        (
+            "Snake Farmer",
+            ("snakefarmer.py", "snake_farming", "snake_fighter", "snake_fighting", "snake_whale", "/snake/"),
+        ),
         ("Rat Farmer", ("ratfarmer.py", "rat_farming", "rat_fighter", "rat_fighting", "rat_utilities", "/rat/")),
         ("Gold Farmer", ("goldfarmer.py", "gold_farming", "gold_dungeon", "gold_card")),
         ("Vision Images", ("vision_images.py",)),
