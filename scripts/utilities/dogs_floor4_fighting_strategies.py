@@ -216,11 +216,14 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Playing a stance-control card to remove stance!")
                 return last_ad
 
-        # Do not play Nasiens ult: mark it GROUND so SmarterBattleStrategy skips it (same idea as Escalin above).
-        for i in nasiens_ids:
-            if self._card_matches_any(hand_of_cards[i], ("nasi_ult",)):
-                print("Disabling Nasiens ult!")
-                hand_of_cards[i].card_type = CardTypes.GROUND
+        # Tuck one Nasiens (prefer heal); never GROUND nasi_ult — Smarter plays it when appropriate.
+        # include_unplayable: still tuck heal/stun if already DISABLED/GROUND (template match only).
+        if heal_ids := self._matching_card_ids(hand_of_cards, ("nasi_heal",), include_unplayable=True):
+            print("Disabling Nasiens heal.")
+            hand_of_cards[heal_ids[-1]].card_type = CardTypes.GROUND
+        elif stun_ids := self._matching_card_ids(hand_of_cards, ("nasi_stun",), include_unplayable=True):
+            print("Disabling Nasiens stun.")
+            hand_of_cards[stun_ids[-1]].card_type = CardTypes.GROUND
 
         # Phase 2: Tuck one SILVER/GOLD roxy_st so Smarter skips it (same pattern as _smarter_phase3).
         roxy_st_hi = (CardRanks.SILVER, CardRanks.GOLD)
@@ -252,6 +255,18 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         if IBattleStrategy.fight_turn % 2 == 0 and card_turn == 0:
             print("Dog is putting up a taunt...")
             DogsFloor4BattleStrategy.taunt_removed = False
+
+        # If we're on the first turn, let's GROUND everything but Nasiens cards
+        if IBattleStrategy.fight_turn == 1:
+            for i, card in enumerate(hand_of_cards):
+                nasi_ids = self._matching_card_ids(hand_of_cards, ("nasi_heal", "nasi_stun"), include_unplayable=True)
+                # First, disable all cards that are not Nasiens cards
+                if i not in nasi_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
+
+            if card_turn < 3 and (len(nasi_ids) > 0):
+                print("Moving Nasiens card to ensure ult...")
+                return [nasi_ids[-1], nasi_ids[-1] + 1]
 
         # Reserve ST gauge cards unless phase-3 logic explicitly plays them.
         st_gauge_ids = [i for i, card in enumerate(hand_of_cards) if self._card_matches_any(card, ST_GAUGE_TEMPLATES)]
