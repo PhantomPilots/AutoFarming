@@ -113,8 +113,14 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 time.sleep(2.5)
 
         # First, play one stance-control card on odd turns; otherwise hide them from Smarter.
-        attack_debuff_ids = self._matching_card_ids(hand_of_cards, STANCE_CONTROL_TEMPLATES)
-        played_attack_debuff_ids = self._matching_card_ids(picked_cards, STANCE_CONTROL_TEMPLATES)
+        # Only SILVER/GOLD stance-control (rank > BRONZE); leave BRONZE to Smarter.
+        stance_hi_ranks = (CardRanks.SILVER, CardRanks.GOLD)
+        attack_debuff_ids = self._matching_card_ids(
+            hand_of_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks
+        )
+        played_attack_debuff_ids = self._matching_card_ids(
+            picked_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks
+        )
         if attack_debuff_ids:
             last_ad = attack_debuff_ids[-1]
             even_fight_turn = IBattleStrategy.fight_turn % 2 == 0
