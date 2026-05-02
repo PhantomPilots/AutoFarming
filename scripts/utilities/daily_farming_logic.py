@@ -141,7 +141,9 @@ class DailyFarmer:
 
     def get_complete_dailies(self, screenshot: np.ndarray, window_location: tuple[int, int]) -> bool:
         """Try to get completed dailies!"""
-        if find_and_click(vio.daily_complete, screenshot, window_location):
+        if find(vio.daily_complete, screenshot):
+            time.sleep(1)
+            find_and_click(vio.daily_complete, screenshot, window_location)
             print("We have complete rewards, let's take them.")
             DailyFarmer._dailies_collected = True
             return True
