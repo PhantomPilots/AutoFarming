@@ -532,6 +532,7 @@ FARMERS = [
         "script": "BirdFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
         ],
     },
@@ -549,6 +550,7 @@ FARMERS = [
         "script": "DeerFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
@@ -567,6 +569,7 @@ FARMERS = [
         "script": "DogsFloor4Farmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
         ],
     },

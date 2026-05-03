@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
+    parser.add_argument("--extra-clears", type=int, default=0, help="How many of the total clears should use extra mode")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     args = parser.parse_args()
 
@@ -19,6 +20,7 @@ def main():
         battle_strategy=DogsFloor4BattleStrategy,
         starting_state=States.GOING_TO_DB,
         max_runs=args.clears,
+        extra_clears=args.extra_clears,
         password=args.password,
         do_dailies=args.do_dailies,
     )

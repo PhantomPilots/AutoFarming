@@ -35,6 +35,7 @@ class IFloor4Farmer(IFarmer):
     total_count = 0
     reset_count = 0
     dict_of_defeats = defaultdict(int)
+    extra_clears_done = 0  # Here because this number changes during farming -- safe againts crashes
 
     def __init__(
         self,
@@ -44,6 +45,7 @@ class IFloor4Farmer(IFarmer):
         demonic_beast_image: vio.Vision | None = None,
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__()
@@ -62,6 +64,9 @@ class IFloor4Farmer(IFarmer):
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
             print(f"We're gonna clear Floor4 {int(self.max_runs)} times.")
+
+        # Set how many extra clears we want
+        self.extra_clear_limit = min(max(0, int(extra_clears)), self.max_runs)
 
         # Store internally the image of the DemonicBeast we want to fight (Bird/Deer/Dogs/Snake/Rat)
         self.db_image = demonic_beast_image
@@ -165,6 +170,9 @@ class IFloor4Farmer(IFarmer):
         if find(vio.floor_3_cleared_db, screenshot):
             print("Going to fight the DemonicBeast!")
             self.current_state = States.PROCEED_TO_FLOOR
+
+    def _maybe_open_floor(self):
+        """Open Floor 4. Also use extra clears if neededs"""
 
     def proceed_to_floor_state(self):
 
