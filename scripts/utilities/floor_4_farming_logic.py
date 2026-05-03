@@ -218,7 +218,8 @@ class IFloor4Farmer(IFarmer):
             # screenshot_testing(screenshot, vio.restore_stamina)
             return
 
-        self.on_ready_to_fight_before_start(screenshot)
+        if not self.on_ready_to_fight_before_start(screenshot):
+            return
 
         # Try to start the fight
         find_and_click(vio.startbutton, screenshot, window_location)

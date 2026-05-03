@@ -383,6 +383,15 @@ Tune your gear so you can guarantee that.<br>
 <p><strong>Requirements:</strong><br>
 • Escalin, Lillia/Cusack/Roxy(recommended), Nasiens, Thonar</p>
     """,
+    "Dogs Floor 4 Whale": """
+<p><strong>Whale mode</strong> (consider this a "beefy acc/units only"):<br>
+• Team: Escalin, Meli3k + Relic, OG B Gowther + Relic, Nasiens<br>
+• Links: Escalin > Roxy LR, Meli3k > Sabunak, OG B Gow > R Tarm, Nasi > NOT Esca UR<br>
+• Esca/Meli ATK Crit<br>
+• NB: Gowther MUST BE ATK DEF with a super set (14.5%+ all around)<br>
+• NB2: Nasi MUST BE HP DEF with 15% DEF rolls AND Orb and Belt MUST NOT HAVE A SINGLE HP ROLL. Put UC pieces.
+</p>
+    """,
     "Dogs Farmer": """
 <p><strong>Requirements:</strong><br>
 • Any team works</p>
@@ -450,10 +459,11 @@ the file <code>run_game.png</code> by it.
     """,
 }
 
-# Maps base farmer names to their whale-mode requirement key and image filename.
+# Maps base farmer names to whale-mode display overrides.
 WHALE_MODE_CONFIG = {
     "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
     "Deer Floor 4": {"requirements_key": "Deer Floor 4 Whale", "image": "deer_floor_4.png"},
+    "Dogs Floor 4": {"requirements_key": "Dogs Floor 4 Whale", "image": "dogs_whale.png"},
     "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
     "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
 }
@@ -479,6 +489,20 @@ FARMER_IMAGES = {
     "Boss Battle Farmer": "boss_battle_farmer.png",
     "Gold Farmer": "gold_farmer.jpg",
 }
+
+
+def get_farmer_display_content(farmer_name: str, whale_enabled: bool = False) -> tuple[str, str]:
+    """Return the requirements key and image filename for the current farmer display state."""
+    requirements_key = farmer_name
+    image_filename = FARMER_IMAGES.get(farmer_name)
+
+    if whale_enabled:
+        whale_config = WHALE_MODE_CONFIG.get(farmer_name)
+        if whale_config:
+            requirements_key = whale_config["requirements_key"]
+            image_filename = whale_config["image"]
+
+    return requirements_key, image_filename
 
 # Farmer script definitions (argument structure)
 FARMERS = [
@@ -571,6 +595,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -2389,19 +2414,18 @@ class FarmerTab(QWidget):
 
     def _refresh_whale_mode(self):
         """Update image and requirements when whale-mode checkbox changes."""
-        whale_config = WHALE_MODE_CONFIG.get(self.farmer["name"])
-        if not whale_config:
+        farmer_name = self.farmer["name"]
+        if farmer_name not in WHALE_MODE_CONFIG:
             return
 
         whale_enabled = "--whale" in self.arg_widgets and self.arg_widgets["--whale"].isChecked()
+        requirements_key, image_filename = get_farmer_display_content(farmer_name, whale_enabled)
 
         if self.req_label is not None:
-            key = whale_config["requirements_key"] if whale_enabled else self.farmer["name"]
-            self.req_label.setText(REQUIREMENTS.get(key, ""))
+            self.req_label.setText(REQUIREMENTS.get(requirements_key, ""))
             self.req_label.adjustSize()
 
-        image = whale_config["image"] if whale_enabled else FARMER_IMAGES.get(self.farmer["name"])
-        self.load_farmer_image(image)
+        self.load_farmer_image(image_filename)
 
 
 # Tile Widget

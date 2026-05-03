@@ -1,6 +1,7 @@
 import argparse
 
 from utilities.dogs_floor4_fighting_strategies import DogsFloor4BattleStrategy
+from utilities.dogs_floor4_fighting_strategies_whale import DogsFloor4WhaleBattleStrategy
 from utilities.farming_factory import FarmingFactory
 from utilities.floor_4_farmers import DogsFloor4Farmer, States
 
@@ -13,16 +14,23 @@ def main():
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
     parser.add_argument("--extra-clears", type=int, default=0, help="How many of the total clears should use extra mode")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
+    parser.add_argument(
+        "--whale",
+        action="store_true",
+        default=False,
+        help="Use the stacked-account Gowther + Meli3k Dogs Floor 4 strat.",
+    )
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
         farmer=DogsFloor4Farmer,
-        battle_strategy=DogsFloor4BattleStrategy,
+        battle_strategy=DogsFloor4WhaleBattleStrategy if args.whale else DogsFloor4BattleStrategy,
         starting_state=States.GOING_TO_DB,
         max_runs=args.clears,
         extra_clears=args.extra_clears,
         password=args.password,
         do_dailies=args.do_dailies,
+        whale=args.whale,
     )
 
 
