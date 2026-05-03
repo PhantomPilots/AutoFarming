@@ -13,6 +13,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter, IFighter
 from utilities.deer_fighter import DeerFighter
 from utilities.dogs_floor4_fighter import DogsFloor4Fighter
+from utilities.dogs_floor4_fighter_whale import DogsFloor4FighterWhale
 from utilities.dogs_floor4_fighting_strategies import DogsFloor4BattleStrategy
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.floor_4_farming_logic import IFloor4Farmer, States
@@ -84,8 +85,11 @@ class DeerFloor4Farmer(IFloor4Farmer):
 
 class DogsFloor4Farmer(IFloor4Farmer):
 
+    whale = False
     lillia_in_team = False
     roxy_in_team = False
+    meli3k_in_team = False
+    bluegow_in_team = False
 
     def __init__(
         self,
@@ -94,6 +98,8 @@ class DogsFloor4Farmer(IFloor4Farmer):
         max_runs="inf",
         do_dailies=False,
         password: str | None = None,
+        *,
+        whale: bool = False,
         extra_clears: int = 0,
     ):
 
@@ -107,20 +113,42 @@ class DogsFloor4Farmer(IFloor4Farmer):
             extra_clears=extra_clears,
         )
 
-        self.fighter: IFighter = DogsFloor4Fighter(
+        self.whale = whale
+
+        fighter_cls = DogsFloor4FighterWhale if whale else DogsFloor4Fighter
+        self.fighter: IFighter = fighter_cls(
             battle_strategy=battle_strategy,
             callback=self.fight_complete_callback,
         )
 
     def on_ready_to_fight_before_start(self, screenshot):
+        if self.whale:
+            DogsFloor4Farmer.meli3k_in_team = find(vio.meli3k_in_team, screenshot)
+            DogsFloor4Farmer.bluegow_in_team = find(vio.bluegow_in_team, screenshot)
+            if DogsFloor4Farmer.meli3k_in_team:
+                print("Meli3k is in the team!")
+            if DogsFloor4Farmer.bluegow_in_team:
+                print("Blue Gowther is in the team!")
+            if not (DogsFloor4Farmer.meli3k_in_team and DogsFloor4Farmer.bluegow_in_team):
+                print("Please make sure both OG Blue Gowther and Meliodas 3k are in the team before starting.")
+                self.current_state = States.EXIT_FARMER
+                return False
+            return True
+
         if find(vio.lillia_in_team, screenshot):
             print("Lillia is in the team!")
             DogsFloor4Farmer.lillia_in_team = True
         elif find(vio.roxy_in_team, screenshot):
             print("Roxy is in the team!")
             DogsFloor4Farmer.roxy_in_team = True
+        return True
 
     def get_fighter_run_kwargs(self) -> dict:
+        if self.whale:
+            return {
+                "meli3k_in_team": DogsFloor4Farmer.meli3k_in_team,
+                "bluegow_in_team": DogsFloor4Farmer.bluegow_in_team,
+            }
         return {
             "lillia_in_team": DogsFloor4Farmer.lillia_in_team,
             "roxy_in_team": DogsFloor4Farmer.roxy_in_team,
