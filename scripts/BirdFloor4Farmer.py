@@ -11,6 +11,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
+    parser.add_argument("--extra-clears", type=int, default=0, help="How many of the total clears should use extra mode")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     args = parser.parse_args()
 
@@ -19,6 +20,7 @@ def main():
         battle_strategy=BirdFloor4BattleStrategy,  # The AI. Floor 4 requires a very specific logic
         starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_FLOOR' or 'FIGHTING', to start the script from outside or within the fight
         max_runs=args.clears,  # Can be a number or "inf"
+        extra_clears=args.extra_clears,
         password=args.password,  # Account password
         do_dailies=args.do_dailies,  # Should we do our dailies?
     )

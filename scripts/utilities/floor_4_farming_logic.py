@@ -15,7 +15,13 @@ from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import capture_window, drag_im, find, find_and_click
+from utilities.utilities import (
+    capture_window,
+    click_and_sleep,
+    drag_im,
+    find,
+    find_and_click,
+)
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
@@ -35,6 +41,7 @@ class IFloor4Farmer(IFarmer):
     total_count = 0
     reset_count = 0
     dict_of_defeats = defaultdict(int)
+    extra_clears_done = 0  # Here because this number changes during farming -- safe againts crashes
 
     def __init__(
         self,
@@ -44,6 +51,7 @@ class IFloor4Farmer(IFarmer):
         demonic_beast_image: vio.Vision | None = None,
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__()
@@ -62,6 +70,9 @@ class IFloor4Farmer(IFarmer):
         self.max_runs = float(max_runs)
         if self.max_runs < float("inf"):
             print(f"We're gonna clear Floor4 {int(self.max_runs)} times.")
+
+        # Set how many extra clears we want
+        self.extra_clear_limit = min(max(0, int(extra_clears)), self.max_runs)
 
         # Store internally the image of the DemonicBeast we want to fight (Bird/Deer/Dogs/Snake/Rat)
         self.db_image = demonic_beast_image
@@ -166,6 +177,16 @@ class IFloor4Farmer(IFarmer):
             print("Going to fight the DemonicBeast!")
             self.current_state = States.PROCEED_TO_FLOOR
 
+    def _open_floor(self):
+        """Open Floor 4. Also use extra clears if neededs"""
+        screenshot, window_location = capture_window()
+        if IFloor4Farmer.extra_clears_done < self.extra_clear_limit:
+            click_and_sleep(vio.extra_clear, screenshot, window_location, threshold=0.7, sleep_time=1)
+            IFloor4Farmer.extra_clears_done += 1
+            print(f"Used extra clear {IFloor4Farmer.extra_clears_done} of {self.extra_clear_limit}!")
+
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
+
     def proceed_to_floor_state(self):
 
         screenshot, window_location = capture_window()
@@ -176,7 +197,9 @@ class IFloor4Farmer(IFarmer):
         self.maybe_reset_daily_checkin_flag()
 
         # In case we need to unlock the floor
-        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
+        if find(vio.ok_main_button, screenshot):
+            self._open_floor()
+            return
 
         # Click on floor 4 if it's available
         find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7)
