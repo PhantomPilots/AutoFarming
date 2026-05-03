@@ -260,19 +260,24 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             print("Dog is putting up a taunt...")
             DogsFloor4BattleStrategy.taunt_removed = False
 
+        nasiens_ult_ids = self._matching_card_ids(hand_of_cards, ("nasi_ult",))
+        if nasiens_ult_ids and IBattleStrategy.fight_turn <= 2:
+            return nasiens_ult_ids[-1]
+
         # If we're on the first turn, let's GROUND everything but Nasiens cards
         if IBattleStrategy.fight_turn == 1:
-            for i, card in enumerate(hand_of_cards):
-                nasi_ids = self._matching_card_ids(
-                    hand_of_cards, ("nasi_heal", "nasi_stun", "nasi_ult"), include_unplayable=True
-                )
-                # First, disable all cards that are not Nasiens cards
-                if i not in nasi_ids:
-                    hand_of_cards[i].card_type = CardTypes.GROUND
+            nasi_ids = self._matching_card_ids(
+                hand_of_cards, ("nasi_heal", "nasi_stun", "nasi_ult"), include_unplayable=True
+            )
+            if not nasiens_ult_ids:
+                for i, card in enumerate(hand_of_cards):
+                    # First, disable all cards that are not Nasiens cards
+                    if i not in nasi_ids:
+                        hand_of_cards[i].card_type = CardTypes.GROUND
 
-            if card_turn < 3 and (len(nasi_ids) > 0):
-                print("Moving Nasiens card to ensure ult...")
-                return [nasi_ids[-1], nasi_ids[-1] + 1]
+                if card_turn < 3 and nasi_ids:
+                    print("Moving Nasiens card to ensure ult...")
+                    return [nasi_ids[-1], nasi_ids[-1] + 1]
 
         # Reserve ST gauge cards unless phase-3 logic explicitly plays them.
         st_gauge_ids = [i for i, card in enumerate(hand_of_cards) if self._card_matches_any(card, ST_GAUGE_TEMPLATES)]
@@ -304,11 +309,6 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             )
             if drag is not None:
                 return drag
-
-        # Pre-cap: play Nasiens ult before the gauge-removal turns.
-        nasiens_ult_id = self._matching_card_ids(hand_of_cards, ("nasi_ult",))
-        if nasiens_ult_id and IBattleStrategy.fight_turn <= 2:
-            return nasiens_ult_id[-1]
 
         # Early turns: wait before damage-cap removal. Non-Lillia can merge ST gauge cards;
         # Lillia must not merge those cards, but still must not spend GOLD lillia_aoe before turn 3.
