@@ -265,19 +265,18 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             return nasiens_ult_ids[-1]
 
         # If we're on the first turn, let's GROUND everything but Nasiens cards
-        if IBattleStrategy.fight_turn == 1:
+        if IBattleStrategy.fight_turn == 1 and not nasiens_ult_ids:
             nasi_ids = self._matching_card_ids(
                 hand_of_cards, ("nasi_heal", "nasi_stun", "nasi_ult"), include_unplayable=True
             )
-            if not nasiens_ult_ids:
-                for i, card in enumerate(hand_of_cards):
-                    # First, disable all cards that are not Nasiens cards
-                    if i not in nasi_ids:
-                        hand_of_cards[i].card_type = CardTypes.GROUND
+            for i, card in enumerate(hand_of_cards):
+                # First, disable all cards that are not Nasiens cards
+                if i not in nasi_ids:
+                    hand_of_cards[i].card_type = CardTypes.GROUND
 
-                if card_turn < 3 and nasi_ids:
-                    print("Moving Nasiens card to ensure ult...")
-                    return [nasi_ids[-1], nasi_ids[-1] + 1]
+            if card_turn < 3 and nasi_ids:
+                print("Moving Nasiens card to ensure ult...")
+                return [nasi_ids[-1], nasi_ids[-1] + 1]
 
         # Reserve ST gauge cards unless phase-3 logic explicitly plays them.
         st_gauge_ids = [i for i, card in enumerate(hand_of_cards) if self._card_matches_any(card, ST_GAUGE_TEMPLATES)]
