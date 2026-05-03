@@ -115,9 +115,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         # First, play one stance-control card on odd turns; otherwise hide them from Smarter.
         # Only SILVER/GOLD stance-control (rank > BRONZE); leave BRONZE to Smarter.
         stance_hi_ranks = (CardRanks.SILVER, CardRanks.GOLD)
-        attack_debuff_ids = self._matching_card_ids(
-            hand_of_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks
-        )
+        attack_debuff_ids = self._matching_card_ids(hand_of_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks)
         played_attack_debuff_ids = self._matching_card_ids(
             picked_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks
         )
@@ -265,7 +263,9 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         # If we're on the first turn, let's GROUND everything but Nasiens cards
         if IBattleStrategy.fight_turn == 1:
             for i, card in enumerate(hand_of_cards):
-                nasi_ids = self._matching_card_ids(hand_of_cards, ("nasi_heal", "nasi_stun"), include_unplayable=True)
+                nasi_ids = self._matching_card_ids(
+                    hand_of_cards, ("nasi_heal", "nasi_stun", "nasi_ult"), include_unplayable=True
+                )
                 # First, disable all cards that are not Nasiens cards
                 if i not in nasi_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
