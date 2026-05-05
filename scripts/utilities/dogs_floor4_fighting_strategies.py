@@ -264,8 +264,12 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         if nasiens_ult_ids and IBattleStrategy.fight_turn <= 2:
             return nasiens_ult_ids[-1]
 
-        # If we're on the first turn, let's GROUND everything but Nasiens cards
-        if IBattleStrategy.fight_turn == 1 and not nasiens_ult_ids:
+        # If we're on the first turn, only force Nasiens setup when no ult is
+        # available anywhere in this turn yet: neither still in hand nor already queued.
+        nasiens_ult_available_this_turn = bool(
+            nasiens_ult_ids or self._matching_card_ids(picked_cards, ("nasi_ult",))
+        )
+        if IBattleStrategy.fight_turn == 1 and not nasiens_ult_available_this_turn:
             nasi_ids = self._matching_card_ids(
                 hand_of_cards, ("nasi_heal", "nasi_stun", "nasi_ult"), include_unplayable=True
             )
