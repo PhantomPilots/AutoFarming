@@ -123,8 +123,8 @@ class DogsFloor4Farmer(IFloor4Farmer):
 
     def on_ready_to_fight_before_start(self, screenshot):
         if self.whale:
-            DogsFloor4Farmer.meli3k_in_team = find(vio.meli3k_in_team, screenshot)
-            DogsFloor4Farmer.bluegow_in_team = find(vio.bluegow_in_team, screenshot)
+            DogsFloor4Farmer.meli3k_in_team = find(vio.meli3k_in_team, screenshot) or type(self).meli3k_in_team
+            DogsFloor4Farmer.bluegow_in_team = find(vio.bluegow_in_team, screenshot) or type(self).bluegow_in_team
             if DogsFloor4Farmer.meli3k_in_team:
                 print("Meli3k is in the team!")
             if DogsFloor4Farmer.bluegow_in_team:
