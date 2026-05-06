@@ -385,11 +385,12 @@ Tune your gear so you can guarantee that.<br>
     """,
     "Dogs Floor 4 Whale": """
 <p><strong>Whale mode</strong> (consider this a "beefy acc/units only"):<br>
-• Team: Escalin, Meli3k + Relic, OG B Gowther + Relic, Nasiens<br>
-• Links: Escalin > Roxy LR, Meli3k > Sabunak, OG B Gow > R Tarm, Nasi > NOT Esca UR<br>
+• Team: Escalin, DK Meli + Relic, OG B Gowther + Relic, Nasiens<br>
+• Links: Escalin > Roxy LR, DK Meli > Sabunak, OG B Gow > R Tarm, Nasi > NOT Esca UR<br>
 • Esca/Meli ATK Crit<br>
 • NB: Gowther MUST BE ATK DEF with a super set (14.5%+ all around)<br>
 • NB2: Nasi MUST BE HP DEF with 15% DEF rolls AND Orb and Belt MUST NOT HAVE A SINGLE HP ROLL. Put UC pieces.
+• NB3: Escalin must be on slot 3 or 4.
 </p>
     """,
     "Dogs Farmer": """
@@ -503,6 +504,7 @@ def get_farmer_display_content(farmer_name: str, whale_enabled: bool = False) ->
             image_filename = whale_config["image"]
 
     return requirements_key, image_filename
+
 
 # Farmer script definitions (argument structure)
 FARMERS = [
