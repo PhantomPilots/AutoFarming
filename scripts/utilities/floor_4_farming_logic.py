@@ -15,12 +15,7 @@ from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import (
-    capture_window,
-    drag_im,
-    find,
-    find_and_click,
-)
+from utilities.utilities import capture_window, drag_im, find, find_and_click
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
@@ -91,6 +86,7 @@ class IFloor4Farmer(IFarmer):
 
     def on_ready_to_fight_before_start(self, screenshot):
         """Called in ``ready_to_fight_state`` after stamina handling, before Start; subclasses may inspect UI."""
+        return True
 
     def get_fighter_run_kwargs(self) -> dict:
         """Keyword arguments passed to ``self.fighter.run`` when starting the Floor 4 fight thread."""
