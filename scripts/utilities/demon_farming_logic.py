@@ -15,7 +15,6 @@ from utilities.indura_fighting_strategies import InduraBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     crop_region,
     display_image,
     find,
@@ -173,20 +172,20 @@ class IDemonFarmer(IFarmer):
 
         # Click OK if we see it (?)
         if find(vio.ok_main_button, screenshot) and not find(self.demon_to_farm, screenshot):
-            click_and_sleep(vio.ok_main_button, screenshot, window_location, threshold=0.7)
+            find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7, sleep_time=1)
 
         # Go to battle menu
-        click_and_sleep(vio.battle_menu, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6, sleep_time=1)
 
         # Go to demons
-        click_and_sleep(vio.boss_menu, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.boss_menu, screenshot, window_location, sleep_time=1)
 
         # Click on real-time menu
-        click_and_sleep(vio.real_time, screenshot, window_location, threshold=0.6, sleep_time=0.2)
+        find_and_click(vio.real_time, screenshot, window_location, threshold=0.6, sleep_time=0.2)
 
         # Click on the demon to farm (if it's not Red, since Red is by default)
         if "red" not in self.demon_to_farm.image_name.lower():
-            click_and_sleep(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
+            find_and_click(self.demon_to_farm, screenshot, window_location, sleep_time=0.2)
 
         if self.demon_to_farm == vio.indura_demon:
             if self.indura_difficulty == "extreme":
@@ -305,22 +304,24 @@ class IDemonFarmer(IFarmer):
 
         # If we're ready to fight, send an emoji *only once*
         if not IDemonFarmer.sent_emoji and find(vio.cancel_preparation, screenshot):
-            click_and_sleep(
+            find_and_click(
                 vio.cancel_preparation,
                 screenshot,
                 window_location,
                 point_coordinates=Coordinates.get_coordinates("stamp_box"),
+                sleep_time=1,
             )
-            click_and_sleep(
+            find_and_click(
                 vio.cancel_preparation,
                 screenshot,
                 window_location,
                 point_coordinates=Coordinates.get_coordinates("first_stamp"),
+                sleep_time=1,
             )
             IDemonFarmer.sent_emoji = True
 
         # Click on the "preparation"
-        click_and_sleep(vio.preparation_incomplete, screenshot, window_location, threshold=0.8)
+        find_and_click(vio.preparation_incomplete, screenshot, window_location, threshold=0.8, sleep_time=1)
 
         # We may have been kicked, move to initial state if so
         if find(vio.ok_main_button, screenshot) or find(vio.battle_menu, screenshot, threshold=0.6):

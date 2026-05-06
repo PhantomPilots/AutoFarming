@@ -47,7 +47,7 @@ class TowerTrialsFarmer(IFarmer):
             return
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
-        if floor_coordinates := find_floor_coordinates(screenshot, window_location):
+        if floor_coordinates := find_floor_coordinates(screenshot):
             find_and_click(
                 vio.available_floor,
                 screenshot,

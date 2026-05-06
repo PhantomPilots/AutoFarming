@@ -8,7 +8,6 @@ from utilities.rat_fighting_strategies import RatFightingStrategy
 from utilities.rat_utilities import detect_stump_from_screen
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     click_im,
     find,
     find_and_click,
@@ -111,7 +110,7 @@ class RatFighter(IFighter):
             None,
         ):
             print(f"Activating {talent.image_name} and waiting...")
-            click_and_sleep(talent, screenshot, window_location, threshold=0.6, sleep_time=2.5)
+            find_and_click(talent, screenshot, window_location, threshold=0.6, sleep_time=2.5)
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""

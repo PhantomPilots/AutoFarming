@@ -12,7 +12,6 @@ from utilities.utilities import (
     find,
     find_and_click,
     press_key,
-    click_and_sleep
 )
 
 logger = LoggerWrapper("boss_battle_logger", level=logging.INFO, log_to_file=False)
@@ -73,7 +72,7 @@ class BossBattleFarmer(IFarmer):
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
 
-        if click_and_sleep(vio.stage_melee_of_phantasms, screenshot, window_location, sleep_time=0.5):
+        if find_and_click(vio.stage_melee_of_phantasms, screenshot, window_location, sleep_time=0.5):
             # We're re-opening the floor!
             self.current_state = States.GOING_TO_FLOOR_STATE
             print(f"Going to {self.current_state}")

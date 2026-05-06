@@ -15,7 +15,6 @@ from utilities.general_fighter_interface import IFighter
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     check_for_reconnect,
-    click_and_sleep,
     close_game,
     drag_im,
     find,
@@ -341,14 +340,14 @@ class IFarmer(metaclass=IFarmerMeta):
             return
 
         # If we see a "cross", click it before clicking the OK button
-        if click_and_sleep(vio.cross, screenshot, window_location):
+        if find_and_click(vio.cross, screenshot, window_location, sleep_time=1):
             screenshot, window_location = capture_window()
 
         # Cancel the demon search
-        click_and_sleep(vio.cancel_realtime, screenshot, window_location)
+        find_and_click(vio.cancel_realtime, screenshot, window_location, sleep_time=1)
 
         # We may be receiving the daily rewards now
-        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6, sleep_time=1)
 
         # We may be receiving the monthly subscription too
         if find(vio.membership_perk, screenshot):
@@ -365,12 +364,13 @@ class IFarmer(metaclass=IFarmerMeta):
             return
 
         # Click on "Knighthood"
-        if click_and_sleep(
+        if find_and_click(
             vio.battle_menu,
             screenshot,
             window_location,
             threshold=0.6,
             point_coordinates=Coordinates.get_coordinates("knighthood"),
+            sleep_time=1,
         ):
             return
 
@@ -401,11 +401,11 @@ class IFarmer(metaclass=IFarmerMeta):
             return
 
         # Check in
-        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
+        if find_and_click(vio.check_in, screenshot, window_location, sleep_time=2):
             print("Checked in successfully!")
 
         # Click on the reward
-        click_and_sleep(vio.check_in_reward, screenshot, window_location)
+        find_and_click(vio.check_in_reward, screenshot, window_location, sleep_time=1)
 
         # Exit the knighthood after checking in...
         if find(vio.check_in_complete, screenshot):

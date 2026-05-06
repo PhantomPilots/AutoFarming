@@ -12,7 +12,6 @@ from utilities.coordinates import Coordinates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     crop_image,
     find,
     find_and_click,
@@ -122,7 +121,7 @@ class WeeklyFarmer:
             return States.DEMONIC_BEAST
 
         # If we're here, means we're done with all dailies.
-        click_and_sleep(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
         screenshot, _ = capture_window()
         find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.battle_menu, screenshot, threshold=0.6):

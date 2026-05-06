@@ -279,8 +279,10 @@ def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
     window_location: list[float] = (0, 0),
+    *,
     threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
+    sleep_time=0,
 ) -> bool:
     """Tries to find the given `vision_image` on the screenshot; if it is found, clicks on it.
     `point_coordinates` can be a tuple with the hardcoded coordinates to click on. TODO: This should be improved
@@ -296,29 +298,14 @@ def find_and_click(
         print(f"Clicked on '{vision_image.image_name}'")
         click_tracker.record_image_click(vision_image.image_name)
 
-        time.sleep(0.1)
+        time.sleep(0.1 + max(0, sleep_time))
 
         return True
 
     return False
 
 
-def click_and_sleep(
-    vision_image: Vision,
-    screenshot: np.ndarray,
-    window_location: list[float],
-    threshold=0.7,
-    point_coordinates: tuple[float, float] | None = None,
-    sleep_time=1,  # In seconds
-) -> bool:
-    """First click, then sleep for 1 sec"""
-    if find_and_click(vision_image, screenshot, window_location, threshold, point_coordinates):
-        time.sleep(sleep_time)
-        return True
-    return False
-
-
-def find_floor_coordinates(screenshot: np.ndarray, window_location):
+def find_floor_coordinates(screenshot: np.ndarray):
     """Given a screenshot of the DB screen, find the coordinates of the available floor"""
     rectangle = vio.available_floor.find(screenshot, threshold=0.8)
     if rectangle.size:

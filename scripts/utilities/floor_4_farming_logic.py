@@ -17,7 +17,6 @@ from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     drag_im,
     find,
     find_and_click,
@@ -181,7 +180,7 @@ class IFloor4Farmer(IFarmer):
         """Open Floor 4. Also use extra clears if neededs"""
         screenshot, window_location = capture_window()
         if IFloor4Farmer.extra_clears_done < self.extra_clear_limit:
-            click_and_sleep(vio.extra_clear, screenshot, window_location, threshold=0.7, sleep_time=1)
+            find_and_click(vio.extra_clear, screenshot, window_location, threshold=0.7, sleep_time=1)
             IFloor4Farmer.extra_clears_done += 1
             print(f"Used extra clear {IFloor4Farmer.extra_clears_done} of {self.extra_clear_limit}!")
 

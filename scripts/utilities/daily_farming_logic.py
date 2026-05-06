@@ -12,7 +12,6 @@ from utilities.coordinates import Coordinates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     crop_image,
     display_image,
     find,
@@ -184,7 +183,7 @@ class DailyFarmer:
             return States.GOING_TO_BRAWL
 
         # If we're here, means we're done with all dailies.
-        click_and_sleep(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
         screenshot, _ = capture_window()
         find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.battle_menu, screenshot, threshold=0.6):
@@ -298,13 +297,13 @@ class DailyFarmer:
         find_and_click(vio.normal_diff_boss_battle, screenshot, window_location)
 
         # Increase the auto ticket by one and clear mission
-        click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=1)
 
         # For auto-salvaging
-        if click_and_sleep(vio.auto_salvage, screenshot, window_location, threshold=0.8, sleep_time=1):
+        if find_and_click(vio.auto_salvage, screenshot, window_location, threshold=0.8, sleep_time=1):
             # We need to re-capture the screen to access the 'Apply' button
             screenshot, window_location = capture_window()
-            click_and_sleep(vio.apply, screenshot, window_location, sleep_time=1)
+            find_and_click(vio.apply, screenshot, window_location, sleep_time=1)
 
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
@@ -438,7 +437,7 @@ class DailyFarmer:
 
         # Increase the auto ticket by two and clear mission
         for _ in range(DailyFarmer.num_dungeon_keys - 1):
-            click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
+            find_and_click(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
 
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
@@ -492,10 +491,10 @@ class DailyFarmer:
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
-        click_and_sleep(vio.claim_reward, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.claim_reward, screenshot, window_location, sleep_time=1)
         find_and_click(vio.patrol_all, screenshot, window_location)
         # First click on complete all
-        click_and_sleep(vio.complete_all, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.complete_all, screenshot, window_location, sleep_time=1)
         # Then click on set all
         find_and_click(vio.set_all_patrol, screenshot, window_location)
         find_and_click(vio.reward, screenshot, window_location)

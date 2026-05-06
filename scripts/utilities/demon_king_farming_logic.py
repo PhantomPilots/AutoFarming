@@ -16,7 +16,6 @@ from utilities.general_fighter_interface import IBattleStrategy, IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     click_im,
     crop_image,
     determine_unit_types,
@@ -135,8 +134,8 @@ class DemonKingFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         time.sleep(1.5)
-        click_and_sleep(vio.x3, screenshot, window_location, threshold=0.8, sleep_time=1)
-        click_and_sleep(vio.register_coins, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.x3, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.register_coins, screenshot, window_location, sleep_time=1)
         if find_and_click(vio.apply, screenshot, window_location):
             self.current_state = States.PREPARE_FIGHT
             print(f"Going to {self.current_state}")
