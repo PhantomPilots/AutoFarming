@@ -14,15 +14,14 @@ from utilities.daily_farming_logic import DailyFarmer
 from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
+from utilities.app_config import load_yaml_config
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     close_game,
     close_game_if_not_in_login_screen,
     crop_image,
     find,
     find_and_click,
-    load_yaml_config,
     press_key,
     type_word,
 )
@@ -198,7 +197,7 @@ class ManyAccountsFarmer:
             screenshot, window_location = capture_window()
 
         # We may be receiving the daily rewards now
-        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6, sleep_time=1)
 
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
             print("Going to CHECK IN state")
@@ -232,11 +231,11 @@ class ManyAccountsFarmer:
             return
 
         # Check in
-        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
+        if find_and_click(vio.check_in, screenshot, window_location, sleep_time=2):
             print("Checked in successfully!")
 
         # Click on the reward
-        click_and_sleep(vio.check_in_reward, screenshot, window_location)
+        find_and_click(vio.check_in_reward, screenshot, window_location, sleep_time=1)
 
         # Exit the knighthood after checking in...
         if find(vio.check_in_complete, screenshot):

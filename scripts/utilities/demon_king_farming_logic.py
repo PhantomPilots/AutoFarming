@@ -7,17 +7,15 @@ import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
 from utilities.card_data import CardColors
-from utilities.constants import MINUTES_TO_WAIT_BEFORE_LOGIN
 from utilities.coordinates import Coordinates
 from utilities.dk_fighter import DemonKingFighter
+from utilities.dk_hard_fighting_strategies import DemonKingHardBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy, IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    check_for_reconnect,
-    click_and_sleep,
     click_im,
     crop_image,
     determine_unit_types,
@@ -44,7 +42,7 @@ class DemonKingFarmer(IFarmer):
 
     num_clears = 0
 
-    dk_difficulty = "hell"
+    dk_difficulty = "hard"
 
     unit_colors: list[CardColors] = []
 
@@ -52,7 +50,7 @@ class DemonKingFarmer(IFarmer):
         self,
         starting_state=States.GOING_TO_DK,
         battle_strategy: IBattleStrategy = None,  # No need
-        dk_difficulty: str = "hell",  # Demon King difficulty
+        dk_difficulty: str = "hard",  # Demon King difficulty
         num_clears: str | float | int = 20,  # How many coins to use at most
         **kwargs,
     ):
@@ -61,10 +59,8 @@ class DemonKingFarmer(IFarmer):
 
         self.current_state = starting_state
 
-        if dk_difficulty != "hard":
-            print("[WARN] Sorry, `hard` difficulty is the most efficient one! So the only one supported.")
-            dk_difficulty = "hard"
         DemonKingFarmer.dk_difficulty = dk_difficulty
+        dk_strategy = self._resolve_dk_strategy()
 
         self.max_clears = float(num_clears)
         if self.max_clears < float("inf"):
@@ -73,17 +69,42 @@ class DemonKingFarmer(IFarmer):
         # Using composition to decouple the main farmer logic from the actual fight.
         # Pass in the callback to call after the fight is complete
         self.fighter: IFighter = DemonKingFighter(
-            battle_strategy=battle_strategy,
+            battle_strategy=dk_strategy,
             callback=self.fight_complete_callback,
+            enable_phase2_team_switch=(DemonKingFarmer.dk_difficulty == "hell"),
         )
         self.dk_fighting_thread: threading.Thread = None
+
+    def _resolve_dk_strategy(self) -> type[IBattleStrategy]:
+        """Resolve the configured Demon King strategy, falling back to hard when unavailable."""
+        if DemonKingFarmer.dk_difficulty == "hard":
+            return DemonKingHardBattleStrategy
+
+        if DemonKingFarmer.dk_difficulty == "hell":
+            try:
+                from utilities.dk_hell_fighting_strategies import (
+                    DemonKingHellBattleStrategy,
+                )
+
+                return DemonKingHellBattleStrategy
+            except Exception as exc:
+                return self._fallback_to_hard_difficulty("Hell", exc)
+
+        raise RuntimeError(f"Unknown Demon King difficulty: {DemonKingFarmer.dk_difficulty}")
+
+    def _fallback_to_hard_difficulty(self, requested_difficulty: str, exc: Exception) -> type[IBattleStrategy]:
+        """Use the hard strategy and hard in-game difficulty when a requested strategy is unavailable."""
+        print(
+            f"[WARN] {requested_difficulty} DK strategy unavailable ({exc}). "
+            "Falling back to hard difficulty and hard strategy."
+        )
+        DemonKingFarmer.dk_difficulty = "hard"
+        return DemonKingHardBattleStrategy
 
     def _click_difficulty(self, screenshot: np.ndarray, window_location: tuple):
         """Click on the desired difficulty"""
         if DemonKingFarmer.dk_difficulty == "hell":
             find_and_click(vio.dk_hell, screenshot, window_location)
-        elif DemonKingFarmer.dk_difficulty == "extreme":
-            find_and_click(vio.dk_extreme, screenshot, window_location)
         elif DemonKingFarmer.dk_difficulty == "hard":
             find_and_click(vio.dk_hard, screenshot, window_location)
 
@@ -113,8 +134,8 @@ class DemonKingFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         time.sleep(1.5)
-        click_and_sleep(vio.x3, screenshot, window_location, threshold=0.8, sleep_time=1)
-        click_and_sleep(vio.register_coins, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.x3, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.register_coins, screenshot, window_location, sleep_time=1)
         if find_and_click(vio.apply, screenshot, window_location):
             self.current_state = States.PREPARE_FIGHT
             print(f"Going to {self.current_state}")
@@ -176,41 +197,27 @@ class DemonKingFarmer(IFarmer):
             if victory:
                 DemonKingFarmer.num_clears += 1
                 print(f"Fight complete! Cleared DK {DemonKingFarmer.num_clears} times.")
+                print("[CLEAR]")
                 if DemonKingFarmer.num_clears >= self.max_clears:
                     print("We've cleared the DK enough times, stopping the farming.")
                     self.current_state = States.EXIT_FARMER
                     return
             else:
                 print("We lost :(")
+                print("[LOSS]")
 
             self.current_state = States.GOING_TO_DK
 
     def run(self):
 
-        while True:
-            # Try to reconnect first
-            if not (success := check_for_reconnect()):
-                # We had to restart the game! Let's log back in immediately
-                print("Let's try to log back in immediately...")
-                IFarmer.first_login = True
-
-            # Check if we need to log in again!
-            self.check_for_login_state()
-
-            if self.current_state == States.GOING_TO_DK:
-                self.going_to_dk_state()
-
-            elif self.current_state == States.OPEN_DK:
-                self.open_dk_state()
-
-            elif self.current_state == States.PREPARE_FIGHT:
-                self.prepare_fight_state()
-
-            elif self.current_state == States.FIGHTING:
-                self.fighting_state()
-
-            elif self.current_state == States.EXIT_FARMER:
-                self.exit_farmer_state()
-
-            # We need the loop to run very fast
-            time.sleep(0.5)
+        self.run_state_loop(
+            {
+                States.GOING_TO_DK: self.going_to_dk_state,
+                States.OPEN_DK: self.open_dk_state,
+                States.PREPARE_FIGHT: self.prepare_fight_state,
+                States.FIGHTING: self.fighting_state,
+                States.EXIT_FARMER: self.exit_farmer_state,
+            },
+            login_return_state=States.GOING_TO_DK,
+            sleep_seconds=0.5,
+        )

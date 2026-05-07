@@ -8,6 +8,7 @@ from numbers import Integral
 from typing import Callable
 
 import numpy as np
+import utilities.vision_images as vio
 from utilities.card_data import Card
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
@@ -17,6 +18,8 @@ from utilities.utilities import (
     click_im,
     display_image,
     drag_im,
+    find,
+    find_and_click,
     get_click_point_from_rectangle,
     get_hand_cards,
     is_ground_region,
@@ -71,14 +74,38 @@ class IFighter(abc.ABC):
         with self._lock:
             print("Manually stopping the fighter thread.")
             self.exit_thread = True
-            # Reset the battle strategy turn
-            self.battle_strategy.reset_fight_turn()
+
+    def _run_manual_forfeit_flow(self) -> None:
+        """Standard pause/forfeit flow shared by beast fighters."""
+        screenshot, window_location = capture_window()
+
+        if find(vio.ok_main_button, screenshot):
+            self.current_state = FightingStates.DEFEAT
+            return
+
+        if find_and_click(vio.forfeit, screenshot, window_location):
+            return
+
+        find_and_click(vio.pause, screenshot, window_location)
+
+    def _before_pick_cards(self, *, screenshot, window_location, empty_card_slots: int) -> None:
+        """Hook for subclasses to react to the slot-count observation before card selection.
+
+        ``play_cards`` owns the shared flow and reads the screenshot / empty-slot count once. Subclasses
+        may use this hook to update internal state from that exact observation before slot-index
+        calculation and ``battle_strategy.pick_cards()`` run. The hook must not play cards or change
+        the control flow of ``play_cards`` directly.
+        """
 
     def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
+
+        self._before_pick_cards(
+            screenshot=screenshot, window_location=window_location, empty_card_slots=empty_card_slots
+        )
 
         # if empty_card_slots == 1:
         #     index_to_play = selected_cards[1][self.available_card_slots - 1]
@@ -197,12 +224,12 @@ class IFighter(abc.ABC):
         """
 
         def wrapper_func(self: IFighter, *args, **kwargs):
-            # Call the original function
-            func(self, *args, **kwargs)
-
-            # Clean up the attributes by resetting them, in case the subclass instance is reused
-            print("Resetting fighter...")
-            self._reset_instance_variables()
+            try:
+                func(self, *args, **kwargs)
+            finally:
+                print("Resetting fighter...")
+                self.battle_strategy.reset_fight_turn()
+                self._reset_instance_variables()
 
         return wrapper_func
 

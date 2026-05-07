@@ -26,6 +26,9 @@ class DogsFighter(IFighter):
     # Keep track of the current floor
     current_floor = 1
 
+    # Subclasses (e.g. Floor 4) may set False to skip auto-clicking Escalin talent on phase 3 entry.
+    activate_phase3_escalin_talent = True
+
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
 
@@ -48,7 +51,7 @@ class DogsFighter(IFighter):
         # To skip quickly to the rewards when the fight is done
         find_and_click(vio.creature_destroyed, screenshot, window_location)
 
-        if find(vio.defeat, screenshot):
+        if find(vio.defeat, screenshot) or find(vio.close, screenshot):
             # I may have lost though...
             print("I lost! :(")
             self.current_state = FightingStates.DEFEAT
@@ -58,14 +61,26 @@ class DogsFighter(IFighter):
             print("Fighting complete! Is it true? Double check...")
             self.current_state = FightingStates.FIGHTING_COMPLETE
 
-        elif (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 0:
-            # We see empty card slots, it means its our turn
-            self.available_card_slots = available_card_slots
-            print(f"MY TURN, selecting {available_card_slots} cards...")
-            self.current_state = FightingStates.MY_TURN
+        elif self._try_enter_my_turn(screenshot):
+            pass
 
-            # # For debugging...
-            # self.count_empty_card_slots(screenshot, plot=True)
+    def _check_disabled_hand(self) -> bool:
+        """Subclasses (e.g. DogsFloor4Fighter) may override to match bird-style full-hand disable detection."""
+        return False
+
+    def _try_enter_my_turn(self, screenshot) -> bool:
+        """If empty card slots are visible, enter MY_TURN. Subclasses may override (e.g. Floor 4 first turn)."""
+        available_card_slots = DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)
+        if available_card_slots <= 0:
+            return False
+        if available_card_slots >= 3 and self._check_disabled_hand():
+            print("Our hand is fully disabled, let's restart the fight!")
+            self.current_state = FightingStates.EXIT_FIGHT
+            return True
+        self.available_card_slots = available_card_slots
+        print(f"MY TURN, selecting {available_card_slots} cards...")
+        self.current_state = FightingStates.MY_TURN
+        return True
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, debug=False):
@@ -78,12 +93,13 @@ class DogsFighter(IFighter):
                 temp_rectangles, _ = vio_image.find_all_rectangles(
                     card_slot_image, threshold=threshold, method=cv2.TM_CCOEFF_NORMED
                 )
-                # Why twice??
-                rectangles.extend(temp_rectangles)
                 rectangles.extend(temp_rectangles)
 
-        # Group all rectangles
-        grouped_rectangles, _ = cv2.groupRectangles(rectangles, groupThreshold=1, eps=0.5)
+        # groupThreshold=1 means each cluster needs at least two detections; otherwise
+        # OpenCV drops the whole cluster. Our slot hits are usually one rect per slot
+        # (non-overlapping), so we duplicate the list once to supply the second vote.
+        doubled = rectangles + rectangles if rectangles else []
+        grouped_rectangles, _ = cv2.groupRectangles(doubled, groupThreshold=1, eps=0.5)
         if debug and len(grouped_rectangles):
             print(f"We have {len(grouped_rectangles)} empty slots.")
             # rectangles_fig = draw_rectangles(screenshot, np.array(rectangles), line_color=(0, 0, 255))
@@ -137,7 +153,9 @@ class DogsFighter(IFighter):
             IFighter.current_phase = 3
             print("Clicking on dark dog, because current phase:", IFighter.current_phase)
             click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-            if find_and_click(vio.talent_escalin, screenshot, window_location, threshold=0.6):
+            if type(self).activate_phase3_escalin_talent and find_and_click(
+                vio.talent_escalin, screenshot, window_location, threshold=0.6
+            ):
                 print("Phase 3 entry: activating talent_escalin")
                 time.sleep(2.5)
 
@@ -168,12 +186,19 @@ class DogsFighter(IFighter):
 
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
+        # In case we see a "close" button
+        find_and_click(vio.close, screenshot, window_location)
+
         if find(vio.db_loading_screen, screenshot):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
             # Reset the current phase
             IFighter.current_phase = None
+
+    def exit_fight_state(self):
+        """Manually finish the fight when the hand is fully disabled (same flow as BirdFighter)."""
+        self._run_manual_forfeit_flow()
 
     @IFighter.run_wrapper
     def run(self, floor=1):
@@ -194,6 +219,9 @@ class DogsFighter(IFighter):
 
             elif self.current_state == FightingStates.DEFEAT:
                 self.defeat_state()
+
+            elif self.current_state == FightingStates.EXIT_FIGHT:
+                self.exit_fight_state()
 
             if self.exit_thread:
                 print("Closing Fighter thread!")

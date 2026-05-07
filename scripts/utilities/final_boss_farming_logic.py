@@ -31,6 +31,7 @@ class FinalBossFarmer(IFarmer):
     num_fights = 0
 
     def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_FB, **kwargs):
+        super().__init__()
 
         # Initialize the current state
         self.current_state = starting_state
@@ -139,6 +140,7 @@ class FinalBossFarmer(IFarmer):
         ):
             FinalBossFarmer.num_fights += 1
             print(f"FB cleared! {FinalBossFarmer.num_fights} times so far.")
+            print("[CLEAR]")
 
             # Now, exit the fight if we've reached the desired number of runs
             if FinalBossFarmer.num_fights >= self.max_num_runs:
@@ -163,6 +165,7 @@ class FinalBossFarmer(IFarmer):
 
         if find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
+            print("[LOSS]")
             self.current_state = States.IN_FINAL_BOSS_MENU
 
     def run(self):

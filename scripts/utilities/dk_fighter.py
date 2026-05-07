@@ -25,7 +25,14 @@ class DemonKingFighter(IFighter):
     _first_turn = True
     _color_context_key: tuple = ()
 
-    def __init__(self, battle_strategy, callback=None):
+    def __init__(
+        self,
+        battle_strategy,
+        callback=None,
+        *,
+        enable_phase2_team_switch: bool = False,
+    ):
+        self._enable_phase2_team_switch = enable_phase2_team_switch
         super().__init__(battle_strategy=battle_strategy, callback=callback)
 
     @classmethod
@@ -76,6 +83,17 @@ class DemonKingFighter(IFighter):
         return 1
 
     def my_turn_state(self):
+        """Select and play the cards"""
+        screenshot, window_location = capture_window()
+
+        # Hell DK: switch to the second team in UI before phase-2 level rules / hand layout.
+        if self._enable_phase2_team_switch and IFighter.current_phase == 2 and DemonKingFighter.current_team == 0:
+            find_and_click(vio.switch_dk_team, screenshot, window_location)
+            print("Switching teams...")
+            DemonKingFighter.current_team = 1
+            time.sleep(5)
+
+        # Just play the cards
         self.play_cards(dk_team=DemonKingFighter.current_team, color_mapper=DemonKingFighter.color_mapper)
 
     def exit_fight_state(self):
@@ -104,6 +122,7 @@ class DemonKingFighter(IFighter):
     @IFighter.run_wrapper
     def run(self, unit_colors: list[CardColors]):
 
+        DemonKingFighter.current_team = 0
         print("[Fighter] Successfully received these unit colors: ", [utype.name for utype in unit_colors])
         DemonKingFighter._update_context(unit_colors)
 

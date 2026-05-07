@@ -74,6 +74,7 @@ class SADungeonFarmer(IFarmer):
         chest_detection_count=3,
         **kwargs,
     ):
+        super().__init__()
         self.current_state = starting_state
 
         # Chest filtering config
@@ -276,6 +277,7 @@ class SADungeonFarmer(IFarmer):
             SADungeonFarmer.finished_run_lockout_until = now + 5.0
             self.reset_retry_flags()
             print(f"We've completed {SADungeonFarmer.num_runs_complete} runs so far")
+            print("[CLEAR]")
 
         find_and_click(vio.startbutton, screenshot, window_location)
 
@@ -298,9 +300,11 @@ class SADungeonFarmer(IFarmer):
                     )
                 else:
                     print_clr("Restarting run: no chest after retry limit", color=Color.RED)
+                    print("[LOSS]")
                     self.lets_restart_fight(screenshot)
             else:
                 print_clr(f"Restarting run immediately: {reason}", color=Color.RED)
+                print("[LOSS]")
                 self.lets_restart_fight(screenshot)
 
     def reset_retry_flags(self):

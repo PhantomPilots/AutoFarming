@@ -22,11 +22,13 @@ class InduraBattleStrategy(IBattleStrategy):
 
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         king_debuf_card_ids = [
-            i for i, card in enumerate(hand_of_cards)
+            i
+            for i, card in enumerate(hand_of_cards)
             if find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
         ]
         played_king_debuf_cards = [
-            i for i, card in enumerate(picked_cards)
+            i
+            for i, card in enumerate(picked_cards)
             if find(vio.king_att, card.card_image) and card.card_rank.value != CardRanks.BRONZE.value
         ]
         six_empty_slots_image = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
@@ -40,7 +42,7 @@ class InduraBattleStrategy(IBattleStrategy):
             InduraBattleStrategy.oxidize_count = 0
 
             # Disable all heal cards if someone has played one already OR it's the first fight turn!
-            if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy._fight_turn == 0:
+            if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy.fight_turn == 0:
                 # Disabled all heal cards, unless it's 3rd card and not 1st turn
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
@@ -68,7 +70,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 return heal_card_ids[-1]
 
             # If it's the first turn literally, play a debuff card first and foremost
-            if IBattleStrategy._fight_turn == 0:
+            if IBattleStrategy.fight_turn == 0:
                 debuff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ATTACK_DEBUFF]
                 if debuff_ids:
                     return debuff_ids[-1]
@@ -131,9 +133,9 @@ class InduraBattleStrategy(IBattleStrategy):
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
         elif phase == 3:
-            print(f"We're on turn {InduraBattleStrategy._fight_turn} of phase 3")
+            print(f"We're on turn {InduraBattleStrategy.fight_turn} of phase 3")
 
-            if InduraBattleStrategy._fight_turn == 0:
+            if InduraBattleStrategy.fight_turn == 0:
                 ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
                 print("Disabling all Ultimates for first turn!")
                 for id in ult_ids:
@@ -149,7 +151,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 [i for i, card in enumerate(hand_of_cards) if card.card_type.value == CardTypes.RECOVERY.value],
                 key=lambda idx: card_ranks[idx],
             )
-            if len(heal_card_ids):  # and InduraBattleStrategy._fight_turn % 2 == 0:
+            if len(heal_card_ids):  # and InduraBattleStrategy.fight_turn % 2 == 0:
                 return heal_card_ids[-1]
 
             # On phase 3, if we have Alpha ult, and haven't played a heal, play a King att card first
@@ -159,7 +161,9 @@ class InduraBattleStrategy(IBattleStrategy):
                     [i for i, card in enumerate(hand_of_cards) if find(vio.king_att, card.card_image)],
                     key=lambda idx: card_ranks[idx],
                 )
-                played_heal_ids = [i for i, card in enumerate(picked_cards) if card.card_type.value == CardTypes.RECOVERY.value]
+                played_heal_ids = [
+                    i for i, card in enumerate(picked_cards) if card.card_type.value == CardTypes.RECOVERY.value
+                ]
                 played_king_att_card = [i for i, card in enumerate(picked_cards) if find(vio.king_att, card.card_image)]
                 num_alpha_buffs = self._count_alpha_buffs(screenshot)
                 if (
@@ -185,7 +189,8 @@ class InduraBattleStrategy(IBattleStrategy):
         # Try to play attack cards only if we can
         attack_card_ids = sorted(
             [
-                i for i, card in enumerate(hand_of_cards)
+                i
+                for i, card in enumerate(hand_of_cards)
                 if card.card_type == CardTypes.ATTACK and not find(vio.king_att, card.card_image)
             ],
             key=lambda idx: card_ranks[idx],
@@ -202,7 +207,8 @@ class InduraBattleStrategy(IBattleStrategy):
         num_buffs = self._count_alpha_buffs(screenshot)
 
         played_single_targets = [
-            i for i, card in enumerate(picked_cards)
+            i
+            for i, card in enumerate(picked_cards)
             if find(vio.king_att, card.card_image) or find(vio.lance_att, card.card_image)
         ]
         played_alpha_att = [i for i, card in enumerate(picked_cards) if find(vio.alpha_att, card.card_image)]

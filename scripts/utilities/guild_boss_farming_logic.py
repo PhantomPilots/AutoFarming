@@ -3,15 +3,14 @@ from enum import Enum, auto
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from utilities.constants import MINUTES_TO_WAIT_BEFORE_LOGIN
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
-    check_for_reconnect,
     click_im,
     find,
     find_and_click,
@@ -47,7 +46,7 @@ class GuildBossFarmer(IFarmer):
         if password:
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
-            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+            print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         self.current_state = starting_state
 
@@ -109,6 +108,7 @@ class GuildBossFarmer(IFarmer):
         if find_and_click(vio.boss_mission, screenshot, window_location):
             GuildBossFarmer.num_fights += 1
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
+            print("[CLEAR]")
             return
         find_and_click(vio.boss_results, screenshot, window_location)
 
@@ -143,39 +143,12 @@ class GuildBossFarmer(IFarmer):
 
     def run(self):
 
-        while True:
-            # Try to reconnect first
-            if not (success := check_for_reconnect()):
-                # We had to restart the game! Let's log back in immediately
-                print("Let's try to log back in immediately...")
-                IFarmer.first_login = True
-
-            # Check if we need to log in again!
-            self.check_for_login_state()
-
-            if self.current_state == States.GOING_TO_GB:
-                self.going_to_gb_state()
-
-            elif self.current_state == States.FINDING_BOSS:
-                self.finding_boss_state()
-
-            elif self.current_state == States.FIGHTING:
-                self.fighting_state()
-
-            elif self.current_state == GlobalStates.DAILY_RESET:
-                self.daily_reset_state()
-
-            elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state()
-
-            elif self.current_state == GlobalStates.DAILIES_STATE:
-                self.dailies_state()
-
-            elif self.current_state == GlobalStates.FORTUNE_CARD:
-                self.fortune_card_state()
-
-            elif self.current_state == GlobalStates.LOGIN_SCREEN:
-                self.login_screen_state(initial_state=States.GOING_TO_GB)
-
-            # We need the loop to run very fast
-            time.sleep(0.7)
+        self.run_state_loop(
+            {
+                States.GOING_TO_GB: self.going_to_gb_state,
+                States.FINDING_BOSS: self.finding_boss_state,
+                States.FIGHTING: self.fighting_state,
+            },
+            login_return_state=States.GOING_TO_GB,
+            sleep_seconds=0.7,
+        )

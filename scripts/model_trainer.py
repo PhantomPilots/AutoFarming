@@ -65,12 +65,7 @@ def load_amplify_cards_features() -> list[np.ndarray]:
     # Extract the features
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
-    # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=20)
-    # Fit the PCA
-    features_reduced = pca_model.fit_transform(features)
-
-    return features_reduced, all_labels, pca_model
+    return features, all_labels
 
 
 def load_HAM_cards_features() -> list[np.ndarray]:
@@ -80,12 +75,7 @@ def load_HAM_cards_features() -> list[np.ndarray]:
     # Extract the features
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
-    # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=25)
-    # Fit the PCA
-    features_reduced = pca_model.fit_transform(features)
-
-    return features_reduced, all_labels, pca_model
+    return features, all_labels
 
 
 def load_thor_cards_features() -> list[np.ndarray]:
@@ -95,27 +85,25 @@ def load_thor_cards_features() -> list[np.ndarray]:
     # Extract the features
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
-    # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=25)
-    # Fit the PCA
-    features_reduced = pca_model.fit_transform(features)
-
-    return features_reduced, all_labels, pca_model
+    return features, all_labels
 
 
-def load_ground_cards_features() -> list[np.ndarray]:
-    """Load features that correspond to GROUND/NO GROUND card slots"""
+def load_ground_cards_features_raw() -> list[np.ndarray]:
+    """Load raw histogram features for GROUND/NO GROUND card slots, without PCA"""
     dataset, all_labels = load_dataset("data/ground_data*")
 
-    # Extract the features
     features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
 
-    # Apply PCA for dimensionality reduction
-    pca_model = PCA(n_components=30)
-    # Fit the PCA
+    return features, all_labels
+
+
+def apply_pca_transform(features: np.ndarray, n_components: int) -> tuple[np.ndarray, PCA]:
+    """Fit a PCA model and return the reduced features plus the fitted transform."""
+
+    pca_model = PCA(n_components=n_components)
     features_reduced = pca_model.fit_transform(features)
 
-    return features_reduced, all_labels, pca_model
+    return features_reduced, pca_model
 
 
 def load_unit_type_features() -> list[np.ndarray]:
@@ -205,6 +193,48 @@ def train_logistic_regressor(X: np.ndarray, labels: np.ndarray) -> LogisticRegre
     return logistic_regressor
 
 
+def train_logistic_regressor_with_scaling(
+    X: np.ndarray, labels: np.ndarray
+) -> tuple[LogisticRegression, StandardScaler]:
+    """Train a logistic regressor after standardizing the input features"""
+
+    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    logistic_regressor = LogisticRegression(max_iter=1000)
+    logistic_regressor.fit(X_train_scaled, y_train)
+
+    test_model(logistic_regressor, X_test_scaled, y_test)
+
+    scaler.fit(X)
+    X_scaled = scaler.transform(X)
+    logistic_regressor.fit(X_scaled, labels)
+    print("Train accuracy on full refitted dataset:")
+    test_model(logistic_regressor, X_scaled, labels)
+
+    return logistic_regressor, scaler
+
+
+def train_svc_classifier_raw(X: np.ndarray, labels: np.ndarray) -> SVC:
+    """Train an SVC directly on the raw extracted features"""
+
+    X_train, X_test, y_train, y_test = train_test_split(X, labels, test_size=0.2, stratify=labels)
+
+    svc_model = SVC(kernel="rbf")
+    svc_model.fit(X_train, y_train)
+
+    test_model(svc_model, X_test, y_test)
+
+    svc_model.fit(X, labels)
+    print("Train accuracy on full refitted dataset:")
+    test_model(svc_model, X, labels)
+
+    return svc_model
+
+
 def test_model(model: KNeighborsClassifier | LogisticRegression | SVC, X_test: np.ndarray, y_test: np.ndarray):
     """Test a generic pre-trained model.
 
@@ -277,8 +307,9 @@ def train_empty_card_slots_model():
 def train_amplify_cards_classifier():
     """Train a model that identifies what cards need to be used in phase 3 of Bird FLoor 4!"""
 
-    features, labels, pca_model = load_amplify_cards_features()
-    model = train_knn(X=features, labels=labels)
+    features, labels = load_amplify_cards_features()
+    features_reduced, pca_model = apply_pca_transform(features, n_components=20)
+    model = train_knn(X=features_reduced, labels=labels)
     save_model(model, filename="amplify_cards_predictor.knn")
     save_model(pca_model, filename="pca_amplify_model.pca")
 
@@ -286,8 +317,9 @@ def train_amplify_cards_classifier():
 def train_HAM_cards_classifier():
     """Train a model that identifies hard-hitting cards (excluding ultimates)"""
 
-    features, labels, pca_model = load_HAM_cards_features()
-    model = train_knn(X=features, labels=labels)
+    features, labels = load_HAM_cards_features()
+    features_reduced, pca_model = apply_pca_transform(features, n_components=25)
+    model = train_knn(X=features_reduced, labels=labels)
     save_model(model, filename="HAM_cards_predictor.knn")
     save_model(pca_model, filename="pca_HAM_cards_model.pca")
 
@@ -295,8 +327,9 @@ def train_HAM_cards_classifier():
 def train_thor_cards_classifier():
     """Train a model that identifies hard-hitting cards (excluding ultimates)"""
 
-    features, labels, pca_model = load_thor_cards_features()
-    model = train_svm_classifier(X=features, labels=labels)
+    features, labels = load_thor_cards_features()
+    features_reduced, pca_model = apply_pca_transform(features, n_components=25)
+    model = train_svm_classifier(X=features_reduced, labels=labels)
     save_model(model, filename="Thor_cards_predictor.svm")
     save_model(pca_model, filename="pca_Thor_cards_model.pca")
 
@@ -304,10 +337,16 @@ def train_thor_cards_classifier():
 def train_ground_cards_classifier():
     """Train a model that distinguished between ground vs. no ground cards"""
 
-    features, labels, pca_model = load_ground_cards_features()
-    model = train_svm_classifier(X=features, labels=labels)
-    save_model(model, filename="ground_cards_predictor.svm")
-    save_model(pca_model, filename="pca_ground_cards_model.pca")
+    # ## Current behavior: raw histogram + scaling + logistic regression
+    # features, labels = load_ground_cards_features_raw()
+    # model, scaler_model = train_logistic_regressor_with_scaling(X=features, labels=labels)
+    # save_model(model, filename="ground_cards_predictor.lr")
+    # save_model(scaler_model, filename="scaler_ground_cards_model.scaler")
+
+    # Alternative behavior: raw histogram + SVC
+    features, labels = load_ground_cards_features_raw()
+    model = train_svc_classifier_raw(X=features, labels=labels)
+    save_model(model, filename="ground_cards_predictor.svc")
 
 
 def train_unit_type_classifier():
@@ -320,7 +359,7 @@ def train_unit_type_classifier():
 def main():
 
     ### For card types
-    train_card_types_model()
+    # train_card_types_model()
 
     ### For card merges
     # train_card_merges_model()
@@ -338,7 +377,7 @@ def main():
     # train_thor_cards_classifier()
 
     # ### Train a model that identifies GROUND cards
-    # train_ground_cards_classifier()
+    train_ground_cards_classifier()
 
     ### Train a model that the color type of a unit
     # train_unit_type_classifier()

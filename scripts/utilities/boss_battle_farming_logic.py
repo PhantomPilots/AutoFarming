@@ -12,7 +12,6 @@ from utilities.utilities import (
     find,
     find_and_click,
     press_key,
-    click_and_sleep
 )
 
 logger = LoggerWrapper("boss_battle_logger", level=logging.INFO, log_to_file=False)
@@ -44,6 +43,7 @@ class BossBattleFarmer(IFarmer):
         battle_strategy=None,
         **kwargs,
     ):
+        super().__init__()
         self.current_state = starting_state
         print(f"Starting Boss Battles farmer")
 
@@ -72,7 +72,7 @@ class BossBattleFarmer(IFarmer):
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
 
-        if click_and_sleep(vio.stage_melee_of_phantasms, screenshot, window_location, sleep_time=0.5):
+        if find_and_click(vio.stage_melee_of_phantasms, screenshot, window_location, sleep_time=0.5):
             # We're re-opening the floor!
             self.current_state = States.GOING_TO_FLOOR_STATE
             print(f"Going to {self.current_state}")
@@ -123,7 +123,9 @@ class BossBattleFarmer(IFarmer):
         if now >= BossBattleFarmer.finished_run_lockout_until and find(vio.finished_auto_repeat_fight, screenshot):
             BossBattleFarmer.num_runs_complete += 1
             BossBattleFarmer.finished_run_lockout_until = now + 5.0
-            print(f"We've completed {BossBattleFarmer.num_runs_complete} runs so far and used {IFarmer.stamina_pots} stamina pots")
+            print(f"We've completed {BossBattleFarmer.num_runs_complete} runs so far.")
+            print("[CLEAR]")
+            self.keep_alive(120, "Completed a run, going next")  # reset the runtime watchdog since we're making progress
 
         # We may need to restore stamina
         if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):

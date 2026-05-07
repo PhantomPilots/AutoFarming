@@ -1,0 +1,6 @@
+ntfy_private_channel: ""
+stuck_timeout_minutes: 5 # time without state change AND click activity before alerting
+notification_cooldown_minutes: 5 # minimum delay between repeated stuck alerts
+max_notifications_per_incident: 1 # hard cap on alerts per stuck incident
+game_password: "" # used when the game shows login after disconnect; do not commit real secrets
+minutes_to_wait_before_login: 30 # wait this many minutes after logout before attempting login again

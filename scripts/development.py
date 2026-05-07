@@ -7,6 +7,7 @@ import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter
 from utilities.card_data import CardTypes
 from utilities.coordinates import Coordinates
+from utilities.daily_farming_logic import DailyFarmer
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
 from utilities.rat_fighter import RatFighter
@@ -42,7 +43,7 @@ def development():
     # determine_relative_coordinates(screenshot)
 
     # print("Screenshot shape:", screenshot.shape)
-    # screenshot_testing(screenshot, vision_image=vio.cross, threshold=0.7)
+    screenshot_testing(screenshot, vision_image=vio.startbutton, threshold=0.7, best_only=False)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 
@@ -80,17 +81,16 @@ def development():
 
     # print(f"We have {count_empty_card_slots_2()} empty card slots")
 
-    # hand_image = capture_hand_image()
-    # display_image(hand_image)
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    # cards = get_hand_cards(num_units=3)
+    # cards = get_hand_cards(num_units=4)
     # for i, card in enumerate(cards, start=0):
-    #     card_interior = get_card_type_image(card.card_image, num_units=3)
-
-    #     print(f"Is {card.card_type.name} Meli's?", is_Meli_card(card))
+    #     card_interior = get_card_type_image(card.card_image, num_units=4)
+    #     display_image(card_interior)
     #     print(card.card_type.name, card.card_rank.name)
+    # hand_image = capture_hand_image()
+    # display_image(hand_image)
 
     #     # print(card.card_image.shape)
 

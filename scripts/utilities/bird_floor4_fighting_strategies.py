@@ -56,6 +56,7 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
         card_types = np.array([card.card_type.value for card in hand_of_cards])
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
         picked_card_types = np.array([card.card_type.value for card in picked_cards])
+        silver_ids = np.where(card_ranks == CardRanks.SILVER.value)[0]
 
         # We may need to cure all the debuffs!
         screenshot, _ = capture_window()
@@ -78,9 +79,8 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
                 return sorted(recovery_ids, key=lambda idx: card_ranks[idx], reverse=True)[-1]
         else:
             # If we don't cure block-skill debuff, check if we can do a card merge
-            silver_cards = np.where(card_ranks == CardRanks.SILVER.value)[0]
-            if len(silver_cards) < 3 and BirdFloor4BattleStrategy.card_turn == 0:
-                # Only do a manual card merge if it's the first card of the turn
+            if len(silver_ids) < 3 and BirdFloor4BattleStrategy.card_turn <= 1:
+                # Try a manual card merge on the first two card picks of the turn
                 if (potential_idx := self._make_silver_merge(hand_of_cards)) is not None:
                     return potential_idx
 
@@ -111,32 +111,30 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
 
         ### DEFAULT
         # Get the next non-silver card that doesn't correspond to a RECOVERY OR a Meli AOE OR doesn't generate a merge of silver cards
-        silver_ids = np.where(card_ranks == CardRanks.SILVER.value)[0]
-        # Allow playing silver cards IF we have already more than 3 silvers saved!
-        next_idx = next(
-            (
-                bronze_item
-                # Reverse the bronze_ids list to start searching from the right:
-                for bronze_item in np.where((card_ranks != CardRanks.SILVER.value) | (len(silver_ids) > 3))[0][::-1]
-                if hand_of_cards[bronze_item].card_type not in [CardTypes.GROUND, CardTypes.RECOVERY, CardTypes.NONE]
-                and not find(vio.meli_aoe, hand_of_cards[bronze_item].card_image)
-                and (
-                    (
-                        bronze_item > 0
-                        and bronze_item < len(hand_of_cards) - 1
-                        and (
-                            not determine_card_merge(
-                                hand_of_cards[bronze_item - 1],
-                                hand_of_cards[bronze_item + 1],
-                            )
-                            or hand_of_cards[bronze_item - 1].card_rank != CardRanks.SILVER
-                        )
-                    )
-                    or bronze_item in [0, len(hand_of_cards) - 1]
-                )
-            ),
-            None,
-        )
+        # Allow playing silver cards IF we have already more than 4 silvers saved (keep at least 3 for phase 2)!
+        playable_ids = np.where((card_ranks != CardRanks.SILVER.value) | (len(silver_ids) > 4))[0][::-1]
+        bronze_merge_partner = BirdFloor4BattleStrategy._bronze_merge_partner_mask(hand_of_cards, card_ranks)
+
+        rightmost_eligible = None
+        for idx in playable_ids:
+            c = hand_of_cards[idx]
+            if c.card_type in (CardTypes.GROUND, CardTypes.RECOVERY, CardTypes.NONE):
+                continue
+            if find(vio.meli_aoe, c.card_image):
+                continue
+            if 0 < idx < len(hand_of_cards) - 1:
+                if determine_card_merge(hand_of_cards[idx - 1], hand_of_cards[idx + 1]) and hand_of_cards[
+                    idx - 1
+                ].card_rank == CardRanks.SILVER:
+                    continue
+            if rightmost_eligible is None:
+                rightmost_eligible = idx
+            # Prefer "lonely" cards (non-bronze or bronze without another merge partner in hand)
+            if not bronze_merge_partner[idx]:
+                next_idx = idx
+                break
+        else:
+            next_idx = rightmost_eligible
 
         if next_idx is None:
             # There's no bronze card to play! Simply move the rightmost two cards
@@ -513,6 +511,21 @@ class BirdFloor4BattleStrategy(IBattleStrategy):
             return -1
 
         return None
+
+    @staticmethod
+    def _bronze_merge_partner_mask(hand_of_cards: list[Card], card_ranks: np.ndarray) -> np.ndarray:
+        """True at index i if hand_of_cards[i] is bronze and merges with another bronze (pairwise, O(b²))."""
+        n = len(hand_of_cards)
+        has_partner = np.zeros(n, dtype=bool)
+        bronze_ix = np.flatnonzero(card_ranks == CardRanks.BRONZE.value)
+        for ii in range(len(bronze_ix)):
+            ia = int(bronze_ix[ii])
+            for jj in range(ii + 1, len(bronze_ix)):
+                ja = int(bronze_ix[jj])
+                if determine_card_merge(hand_of_cards[ia], hand_of_cards[ja]):
+                    has_partner[ia] = True
+                    has_partner[ja] = True
+        return has_partner
 
     def _make_silver_merge(self, hand_of_cards: list[Card]):
         """See if we can make a silver merge"""

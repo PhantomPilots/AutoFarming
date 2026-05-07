@@ -2,7 +2,6 @@ import contextlib
 import glob
 import os
 import random
-import tempfile
 import threading
 import time
 from ctypes import windll
@@ -14,14 +13,19 @@ import cv2
 import dill as pickle
 import numpy as np
 import pyautogui
+import requests
 import utilities.vision_images as vio
 import win32api
 import win32con
 import win32gui
-import win32ui
-import yaml
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
+from utilities.app_config import (
+    APP_CONFIG_DEFAULTS,
+    click_tracker,
+    config,
+    wait_if_paused,
+)
 from utilities.capture_window import (
     capture_screen,
     capture_window,
@@ -54,33 +58,6 @@ class Color(str, Enum):
     GRAY = "gray"
 
 
-def get_pause_flag_path(pid: int | None = None) -> str:
-    """Get the path to the pause flag file for a given process ID"""
-    if pid is None:
-        pid = os.getpid()
-    return os.path.join(tempfile.gettempdir(), f"autofarmers_pause_{pid}.flag")
-
-
-def is_paused() -> bool:
-    """Check if the current process is paused"""
-    return os.path.exists(get_pause_flag_path())
-
-
-def wait_if_paused(print_messages: bool = True):
-    """Wait while the process is paused, with optional status messages"""
-    if not is_paused():
-        return
-
-    if print_messages:
-        print("Paused...")
-
-    while is_paused():
-        time.sleep(0.1)
-
-    if print_messages:
-        print("Resumed.")
-
-
 def draw_rectangles(
     haystack_img, rectangles: np.ndarray, line_color: tuple = (0, 255, 0), line_type=cv2.LINE_4
 ) -> np.ndarray:
@@ -109,12 +86,27 @@ def draw_regions(image: np.ndarray, *regions: tuple[int, int, int, int], line_co
     return draw_rectangles(image.copy(), rects, line_color=line_color)
 
 
-def screenshot_testing(screenshot: np.ndarray, vision_image: Vision, threshold=0.7, cv_method=cv2.TM_CCOEFF_NORMED):
+def screenshot_testing(
+    screenshot: np.ndarray,
+    vision_image: Vision,
+    threshold=0.7,
+    cv_method=cv2.TM_CCOEFF_NORMED,
+    best_only: bool = False,
+):
     """Debugging function that displays a screenshot and the patterns matched for a specific `Vision` image"""
 
     # cv2.imshow("screenshot", screenshot)
 
-    # rectangle = vision_image.find(screenshot, threshold=threshold)
+    if best_only:
+        rectangle = vision_image.find(screenshot, threshold=threshold, method=cv_method)
+        if rectangle is None or not rectangle.size:
+            print("No rectangles found!")
+            return
+        new_image = draw_rectangles(screenshot, rectangle)
+        cv2.imshow("Rectangles", new_image)
+        cv2.waitKey(0)
+        return
+
     rectangles, _ = vision_image.find_all_rectangles(screenshot, threshold=threshold, method=cv_method)
     if rectangles.size:
         new_image = draw_rectangles(screenshot, rectangles)
@@ -287,8 +279,10 @@ def find_and_click(
     vision_image: Vision,
     screenshot: np.ndarray,
     window_location: list[float] = (0, 0),
+    *,
     threshold=0.7,
     point_coordinates: tuple[float, float] | None = None,
+    sleep_time=0,
 ) -> bool:
     """Tries to find the given `vision_image` on the screenshot; if it is found, clicks on it.
     `point_coordinates` can be a tuple with the hardcoded coordinates to click on. TODO: This should be improved
@@ -302,30 +296,16 @@ def find_and_click(
             click_im(rectangle, window_location)
 
         print(f"Clicked on '{vision_image.image_name}'")
+        click_tracker.record_image_click(vision_image.image_name)
 
-        time.sleep(0.5)
+        time.sleep(0.1 + max(0, sleep_time))
 
         return True
 
     return False
 
 
-def click_and_sleep(
-    vision_image: Vision,
-    screenshot: np.ndarray,
-    window_location: list[float],
-    threshold=0.7,
-    point_coordinates: tuple[float, float] | None = None,
-    sleep_time=1,  # In seconds
-) -> bool:
-    """First click, then sleep for 1 sec"""
-    if find_and_click(vision_image, screenshot, window_location, threshold, point_coordinates):
-        time.sleep(sleep_time)
-        return True
-    return False
-
-
-def find_floor_coordinates(screenshot: np.ndarray, window_location):
+def find_floor_coordinates(screenshot: np.ndarray):
     """Given a screenshot of the DB screen, find the coordinates of the available floor"""
     rectangle = vio.available_floor.find(screenshot, threshold=0.8)
     if rectangle.size:
@@ -345,6 +325,7 @@ def click(x, y, sleep_after_click=0.01):
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
     time.sleep(sleep_after_click)
     win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+    click_tracker.record_click()
 
 
 def rclick(x, y, sleep_after_click=0.01):
@@ -866,11 +847,30 @@ def re_open_7ds_window() -> bool:
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
             return True
+    print("Failed to re-open the game.")
     return False
 
 
-def load_yaml_config(file_path: str) -> dict:
-    """Load a YAML configuration file and return its contents as a dictionary."""
-    with open(file_path, "r") as file:
-        config = yaml.safe_load(file)
-    return config
+def send_push_notification(message: str, screenshot: np.ndarray | None = None):
+    """Send a push notification via ntfy.sh, optionally with a screenshot attachment."""
+    channel = config.get("ntfy_private_channel")
+    if not channel:
+        return
+
+    def _send():
+        try:
+            url = f"https://ntfy.sh/{channel}"
+            if screenshot is not None:
+                _, jpg_bytes = cv2.imencode(".jpg", screenshot, [cv2.IMWRITE_JPEG_QUALITY, 80])
+                requests.post(
+                    url,
+                    data=jpg_bytes.tobytes(),
+                    headers={"Filename": "stuck_screenshot.jpg", "Title": message},
+                    timeout=10,
+                )
+            else:
+                requests.post(url, data=message.encode("utf-8"), timeout=10)
+        except requests.RequestException as e:
+            print(f"Failed to send push notification: {e}")
+
+    threading.Thread(target=_send, daemon=True).start()

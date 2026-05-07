@@ -12,8 +12,9 @@ from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
 from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_fighter_interface import IFighter
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
-    click_and_sleep,
+    check_for_reconnect,
     close_game,
     drag_im,
     find,
@@ -31,7 +32,22 @@ class States(Enum):
     FORTUNE_CARD = 7
 
 
-class IFarmer:
+class IFarmerMeta(abc.ABCMeta):
+    """Metaclass that auto-prints [POT] whenever stamina_pots is incremented."""
+
+    @property
+    def stamina_pots(cls):
+        return cls._stamina_pots
+
+    @stamina_pots.setter
+    def stamina_pots(cls, value):
+        old = getattr(cls, "_stamina_pots", 0)
+        cls._stamina_pots = value
+        if value > old:
+            print("[POT]")
+
+
+class IFarmer(metaclass=IFarmerMeta):
     """Generic farmer interface."""
 
     # For thread-safe variables
@@ -40,7 +56,7 @@ class IFarmer:
     # For type helping
     current_state: int
     fighter: IFighter
-    stamina_pots: int = 0
+    _stamina_pots: int = 0  # managed by IFarmerMeta — use IFarmer.stamina_pots
 
     # Keep track of the defeats in an organized manner
     dict_of_defeats = defaultdict(int)
@@ -65,13 +81,100 @@ class IFarmer:
     # To keep track of whether we're doing dailies
     doing_dailies = False
 
+    # Manual keepalive support for long-running operations with no state/click changes
+    _keepalive_until: float = 0.0
+    _keepalive_reason: str | None = None
+
     def __init__(self):
         """Just to initialize the Daily Farmer"""
+        self._keepalive_until = 0.0
+        self._keepalive_reason = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
             do_daily_pvp=False,
             complete_callback=None,
         )
+
+    def keep_alive(self, duration_seconds: float = 120, reason: str | None = None):
+        """Emit a manual keepalive to temporarily suppress runtime stuck alerts.
+
+        Use this in farmer logic for known long-running phases where state and click activity
+        are legitimately quiet (for example, long animation, loading, or battle waits).
+        """
+        keepalive_seconds = max(0.0, float(duration_seconds))
+        keepalive_until = time.time() + keepalive_seconds
+
+        with IFarmer._lock:
+            self._keepalive_until = max(self._keepalive_until, keepalive_until)
+            if reason is not None:
+                self._keepalive_reason = reason
+
+    def get_keepalive_deadline(self) -> float:
+        """Return the keepalive deadline timestamp (epoch seconds)."""
+        with IFarmer._lock:
+            return self._keepalive_until
+
+    def before_state_loop_iteration(self) -> None:
+        """Hook called at the beginning of each shared state-loop iteration."""
+
+    def on_unknown_state(self) -> None:
+        """Raise a clear error when a farmer reaches a state it cannot dispatch."""
+        raise RuntimeError(f"Unknown farmer state: {self.current_state}")
+
+    def handle_global_state(self, login_return_state: States) -> bool:
+        """Handle global farmer states shared by multiple farming loops."""
+        if self.current_state == States.DAILY_RESET:
+            self.daily_reset_state()
+            return True
+
+        if self.current_state == States.CHECK_IN:
+            self.check_in_state()
+            return True
+
+        if self.current_state == States.DAILIES_STATE:
+            self.dailies_state()
+            return True
+
+        if self.current_state == States.FORTUNE_CARD:
+            self.fortune_card_state()
+            return True
+
+        if self.current_state == States.LOGIN_SCREEN:
+            self.login_screen_state(initial_state=login_return_state)
+            return True
+
+        return False
+
+    def run_state_loop(
+        self,
+        state_handlers: dict,
+        *,
+        login_return_state,
+        sleep_seconds=0.6,
+        check_reconnect=True,
+        login_check=True,
+    ):
+        """Run a farmer's local state machine with shared reconnect/login/global-state handling."""
+        while True:
+            if check_reconnect and not check_for_reconnect():
+                print("Let's try to log back in immediately...")
+                IFarmer.first_login = True
+
+            self.before_state_loop_iteration()
+
+            if login_check:
+                self.check_for_login_state()
+
+            if self.handle_global_state(login_return_state):
+                time.sleep(sleep_seconds)
+                continue
+
+            state_handler = state_handlers.get(self.current_state)
+            if state_handler is None:
+                self.on_unknown_state()
+
+            state_handler()
+            time.sleep(sleep_seconds)
 
     def stop_fighter_thread(self):
         """Send a STOP signal to the IFighter thread"""
@@ -143,7 +246,7 @@ class IFarmer:
         if (
             not login_attempted
             and not IFarmer.first_login
-            and time.time() - IFarmer.logged_out_time < MINUTES_TO_WAIT_BEFORE_LOGIN * 60
+            and time.time() - IFarmer.logged_out_time < get_minutes_to_wait_before_login() * 60
         ):
             time.sleep(1)
             return
@@ -201,7 +304,7 @@ class IFarmer:
         elif find(vio.password, screenshot) and self.current_state != States.LOGIN_SCREEN:
             self.current_state = States.LOGIN_SCREEN
             IFarmer.logged_out_time = time.time()
-            print(f"We've been logged out! Waiting {MINUTES_TO_WAIT_BEFORE_LOGIN} mins to log back in...")
+            print(f"We've been logged out! Waiting {get_minutes_to_wait_before_login()} mins to log back in...")
 
             # And close the fighter thread if open
             self.stop_fighter_thread()
@@ -237,18 +340,22 @@ class IFarmer:
             return
 
         # If we see a "cross", click it before clicking the OK button
-        if click_and_sleep(vio.cross, screenshot, window_location):
+        if find_and_click(vio.cross, screenshot, window_location, sleep_time=1):
             screenshot, window_location = capture_window()
 
         # Cancel the demon search
-        click_and_sleep(vio.cancel_realtime, screenshot, window_location)
+        find_and_click(vio.cancel_realtime, screenshot, window_location, sleep_time=1)
 
         # We may be receiving the daily rewards now
-        click_and_sleep(vio.skip, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6, sleep_time=1)
 
         # We may be receiving the monthly subscription too
         if find(vio.membership_perk, screenshot):
             press_key("esc")
+
+        # In case we're in the knighthood or something!
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
+            return
 
         # Go to CHECK IN state
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
@@ -257,12 +364,13 @@ class IFarmer:
             return
 
         # Click on "Knighthood"
-        if click_and_sleep(
+        if find_and_click(
             vio.battle_menu,
             screenshot,
             window_location,
             threshold=0.6,
             point_coordinates=Coordinates.get_coordinates("knighthood"),
+            sleep_time=1,
         ):
             return
 
@@ -293,11 +401,11 @@ class IFarmer:
             return
 
         # Check in
-        if click_and_sleep(vio.check_in, screenshot, window_location, sleep_time=2):
+        if find_and_click(vio.check_in, screenshot, window_location, sleep_time=2):
             print("Checked in successfully!")
 
         # Click on the reward
-        click_and_sleep(vio.check_in_reward, screenshot, window_location)
+        find_and_click(vio.check_in_reward, screenshot, window_location, sleep_time=1)
 
         # Exit the knighthood after checking in...
         if find(vio.check_in_complete, screenshot):

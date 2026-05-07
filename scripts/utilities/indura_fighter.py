@@ -76,8 +76,6 @@ class InduraFighter(IFighter):
 
         with self._lock:
             self.exit_thread = True
-            # Reset the battle strategy turn
-            self.battle_strategy.reset_fight_turn()
 
     def play_cards(self, screenshot, window_location):
         """Read the current hand of cards, and play them based on the available card slots.

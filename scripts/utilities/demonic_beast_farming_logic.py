@@ -9,14 +9,13 @@ import utilities.vision_images as vio
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import (
     CHECK_IN_HOUR,
-    MINUTES_TO_WAIT_BEFORE_LOGIN,
     IFarmer,
 )
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
-    check_for_reconnect,
     crop_region,
     drag_im,
     find,
@@ -37,7 +36,7 @@ class States(Enum):
     EXIT_FARMER = 5
 
 
-class DemonicBeastFarmer(IFarmer, abc.ABC):
+class DemonicBeastFarmer(IFarmer):
 
     current_floor = 1
 
@@ -45,6 +44,9 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
     num_floor_3_victories = 0
     num_victories = 0
     num_losses = 0
+
+    # Beast search swipe counter; class-level to survive FarmingFactory crash recovery (same pattern as num_victories).
+    _swipe_attempts = 0
 
     def __init__(
         self,
@@ -65,7 +67,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         if password:
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
-            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+            print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         # In case we want to do dailies at the specified hour
         IFarmer.do_dailies = do_dailies
@@ -116,6 +118,11 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         """This should be the original state. Let's go to the Demonic Beast menu"""
         screenshot, window_location = capture_window()
 
+        if DemonicBeastFarmer.current_floor == 1 and find(vio.floor_3_cleared_db, screenshot):
+            print("Detected floor cleared image, moving to RESETTING_DB...")
+            self.current_state = States.RESETTING_DB
+            return
+
         # First of all, check whether it's time to do our dailies!
         if self.check_for_dailies():
             return
@@ -131,17 +138,28 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
         # If we see we're inside the DB selection screen but don't see our DemonicBeast,
-        # swipe right and try again
+        # swipe right (or left after 4 attempts) and try again
         if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
-            # Swipe to the right!
-            print("Wrong demonic beast, searching the right one...")
-            drag_im(
-                Coordinates.get_coordinates("right_swipe"),
-                Coordinates.get_coordinates("left_swipe"),
-                window_location,
-            )
+            DemonicBeastFarmer._swipe_attempts += 1
+            if DemonicBeastFarmer._swipe_attempts > 4:
+                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping left...")
+                drag_im(
+                    Coordinates.get_coordinates("left_swipe"),
+                    Coordinates.get_coordinates("right_swipe"),
+                    window_location,
+                )
+            else:
+                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping right...")
+                drag_im(
+                    Coordinates.get_coordinates("right_swipe"),
+                    Coordinates.get_coordinates("left_swipe"),
+                    window_location,
+                )
             time.sleep(0.5)
             return
+
+        # Reset swipe counter once the beast is found
+        DemonicBeastFarmer._swipe_attempts = 0
 
         # Go into the 'Demonic Beast' section
         find_and_click(self.db_image, screenshot, window_location)
@@ -203,7 +221,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
-        if floor_coordinates := find_floor_coordinates(screenshot, window_location):
+        if floor_coordinates := find_floor_coordinates(screenshot):
             find_and_click(
                 vio.available_floor,
                 screenshot,
@@ -288,6 +306,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
                 # Transition to another state or perform clean-up actions
                 if DemonicBeastFarmer.current_floor == 1:  # Since we updated it already beforehand!
                     DemonicBeastFarmer.num_floor_3_victories += 1
+                    print("[CLEAR]")
 
                     # Check if we need to exit the farmer due to reaching the max number of desired floor 3 clears
                     if DemonicBeastFarmer.num_floor_3_victories >= self.max_floor_3_clears:
@@ -305,6 +324,7 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
             else:
                 print("The Demonic Beast fighter told me we lost... :/")
+                print("[LOSS]")
                 # print("Resetting the team in case the saved team has very little health")
                 DemonicBeastFarmer.num_losses += 1
                 IFarmer.dict_of_defeats[f"Floor {DemonicBeastFarmer.current_floor} Phase {phase}"] += 1
@@ -323,6 +343,8 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
         # Click on the confirmation window...
         if find_and_click(vio.ok_main_button, screenshot, window_location) or find(vio.set_db_party, screenshot):
+            # Scroll down slightly so the floor image becomes detectable again
+            drag_im((530, 530), (530, 430), window_location, sleep_after_click=0.1, drag_duration=0.4)
             print("Moving to the original state, GOING_TO_DB")
             self.current_state = States.GOING_TO_DB
             return
@@ -339,44 +361,15 @@ class DemonicBeastFarmer(IFarmer, abc.ABC):
 
     def run(self):
 
-        while True:
-
-            check_for_reconnect()
-
-            # Check if we need to log in again!
-            self.check_for_login_state()
-
-            if self.current_state == States.GOING_TO_DB:
-                self.going_to_db_state()
-
-            elif self.current_state == States.SET_PARTY:
-                self.set_party_state()
-
-            elif self.current_state == States.READY_TO_FIGHT:
-                self.proceed_to_floor_state()
-
-            elif self.current_state == States.FIGHTING_FLOOR:
-                self.fighting_floor()
-
-            elif self.current_state == States.RESETTING_DB:
-                self.resetting_db_state()
-
-            elif self.current_state == GlobalStates.DAILY_RESET:
-                self.daily_reset_state()
-
-            elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state()
-
-            elif self.current_state == GlobalStates.DAILIES_STATE:
-                self.dailies_state()
-
-            elif self.current_state == GlobalStates.FORTUNE_CARD:
-                self.fortune_card_state()
-
-            elif self.current_state == GlobalStates.LOGIN_SCREEN:
-                self.login_screen_state(initial_state=States.GOING_TO_DB)
-
-            elif self.current_state == States.EXIT_FARMER:
-                self.exit_farmer_state()
-
-            time.sleep(0.6)
+        self.run_state_loop(
+            {
+                States.GOING_TO_DB: self.going_to_db_state,
+                States.SET_PARTY: self.set_party_state,
+                States.READY_TO_FIGHT: self.proceed_to_floor_state,
+                States.FIGHTING_FLOOR: self.fighting_floor,
+                States.RESETTING_DB: self.resetting_db_state,
+                States.EXIT_FARMER: self.exit_farmer_state,
+            },
+            login_return_state=States.GOING_TO_DB,
+            sleep_seconds=0.6,
+        )

@@ -8,3 +8,9 @@ logs/
 cython_build/
 *original.py
 .venv/
+.cursor/
+scripts/config/.theme
+build/
+analysis_outputs/
+AutoFarmers.spec
+ground_classifier_analysis.py

@@ -1,7 +1,6 @@
 import argparse
 
 from utilities.demon_king_farming_logic import DemonKingFarmer, States
-from utilities.dk_fighting_strategies import DemonKingBattleStrategy
 from utilities.farming_factory import FarmingFactory
 
 
@@ -13,9 +12,9 @@ def main():
         "--dk-diff",
         "-d",
         type=str,
-        choices=["hard", "extreme", "hell"],
+        choices=["hard", "hell"],
         default="hard",
-        help="Difficulty (choices: hard, extreme, hell)",
+        help="Demon King difficulty. Hell falls back to hard difficulty and hard strategy if unavailable.",
     )
     parser.add_argument(
         "--num-clears", default=float("inf"), type=str, help="How many times to clear the Demon King fight."
@@ -25,7 +24,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=DemonKingFarmer,
         starting_state=States.GOING_TO_DK,
-        battle_strategy=DemonKingBattleStrategy,
+        battle_strategy=None,
         num_clears=args.num_clears,
         dk_difficulty=args.dk_diff,
     )

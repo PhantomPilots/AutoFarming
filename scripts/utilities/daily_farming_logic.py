@@ -12,8 +12,8 @@ from utilities.coordinates import Coordinates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     crop_image,
+    display_image,
     find,
     find_and_click,
     press_key,
@@ -60,6 +60,8 @@ class DailyFarmer:
     # To check if we should kill the farmer
     farmer_killed = False
     manual_kill = False
+
+    _dailies_collected = False
 
     def __init__(
         self,
@@ -136,6 +138,16 @@ class DailyFarmer:
 
         return False
 
+    def get_complete_dailies(self, screenshot: np.ndarray, window_location: tuple[int, int]) -> bool:
+        """Try to get completed dailies!"""
+        if find(vio.daily_complete, screenshot):
+            time.sleep(2)
+            find_and_click(vio.daily_complete, screenshot, window_location)
+            print("We have complete rewards, let's take them.")
+            DailyFarmer._dailies_collected = True
+            return True
+        return False
+
     def find_next_mission(self) -> States | None:
         """Identify the next mission to do, by scrolling if we can't find any match.
         If we don't find a match by "Take all" is available, click on it.
@@ -146,35 +158,23 @@ class DailyFarmer:
         """
         screenshot, window_location = capture_window()
 
-        # Get rewards
-        if find(vio.daily_complete, screenshot):
-            find_and_click(vio.take_all_rewards, screenshot, window_location, threshold=0.89)
-            print("We have complete rewards, let's take them.")
-            return
+        missions = [
+            (self.do_daily_pvp, vio.daily_pvp, States.PVP_STATE, "PVP_STATE"),
+            (True, vio.daily_boss_battle, States.BOSS_STATE, "BOSS_STATE"),
+            (True, vio.daily_patrol, States.PATROL_STATE, "PATROL_STATE"),
+            (True, vio.daily_vanya_ale, States.VANYA_ALE_STATE, "VANYA_ALE_STATE"),
+            (True, vio.daily_friendship_coins, States.FRIENDSHIP_COINS_STATE, "FRIENDSHIP_COINS_STATE"),
+            (True, vio.daily_fort_solgress, States.FORT_SOLGRESS_STATE, "FORT_SOLGRESS_STATE"),
+        ]
+        for enabled, vision_image, state, state_name in missions:
+            if enabled and find(vision_image, screenshot, threshold=0.89):
+                print(f"Going to {state_name}")
+                DailyFarmer._dailies_collected = False  # And let's reset the collected flag!
+                return state
 
-        if self.do_daily_pvp and find(vio.daily_pvp, screenshot, threshold=0.89):
-            print("Going to PVP_STATE")
-            return States.PVP_STATE
-        if find(vio.daily_boss_battle, screenshot, threshold=0.89):
-            print("Going to BOSS_STATE")
-            return States.BOSS_STATE
-        if find(vio.daily_patrol, screenshot, threshold=0.89):
-            print("Going to PATROL_STATE")
-            return States.PATROL_STATE
-        if find(vio.daily_vanya_ale, screenshot, threshold=0.89):
-            print("Going to VANYA_ALE_STATE")
-            return States.VANYA_ALE_STATE
-        if find(vio.daily_friendship_coins, screenshot, threshold=0.89):
-            print("Going to FRIENDSHIP_COINS_STATE")
-            return States.FRIENDSHIP_COINS_STATE
-        if find(vio.daily_fort_solgress, screenshot, threshold=0.89):
-            # Here, we may have wrongly clicked on death match
-            mission_rectangle = self.extract_mission_rectangle(vio.daily_fort_solgress, screenshot)
-            if not find(vio.blue_stone, mission_rectangle, threshold=0.8):
-                print("Going to FORT_SOLGRESS_STATE")
-                return States.FORT_SOLGRESS_STATE
-            else:
-                print("We WRONGLY want to click on death match thinking it's FORT SOLGRESS!")
+        # If we're here, let's try to collect the rewards first:
+        if not DailyFarmer._dailies_collected and self.get_complete_dailies(screenshot, window_location):
+            return self.current_state  # Return the state we were in to not change it yet
 
         # If there's no 'go now', means we're done with the missions
         if not find(vio.go_now, screenshot):
@@ -183,7 +183,7 @@ class DailyFarmer:
             return States.GOING_TO_BRAWL
 
         # If we're here, means we're done with all dailies.
-        click_and_sleep(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.tavern, screenshot, window_location, threshold=0.8, sleep_time=1)
         screenshot, _ = capture_window()
         find_and_click(vio.ok_main_button, screenshot, window_location)
         if find(vio.battle_menu, screenshot, threshold=0.6):
@@ -207,7 +207,9 @@ class DailyFarmer:
         rectangle = vision_image.find(screenshot, threshold=threshold)
 
         if len(rectangle):
-            rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
+            rectangle_image = crop_image(
+                screenshot, (0, rectangle[1]), (screenshot.shape[1], rectangle[1] + rectangle[3])
+            )
 
             print(f"Going to the '{vision_image.image_name}' mission...")
 
@@ -295,13 +297,13 @@ class DailyFarmer:
         find_and_click(vio.normal_diff_boss_battle, screenshot, window_location)
 
         # Increase the auto ticket by one and clear mission
-        click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=1)
+        find_and_click(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=1)
 
         # For auto-salvaging
-        if click_and_sleep(vio.auto_salvage, screenshot, window_location, threshold=0.8, sleep_time=1):
+        if find_and_click(vio.auto_salvage, screenshot, window_location, threshold=0.8, sleep_time=1):
             # We need to re-capture the screen to access the 'Apply' button
             screenshot, window_location = capture_window()
-            click_and_sleep(vio.apply, screenshot, window_location, sleep_time=1)
+            find_and_click(vio.apply, screenshot, window_location, sleep_time=1)
 
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
@@ -435,7 +437,7 @@ class DailyFarmer:
 
         # Increase the auto ticket by two and clear mission
         for _ in range(DailyFarmer.num_dungeon_keys - 1):
-            click_and_sleep(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
+            find_and_click(vio.plus_auto_ticket, screenshot, window_location, threshold=0.8, sleep_time=0.5)
 
         if find_and_click(vio.strart_auto_clear, screenshot, window_location):
             return
@@ -489,10 +491,10 @@ class DailyFarmer:
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
-        click_and_sleep(vio.claim_reward, screenshot, window_location, sleep_time=1)
+        find_and_click(vio.claim_reward, screenshot, window_location, sleep_time=1)
         find_and_click(vio.patrol_all, screenshot, window_location)
         # First click on complete all
-        find_and_click(vio.complete_all, screenshot, window_location)
+        find_and_click(vio.complete_all, screenshot, window_location, sleep_time=1)
         # Then click on set all
         find_and_click(vio.set_all_patrol, screenshot, window_location)
         find_and_click(vio.reward, screenshot, window_location)
@@ -505,7 +507,9 @@ class DailyFarmer:
             # Go to the mission
             self.go_to_mission(vio.daily_friendship_coins, screenshot, window_location)
 
-        if find_and_click(vio.send_friendship_coins, screenshot, window_location, threshold=0.8):
+        if find(vio.send_friendship_coins, screenshot, threshold=0.8):
+            time.sleep(2)  # Necessary in case Hawk is loading...
+            find_and_click(vio.send_friendship_coins, screenshot, window_location, threshold=0.8)
             DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
@@ -602,6 +606,7 @@ class DailyFarmer:
         """Check if we have the Essette shop, and click on it if so to remove the popup"""
         screenshot, window_location = capture_window()
         find_and_click(vio.essette_shop, screenshot, window_location)
+        find_and_click(vio.daily_tasks_complete, screenshot, window_location)
 
         if (
             DailyFarmer.current_state in [States.IN_TAVERN_STATE, States.PVP_STATE]

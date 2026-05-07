@@ -9,23 +9,13 @@ import pyautogui as pyautogui
 
 # Import all images
 import utilities.vision_images as vio
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
-from utilities.general_farmer_interface import (
-    CHECK_IN_HOUR,
-    MINUTES_TO_WAIT_BEFORE_LOGIN,
-    PACIFIC_TIMEZONE,
-    IFarmer,
-)
+from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import (
-    capture_window,
-    check_for_reconnect,
-    drag_im,
-    find,
-    find_and_click,
-)
+from utilities.utilities import capture_window, drag_im, find, find_and_click
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
@@ -43,7 +33,9 @@ class IFloor4Farmer(IFarmer):
     # Need to be static across instances
     success_count = 0
     total_count = 0
+    reset_count = 0
     dict_of_defeats = defaultdict(int)
+    extra_clears_done = 0  # Here because this number changes during farming -- safe againts crashes
 
     def __init__(
         self,
@@ -53,6 +45,7 @@ class IFloor4Farmer(IFarmer):
         demonic_beast_image: vio.Vision | None = None,
         do_dailies=False,
         password: str | None = None,
+        extra_clears: int = 0,
     ):
 
         super().__init__()
@@ -61,7 +54,7 @@ class IFloor4Farmer(IFarmer):
         if password:
             IFarmer.password = password
             print("Stored the account password locally in case we need to log in again.")
-            print(f"We'll wait {MINUTES_TO_WAIT_BEFORE_LOGIN} mins. before attempting a log in.")
+            print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         # In case we want to do dailies at the specified hour
         IFarmer.do_dailies = do_dailies
@@ -72,7 +65,10 @@ class IFloor4Farmer(IFarmer):
         if self.max_runs < float("inf"):
             print(f"We're gonna clear Floor4 {int(self.max_runs)} times.")
 
-        # Store internally the image of the DemonicBeast we want to fight (Bird/Deer for now)
+        # Set how many extra clears we want
+        self.extra_clear_limit = min(max(0, int(extra_clears)), self.max_runs)
+
+        # Store internally the image of the DemonicBeast we want to fight (Bird/Deer/Dogs/Snake/Rat)
         self.db_image = demonic_beast_image
 
         # For type helping
@@ -82,10 +78,19 @@ class IFloor4Farmer(IFarmer):
 
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
+        self._swipe_attempts = 0
 
         # For the login/dailies
         IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
+
+    def on_ready_to_fight_before_start(self, screenshot):
+        """Called in ``ready_to_fight_state`` after stamina handling, before Start; subclasses may inspect UI."""
+        return True
+
+    def get_fighter_run_kwargs(self) -> dict:
+        """Keyword arguments passed to ``self.fighter.run`` when starting the Floor 4 fight thread."""
+        return {}
 
     def exit_message(self):
         super().exit_message()
@@ -106,6 +111,40 @@ class IFloor4Farmer(IFarmer):
 
         return str_msg
 
+    def _search_for_target_demonic_beast(self, screenshot, window_location) -> bool:
+        if not find(vio.demonic_beast_battle, screenshot):
+            self._swipe_attempts = 0
+            return True
+
+        if find(self.db_image, screenshot):
+            self._swipe_attempts = 0
+            return True
+
+        self._swipe_attempts += 1
+        if self._swipe_attempts <= 4:
+            print(f"Wrong demonic beast, attempt {self._swipe_attempts}, swiping right...")
+            drag_im(
+                Coordinates.get_coordinates("right_swipe"),
+                Coordinates.get_coordinates("left_swipe"),
+                window_location,
+            )
+            time.sleep(0.5)
+            return False
+
+        if self._swipe_attempts <= 8:
+            print(f"Wrong demonic beast, attempt {self._swipe_attempts}, swiping left...")
+            drag_im(
+                Coordinates.get_coordinates("left_swipe"),
+                Coordinates.get_coordinates("right_swipe"),
+                window_location,
+            )
+            time.sleep(0.5)
+            return False
+
+        print("Couldn't find the target demonic beast after 8 swipes. Resetting the search.")
+        self._swipe_attempts = 0
+        return False
+
     def going_to_db_state(self):
         """This should be the original state. Let's go to the DemonicBeast menu"""
         screenshot, window_location = capture_window()
@@ -122,17 +161,7 @@ class IFloor4Farmer(IFarmer):
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
-        # If we see we're inside the DB selection screen but don't see our DemonicBeast,
-        # swipe right and return
-        if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
-            # Swipe to the right!
-            print("Wrong demonic beast, searching the right one...")
-            drag_im(
-                Coordinates.get_coordinates("right_swipe"),
-                Coordinates.get_coordinates("left_swipe"),
-                window_location,
-            )
-            time.sleep(0.5)
+        if not self._search_for_target_demonic_beast(screenshot, window_location):
             return
 
         # Go into the 'db' section
@@ -142,6 +171,16 @@ class IFloor4Farmer(IFarmer):
         if find(vio.floor_3_cleared_db, screenshot):
             print("Going to fight the DemonicBeast!")
             self.current_state = States.PROCEED_TO_FLOOR
+
+    def _open_floor(self):
+        """Open Floor 4. Also use extra clears if neededs"""
+        screenshot, window_location = capture_window()
+        if IFloor4Farmer.extra_clears_done < self.extra_clear_limit:
+            find_and_click(vio.extra_clear, screenshot, window_location, threshold=0.7, sleep_time=1)
+            IFloor4Farmer.extra_clears_done += 1
+            print(f"Used extra clear {IFloor4Farmer.extra_clears_done} of {self.extra_clear_limit}!")
+
+        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
 
     def proceed_to_floor_state(self):
 
@@ -153,7 +192,9 @@ class IFloor4Farmer(IFarmer):
         self.maybe_reset_daily_checkin_flag()
 
         # In case we need to unlock the floor
-        find_and_click(vio.ok_main_button, screenshot, window_location, threshold=0.7)
+        if find(vio.ok_main_button, screenshot):
+            self._open_floor()
+            return
 
         # Click on floor 4 if it's available
         find_and_click(vio.floor_3_cleared_db, screenshot, window_location, threshold=0.7)
@@ -170,6 +211,9 @@ class IFloor4Farmer(IFarmer):
         if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
             IFarmer.stamina_pots += 1
             # screenshot_testing(screenshot, vio.restore_stamina)
+            return
+
+        if not self.on_ready_to_fight_before_start(screenshot):
             return
 
         # Try to start the fight
@@ -190,7 +234,12 @@ class IFloor4Farmer(IFarmer):
         # Set the fighter thread
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and self.current_state == States.FIGHTING:
             print("Floor4 fight started!")
-            self.fight_thread = threading.Thread(target=self.fighter.run, name="Floor4FighterThread", daemon=True)
+            self.fight_thread = threading.Thread(
+                target=self.fighter.run,
+                name="Floor4FighterThread",
+                daemon=True,
+                kwargs=self.get_fighter_run_kwargs(),
+            )
             self.fight_thread.start()
 
         # We may have finished the fight already, let's check if we need to go back to the main screen
@@ -201,16 +250,31 @@ class IFloor4Farmer(IFarmer):
             self.current_state = States.PROCEED_TO_FLOOR
 
     def fight_complete_callback(self, victory=True, **kwargs):
-        """Called when the fight logic completes."""
+        """Called when the fight logic completes.
+
+        If ``stop_farmer`` is True, the farmer exits immediately without taking the lock,
+        incrementing ``total_count``, or updating success/defeat tallies — intentional for
+        clean shutdown (e.g. a fighter requesting early exit).
+        """
+        if kwargs.get("stop_farmer", False):
+            reason = kwargs.get("reason", "Stopping the Floor 4 farmer.")
+            print(reason)
+            self.current_state = States.EXIT_FARMER
+            return
+
         with IFarmer._lock:
             IFloor4Farmer.total_count += 1
+            if kwargs.get("reset", False):
+                IFloor4Farmer.reset_count += 1
             if victory:
                 # Transition to another state or perform clean-up actions
                 IFloor4Farmer.success_count += 1
                 print("FLOOR 4 COMPLETE, WOOO!")
+                print("[CLEAR]")
             else:
                 phase = kwargs.get("phase", None)
                 print(f"The fighter told me they lost{f' on phase {phase}' if phase is not None else ''}... :/")
+                print("[LOSS]")
                 # Increment the defeat count of the corresponding phase
                 if phase is not None:
                     IFloor4Farmer.dict_of_defeats[phase] += 1
@@ -240,41 +304,14 @@ class IFloor4Farmer(IFarmer):
 
         print(f"Fighting Floor 4 hard, starting in state {self.current_state}.")
 
-        while True:
-
-            check_for_reconnect()
-
-            # Check if we need to log in again!
-            self.check_for_login_state()
-
-            if self.current_state == States.GOING_TO_DB:
-                self.going_to_db_state()
-
-            elif self.current_state == States.PROCEED_TO_FLOOR:
-                self.proceed_to_floor_state()
-
-            elif self.current_state == States.READY_TO_FIGHT:
-                self.ready_to_fight_state()
-
-            elif self.current_state == States.FIGHTING:
-                self.fighting_state()
-
-            elif self.current_state == GlobalStates.DAILY_RESET:
-                self.daily_reset_state()
-
-            elif self.current_state == GlobalStates.CHECK_IN:
-                self.check_in_state()
-
-            elif self.current_state == GlobalStates.DAILIES_STATE:
-                self.dailies_state()
-
-            elif self.current_state == GlobalStates.FORTUNE_CARD:
-                self.fortune_card_state()
-
-            elif self.current_state == GlobalStates.LOGIN_SCREEN:
-                self.login_screen_state(initial_state=States.GOING_TO_DB)
-
-            elif self.current_state == States.EXIT_FARMER:
-                self.exit_farmer_state()
-
-            time.sleep(0.8)
+        self.run_state_loop(
+            {
+                States.GOING_TO_DB: self.going_to_db_state,
+                States.PROCEED_TO_FLOOR: self.proceed_to_floor_state,
+                States.READY_TO_FIGHT: self.ready_to_fight_state,
+                States.FIGHTING: self.fighting_state,
+                States.EXIT_FARMER: self.exit_farmer_state,
+            },
+            login_return_state=States.GOING_TO_DB,
+            sleep_seconds=0.6,
+        )

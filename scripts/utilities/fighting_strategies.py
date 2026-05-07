@@ -31,15 +31,15 @@ class IBattleStrategy(abc.ABC):
     picked_cards: list[Card] = []
 
     # What's the current fight turn?
-    _fight_turn = 0
+    fight_turn = 0
 
     def increment_fight_turn(self):
         """Increment the fight turn"""
-        IBattleStrategy._fight_turn += 1
+        IBattleStrategy.fight_turn += 1
 
     def reset_fight_turn(self):
-        """Reset the fight turn"""
-        IBattleStrategy._fight_turn = 0
+        """Reset IBattleStrategy.fight_turn. Normally IFighter.run_wrapper (finally); mid-fight resets are rare (e.g. Indura phase 3)."""
+        IBattleStrategy.fight_turn = 0
 
     def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
@@ -74,7 +74,7 @@ class IBattleStrategy(abc.ABC):
 
             elif isinstance(next_index, (tuple, list)):
                 # Make sure both numbers are part of a circular buffer
-                next_index = [next_index[0] % 8, next_index[1] % 8]
+                next_index = [next_index[0] % len(hand_of_cards), next_index[1] % len(hand_of_cards)]
                 # print(f"Moving cards: {next_index}")
 
             # Update the indices and cards lists
@@ -135,6 +135,18 @@ class SmarterBattleStrategy(IBattleStrategy):
     """This strategy assumes the card types can be read properly.
     It prioritizes one recovery and one stance card, and then it picks attack cards for the remaining slots."""
 
+    @staticmethod
+    def _rightmost_playable_fallback_index(hand_of_cards: list[Card]) -> int:
+        """Prefer rightmost non-GROUND/NONE/DISABLED; if only DISABLED remains, use rightmost DISABLED."""
+        for i in range(len(hand_of_cards) - 1, -1, -1):
+            t = hand_of_cards[i].card_type
+            if t not in (CardTypes.GROUND, CardTypes.NONE, CardTypes.DISABLED):
+                return i
+        for i in range(len(hand_of_cards) - 1, -1, -1):
+            if hand_of_cards[i].card_type == CardTypes.DISABLED:
+                return i
+        return -1
+
     @classmethod
     def get_next_card_index(cls, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
         """Apply the logic to extract the right indices."""
@@ -188,14 +200,21 @@ class SmarterBattleStrategy(IBattleStrategy):
         if len(attack_ids):
             return attack_ids[-1]
 
+        if hand_of_cards and all(card.card_type == CardTypes.GROUND for card in hand_of_cards):
+            print("All cards are ground, moving the two rightmost cards...")
+            return [-1, -2]
+
         if all(card.card_type in [CardTypes.GROUND, CardTypes.DISABLED] for card in hand_of_cards):
             print("We only have ground and disabled cards, let's play the rightmost disabled card...")
             disabled_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.DISABLED]
             if len(disabled_ids):
                 return disabled_ids[-1]
 
-        # print("We don't meet any of the previous criteria, defaulting to the rightmost index")
-        return -1
+        print(
+            "We don't meet any of the previous criteria, defaulting to the rightmost index "
+            "that isn't GROUND, NONE, or DISABLED (else rightmost DISABLED)"
+        )
+        return cls._rightmost_playable_fallback_index(hand_of_cards)
 
 
 def play_stance_card(card_types: np.ndarray, picked_card_types: np.ndarray, card_ranks: np.ndarray = None):

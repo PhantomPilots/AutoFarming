@@ -20,26 +20,31 @@ class Vision:
     ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
 
-        needle_path = os.path.join("images", needle_basename)
-
-        # Save the pattern matching strategy as an attribute
+        self._needle_basename = needle_basename
+        self._needle_path = os.path.join("images", needle_basename)
         self.matching_strategy = matching_strategy
 
-        # Save the name of the needle image
         if image_name is None:
             self._image_name = os.path.basename(needle_basename).split(".")[0]
         else:
             self._image_name = image_name
 
-        # Store the needle image
-        self.needle_img = cv2.imread(needle_path)
-        if self.needle_img is None:
-            cprint(f"No image can be found for '{needle_basename}'", "yellow")
-            return
+        self._needle_img: np.ndarray | None = None
+        self._needle_loaded: bool = False
 
     @property
     def image_name(self) -> str:
         return self._image_name
+
+    @property
+    def needle_img(self) -> np.ndarray | None:
+        """Lazily-loaded template image; missing file yields ``None`` (and a one-shot warning)."""
+        if not self._needle_loaded:
+            self._needle_img = cv2.imread(self._needle_path)
+            if self._needle_img is None:
+                cprint(f"No image can be found for '{self._needle_basename}'", "yellow")
+            self._needle_loaded = True
+        return self._needle_img
 
     def __eq__(self, other):
         if not isinstance(other, Vision):
@@ -81,13 +86,11 @@ class Vision:
         if self.needle_img is None:
             return np.array([], dtype=np.int32).reshape(0, 4), None
 
-        # If the matching strategy supports this directly, use it
         if hasattr(self.matching_strategy, "find_with_confidence"):
             return self.matching_strategy.find_with_confidence(
                 haystack_img, self.needle_img, threshold=threshold, cv_method=method
             )
 
-        # Otherwise, gracefully fall back to standard `find`
         rect = self.matching_strategy.find(haystack_img, self.needle_img, threshold=threshold, cv_method=method)
         return rect, None
 
@@ -106,25 +109,24 @@ class MultiVision(Vision):
         if image_name is None:
             raise ValueError("For a MultiVision instance, the 'image_name' argument must be provided")
 
-        needle_paths = [os.path.join("images", needle_basename) for needle_basename in needle_basenames]
-
-        # List with all OK image names
+        self._needle_paths = [os.path.join("images", needle_basename) for needle_basename in needle_basenames]
         self._image_names_list = [
             os.path.basename(needle_basename).split(".")[0] for needle_basename in needle_basenames
         ]
-
-        # Save a single image name internally
         self._image_name = image_name
-
-        # Save the pattern matching strategy as an attribute
         self.matching_strategy = matching_strategy
 
-        # Store the needle image
-        self.needle_imgs = [
-            cv2.imread(needle_path) for needle_path in needle_paths if cv2.imread(needle_path) is not None
-        ]
-        if not len(self.needle_imgs):
-            raise ValueError("No image can be found for to create an MultiVision instance", "yellow")
+        self._needle_imgs: list[np.ndarray] | None = None
+
+    @property
+    def needle_imgs(self) -> list[np.ndarray]:
+        """Lazily-loaded template images; raises ``ValueError`` on first access if all paths missing."""
+        if self._needle_imgs is None:
+            loaded = [img for img in (cv2.imread(path) for path in self._needle_paths) if img is not None]
+            if not loaded:
+                raise ValueError(f"No image can be found to create the MultiVision instance '{self._image_name}'")
+            self._needle_imgs = loaded
+        return self._needle_imgs
 
     def find(self, haystack_img, threshold=0.5, method=cv2.TM_CCOEFF_NORMED) -> np.ndarray:
         """Run the defined pattern matching strategy.

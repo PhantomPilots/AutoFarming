@@ -28,6 +28,7 @@ class TowerTrialsFarmer(IFarmer):
     num_fights = 0
 
     def __init__(self, battle_strategy: IBattleStrategy | None = None, starting_state=States.READY_TO_FIGHT, **kwargs):
+        super().__init__()
 
         # Initialize the current state
         self.current_state = starting_state
@@ -46,7 +47,7 @@ class TowerTrialsFarmer(IFarmer):
             return
 
         # Get the floor coordinates of the available floor, and click on the corresponding floor
-        if floor_coordinates := find_floor_coordinates(screenshot, window_location):
+        if floor_coordinates := find_floor_coordinates(screenshot):
             find_and_click(
                 vio.available_floor,
                 screenshot,
@@ -84,6 +85,7 @@ class TowerTrialsFarmer(IFarmer):
         if find_and_click(vio.continue_fight, screenshot, window_location):
             TowerTrialsFarmer.num_fights += 1
             print(f"Fighting again! Total fights so far: {TowerTrialsFarmer.num_fights}")
+            print("[CLEAR]")
             return
 
         # For when we've cleared an episode

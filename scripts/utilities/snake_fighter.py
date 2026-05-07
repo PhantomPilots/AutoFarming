@@ -10,7 +10,6 @@ from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.utilities import (
     capture_window,
-    click_and_sleep,
     click_im,
     draw_rectangles,
     find,
@@ -110,7 +109,7 @@ class SnakeFighter(IFighter):
         for talent in talents:
             if find(talent, screenshot):
                 print(f"Activating {talent.image_name} and waiting...")
-                click_and_sleep(
+                find_and_click(
                     talent,
                     screenshot,
                     window_location,

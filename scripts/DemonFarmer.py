@@ -27,6 +27,13 @@ def main():
         help="List of demons to farm (space-separated).",
     )
     parser.add_argument(
+        "--indura-team",
+        type=str,
+        choices=["fairies", "humans"],
+        default="fairies",
+        help="Team strategy to use for Indura demon (choices: fairies, humans)",
+    )
+    parser.add_argument(
         "--time-to-sleep",
         type=float,
         default=9.1,
@@ -50,6 +57,7 @@ def main():
         starting_state=States.GOING_TO_DEMONS,
         demons_to_farm=demons_to_farm,
         indura_difficulty=args.indura_diff,
+        indura_team=args.indura_team,
         time_to_sleep=args.time_to_sleep,
         time_between_demons=2,
         do_dailies=args.do_dailies,
