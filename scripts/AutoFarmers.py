@@ -22,8 +22,11 @@ import hashlib
 import os
 import re
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
+
+import yaml
 
 from PyQt5.QtCore import (
     QObject,
@@ -157,6 +160,30 @@ _CONFIG_DIR = os.path.join(_BASE_DIR, "config")
 os.makedirs(_CONFIG_DIR, exist_ok=True)
 
 _THEME_FILE = os.path.join(_CONFIG_DIR, ".theme")
+_FARMER_ARGS_FILE = os.path.join(_CONFIG_DIR, "farmer_args.yaml")
+
+
+def _load_all_farmer_args() -> dict:
+    try:
+        with open(_FARMER_ARGS_FILE, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+        return data if isinstance(data, dict) else {}
+    except (FileNotFoundError, yaml.YAMLError, OSError):
+        return {}
+
+
+def _save_farmer_arg(farmer_name: str, arg_name: str, value) -> None:
+    try:
+        data = _load_all_farmer_args()
+        if farmer_name not in data or not isinstance(data[farmer_name], dict):
+            data[farmer_name] = {}
+        data[farmer_name][arg_name] = value
+        fd, tmp = tempfile.mkstemp(prefix="farmer_args_", suffix=".yaml.tmp", dir=_CONFIG_DIR)
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            yaml.safe_dump(data, f, default_flow_style=False, allow_unicode=True)
+        os.replace(tmp, _FARMER_ARGS_FILE)
+    except Exception:
+        pass
 
 
 def _load_theme() -> str:
@@ -815,6 +842,7 @@ class FarmerController(QObject):
         if current == normalized:
             return
         self._arg_values[arg_name] = normalized
+        _save_farmer_arg(self.farmer["name"], arg_name, normalized)
         self.arg_values_changed.emit(self.get_arg_values())
 
     def start(self, arg_values: dict[str, object]):
@@ -986,6 +1014,10 @@ class FarmerController(QObject):
                 values[arg["name"]] = ""
             else:
                 values[arg["name"]] = default
+        saved = _load_all_farmer_args().get(self.farmer["name"], {})
+        for k, v in saved.items():
+            if k in values:
+                values[k] = v
         return values
 
     def _read_target_clears(self) -> int | None:
