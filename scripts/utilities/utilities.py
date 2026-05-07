@@ -846,6 +846,7 @@ def re_open_7ds_window() -> bool:
         if find_and_click(vio.server_cancel, entire_screen) or find_and_click(vio.update_game_ok, entire_screen):
             print("We cannot open the game...")
         time.sleep(5)  # Let's sleep to allow the game to be closed properly...
+        entire_screen = capture_screen()  # Let's re-capture it to avoid clicking on a stale image
         if find_and_click(vio.run_game, entire_screen):
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while
