@@ -1973,15 +1973,7 @@ class FarmerTab(QWidget):
                 f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
                 f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
             )
-            req_scroll = QScrollArea()
-            req_scroll.setWidget(self.req_label)
-            req_scroll.setWidgetResizable(True)
-            req_scroll.setMaximumHeight(180)
-            req_scroll.setStyleSheet(
-                f"QScrollArea {{ background: {C['panel3']}; border-left: 3px solid {C['accent']};"
-                f" border-radius: 0 5px 5px 0; border-top: none; border-right: none; border-bottom: none; }}"
-            )
-            panel.addWidget(req_scroll)
+            panel.addWidget(self.req_label)
             panel.addSpacing(4)
 
         # Action buttons
@@ -2425,7 +2417,6 @@ class FarmerTab(QWidget):
 
         if self.req_label is not None:
             self.req_label.setText(REQUIREMENTS.get(requirements_key, ""))
-            self.req_label.adjustSize()
 
         self.load_farmer_image(image_filename)
 
