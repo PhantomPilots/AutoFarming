@@ -173,6 +173,11 @@ class SADungeonFarmer(IFarmer):
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
 
+        # If we somehow opened the wrong dungeon, back out and try again. let's make sure we don't accidentally consume a key on the wrong dungeon
+        if find(vio.sa_coin_dungeon_menu, screenshot) or find(vio.sa_tower_of_chaos, screenshot) or find(vio.sa_broken_clock_tower, screenshot):
+            press_key("esc")
+            return
+
         if find(vio.clock_tower_floor, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE
             print(f"Going to {self.current_state}")
@@ -326,6 +331,10 @@ class SADungeonFarmer(IFarmer):
 
     def restart_fight_state(self):
         """We gotta restart, because of no chest..."""
+
+        # Start by pressing esc first things first to interrupt the current fight asap.
+        # Some users on slower machines had an issue where backing out of a fight took so long that they ended up killing the boss too fast
+        press_key("esc")
         screenshot, window_location = capture_window()
 
         if find(vio.tavern_loading_screen, screenshot):
@@ -337,8 +346,6 @@ class SADungeonFarmer(IFarmer):
             return
         if find_and_click(vio.forfeit, screenshot, window_location):
             return
-
-        press_key("esc")
 
     def run_ended_state(self):
         """We finished a run! Gotta re-open the dungeon, by ESC-ing until we're back into the dungeon"""

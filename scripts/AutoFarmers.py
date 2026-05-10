@@ -2136,16 +2136,18 @@ class FarmerTab(QWidget):
 
         if normalized_type == "silver":
             self.sa_chest_warning_label.setText(
-                "Warning: Selecting silver minimum is expected to use many stamina pots for a full run.\n"
-                "5% silver + 2% gold: ~15 retries or ~7 pots per chest!\nExpect over 150 pots for a full run!"
+                "Warning: Selecting silver minimum can take a long time.\n"
+                "5% silver + 2% gold: ~15 retries per chest on average.\n"
+                "Estimated ~12-13 minutes per chest."
             )
             self.sa_chest_warning_label.show()
             return
 
         if normalized_type == "gold":
             self.sa_chest_warning_label.setText(
-                "Warning: Selecting gold minimum is extremely costly.\n"
-                "2% gold: ~50 retries or ~23 pots per chest!\nExpect over 600 pots for a full run!"
+                "Warning: Selecting gold minimum is extremely time-consuming.\n"
+                "2% gold: ~50 retries per chest on average.\n"
+                "Estimated ~40 minutes per chest."
             )
             self.sa_chest_warning_label.show()
             return
