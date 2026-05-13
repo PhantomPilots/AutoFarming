@@ -82,6 +82,8 @@ class InduraFighter(IFighter):
         slot_index = InduraFighter.card_turn
 
         if empty_card_slots > 0:
+            self._start_phase_turn_if_needed()
+
             # KEY: Read the hand of cards
             current_hand = self.battle_strategy.pick_cards(
                 picked_cards=self.picked_cards,
@@ -116,8 +118,7 @@ class InduraFighter(IFighter):
         elif empty_card_slots == 0:  # or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
-            # Increment to the next phase turn
-            self.battle_strategy.increment_phase_turn()
+            IFighter._phase_turn_started_for_current_turn = False
             # And reset instance variables
             self._reset_instance_variables()
             return 1

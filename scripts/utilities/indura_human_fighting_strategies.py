@@ -88,18 +88,18 @@ class InduraHumanBattleStrategy(IBattleStrategy):
     Phase overview
     ──────────────
     Phase 1 — Burst to try to one-shot.
-              Turn 0: only freyr cards and ban_aoe are restricted — everything
+              Turn 1: only freyr cards and ban_aoe are restricted — everything
               else (ults, attacks) is fair game for maximum burst.
-              Turn 1+ (if boss survived): check for the counter stance and play
+              Turn 2+ (if boss survived): check for the counter stance and play
               a silver+ freyr_att to safely absorb it.  If no counter is up,
               freyr_att stays benched and normal attacks proceed.
 
     Phase 2 — Boss is tanky and loses damage reduction each turn.
-              Turn 0: check if Sho's potential freeze can be handled — prefer
+              Turn 1: check if Sho's potential freeze can be handled — prefer
               freyr_att (cleanses + starts Freyr passive).  If no freyr on the
               team, check whether an ally King or Freyr card is already in the
               played slots and log it; fall through to ban/attack filler.
-              Turn 1+: ban falls off; switch to harder attack cards.
+              Turn 2+: ban falls off; switch to harder attack cards.
               Ultimates are held for P3 throughout; released only as a last
               resort if the hand is empty of anything else.
 
@@ -111,8 +111,8 @@ class InduraHumanBattleStrategy(IBattleStrategy):
               if evasion is still active, cards are filtered to those that can
               bypass the active restriction (melee cards for ranged evasion,
               ranged cards for melee evasion).
-              Turn 0: hold ults, observe the teammate, play attack cards.
-              Turn 1+: full-send with roxy_ult / sho_ult, then any other ult.
+              Turn 1: hold ults, observe the teammate, play attack cards.
+              Turn 2+: full-send with roxy_ult / sho_ult, then any other ult.
               Freyr's att and ult carry a built-in cleanse for both the boss's
               card-seal debuff and Sho's freeze.
 
@@ -174,7 +174,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
 
         # ── PHASE 1 ───────────────────────────────────────────────────────
         if phase == 1:
-            if phase_turn == 0:
+            if phase_turn == 1:
                 # Hard restrictions only: freyr triggers the counter early;
                 # ban_aoe wastes burst.  Everything else is fair game.
                 for idx in freyr_ids + ban_aoe_ids:
@@ -212,7 +212,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     print("[HumanTeam] Card-seal debuff (P2) — using freyr cleanse")
                     return self._play(freyr_cleanse_ids[-1], hand_of_cards, card_ranks)
 
-            if phase_turn == 0:
+            if phase_turn == 1:
                 # Check if an ally King or Freyr is already in the played slots —
                 # either of those can cleanse Sho's potential freeze from P1.
                 six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
@@ -220,21 +220,21 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     find(img, six_slots) for img in (vio.indura_freyr_att, vio.freyr_ult)
                 )
                 if ally_has_cleanse:
-                    print("[HumanTeam] P2 turn 0 — ally cleanse (King or Freyr) detected in played slots")
+                    print("[HumanTeam] P2 turn 1 — ally cleanse (King or Freyr) detected in played slots")
 
                 # Lead with freyr_att: cleanses Sho freeze + starts passive stack
                 if freyr_att_ids:
-                    print("[HumanTeam] P2 turn 0 — playing freyr att (passive + Sho cleanse)")
+                    print("[HumanTeam] P2 turn 1 — playing freyr att (passive + Sho cleanse)")
                     return self._play(freyr_att_ids[-1], hand_of_cards, card_ranks)
                 if freyr_ids:
-                    print("[HumanTeam] P2 turn 0 — playing freyr card (passive + cleanse)")
+                    print("[HumanTeam] P2 turn 1 — playing freyr card (passive + cleanse)")
                     return self._play(freyr_ids[-1], hand_of_cards, card_ranks)
 
                 # No freyr on team
                 if ally_has_cleanse:
-                    print("[HumanTeam] P2 turn 0 — no freyr; ally handling Sho cleanse")
+                    print("[HumanTeam] P2 turn 1 — no freyr; ally handling Sho cleanse")
                 else:
-                    print("[HumanTeam] P2 turn 0 — no freyr on team; no ally cleanse detected")
+                    print("[HumanTeam] P2 turn 1 — no freyr on team; no ally cleanse detected")
 
                 if ban_ids:
                     return self._play(ban_ids[-1], hand_of_cards, card_ranks)
@@ -263,7 +263,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         # ── PHASE 3 ───────────────────────────────────────────────────────
         elif phase == 3:
             # ── Evasion pre-check ─────────────────────────────────────────
-            # Boss applies melee or ranged evasion each turn after turn 0.
+            # Boss applies melee or ranged evasion each turn after turn 1.
             # Ults always bypass and remove it.  If no ult is available, wait
             # to see if an ally clears it before filtering down to passable cards.
             melee_evasion_up = find(vio.melee_evasion, screenshot)
@@ -304,7 +304,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     return self._play(freyr_cleanse_ids[-1], hand_of_cards, card_ranks)
 
             # ── Turn-based priority ───────────────────────────────────────
-            if phase_turn == 0:
+            if phase_turn == 1:
                 # Observe the teammate; hold ults; play attack cards
                 for idx in ult_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED

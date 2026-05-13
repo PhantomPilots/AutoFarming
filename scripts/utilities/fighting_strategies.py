@@ -30,15 +30,15 @@ class IBattleStrategy(abc.ABC):
     # In case the fighter dies!
     picked_cards: list[Card] = []
 
-    # What's the current phase turn?
+    # How many turns have started in the current phase? The first started turn is 1.
     phase_turn = 0
 
     def increment_phase_turn(self):
-        """Increment the phase turn"""
+        """Advance to the next started turn within the current phase."""
         IBattleStrategy.phase_turn += 1
 
     def reset_phase_turn(self):
-        """Reset the shared phase-turn counter for the current fight phase."""
+        """Reset the shared phase-turn counter so the next started turn becomes 1."""
         IBattleStrategy.phase_turn = 0
 
     def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:

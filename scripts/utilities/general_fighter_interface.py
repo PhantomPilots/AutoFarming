@@ -43,6 +43,7 @@ class IFighter(abc.ABC):
     # Every battle has a floor and a phase, so this should be generalized here
     current_phase = 1
     current_floor = 1
+    _phase_turn_started_for_current_turn = False
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         """Initialize the fighter instance with a (optional) callback to call when the fight has finished,
@@ -83,6 +84,19 @@ class IFighter(abc.ABC):
         print(f"MOVING TO PHASE {new_phase}!")
         IFighter.current_phase = new_phase
         self.battle_strategy.reset_phase_turn()
+        IFighter._phase_turn_started_for_current_turn = False
+        return True
+
+    def _start_phase_turn_if_needed(self, *, reason: str | None = None) -> bool:
+        """Start the current phase turn once, using a shared 1-based started-turn contract."""
+        if IFighter._phase_turn_started_for_current_turn:
+            return False
+
+        if reason:
+            print(reason)
+
+        self.battle_strategy.increment_phase_turn()
+        IFighter._phase_turn_started_for_current_turn = True
         return True
 
     def _run_manual_forfeit_flow(self) -> None:
@@ -128,6 +142,8 @@ class IFighter(abc.ABC):
         slot_index = max(0, self.available_card_slots - empty_card_slots)
 
         if empty_card_slots > 0:
+            self._start_phase_turn_if_needed()
+
             # KEY: Read the hand of cards here
             current_hand = self.battle_strategy.pick_cards(
                 picked_cards=self.picked_cards,
@@ -164,8 +180,7 @@ class IFighter(abc.ABC):
     def finish_turn(self):
         """May need to re-implement (like on Rat Fighter)"""
         print("Finished my turn!")
-        # Increment to the next phase turn
-        self.battle_strategy.increment_phase_turn()
+        IFighter._phase_turn_started_for_current_turn = False
         # Reset variables
         self._reset_instance_variables()
         return 1

@@ -252,7 +252,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         return SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)
 
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int):
-        """Important: In phase 3, phase turns start at 1!"""
+        """Phase turns are 1-based started-turn counters everywhere, including phase 3."""
         self._maybe_reset("phase_3")
 
         print(f"Phase 3: phase turn {IBattleStrategy.phase_turn}")

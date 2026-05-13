@@ -41,8 +41,8 @@ class InduraBattleStrategy(IBattleStrategy):
             # Reset the oxidize count
             InduraBattleStrategy.oxidize_count = 0
 
-            # Disable all heal cards if someone has played one already OR it's the first fight turn!
-            if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy.phase_turn == 0:
+            # Disable all heal cards if someone has played one already OR it's the first started turn!
+            if find(vio.mini_heal, six_empty_slots_image) or IBattleStrategy.phase_turn == 1:
                 # Disabled all heal cards, unless it's 3rd card and not 1st turn
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
@@ -69,8 +69,8 @@ class InduraBattleStrategy(IBattleStrategy):
             if not len(played_king_debuf_cards) and len(heal_card_ids):
                 return heal_card_ids[-1]
 
-            # If it's the first turn literally, play a debuff card first and foremost
-            if IBattleStrategy.phase_turn == 0:
+            # If it's the first started turn literally, play a debuff card first and foremost
+            if IBattleStrategy.phase_turn == 1:
                 debuff_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ATTACK_DEBUFF]
                 if debuff_ids:
                     return debuff_ids[-1]
@@ -135,13 +135,13 @@ class InduraBattleStrategy(IBattleStrategy):
         elif phase == 3:
             print(f"We're on turn {InduraBattleStrategy.phase_turn} of phase 3")
 
-            if InduraBattleStrategy.phase_turn == 0:
+            if InduraBattleStrategy.phase_turn == 1:
                 ult_ids = [i for i, card in enumerate(hand_of_cards) if card.card_type == CardTypes.ULTIMATE]
                 print("Disabling all Ultimates for first turn!")
                 for id in ult_ids:
                     hand_of_cards[id].card_type = CardTypes.DISABLED
 
-            if InduraBattleStrategy.phase_turn == 1 or find(vio.mini_heal, six_empty_slots_image):
+            if InduraBattleStrategy.phase_turn == 2 or find(vio.mini_heal, six_empty_slots_image):
                 # Disabled all heal cards
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
