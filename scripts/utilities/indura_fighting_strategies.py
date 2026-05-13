@@ -141,7 +141,7 @@ class InduraBattleStrategy(IBattleStrategy):
                 for id in ult_ids:
                     hand_of_cards[id].card_type = CardTypes.DISABLED
 
-            if find(vio.mini_heal, six_empty_slots_image):
+            if InduraBattleStrategy.fight_turn == 1 or find(vio.mini_heal, six_empty_slots_image):
                 # Disabled all heal cards
                 for idx in heal_card_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
