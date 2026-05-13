@@ -173,6 +173,11 @@ class SADungeonFarmer(IFarmer):
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
 
+        # If we somehow opened the wrong dungeon, back out and try again. let's make sure we don't accidentally consume a key on the wrong dungeon
+        if find(vio.sa_coin_dungeon_menu, screenshot) or find(vio.sa_tower_of_chaos, screenshot) or find(vio.sa_broken_clock_tower, screenshot):
+            press_key("esc")
+            return
+
         if find(vio.clock_tower_floor, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE
             print(f"Going to {self.current_state}")
