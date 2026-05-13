@@ -14,7 +14,7 @@ class DogsFloor4Fighter(DogsFighter):
 
     activate_phase3_escalin_talent = False
     _f4_first_my_turn_pending = True
-    _fight_turn_incremented_at_turn_start = False
+    _phase_turn_incremented_at_turn_start = False
 
     def __init__(self, battle_strategy: type[DogsFloor4BattleStrategy], callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
@@ -42,12 +42,12 @@ class DogsFloor4Fighter(DogsFighter):
             DogsFloor4Fighter._f4_first_my_turn_pending = False
         return entered
 
-    def _maybe_increment_fight_turn_at_turn_start(self):
+    def _maybe_increment_phase_turn_at_turn_start(self):
         """Floor 4: count turns at turn start using talent visibility first, slots second.
 
         Runs every MY_TURN loop tick before ``play_cards``; mid-turn ticks are skipped via ``picked_cards[0]``.
         Every Floor 4 phase starts from a fresh counter, and ``finish_turn`` never increments it.
-        This keeps ``fight_turn`` meaning consistent across phases: it increments exactly once, at the
+        This keeps ``phase_turn`` meaning consistent across phases: it increments exactly once, at the
         start of a turn. If Escalin talent is visible, that is treated as a definitive turn-start signal.
         Otherwise we fall back to the normal 3+/4-slot opening rule. If units die and neither signal is
         observed cleanly, the counter remains best-effort and cleanup turns may not be counted.
@@ -55,7 +55,7 @@ class DogsFloor4Fighter(DogsFighter):
         Opening slot count may be nudged up from vision when it exceeds ``available_card_slots``
         (same idea as ``play_cards``).
         """
-        if DogsFloor4Fighter._fight_turn_incremented_at_turn_start:
+        if DogsFloor4Fighter._phase_turn_incremented_at_turn_start:
             return
 
         if self.picked_cards[0].card_image is not None:
@@ -63,7 +63,7 @@ class DogsFloor4Fighter(DogsFighter):
 
         screenshot, _ = capture_window()
         empty = DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)
-        self._try_increment_fight_turn_from_start_signals(
+        self._try_increment_phase_turn_from_start_signals(
             screenshot,
             empty_card_slots=empty,
             talent_log="Turn start detected from talent_escalin visibility.",
@@ -72,7 +72,7 @@ class DogsFloor4Fighter(DogsFighter):
 
     def my_turn_state(self):
         self._identify_current_phase()
-        self._maybe_increment_fight_turn_at_turn_start()
+        self._maybe_increment_phase_turn_at_turn_start()
         if self._should_exit_before_play_cards():
             return
         self.play_cards()
@@ -81,7 +81,7 @@ class DogsFloor4Fighter(DogsFighter):
         """Re-check the turn-limit cutoff after the late slot-detection fallback.
 
         Floor 4 can discover a normal 3+/4-slot opening only inside ``play_cards``.
-        When that path bumps ``fight_turn`` to 10, we must still forfeit before the
+        When that path bumps ``phase_turn`` to 10, we must still forfeit before the
         first card pick rather than letting one card slip through.
         """
         screenshot, window_location = capture_window()
@@ -101,15 +101,15 @@ class DogsFloor4Fighter(DogsFighter):
 
     def _should_exit_before_play_cards(self) -> bool:
         is_turn_start = self.picked_cards[0].card_image is None
-        fight_turn = self.battle_strategy.fight_turn
+        phase_turn = self.battle_strategy.phase_turn
         if IFighter.current_phase == 3:
-            print(f"Phase 3 turn {fight_turn}")
-        if IFighter.current_phase != 3 or not is_turn_start or fight_turn < 10:
+            print(f"Phase 3 turn {phase_turn}")
+        if IFighter.current_phase != 3 or not is_turn_start or phase_turn < 10:
             return False
 
         print(
             "Phase 3 reached the turn limit; manually forfeiting before playing cards.",
-            f"fight_turn={fight_turn}",
+            f"phase_turn={phase_turn}",
         )
         self.current_state = FightingStates.EXIT_FIGHT
         return True
@@ -126,18 +126,18 @@ class DogsFloor4Fighter(DogsFighter):
         that will drive slot-index calculation and card selection. We still keep the overall policy
         of start-only counting and never increment at ``finish_turn``.
         """
-        if DogsFloor4Fighter._fight_turn_incremented_at_turn_start:
+        if DogsFloor4Fighter._phase_turn_incremented_at_turn_start:
             return
         if self.picked_cards[0].card_image is not None:
             return
-        self._try_increment_fight_turn_from_start_signals(
+        self._try_increment_phase_turn_from_start_signals(
             screenshot,
             empty_card_slots=empty_card_slots,
             talent_log="Late turn-start detection from talent_escalin visibility.",
             slots_log_prefix="Late turn-start detection from empty card slots",
         )
 
-    def _try_increment_fight_turn_from_start_signals(
+    def _try_increment_phase_turn_from_start_signals(
         self,
         screenshot,
         *,
@@ -152,8 +152,8 @@ class DogsFloor4Fighter(DogsFighter):
         """
         if find(vio.talent_escalin, screenshot, threshold=0.7):
             print(talent_log)
-            self.battle_strategy.increment_fight_turn()
-            DogsFloor4Fighter._fight_turn_incremented_at_turn_start = True
+            self.battle_strategy.increment_phase_turn()
+            DogsFloor4Fighter._phase_turn_incremented_at_turn_start = True
             return True
 
         if empty_card_slots > self.available_card_slots:
@@ -163,14 +163,14 @@ class DogsFloor4Fighter(DogsFighter):
             return False
 
         print(f"{slots_log_prefix}: available_card_slots={self.available_card_slots}")
-        self.battle_strategy.increment_fight_turn()
-        DogsFloor4Fighter._fight_turn_incremented_at_turn_start = True
+        self.battle_strategy.increment_phase_turn()
+        DogsFloor4Fighter._phase_turn_incremented_at_turn_start = True
         return True
 
     def finish_turn(self):
         # Floor 4 turn counting is start-only for every phase. We deliberately avoid end-of-turn
         # increments so short turns (for example, 1-slot cleanup turns) do not create confusing jumps.
-        DogsFloor4Fighter._fight_turn_incremented_at_turn_start = False
+        DogsFloor4Fighter._phase_turn_incremented_at_turn_start = False
         self._reset_instance_variables()
         print("Finished my turn!")
         return 1
@@ -184,13 +184,11 @@ class DogsFloor4Fighter(DogsFighter):
         prev = IFighter.current_phase
         super()._identify_current_phase()
         if prev != IFighter.current_phase:
-            print(f"Entered phase {IFighter.current_phase}! Resetting the Floor 4 turn counter...")
-            self.battle_strategy.reset_fight_turn()
-            DogsFloor4Fighter._fight_turn_incremented_at_turn_start = False
+            DogsFloor4Fighter._phase_turn_incremented_at_turn_start = False
 
     def run(self, floor=4, lillia_in_team=False, roxy_in_team=False):
         self.battle_strategy.reset_run_state(lillia_in_team=lillia_in_team, roxy_in_team=roxy_in_team)
         DogsFloor4Fighter._f4_first_my_turn_pending = True
-        DogsFloor4Fighter._fight_turn_incremented_at_turn_start = False
+        DogsFloor4Fighter._phase_turn_incremented_at_turn_start = False
 
         super().run(floor=floor)

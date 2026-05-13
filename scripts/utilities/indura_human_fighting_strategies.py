@@ -130,10 +130,6 @@ class InduraHumanBattleStrategy(IBattleStrategy):
     logs what it finds.
     """
 
-    # Fight-turn value snapshotted on first entry into phase 2; used to derive
-    # the turn number within that phase.  Phase 3 resets fight_turn externally.
-    _p2_entry_fight_turn: int = -1
-
     # ── Logging helper ────────────────────────────────────────────────────────
 
     def _play(self, idx: int, hand_of_cards: list[Card], card_ranks: np.ndarray) -> int:
@@ -155,21 +151,8 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
 
-        # ── Phase-2 entry tracking ─────────────────────────────────────────
-        if phase == 2 and InduraHumanBattleStrategy._p2_entry_fight_turn == -1:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = IBattleStrategy.fight_turn
-            print(f"[HumanTeam] Entered phase 2 at fight turn {IBattleStrategy.fight_turn}")
-        elif phase != 2:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = -1
-
         # Turn number relative to the start of the current phase.
-        # Phase 3 resets fight_turn to 0 externally (InduraFighter.fighting_state).
-        if phase == 1:
-            phase_turn = IBattleStrategy.fight_turn
-        elif phase == 2:
-            phase_turn = IBattleStrategy.fight_turn - InduraHumanBattleStrategy._p2_entry_fight_turn
-        else:
-            phase_turn = IBattleStrategy.fight_turn
+        phase_turn = IBattleStrategy.phase_turn
 
         print(f"[HumanTeam] phase={phase}  phase_turn={phase_turn}  card_turn={card_turn}")
 
@@ -191,8 +174,6 @@ class InduraHumanBattleStrategy(IBattleStrategy):
 
         # ── PHASE 1 ───────────────────────────────────────────────────────
         if phase == 1:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = -1  # keep clean
-
             if phase_turn == 0:
                 # Hard restrictions only: freyr triggers the counter early;
                 # ban_aoe wastes burst.  Everything else is fair game.

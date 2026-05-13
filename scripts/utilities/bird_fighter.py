@@ -49,9 +49,7 @@ class BirdFighter(IFighter):
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
-                IFighter.current_phase = new_phase
+            self._set_phase(self._identify_phase(screenshot))
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -75,7 +73,7 @@ class BirdFighter(IFighter):
         screenshot, _ = capture_window()
 
         # First, update the current phase
-        IFighter.current_phase = self._identify_phase(screenshot)
+        self._set_phase(self._identify_phase(screenshot))
 
         # Then, play the cards
         self.play_cards()

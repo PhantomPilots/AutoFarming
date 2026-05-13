@@ -54,9 +54,7 @@ class DemonKingFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
-                IFighter.current_phase = new_phase
+            self._set_phase(self._identify_phase(screenshot))
 
             if DemonKingFighter.first_turn:
                 self.build_cards_to_colors()

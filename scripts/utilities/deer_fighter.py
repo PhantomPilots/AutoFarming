@@ -72,9 +72,7 @@ class DeerFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            if (phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"Moving to phase {phase}!")
-                IFighter.current_phase = phase
+            self._set_phase(self._identify_phase(screenshot))
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):

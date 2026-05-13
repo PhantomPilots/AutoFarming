@@ -75,6 +75,16 @@ class IFighter(abc.ABC):
             print("Manually stopping the fighter thread.")
             self.exit_thread = True
 
+    def _set_phase(self, new_phase: int) -> bool:
+        """Apply an active-fight phase transition and reset shared per-phase turn state."""
+        if new_phase == IFighter.current_phase:
+            return False
+
+        print(f"MOVING TO PHASE {new_phase}!")
+        IFighter.current_phase = new_phase
+        self.battle_strategy.reset_phase_turn()
+        return True
+
     def _run_manual_forfeit_flow(self) -> None:
         """Standard pause/forfeit flow shared by beast fighters."""
         screenshot, window_location = capture_window()
@@ -154,8 +164,8 @@ class IFighter(abc.ABC):
     def finish_turn(self):
         """May need to re-implement (like on Rat Fighter)"""
         print("Finished my turn!")
-        # Increment to the next fight turn
-        self.battle_strategy.increment_fight_turn()
+        # Increment to the next phase turn
+        self.battle_strategy.increment_phase_turn()
         # Reset variables
         self._reset_instance_variables()
         return 1
@@ -228,7 +238,7 @@ class IFighter(abc.ABC):
                 func(self, *args, **kwargs)
             finally:
                 print("Resetting fighter...")
-                self.battle_strategy.reset_fight_turn()
+                self.battle_strategy.reset_phase_turn()
                 self._reset_instance_variables()
 
         return wrapper_func

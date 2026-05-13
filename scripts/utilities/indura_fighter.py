@@ -39,11 +39,7 @@ class InduraFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
-                IFighter.current_phase = new_phase
-                if new_phase == 3:
-                    self.battle_strategy.reset_fight_turn()
+            self._set_phase(self._identify_phase(screenshot))
 
     def _identify_phase(self, screenshot: np.ndarray):
         """Read the screenshot and identify the phase we're currently in"""
@@ -120,8 +116,8 @@ class InduraFighter(IFighter):
         elif empty_card_slots == 0:  # or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
-            # Increment to the next fight turn
-            self.battle_strategy.increment_fight_turn()
+            # Increment to the next phase turn
+            self.battle_strategy.increment_phase_turn()
             # And reset instance variables
             self._reset_instance_variables()
             return 1

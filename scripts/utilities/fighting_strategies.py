@@ -30,16 +30,16 @@ class IBattleStrategy(abc.ABC):
     # In case the fighter dies!
     picked_cards: list[Card] = []
 
-    # What's the current fight turn?
-    fight_turn = 0
+    # What's the current phase turn?
+    phase_turn = 0
 
-    def increment_fight_turn(self):
-        """Increment the fight turn"""
-        IBattleStrategy.fight_turn += 1
+    def increment_phase_turn(self):
+        """Increment the phase turn"""
+        IBattleStrategy.phase_turn += 1
 
-    def reset_fight_turn(self):
-        """Reset IBattleStrategy.fight_turn. Normally IFighter.run_wrapper (finally); mid-fight resets are rare (e.g. Indura phase 3)."""
-        IBattleStrategy.fight_turn = 0
+    def reset_phase_turn(self):
+        """Reset the shared phase-turn counter for the current fight phase."""
+        IBattleStrategy.phase_turn = 0
 
     def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""

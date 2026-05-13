@@ -26,12 +26,6 @@ logger = LoggerWrapper("DeerFloor4FightingStrategies", log_file="deer_floor4_AI.
 class DeerFloor4BattleStrategy(IBattleStrategy):
     """The logic behind the battle for Floor 4"""
 
-    # Per-phase snapshot of IBattleStrategy.fight_turn at first entry (phase turn index = fight_turn - baseline).
-    _fight_turn_baseline: dict[str, int] = {}
-
-    # To keep track of what phases have been initialized
-    _phase_initialized = set()
-
     # Did we use red or blue cards in phase 1 turn 0?
     _color_cards_used_p2t0 = None
 
@@ -45,8 +39,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     _phase2_double_red_used = False
 
     def _initialize_static_variables(self):
-        DeerFloor4BattleStrategy._fight_turn_baseline = {}
-        DeerFloor4BattleStrategy._phase_initialized = set()
         DeerFloor4BattleStrategy._color_cards_used_p2t0 = None
         DeerFloor4BattleStrategy._color_cards_picked_p3 = None
         DeerFloor4BattleStrategy._phase2_double_red_used = False
@@ -69,8 +61,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
     @staticmethod
     def _phase_turn_index(phase_id: str) -> int:
-        """0-based player-turn index within this phase (matches ``finish_turn`` / ``fight_turn``)."""
-        return IBattleStrategy.fight_turn - DeerFloor4BattleStrategy._fight_turn_baseline[phase_id]
+        """0-based player-turn index within this phase."""
+        return IBattleStrategy.phase_turn
 
     def get_next_card_index(
         self, hand_of_cards: list[Card], picked_cards: list[Card], phase: int, card_turn=0, **kwargs
@@ -98,17 +90,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
             card_index = self.get_next_card_index_phase4(hand_of_cards, picked_cards, card_turn=card_turn)
 
         return card_index
-
-    def _maybe_reset(self, phase_id: str):
-        """First entry into a phase: record fight_turn baseline so board round restarts at 0."""
-        if phase_id not in DeerFloor4BattleStrategy._phase_initialized:
-            DeerFloor4BattleStrategy._fight_turn_baseline[phase_id] = IBattleStrategy.fight_turn
-            print(
-                "Resetting phase counter for",
-                phase_id,
-                f"(fight_turn baseline={DeerFloor4BattleStrategy._fight_turn_baseline[phase_id]})",
-            )
-            DeerFloor4BattleStrategy._phase_initialized.add(phase_id)
 
     def _phase1_round0_standard(
         self,
@@ -225,8 +206,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
         Later phase-1 rounds: same for both; Thor moves / plays and Tyr/Hel/Jorm moves as before.
         """
 
-        self._maybe_reset("phase_1")  # Not needed, but whatever
-
         if card_turn == 0:
             print(f"TURN {self._phase_turn_index('phase_1')}:")
 
@@ -297,8 +276,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     ) -> int:
         # sourcery skip: extract-method
         """Extract the indices based on the list of cards and the current phase"""
-
-        self._maybe_reset("phase_2")
 
         if card_turn == 0:
             print(f"TURN {self._phase_turn_index('phase_2')}:")
@@ -395,8 +372,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
     def get_next_card_index_phase3(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
         """Extract the indices based on the list of cards and the current phase"""
 
-        self._maybe_reset("phase_3")
-
         if card_turn == 0:
             print(f"TURN {self._phase_turn_index('phase_3')}:")
 
@@ -454,8 +429,6 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
     def get_next_card_index_phase4(self, hand_of_cards: list[Card], picked_cards: list[Card], card_turn: int) -> int:
         """Extract the indices based on the list of cards and the current phase"""
-
-        self._maybe_reset("phase_4")
 
         if card_turn == 0:
             print(f"TURN {self._phase_turn_index('phase_4')}:")

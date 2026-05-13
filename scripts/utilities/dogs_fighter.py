@@ -137,27 +137,25 @@ class DogsFighter(IFighter):
     def _identify_current_phase(self):  # sourcery skip: extract-duplicate-method
         """Identify DB phase"""
         screenshot, window_location = capture_window()
-        if find(vio.phase_1, screenshot, threshold=0.8) and IFighter.current_phase != 1:
+        if find(vio.phase_1, screenshot, threshold=0.8):
             if (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 1:
                 # Click on light dog -- This is a hack!
-                IFighter.current_phase = 1
-                print("Clicking on light dog, because current phase:", IFighter.current_phase)
-                click_im(Coordinates.get_coordinates("light_dog"), window_location)
-        elif find(vio.phase_2, screenshot, threshold=0.8) and IFighter.current_phase != 2:
-            # Click on dark dog
-            IFighter.current_phase = 2
-            print("Clicking on dark dog, because current phase:", IFighter.current_phase)
-            click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-        elif find(vio.phase_3_dogs, screenshot, threshold=0.8) and IFighter.current_phase != 3:
-            # Click on dark dog
-            IFighter.current_phase = 3
-            print("Clicking on dark dog, because current phase:", IFighter.current_phase)
-            click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-            if type(self).activate_phase3_escalin_talent and find_and_click(
-                vio.talent_escalin, screenshot, window_location, threshold=0.6
-            ):
-                print("Phase 3 entry: activating talent_escalin")
-                time.sleep(2.5)
+                if self._set_phase(1):
+                    print("Clicking on light dog, because current phase:", IFighter.current_phase)
+                    click_im(Coordinates.get_coordinates("light_dog"), window_location)
+        elif find(vio.phase_2, screenshot, threshold=0.8):
+            if self._set_phase(2):
+                print("Clicking on dark dog, because current phase:", IFighter.current_phase)
+                click_im(Coordinates.get_coordinates("dark_dog"), window_location)
+        elif find(vio.phase_3_dogs, screenshot, threshold=0.8):
+            if self._set_phase(3):
+                print("Clicking on dark dog, because current phase:", IFighter.current_phase)
+                click_im(Coordinates.get_coordinates("dark_dog"), window_location)
+                if type(self).activate_phase3_escalin_talent and find_and_click(
+                    vio.talent_escalin, screenshot, window_location, threshold=0.6
+                ):
+                    print("Phase 3 entry: activating talent_escalin")
+                    time.sleep(2.5)
 
     def fight_complete_state(self):
 
