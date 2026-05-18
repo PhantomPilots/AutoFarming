@@ -185,6 +185,7 @@ class DemonKingFarmer(IFarmer):
                 self.dk_fighting_thread is None or not self.dk_fighting_thread.is_alive()
             ) and self.current_state == States.FIGHTING:
                 print("Let's start the DK fight!")
+                self.fighter.prepare_for_new_fight()
                 self.dk_fighting_thread = threading.Thread(
                     target=self.fighter.run, daemon=True, args=(DemonKingFarmer.unit_colors,)
                 )

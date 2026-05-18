@@ -49,7 +49,7 @@ class BirdFighter(IFighter):
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             # Update the current phase
-            self._set_phase(self._identify_phase(screenshot))
+            self._apply_detected_phase(self._identify_phase(screenshot))
 
             # Finally, move to the next state
             print(f"MY TURN, selecting {available_card_slots} cards...")
@@ -65,15 +65,14 @@ class BirdFighter(IFighter):
         elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
-        return 1
+        return None
 
     def my_turn_state(self):
         """State in which the 4 cards will be picked and clicked. Overrides the parent method."""
         screenshot, _ = capture_window()
 
         # First, update the current phase
-        self._set_phase(self._identify_phase(screenshot))
+        self._apply_detected_phase(self._identify_phase(screenshot))
 
         # Then, play the cards
         self.play_cards()

@@ -72,7 +72,7 @@ class DeerFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the phase
-            self._set_phase(self._identify_phase(screenshot))
+            self._apply_detected_phase(self._identify_phase(screenshot))
 
     @staticmethod
     def count_empty_card_slots(screenshot, threshold=0.6, plot=False):
@@ -121,8 +121,7 @@ class DeerFighter(IFighter):
         elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
-        return 1
+        return None
 
     def fight_complete_state(self):
 

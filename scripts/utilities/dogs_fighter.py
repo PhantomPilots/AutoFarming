@@ -25,15 +25,13 @@ class DogsFighter(IFighter):
 
     # Keep track of the current floor
     current_floor = 1
+    initial_phase = -1
 
     # Subclasses (e.g. Floor 4) may set False to skip auto-clicking Escalin talent on phase 3 entry.
     activate_phase3_escalin_talent = True
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         super().__init__(battle_strategy=battle_strategy, callback=callback)
-
-        # Reset the current phase to -1
-        IFighter.current_phase = -1
 
     def fighting_state(self):
 
@@ -134,24 +132,30 @@ class DogsFighter(IFighter):
         # Then play the cards
         self.play_cards()
 
+    def _identify_phase(self, screenshot: np.ndarray) -> int | None:
+        """Identify the currently visible Dogs phase, or ``None`` if vision is inconclusive."""
+        if find(vio.phase_1, screenshot, threshold=0.8):
+            if DogsFighter.count_empty_card_slots(screenshot, threshold=0.8) > 1:
+                return 1
+            return None
+        if find(vio.phase_2, screenshot, threshold=0.8):
+            return 2
+        if find(vio.phase_3_dogs, screenshot, threshold=0.8):
+            return 3
+
+        return None
+
     def _identify_current_phase(self):  # sourcery skip: extract-duplicate-method
         """Identify DB phase"""
         screenshot, window_location = capture_window()
-        if find(vio.phase_1, screenshot, threshold=0.8):
-            if (available_card_slots := DogsFighter.count_empty_card_slots(screenshot, threshold=0.8)) > 1:
-                # Click on light dog -- This is a hack!
-                if self._set_phase(1):
-                    print("Clicking on light dog, because current phase:", IFighter.current_phase)
-                    click_im(Coordinates.get_coordinates("light_dog"), window_location)
-        elif find(vio.phase_2, screenshot, threshold=0.8):
-            if self._set_phase(2):
+        if self._apply_detected_phase(self._identify_phase(screenshot)):
+            if IFighter.current_phase == 1:
+                print("Clicking on light dog, because current phase:", IFighter.current_phase)
+                click_im(Coordinates.get_coordinates("light_dog"), window_location)
+            elif IFighter.current_phase in {2, 3}:
                 print("Clicking on dark dog, because current phase:", IFighter.current_phase)
                 click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-        elif find(vio.phase_3_dogs, screenshot, threshold=0.8):
-            if self._set_phase(3):
-                print("Clicking on dark dog, because current phase:", IFighter.current_phase)
-                click_im(Coordinates.get_coordinates("dark_dog"), window_location)
-                if type(self).activate_phase3_escalin_talent and find_and_click(
+                if IFighter.current_phase == 3 and type(self).activate_phase3_escalin_talent and find_and_click(
                     vio.talent_escalin, screenshot, window_location, threshold=0.6
                 ):
                     print("Phase 3 entry: activating talent_escalin")
@@ -191,8 +195,6 @@ class DogsFighter(IFighter):
             # We're going back to the main bird menu, let's end this thread
             self.complete_callback(victory=False, phase=IFighter.current_phase)
             self.exit_thread = True
-            # Reset the current phase
-            IFighter.current_phase = None
 
     def exit_fight_state(self):
         """Manually finish the fight when the hand is fully disabled (same flow as BirdFighter)."""

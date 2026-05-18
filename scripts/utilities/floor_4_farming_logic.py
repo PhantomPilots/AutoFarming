@@ -234,6 +234,7 @@ class IFloor4Farmer(IFarmer):
         # Set the fighter thread
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and self.current_state == States.FIGHTING:
             print("Floor4 fight started!")
+            self.fighter.prepare_for_new_fight()
             self.fight_thread = threading.Thread(
                 target=self.fighter.run,
                 name="Floor4FighterThread",

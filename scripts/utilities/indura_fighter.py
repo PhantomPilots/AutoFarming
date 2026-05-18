@@ -24,6 +24,10 @@ class InduraFighter(IFighter):
 
     card_turn = 0
 
+    def _reset_phase_tracking(self):
+        super()._reset_phase_tracking()
+        InduraFighter.card_turn = 0
+
     def fighting_state(self):
         screenshot, _ = capture_window()
 
@@ -39,17 +43,17 @@ class InduraFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the current phase
-            self._set_phase(self._identify_phase(screenshot))
+            self._apply_detected_phase(self._identify_phase(screenshot))
 
-    def _identify_phase(self, screenshot: np.ndarray):
-        """Read the screenshot and identify the phase we're currently in"""
+    def _identify_phase(self, screenshot: np.ndarray) -> int | None:
+        """Read the screenshot and identify the phase we're currently in."""
         if find(vio.phase_2, screenshot, threshold=0.8):
             return 2
-        elif find(vio.phase_3, screenshot, threshold=0.8):
+        if find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
-        return 1
+        # Unknown / unreadable frame: keep the current confirmed phase.
+        return None
 
     def my_turn_state(self):
         """Select and play the cards"""

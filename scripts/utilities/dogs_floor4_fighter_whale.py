@@ -284,17 +284,8 @@ class DogsFloor4FighterWhale(DogsFighter):
 
     def _identify_current_phase(self):
         screenshot, window_location = capture_window()
-
-        if find(vio.phase_1, screenshot, threshold=0.8) and IFighter.current_phase != 1:
-            if DogsFighter.count_empty_card_slots(screenshot, threshold=0.8) > 1:
-                if self._set_phase(1):
-                    self.target_selected_phase = None
-        elif find(vio.phase_2, screenshot, threshold=0.8):
-            if self._set_phase(2):
-                self.target_selected_phase = None
-        elif find(vio.phase_3_dogs, screenshot, threshold=0.8):
-            if self._set_phase(3):
-                self.target_selected_phase = None
+        if self._apply_detected_phase(self._identify_phase(screenshot)):
+            self.target_selected_phase = None
 
         if IFighter.current_phase == 1 and self.target_selected_phase != 1:
             if not self._ensure_dogs_target_selected("right", "light_dog", window_location):

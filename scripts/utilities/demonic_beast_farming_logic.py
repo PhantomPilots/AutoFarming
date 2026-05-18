@@ -278,6 +278,7 @@ class DemonicBeastFarmer(IFarmer):
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and (
             self.current_state == States.FIGHTING_FLOOR
         ):
+            self.fighter.prepare_for_new_fight()
             self.fight_thread = threading.Thread(
                 target=self.fighter.run, daemon=True, args=(DemonicBeastFarmer.current_floor,)
             )

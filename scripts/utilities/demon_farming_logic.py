@@ -342,6 +342,7 @@ class IDemonFarmer(IFarmer):
         if self.demon_to_farm == vio.indura_demon and (
             (self.indura_fight_thread is None) or not self.indura_fight_thread.is_alive()
         ):
+            self.fighter.prepare_for_new_fight()
             self.indura_fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.indura_fight_thread.start()
             print("Indura demon fighter started!")
