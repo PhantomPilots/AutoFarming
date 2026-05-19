@@ -20,6 +20,6 @@ while num_rerolls < max_rerolls:
     if find_and_click(vio.change_stats, screenshot, window_location):
         num_rerolls += 1
         print(f"Rerolled {num_rerolls} times.")
-        time.sleep(4)
+        time.sleep(5)
     else:
         time.sleep(0.1)
