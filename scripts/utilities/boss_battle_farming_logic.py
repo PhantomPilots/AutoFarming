@@ -92,7 +92,7 @@ class BossBattleFarmer(IFarmer):
             print(f"Going to {self.current_state}")
             return
 
-        find_and_click(vio.boss_floor_extreme, screenshot, window_location)
+        find_and_click(vio.extreme_difficulty, screenshot, window_location)
 
     def get_ready_state(self):
         """Prepare the fight and go!"""

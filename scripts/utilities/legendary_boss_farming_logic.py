@@ -31,6 +31,12 @@ class LegendaryBossFarmer(IFarmer):
     # Keep track of how many fights have been done
     num_fights = 0
 
+    difficulty_visions = {
+        "extreme": vio.extreme_difficulty,
+        "hell": vio.hell_difficulty,
+        "challenge": vio.challenge_difficulty,
+    }
+
     def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_LB, **kwargs):
         super().__init__()
 
@@ -82,12 +88,10 @@ class LegendaryBossFarmer(IFarmer):
 
         difficulty_rect = None
         difficulty_on_screen = None
-        if (difficulty_rect := find_rect(vio.legendary_boss_extreme, screenshot)) is not None:
-            difficulty_on_screen = "extreme"
-        elif (difficulty_rect := find_rect(vio.legendary_boss_hell, screenshot)) is not None:
-            difficulty_on_screen = "hell"
-        elif (difficulty_rect := find_rect(vio.legendary_boss_challenge, screenshot)) is not None:
-            difficulty_on_screen = "challenge"
+        for difficulty_name, vision_image in self.difficulty_visions.items():
+            if (difficulty_rect := find_rect(vision_image, screenshot)) is not None:
+                difficulty_on_screen = difficulty_name
+                break
 
         if difficulty_rect is None or difficulty_on_screen is None:
             print("Couldn't find the current difficulty on screen, retry...")

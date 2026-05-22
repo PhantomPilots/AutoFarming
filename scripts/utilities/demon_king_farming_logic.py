@@ -7,7 +7,6 @@ import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
 from utilities.card_data import CardColors
-from utilities.coordinates import Coordinates
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dk_hard_fighting_strategies import DemonKingHardBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
@@ -16,14 +15,13 @@ from utilities.general_fighter_interface import IBattleStrategy, IFighter
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
-    click_im,
-    crop_image,
     determine_unit_types,
+    drag_im,
     find,
     find_and_click,
-    press_key,
+    find_rect,
+    get_click_point_from_rectangle,
 )
-from utilities.vision import Vision
 
 logger = LoggerWrapper(name="DemonKingLogger", log_to_file=False)
 
@@ -104,9 +102,17 @@ class DemonKingFarmer(IFarmer):
     def _click_difficulty(self, screenshot: np.ndarray, window_location: tuple):
         """Click on the desired difficulty"""
         if DemonKingFarmer.dk_difficulty == "hell":
-            find_and_click(vio.dk_hell, screenshot, window_location)
+            find_and_click(vio.hell_difficulty, screenshot, window_location)
         elif DemonKingFarmer.dk_difficulty == "hard":
-            find_and_click(vio.dk_hard, screenshot, window_location)
+            if not find_and_click(vio.hard_difficulty, screenshot, window_location):
+                extreme_rect = find_rect(vio.extreme_difficulty, screenshot, threshold=0.6)
+                hell_rect = find_rect(vio.hell_difficulty, screenshot, threshold=0.6)
+                if extreme_rect is not None and hell_rect is not None:
+                    drag_im(
+                        get_click_point_from_rectangle(extreme_rect),
+                        get_click_point_from_rectangle(hell_rect),
+                        window_location,
+                    )
 
     def going_to_dk_state(self):
         screenshot, window_location = capture_window()
@@ -123,6 +129,8 @@ class DemonKingFarmer(IFarmer):
             self.current_state = States.FIGHTING
             print(f"Going to {self.current_state}")
             return
+
+        find_and_click(vio.apply, screenshot, window_location)
 
         self._click_difficulty(screenshot, window_location)
 

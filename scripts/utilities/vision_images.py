@@ -334,10 +334,34 @@ talent_escalin = Vision("rat\\talent_escalin.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
-hell_difficulty = Vision("final_boss\\hell_difficulty.png")
-challenge_difficulty = Vision("final_boss\\challenge_difficulty.png")
-extreme_difficulty = Vision("final_boss\\extreme_difficulty.png")
-hard_difficulty = Vision("final_boss\\hard_difficulty.png")
+normal_difficulty = Vision("demons\\normal.png", image_name="normal_difficulty")
+hard_difficulty = MultiVision(
+    "final_boss\\hard_difficulty.png",
+    "demons\\hard.png",
+    "demon_king\\dk_hard.png",
+    image_name="hard_difficulty",
+)
+extreme_difficulty = MultiVision(
+    "final_boss\\extreme_difficulty.png",
+    "legendary_boss\\lb_extreme.png",
+    "demons\\extreme.png",
+    "demon_king\\dk_extreme.png",
+    "boss_battle\\boss_floor_extreme.png",
+    image_name="extreme_difficulty",
+)
+hell_difficulty = MultiVision(
+    "final_boss\\hell_difficulty.png",
+    "legendary_boss\\lb_hell.png",
+    "demons\\hell.png",
+    "demon_king\\dk_hell.png",
+    image_name="hell_difficulty",
+)
+challenge_difficulty = MultiVision(
+    "final_boss\\challenge_difficulty.png",
+    "legendary_boss\\lb_challenge.png",
+    image_name="challenge_difficulty",
+)
+chaos_difficulty = Vision("demons\\chaos.png", image_name="chaos_difficulty")
 boss_destroyed = Vision("final_boss\\boss_destroyed.png")
 boss_results = Vision("final_boss\\boss_results.png")
 boss_mission = Vision("final_boss\\boss_mission.png")
@@ -349,9 +373,6 @@ failed = Vision("final_boss\\failed.png")
 # For Legendary Boss
 legendary_boss_menu = Vision("legendary_boss\\legendary_boss_menu.png")
 legendary_boss_roxy = Vision("legendary_boss\\lb_roxy.png")
-legendary_boss_extreme = Vision("legendary_boss\\lb_extreme.png")
-legendary_boss_hell = Vision("legendary_boss\\lb_hell.png")
-legendary_boss_challenge = Vision("legendary_boss\\lb_challenge.png")
 legendary_boss_left_arrow = Vision("legendary_boss\\lb_left.png")
 legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
 legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")
@@ -367,11 +388,6 @@ og_demon = Vision("demons\\og_demon.png")
 indura_demon = Vision("demons\\indura_demon.png")
 accept_invitation = Vision("demons\\accept.png")
 real_time = Vision("demons\\RT.png")
-demon_hell_diff = Vision("demons\\hell.png")
-demon_normal_diff = Vision("demons\\normal.png")
-demon_hard_diff = Vision("demons\\hard.png")
-demon_extreme_diff = Vision("demons\\extreme.png")
-demon_chaos_diff = Vision("demons\\chaos.png")
 cancel_realtime = Vision("demons\\cancel.png")
 demons_loading_screen = Vision("demons\\demons_loading_screen.png")
 preparation_incomplete = Vision("demons\\preparation_incomplete.png")
@@ -414,8 +430,6 @@ kh_rank = Vision("guild_boss\\knighthood_rank.png")
 
 # Demon King
 demon_king = Vision("demon_king\\demon_king.png")
-dk_hell = Vision("demon_king\\dk_hell.png")
-dk_hard = Vision("demon_king\\dk_hard.png")
 x3 = Vision("demon_king\\x3.png")
 register_coins = Vision("demon_king\\register_coins.png")
 switch_dk_team = Vision("demon_king\\switch_dk_team.png")
@@ -512,7 +526,6 @@ sim_clear_on = Vision("boss_battle\\sim_clear_on.png")
 activate_all_on = Vision("boss_battle\\activate_all_on.png")
 boss_one_star = Vision("boss_battle\\boss_one_star.png")
 stage_melee_of_phantasms = Vision("boss_battle\\stage_melee_of_phantasms.png")
-boss_floor_extreme = Vision("boss_battle\\boss_floor_extreme.png")
 death_match_vanya = Vision("boss_battle\\death_match_vanya.png")
 boss_battle_loading_screen = Vision("boss_battle\\boss_battle_loading_screen.png")
 

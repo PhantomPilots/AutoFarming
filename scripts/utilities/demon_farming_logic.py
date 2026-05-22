@@ -189,26 +189,26 @@ class IDemonFarmer(IFarmer):
 
         if self.demon_to_farm == vio.indura_demon:
             if self.indura_difficulty == "extreme":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.normal_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.extreme_difficulty, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "hell":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_hard_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.hard_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.hell_difficulty, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "chaos":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.extreme_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_chaos_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.chaos_difficulty, screenshot, window_location, threshold=0.6)
             else:
                 raise RuntimeError(f"Unknown Indura difficulty: {self.indura_difficulty}")
             return
 
         # Click on the difficuly -- ONLY HELL
-        find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.hell_difficulty, screenshot, window_location, threshold=0.6)
 
     def wait_for_accepting_invite(self):
         """Wait for 9 seconds before accepting the invite. This should be a threading event!"""

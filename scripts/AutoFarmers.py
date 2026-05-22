@@ -625,7 +625,7 @@ FARMERS = [
                 "name": "--dk-diff",
                 "label": "Difficulty",
                 "type": "dropdown",
-                "choices": ["hard", "extreme", "hell"],
+                "choices": ["hard", "hell"],
                 "default": "hard",
             },
             {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "10"},
