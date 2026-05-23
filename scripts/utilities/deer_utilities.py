@@ -23,10 +23,7 @@ def is_red_card(card: Card) -> bool:
 
 def is_green_card(card: Card) -> bool:
     return card.card_type != CardTypes.DISABLED and (
-        find(vio.lolimerl_st, card.card_image)
-        or find(vio.lolimerl_aoe, card.card_image)
-        or find(vio.lolimerl_ult, card.card_image)
-        or find(vio.jorm_1, card.card_image)
+        find(vio.jorm_1, card.card_image)
         or find(vio.jorm_2, card.card_image)
         or find(vio.jorm_ult, card.card_image)
         or find(vio.escanor_st, card.card_image)
@@ -43,9 +40,7 @@ def is_green_card(card: Card) -> bool:
 
 def is_blue_card(card: Card) -> bool:
     return card.card_type != CardTypes.DISABLED and (
-        find(vio.albedo_1, card.card_image)
-        or find(vio.albedo_ult, card.card_image)
-        or find(vio.roxy_st, card.card_image)
+        find(vio.roxy_st, card.card_image)
         or find(vio.roxy_aoe, card.card_image)
         or find(vio.roxy_ult, card.card_image)
         or find(vio.thor_1, card.card_image)

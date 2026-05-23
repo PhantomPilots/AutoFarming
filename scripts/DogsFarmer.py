@@ -1,6 +1,7 @@
 import argparse
 
 from utilities.dogs_farming_logic import DogsFarmer, States
+from utilities.dogs_fighting_strategies import DogsBattleStrategy
 from utilities.farming_factory import FarmingFactory
 
 
@@ -16,13 +17,7 @@ def main():
         default=True,
         help="Do daily PVP when dailies run (default: True)",
     )
-    parser.add_argument("--whale", action="store_true", default=False, help="Use whale strategy")
     args = parser.parse_args()
-
-    if args.whale:
-        from utilities.dogs_fighting_strategies_whale import DogsBattleStrategy
-    else:
-        from utilities.dogs_fighting_strategies import DogsBattleStrategy
 
     FarmingFactory.main_loop(
         farmer=DogsFarmer,

@@ -349,7 +349,7 @@ QTextEdit {{
 
 APP_STYLESHEET = _make_stylesheet()
 
-# Requirements for whale farmers (displayed in GUI)
+# Farmer requirements displayed in the GUI.
 REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
@@ -374,7 +374,7 @@ Tune your gear so you can guarantee that.<br>
     """,
     "Deer Floor 4 Whale": """
 <p><strong>Requirements (Whale mode):</strong><br>
-• Same team as normal Deer Floor 4 — <em>not</em> the separate Deer Whale comp<br>
+• Same team as normal Deer Floor 4 — <em>not</em> the removed floors 1-3 whale comp<br>
 • Targets finishing <strong>Phase 1 in 1</strong> player turn<br>
 • Tune your gear/CC to support the aggressive opener<br>
 • <strong>IMPORTANT</strong>: NO SKULD</p>
@@ -405,21 +405,6 @@ Tune your gear so you can guarantee that.<br>
 <p><strong>Requirements:</strong><br>
 • Red Jorm, LR Liz, Blue Valenti, King-Diane/EscaMerlin<br>
 • If using King-Diane, place them to the very right</p>
-    """,
-    "Deer Whale": """
-<p><strong>Requirements:</strong><br>
-• 16M+ CC • 5th+ Constellation<br>
-• UR Atk/Crit gear (14.5%+ atk pieces)<br>
-• Team order: Jorm → Loli Merlin → Freyr → Albedo<br>
-• All units need relics</p>
-    """,
-    "Dogs Whale": """
-<p><strong>Requirements:</strong><br>
-• 14-16M+ CC • 6th Constellation (5th ok)<br>
-• UR Atk/Crit gear (14.5%+ top pieces)<br>
-• Team: Milim LR, Loli Merlin LR, Thor, Green Hel<br>
-• Links: Ludo on Milim, OG Red Sariel on Merlin, Sab on Thor, Mael on Hel<br>
-• Artifacts #37 or #29</p>
     """,
     "Snake Whale": """
 <p><strong>Requirements:</strong><br>
@@ -462,10 +447,8 @@ the file <code>run_game.png</code> by it.
 
 # Maps base farmer names to whale-mode display overrides.
 WHALE_MODE_CONFIG = {
-    "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
     "Deer Floor 4": {"requirements_key": "Deer Floor 4 Whale", "image": "deer_floor_4.png"},
     "Dogs Floor 4": {"requirements_key": "Dogs Floor 4 Whale", "image": "dogs_whale.png"},
-    "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
     "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
 }
 
@@ -582,7 +565,6 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -603,7 +585,6 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
     {
@@ -1167,8 +1148,8 @@ class AboutTab(QWidget):
         ("Daily Quests Farmer", ("dailyquestsfarmer.py", "daily_farming", "/dailies/")),
         ("Equipment Farmer", ("equipmentfarmer.py", "equipment")),
         ("Demon Farmer", ("demonfarmer.py", "demon_farming", "demons/", "indura_")),
-        ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "dogs_whale", "/dogs/")),
-        ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "deer_whale", "/deer/")),
+        ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "/dogs/")),
+        ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "/deer/")),
         ("Bird Farmer", ("birdfarmer.py", "bird_farming", "bird_fighter", "/bird")),
         (
             "Snake Farmer",

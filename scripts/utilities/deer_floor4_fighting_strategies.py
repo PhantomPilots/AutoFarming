@@ -197,8 +197,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
 
         First player round: the game gives 2 cards per unit (8 cards); vision can still fail to classify them.
 
-        Round 0 (first four picks): controlled by ``whale``. This is **not** the separate Deer Whale *team*
-        used by ``DeerFarmer --whale``; it only toggles the floor-4 phase-1 opener.
+        Round 0 (first four picks): controlled by ``whale``. This only toggles the Floor 4 phase-1 opener;
+        the removed floors 1-3 whale team used a different comp.
 
         - **Standard** (``whale=False``): lowest Tyr/Hel, Jorm (else Freyr/red), lowest Thor, highest Tyr/Hel.
         - **Whale** (``whale=True``): highest Tyr/Hel, Freyr (else Jorm/red), lowest Thor, highest Thor (else Tyr/Hel).

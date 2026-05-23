@@ -1,6 +1,7 @@
 import argparse
 
 from utilities.deer_farming_logic import DeerFarmer, States
+from utilities.deer_fighting_strategies import DeerBattleStrategy
 from utilities.farming_factory import FarmingFactory
 
 
@@ -16,13 +17,7 @@ def main():
         default=True,
         help="Do daily PVP when dailies run (default: True)",
     )
-    parser.add_argument("--whale", action="store_true", default=False, help="Use whale strategy")
     args = parser.parse_args()
-
-    if args.whale:
-        from utilities.deer_whale_fighting_strategies import DeerBattleStrategy
-    else:
-        from utilities.deer_fighting_strategies import DeerBattleStrategy
 
     FarmingFactory.main_loop(
         farmer=DeerFarmer,

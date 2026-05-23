@@ -23,7 +23,7 @@ def main():
         "--whale",
         action="store_true",
         default=False,
-        help="Phase 1 in 1 turn (high gear); default off = phase 1 in 3 turns. Not the Deer Farmer whale team.",
+        help="Phase 1 in 1 turn (high gear); default off = phase 1 in 3 turns.",
     )
     args = parser.parse_args()
 
