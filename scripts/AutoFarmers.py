@@ -443,6 +443,12 @@ In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> butt
 the file <code>run_game.png</code> by it.
 </p>
     """,
+    "Daily Quests Farmer": """
+<p><strong>Requirements:</strong><br>
+• START runs daily quests immediately from the standard daily mission flow<br>
+• Start from the tavern/tasks context<br>
+• Daily PVP can be enabled or disabled with the checkbox above</p>
+    """,
 }
 
 # Maps base farmer names to whale-mode display overrides.
@@ -466,6 +472,7 @@ FARMER_IMAGES = {
     "Final Boss": "final_boss.png",
     "Legendary Boss": "legendary_boss.png",
     "Accounts Farmer": "accounts_farmer.jpg",
+    "Daily Quests Farmer": "daily_farmer.png",
     "Reroll Constellation": "reroll_constellation_whale.jpg",
     "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
     "Guild Boss Farmer": "guild_boss_farmer.jpg",
@@ -682,9 +689,11 @@ FARMERS = [
         ],
     },
     {
-        "name": "Tower Trials",
-        "script": "TowerTrialsFarmer.py",
-        "args": [],
+        "name": "Daily Quests Farmer",
+        "script": "DailyQuestsFarmer.py",
+        "args": [
+            DAILY_PVP_ARG,
+        ],
     },
     {
         "name": "Accounts Farmer",
@@ -1324,7 +1333,7 @@ class AboutTab(QWidget):
             """
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
-• Final Boss battles and Tower Trials<br>
+• Final Boss and boss battle farming<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
         """

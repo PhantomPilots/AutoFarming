@@ -45,7 +45,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Dogs Farmer**: Farm Skoll and Hati floors 1-3 for dog materials
 - **Snake Farmer**: Farm Nidhogrr floors 1-3 for snake materials (whale mode available)
 - **Final Boss**: Battle final bosses with different difficulty levels
-- **Tower Trials**: Complete tower trial challenges
+- **Daily Quests Farmer**: Run standalone daily missions, with optional daily PVP
 
 ### Requirements
 
