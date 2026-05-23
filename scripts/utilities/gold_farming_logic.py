@@ -32,10 +32,11 @@ class GoldFarmer(IFarmer):
         battle_strategy=None,
         password: str | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
         **kwargs,
     ):
         del battle_strategy, kwargs
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         self.current_state = starting_state
 
@@ -44,7 +45,6 @@ class GoldFarmer(IFarmer):
             print("Stored the account password locally in case we need to log in again.")
 
         IFarmer.do_dailies = do_dailies
-        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
         print("Starting Gold farmer skeleton.")

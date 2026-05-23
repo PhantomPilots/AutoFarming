@@ -507,6 +507,15 @@ def get_farmer_display_content(farmer_name: str, whale_enabled: bool = False) ->
 
 
 # Farmer script definitions (argument structure)
+DAILY_PVP_ARG = {
+    "name": "--daily-pvp",
+    "false_name": "--no-daily-pvp",
+    "label": "Daily PVP",
+    "type": "checkbox",
+    "default": True,
+}
+
+
 FARMERS = [
     {
         "name": "Demon Farmer",
@@ -536,6 +545,7 @@ FARMERS = [
             },
             {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -543,6 +553,7 @@ FARMERS = [
         "script": "GuildBossFarmer.py",
         "args": [
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -551,6 +562,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -560,6 +572,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -568,6 +581,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -578,6 +592,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -587,6 +602,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -597,6 +613,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -606,6 +623,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -615,6 +633,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -650,6 +669,7 @@ FARMERS = [
         "script": "GoldFarmer.py",
         "args": [
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -1010,6 +1030,8 @@ class FarmerController(QObject):
             elif arg["type"] == "checkbox":
                 if value:
                     args.append(arg["name"])
+                elif arg.get("false_name"):
+                    args.append(arg["false_name"])
             elif arg["type"] == "multiselect":
                 selected = [str(item) for item in (value or []) if str(item)]
                 if selected:

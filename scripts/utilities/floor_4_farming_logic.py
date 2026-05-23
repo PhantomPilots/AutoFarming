@@ -44,11 +44,12 @@ class IFloor4Farmer(IFarmer):
         max_runs="inf",
         demonic_beast_image: vio.Vision | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         extra_clears: int = 0,
     ):
 
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # Store the account password in this instance if given
         if password:
@@ -81,7 +82,6 @@ class IFloor4Farmer(IFarmer):
         self._swipe_attempts = 0
 
         # For the login/dailies
-        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def on_ready_to_fight_before_start(self, screenshot):

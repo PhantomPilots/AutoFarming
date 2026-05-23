@@ -57,9 +57,10 @@ class DemonicBeastFarmer(IFarmer):
         reset_after_defeat=False,
         password: str | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
         logger=logger,
     ):
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
 
@@ -103,7 +104,6 @@ class DemonicBeastFarmer(IFarmer):
             print(f"We're gonna clear floor 3 at most {int(self.max_floor_3_clears)} times.")
 
         # For the login/dailies
-        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):

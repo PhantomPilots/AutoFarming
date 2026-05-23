@@ -28,6 +28,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         extra_clears: int = 0,
     ):
@@ -38,6 +39,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.hraesvelgr,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )
@@ -58,6 +60,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         *,
         whale: bool = False,
@@ -70,6 +73,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.eikthyrnir,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )
@@ -97,6 +101,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         *,
         whale: bool = False,
@@ -109,6 +114,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.skollandhati,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )

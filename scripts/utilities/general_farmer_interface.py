@@ -85,13 +85,13 @@ class IFarmer(metaclass=IFarmerMeta):
     _keepalive_until: float = 0.0
     _keepalive_reason: str | None = None
 
-    def __init__(self):
+    def __init__(self, *, do_daily_pvp: bool = False):
         """Just to initialize the Daily Farmer"""
         self._keepalive_until = 0.0
         self._keepalive_reason = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
-            do_daily_pvp=False,
+            do_daily_pvp=do_daily_pvp,
             complete_callback=None,
         )
 

@@ -40,6 +40,12 @@ def main():
         help="Seconds to sleep before accepting an invitation (default: 9.1)",
     )
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
+    parser.add_argument(
+        "--daily-pvp",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Do daily PVP when dailies run (default: True)",
+    )
     args = parser.parse_args()
 
     demon_map = {
@@ -61,7 +67,7 @@ def main():
         time_to_sleep=args.time_to_sleep,
         time_between_demons=2,
         do_dailies=args.do_dailies,
-        do_daily_pvp=True,
+        do_daily_pvp=args.daily_pvp,
         password=args.password,
     )
 

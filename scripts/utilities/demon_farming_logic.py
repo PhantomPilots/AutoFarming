@@ -68,12 +68,12 @@ class IDemonFarmer(IFarmer):
         demon_to_farm: Vision = vio.og_demon,
         time_to_sleep=9.3,
         do_dailies=False,
-        do_daily_pvp=False,
+        do_daily_pvp=True,
         password: str | None = None,
         indura_difficulty: str = "extreme",  # Difficulty of Indura demon
         indura_team: str = "fairies",
     ):
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # Store the account password in this instance if given
         if password:
@@ -94,7 +94,6 @@ class IDemonFarmer(IFarmer):
         self.sleep_before_accept = time_to_sleep
 
         # Set specific properties of our DailyFarmer
-        IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
         # For the Indura fight!
@@ -433,7 +432,7 @@ class DemonFarmer(IDemonFarmer):
         time_to_sleep=9.4,
         time_between_demons=2,
         do_dailies=False,  # Do we halt demon farming to do dailies?
-        do_daily_pvp=False,  # If we do dailies, do we do PVP?
+        do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
         indura_difficulty: str = "extreme",  # Difficulty of Indura demon
         indura_team: str = "fairies",

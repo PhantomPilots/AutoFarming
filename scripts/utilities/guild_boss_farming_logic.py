@@ -36,11 +36,11 @@ class GuildBossFarmer(IFarmer):
         starting_state=States.GOING_TO_GB,
         battle_strategy: IBattleStrategy = None,  # No need
         do_dailies=False,  # Do we halt demon farming to do dailies?
-        do_daily_pvp=False,  # If we do dailies, do we do PVP?
+        do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
     ):
         # To initialize the Daily Farmer thread
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # Store the account password in this instance if given
         if password:
@@ -51,7 +51,6 @@ class GuildBossFarmer(IFarmer):
         self.current_state = starting_state
 
         # Set specific properties of our DailyFarmer
-        IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
         IFarmer.do_dailies = do_dailies
         if do_dailies:

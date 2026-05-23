@@ -24,6 +24,7 @@ class RatFarmer(DemonicBeastFarmer):
         logger=logger,
         password: str | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
     ):
         super().__init__(
             starting_state=starting_state,
@@ -34,6 +35,7 @@ class RatFarmer(DemonicBeastFarmer):
             logger=logger,
             password=password,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.

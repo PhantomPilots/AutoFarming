@@ -14,6 +14,12 @@ def main():
     parser.add_argument("--extra-clears", type=int, default=0, help="How many of the total clears should use extra mode")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     parser.add_argument(
+        "--daily-pvp",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Do daily PVP when dailies run (default: True)",
+    )
+    parser.add_argument(
         "--whale",
         action="store_true",
         default=False,
@@ -29,6 +35,7 @@ def main():
         extra_clears=args.extra_clears,
         password=args.password,  # Account password
         do_dailies=args.do_dailies,
+        do_daily_pvp=args.daily_pvp,
         whale=args.whale,
     )
 
