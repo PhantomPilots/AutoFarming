@@ -134,13 +134,7 @@ class FarmingFactory:
                 last_notification_time = now
 
     @staticmethod
-    def main_loop(
-        farmer: IFarmer,
-        starting_state,
-        battle_strategy: IBattleStrategy | None = None,
-        restart_on_completion: bool = True,
-        **kwargs,
-    ):
+    def main_loop(farmer: IFarmer, starting_state, battle_strategy: IBattleStrategy | None = None, **kwargs):
         """Defined for any subclass of the interface IFarmer, and any subclass of the interface IBattleStrategy"""
         runtime_context_lock = threading.Lock()
         runtime_context: dict = {"farmer_instance": None}
@@ -171,8 +165,6 @@ class FarmingFactory:
 
                     click_tracker.reset()
                     farmer_instance.run()
-                    if not restart_on_completion:
-                        break
 
                 except KeyboardInterrupt as e:
                     print(f"{e}: Exiting the program.")

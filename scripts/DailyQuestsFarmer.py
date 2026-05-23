@@ -4,6 +4,12 @@ from utilities.daily_farming_logic import DailyFarmer, States
 from utilities.farming_factory import FarmingFactory
 
 
+class StandaloneDailyFarmer(DailyFarmer):
+    def run(self):
+        super().run()
+        raise KeyboardInterrupt("Terminating process: farming cycle completed.")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Run standalone daily quest automation.")
     parser.add_argument(
@@ -21,9 +27,8 @@ def main():
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
-        farmer=DailyFarmer,
+        farmer=StandaloneDailyFarmer,
         starting_state=States.IN_TAVERN_STATE,  # Should be 'IN_TAVERN_STATE'
-        restart_on_completion=False,
         do_daily_pvp=args.daily_pvp,  # Whether to auto a PVP match (you may win, who knows 🤷‍♂️)
     )
 
