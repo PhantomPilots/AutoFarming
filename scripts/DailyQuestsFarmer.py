@@ -23,6 +23,7 @@ def main():
     FarmingFactory.main_loop(
         farmer=DailyFarmer,
         starting_state=States.IN_TAVERN_STATE,  # Should be 'IN_TAVERN_STATE'
+        restart_on_completion=False,
         do_daily_pvp=args.daily_pvp,  # Whether to auto a PVP match (you may win, who knows 🤷‍♂️)
     )
 
