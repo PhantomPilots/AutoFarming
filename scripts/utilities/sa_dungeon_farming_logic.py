@@ -174,9 +174,27 @@ class SADungeonFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # If we somehow opened the wrong dungeon, back out and try again. let's make sure we don't accidentally consume a key on the wrong dungeon
-        if find(vio.sa_coin_dungeon_menu, screenshot) or find(vio.sa_tower_of_chaos, screenshot) or find(vio.sa_broken_clock_tower, screenshot):
+        if find(vio.sa_coin_dungeon_menu, screenshot, threshold=0.85):
+            print("Wrong dungeon, Coin Dungeon detected, backing out and retrying")
             press_key("esc")
             return
+
+        if find(vio.sa_tower_of_chaos, screenshot, threshold=0.85):
+            print("Wrong dungeon, Clock Tower of Chaos detected, backing out and retrying")
+            press_key("esc")
+            return
+
+        if find(vio.sa_broken_clock_tower, screenshot, threshold=0.85):
+            print("Wrong dungeon, Broken Clock Tower detected, backing out and retrying")
+            press_key("esc")
+            return
+
+        # If no keys are detected, retry a few times before exiting in case detection is temporarily wrong.
+        # Has to be very high confidence, hence the 0.9 threshold
+        if find(vio.sa_no_keys, screenshot, threshold=0.9):
+            print_clr("We have no keys to open the dungeon, stopping the farmer", color=Color.RED)
+            exit(0)
+
 
         if find(vio.clock_tower_floor, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE

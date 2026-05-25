@@ -110,6 +110,7 @@ finished_auto_repeat_fight = Vision("finished_auto_repeat_fight.png")
 sa_coin_dungeon_menu = Vision("sa_coin_dungeon\\coin_dungeon.png")
 sa_tower_of_chaos = Vision("sa_coin_dungeon\\tower_of_chaos.png")
 sa_broken_clock_tower = Vision("sa_coin_dungeon\\broken_clock_tower.png")
+sa_no_keys = Vision("sa_coin_dungeon\\no_keys.png")
 
 
 # Equipment farming
