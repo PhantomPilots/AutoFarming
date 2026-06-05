@@ -354,6 +354,7 @@ failed = Vision("final_boss\\failed.png")
 # For Legendary Boss
 legendary_boss_menu = Vision("legendary_boss\\legendary_boss_menu.png")
 legendary_boss_roxy = Vision("legendary_boss\\lb_roxy.png")
+legendary_boss_estarossa = Vision("legendary_boss\\lb_estarossa.png")
 legendary_boss_left_arrow = Vision("legendary_boss\\lb_left.png")
 legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
 legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")

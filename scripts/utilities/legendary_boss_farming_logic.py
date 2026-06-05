@@ -68,7 +68,7 @@ class LegendaryBossFarmer(IFarmer):
         # If we're in the battle menu, click on Legendary Boss
         find_and_click(vio.legendary_boss_menu, screenshot, window_location, threshold=0.8)
 
-        if find(vio.legendary_boss_roxy, screenshot):
+        if find(vio.legendary_boss_roxy, screenshot) or find(vio.legendary_boss_estarossa, screenshot):
             # We're in the legendary boss menu, move to the next state
             print("Moving to IN_LEGENDARY_BOSS_MENU")
             self.current_state = States.IN_LEGENDARY_BOSS_MENU
