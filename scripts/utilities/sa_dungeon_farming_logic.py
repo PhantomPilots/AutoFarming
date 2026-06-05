@@ -129,15 +129,16 @@ class SADungeonFarmer(IFarmer):
         if rect is None or len(rect) == 0:
             return True, "no chest"
 
-        SADungeonFarmer.chest_found = (
-            True  # We found the chest, let's set the flag to avoid re-checking until next fight
-        )
         roi = crop_roi_from_rect(screenshot, rect)
         label, score = self.classify_chest_type(roi)
 
         if label == "unknown" or score < 0.70:
             # Conservative keep on low-confidence classification
             return True, f"unknown chest (score={score:.3f}), retrying classification"
+
+        SADungeonFarmer.chest_found = (
+            True  # We found the chest, let's set the flag to avoid re-checking until next fight
+        )
 
         chest_tier = {
             "bronze": ChestTier.BRONZE,
@@ -314,7 +315,7 @@ class SADungeonFarmer(IFarmer):
             should_restart, reason = self.should_restart_for_chest(screenshot)
             if not should_restart:
                 print_clr(f"Keeping run: {reason}", color=Color.GREEN)
-            elif reason == "no chest" or "unknown" in reason:
+            elif reason == "no chest" or reason.startswith("unknown chest"):
                 SADungeonFarmer.retry_count += 1
                 if SADungeonFarmer.retry_count <= self.num_image_detection_retries:
                     print(
