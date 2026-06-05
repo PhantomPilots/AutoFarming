@@ -314,15 +314,15 @@ class SADungeonFarmer(IFarmer):
             should_restart, reason = self.should_restart_for_chest(screenshot)
             if not should_restart:
                 print_clr(f"Keeping run: {reason}", color=Color.GREEN)
-            elif reason == "no chest":
+            elif reason == "no chest" or "unknown" in reason:
                 SADungeonFarmer.retry_count += 1
                 if SADungeonFarmer.retry_count <= self.num_image_detection_retries:
                     print(
                         f"[RETRY {SADungeonFarmer.retry_count}/{self.num_image_detection_retries}] "
-                        f"No chest detected yet, retrying image detection before restarting."
+                        f"Chest not ready ({reason}), retrying image detection before restarting."
                     )
                 else:
-                    print_clr("Restarting run: no chest after retry limit", color=Color.RED)
+                    print_clr(f"Restarting run: {reason} after retry limit", color=Color.RED)
                     print("[LOSS]")
                     self.lets_restart_fight(screenshot)
             else:
