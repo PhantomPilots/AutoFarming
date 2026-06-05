@@ -137,7 +137,7 @@ class SADungeonFarmer(IFarmer):
 
         if label == "unknown" or score < 0.70:
             # Conservative keep on low-confidence classification
-            return False, f"unknown chest (score={score:.3f}), keeping run"
+            return True, f"unknown chest (score={score:.3f}), retrying classification"
 
         chest_tier = {
             "bronze": ChestTier.BRONZE,
