@@ -135,7 +135,6 @@ demonic_beast = Vision("demonic_beasts\\creature_nest.png")
 hraesvelgr = Vision("demonic_beasts\\hraesvelgr.png")
 empty_party = Vision("demonic_beasts\\empty_party.png")
 save_party = Vision("demonic_beasts\\save_party.png")
-skip_bird = Vision("demonic_beasts\\skip_masked.png")
 db_loading_screen = Vision("demonic_beasts\\loading_screen.png")
 reset_demonic_beast = Vision("demonic_beasts\\reset_demonic_beast.png")
 floor_3_cleared_db = MultiVision(

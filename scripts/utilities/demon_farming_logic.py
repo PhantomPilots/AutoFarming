@@ -355,7 +355,7 @@ class IDemonFarmer(IFarmer):
             IDemonFarmer.sent_emoji = False
 
         # If we see a skip
-        find_and_click(vio.skip_bird, screenshot, window_location)
+        find_and_click(vio.skip, screenshot, window_location)
 
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5)

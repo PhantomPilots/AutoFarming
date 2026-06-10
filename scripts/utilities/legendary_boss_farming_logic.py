@@ -151,6 +151,7 @@ class LegendaryBossFarmer(IFarmer):
     def fighting_state(self):
         screenshot, window_location = capture_window()
 
+        # Needed here because of the phase1->phase2 transition skip
         find_and_click(vio.skip, screenshot, window_location)
 
         # If we've ended the fight...
@@ -184,9 +185,6 @@ class LegendaryBossFarmer(IFarmer):
             self.current_state = States.IN_LEGENDARY_BOSS_MENU
 
         else:
-            # Skip to the fight
-            find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
-
             # Ensure AUTO is on
             find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 

@@ -266,7 +266,7 @@ class DemonicBeastFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Skip the Demonic Beast screen
-        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
         # In case we see a 'Close' pop-up
         find_and_click(vio.close, screenshot, window_location, threshold=0.8)

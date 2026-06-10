@@ -92,7 +92,7 @@ class TowerTrialsFarmer(IFarmer):
         find_and_click(vio.episode_clear, screenshot, window_location)
 
         # Skip to the fight
-        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
         # Ensure AUTO is on
         find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.9)

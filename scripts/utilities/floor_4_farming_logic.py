@@ -229,7 +229,7 @@ class IFloor4Farmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.skip_bird, screenshot, window_location)
+        find_and_click(vio.skip, screenshot, window_location)
 
         # Set the fighter thread
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and self.current_state == States.FIGHTING:
