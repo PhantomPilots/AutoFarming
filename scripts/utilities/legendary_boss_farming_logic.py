@@ -151,6 +151,8 @@ class LegendaryBossFarmer(IFarmer):
     def fighting_state(self):
         screenshot, window_location = capture_window()
 
+        find_and_click(vio.skip, screenshot, window_location)
+
         # If we've ended the fight...
         find_and_click(vio.legendary_boss_final_score, screenshot, window_location, threshold=0.7)
         find_and_click(vio.episode_clear, screenshot, window_location)
