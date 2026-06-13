@@ -10,6 +10,7 @@ from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
+from utilities.models import GroundCardPredictor
 from utilities.rat_fighter import RatFighter
 from utilities.utilities import (
     capture_hand_image,
@@ -84,11 +85,13 @@ def development():
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    # cards = get_hand_cards(num_units=4)
-    # for i, card in enumerate(cards, start=0):
-    #     card_interior = get_card_type_image(card.card_image, num_units=4)
-    #     display_image(card_interior)
-    #     print(card.card_type.name, card.card_rank.name)
+    cards = get_hand_cards(num_units=4)
+    for i, card in enumerate(cards, start=0):
+        card_type = get_card_type_image(card.card_image, num_units=4)
+        card_interior = get_card_interior_image(card.card_image, num_units=4)
+        print("Is it ground?", GroundCardPredictor.is_ground_card(card_interior))
+        print(card.card_type.name, card.card_rank.name)
+        display_image(card_interior)
     # hand_image = capture_hand_image()
     # display_image(hand_image)
 
