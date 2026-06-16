@@ -240,11 +240,11 @@ class IFighter(abc.ABC):
                 prev_card: Card = list_of_cards[index - 1]
                 while (
                     index != -1
-                    and is_ground_region(screenshot, card_to_play.rectangle)
+                    and is_ground_region(screenshot, card_to_play)
                     and is_ground_region(  # Double check that we have 2 grounds before assuming it's a ground
-                        screenshot, prev_card.rectangle
+                        screenshot, prev_card
                     )
-                ) or (index == 0 and is_ground_region(screenshot, card_to_play.rectangle)):
+                ) or (index == 0 and is_ground_region(screenshot, card_to_play)):
                     # print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
                     if index >= len(list_of_cards) - 1:

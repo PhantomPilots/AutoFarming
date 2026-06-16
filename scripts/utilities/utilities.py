@@ -584,7 +584,10 @@ def get_hand_cards(num_units=4) -> list[Card]:
         for i in range(8)
     ]
 
-    return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
+    return [
+        Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1]), num_units=num_units)
+        for card in house_of_cards
+    ]
 
 
 def get_hand_cards_3_cards() -> list[Card]:
@@ -608,7 +611,12 @@ def get_hand_cards_3_cards() -> list[Card]:
     ]
 
     return [
-        Card(determine_card_type(card[-1], three_cards=True), *card, determine_card_rank(card[-1], three_cards=True))
+        Card(
+            determine_card_type(card[-1], three_cards=True),
+            *card,
+            determine_card_rank(card[-1], three_cards=True),
+            num_units=3,
+        )
         for card in house_of_cards
     ]
 
@@ -757,11 +765,13 @@ def is_ground_card(card: Card) -> bool:
     return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
 
 
-def is_ground_region(screenshot: np.ndarray, rectangle: tuple[float, float, float, float], plot: bool = False) -> bool:
-    """Given an entire screenshot and a rectangle of a region with [x,y,w,h], return whether the region is ground"""
+def is_ground_region(screenshot: np.ndarray, card: Card, plot: bool = False) -> bool:
+    """Given an entire screenshot and a card, return whether the card region is ground."""
+    rectangle = card.rectangle
     region_image = crop_image(
         screenshot, (rectangle[0], rectangle[1]), (rectangle[0] + rectangle[2], rectangle[1] + rectangle[3])
     )
+    region_image = get_card_interior_image(region_image, num_units=card.num_units)
 
     is_ground = GroundCardPredictor.is_ground_card(region_image)
     if plot and is_ground:

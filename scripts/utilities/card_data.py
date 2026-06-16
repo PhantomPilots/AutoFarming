@@ -41,3 +41,4 @@ class Card:
     card_image: np.ndarray | None = None  # The card image itself
     card_rank: CardRanks = CardRanks.NONE  # From above
     card_color: CardColors = CardColors.NONE
+    num_units: int = 4
