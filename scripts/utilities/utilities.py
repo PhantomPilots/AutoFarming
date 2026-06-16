@@ -549,7 +549,7 @@ def get_card_interior_image(card_image: np.ndarray, num_units=4) -> np.ndarray:
         return crop_image(
             card_image,
             (border, border + 4),
-            (card_image.shape[1] - border, card_image.shape[0] - border - 12),
+            (card_image.shape[1] - border - 5, card_image.shape[0] - border - 12),
         )
     elif num_units == 3:
         border = 8
