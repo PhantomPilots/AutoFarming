@@ -1410,8 +1410,7 @@ class AboutTab(QWidget):
     def after_stash(self, exit_code):
         """Handle completion of git stash command"""
         if exit_code != 0:
-            self.status_label.setText("❌ git stash failed")
-            self._finish_update()
+            self._start_update_recovery()
             return
 
         # Stash successful, now run git pull
@@ -1423,10 +1422,77 @@ class AboutTab(QWidget):
     def after_pull(self, exit_code):
         """Handle completion of git pull command"""
         if exit_code != 0:
-            self.status_label.setText("❌ git pull failed")
-            self._finish_update()
+            self._start_update_recovery()
             return
 
+        self._start_post_update_summary()
+
+    def _start_update_recovery(self):
+        """Fetch fresh remote state before attempting a destructive recovery."""
+        if self._pre_update_gui_hash is None:
+            self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
+            self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
+
+        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.run_process("git", ["fetch", "--prune"], self.after_recovery_fetch)
+
+    def after_recovery_fetch(self, exit_code):
+        """Resolve the configured upstream only after its remote state is fresh."""
+        if exit_code != 0:
+            self._fail_update_recovery("Unable to download the official version; check your connection and repository")
+            return
+
+        self.run_process(
+            "git",
+            ["rev-parse", "--verify", "@{upstream}^{commit}"],
+            self.after_recovery_upstream_resolution,
+            capture_output=True,
+        )
+
+    def after_recovery_upstream_resolution(self, exit_code):
+        """Prefer the branch upstream, falling back to origin's default branch."""
+        if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
+            return
+
+        self.run_process(
+            "git",
+            ["rev-parse", "--verify", "origin/HEAD^{commit}"],
+            self.after_recovery_origin_head_resolution,
+            capture_output=True,
+        )
+
+    def after_recovery_origin_head_resolution(self, exit_code):
+        """Reset to origin/HEAD when the current branch has no configured upstream."""
+        if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
+            return
+
+        self._fail_update_recovery("Unable to identify the official update branch")
+
+    def _reset_to_recovery_commit(self, output):
+        """Validate a resolved commit ID and start the destructive reset."""
+        commit = output.strip()
+        if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+            return False
+
+        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.run_process("git", ["reset", "--hard", commit], self.after_recovery_reset)
+        return True
+
+    def after_recovery_reset(self, exit_code):
+        """Resume the normal post-update workflow after a successful reset."""
+        if exit_code != 0:
+            self._fail_update_recovery("Unable to restore the official version; the repository may be locked or damaged")
+            return
+
+        self._start_post_update_summary()
+
+    def _fail_update_recovery(self, message):
+        """Finish a failed recovery while keeping its actionable status visible."""
+        self.status_label.setText(f"❌ {message}")
+        self._finish_update(clear_status=False)
+
+    def _start_post_update_summary(self):
+        """Enter the shared post-pull/reset summary workflow."""
         self.status_label.setText("🔄 Summarizing what you just downloaded...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
