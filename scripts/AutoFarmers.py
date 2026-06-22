@@ -354,7 +354,7 @@ REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
 <p><strong>Indura Humans:</strong><br>
-• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th<br>
+• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th (Mikasa preferred)<br>
     """,
     "Bird Floor 4": """
 <p><strong>Requirements:</strong><br>
