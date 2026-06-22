@@ -354,7 +354,7 @@ REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
 <p><strong>Indura Humans:</strong><br>
-• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th (Mikasa preferred)<br>
+• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th<br>
     """,
     "Bird Floor 4": """
 <p><strong>Requirements:</strong><br>
@@ -1481,7 +1481,9 @@ class AboutTab(QWidget):
     def after_recovery_reset(self, exit_code):
         """Resume the normal post-update workflow after a successful reset."""
         if exit_code != 0:
-            self._fail_update_recovery("Unable to restore the official version; the repository may be locked or damaged")
+            self._fail_update_recovery(
+                "Unable to restore the official version; the repository may be locked or damaged"
+            )
             return
 
         self._start_post_update_summary()
