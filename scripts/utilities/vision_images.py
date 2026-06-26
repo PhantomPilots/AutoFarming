@@ -90,10 +90,12 @@ change_stats = MultiVision(
     "change_stats.png",
     image_name="Change stats",
 )
+stamina_pot = Vision("stamina_pot.png")
 
 # Gold farming
 gold_dungeon = Vision("gold_dungeon\\gold_dungeon.png")
 sixth_floor = Vision("gold_dungeon\\6th_floor.png")
+max_skip_tickets = Vision("gold_dungeon\\max_clears.png")
 
 # SA coin farmer
 clock_tower = Vision("sa_coin_dungeon\\clock_tower.png")

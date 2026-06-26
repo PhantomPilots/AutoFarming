@@ -656,6 +656,13 @@ FARMERS = [
         "name": "Gold Farmer",
         "script": "GoldFarmer.py",
         "args": [
+            {"name": "--use-skip-tickets", "label": "Use skip tickets", "type": "checkbox", "default": False},
+            {
+                "name": "--max-skip-tickets-to-use",
+                "label": "Max skip tickets to use",
+                "type": "text",
+                "default": "inf",
+            },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
         ],

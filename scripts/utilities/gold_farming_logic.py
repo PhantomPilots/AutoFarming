@@ -4,18 +4,14 @@ from enum import Enum, auto
 import utilities.vision_images as vio
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
-from utilities.utilities import (
-    capture_window,
-    find,
-    find_and_click,
-    press_key,
-)
+from utilities.utilities import capture_window, find, find_and_click, press_key
 
 
 class States(Enum):
     GOING_TO_DUNGEON = auto()
     FIGHTING = auto()
     SETTING_UP_CHECKIN = auto()
+    SKIP_FIGHT = auto()
 
 
 class GoldFarmer(IFarmer):
@@ -25,12 +21,16 @@ class GoldFarmer(IFarmer):
     and the initial local state machine entrypoint.
     """
 
+    used_skip_tickets = 0
+
     def __init__(
         self,
         *,
         starting_state=States.GOING_TO_DUNGEON,
         battle_strategy=None,
         password: str | None = None,
+        use_skip_tickets=False,
+        max_skip_tickets_to_use=float("inf"),
         do_dailies=False,
         do_daily_pvp=True,
         **kwargs,
@@ -39,6 +39,10 @@ class GoldFarmer(IFarmer):
         super().__init__(do_daily_pvp=do_daily_pvp)
 
         self.current_state = starting_state
+        self.use_skip_tickets = use_skip_tickets
+        if self.use_skip_tickets:
+            print("We'll use skip tickets to farm Gold!")
+        self.max_skip_tickets_to_use = max_skip_tickets_to_use
 
         if password:
             IFarmer.password = password
@@ -75,15 +79,49 @@ class GoldFarmer(IFarmer):
             return
         self.maybe_reset_daily_checkin_flag()
 
+        # In case we come from fighting with skip tickets...
+        if find_and_click(vio.daily_result, screenshot, window_location):
+            return
+
         # We may need to restore stamina to keep the run going.
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 
-        if find_and_click(vio.auto_repeat_off, screenshot, window_location):
+        # Now, below we can choose to either start the fight, OR use skip tickets!
+        if not self.use_skip_tickets:
+            if find_and_click(vio.auto_repeat_off, screenshot, window_location):
+                return
+
+            find_and_click(vio.startbutton, screenshot, window_location)
+
+        elif GoldFarmer.used_skip_tickets < self.max_skip_tickets_to_use:
+            print("Let's use skip tickets!")
+            self.current_state = States.SKIP_FIGHT
+
+        else:
+            print("[WARN] We've used all our skip tickets, let's farm Gold normally now!")
+            self.use_skip_tickets = False
+
+    def skipping_fight_state(self):
+        """For when using skip tickets..."""
+        screenshot, window_location = capture_window()
+
+        if find(vio.daily_result, screenshot):
+            self.current_state = States.FIGHTING
             return
 
-        find_and_click(vio.startbutton, screenshot, window_location)
+        # We're using skip tickets :)
+        if find(vio.max_skip_tickets, screenshot):
+            # Click on MAX twice, then click on START auto-clear!
+            find_and_click(vio.max_skip_tickets, screenshot, window_location, sleep_time=0.5)
+            find_and_click(vio.max_skip_tickets, screenshot, window_location, sleep_time=0.5)
+            if find_and_click(vio.strart_auto_clear, screenshot, window_location):
+                GoldFarmer.used_skip_tickets += 30
+                print(f"We've used {GoldFarmer.used_skip_tickets} skip tickets so far.")
+
+        # If not, try to click on auto-clear
+        find_and_click(vio.auto_clear, screenshot, window_location)
 
     def setting_up_checkin_state(self):
         """Setting up checkin!"""
@@ -115,6 +153,7 @@ class GoldFarmer(IFarmer):
                 States.GOING_TO_DUNGEON: self.going_to_dungeon_state,
                 States.FIGHTING: self.fighting_state,
                 States.SETTING_UP_CHECKIN: self.setting_up_checkin_state,
+                States.SKIP_FIGHT: self.skipping_fight_state,
             },
             login_return_state=States.GOING_TO_DUNGEON,
             sleep_seconds=0.5,

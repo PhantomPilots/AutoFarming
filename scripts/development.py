@@ -44,7 +44,7 @@ def development():
     # determine_relative_coordinates(screenshot)
 
     # print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.hell_difficulty, threshold=0.7, best_only=False)
+    screenshot_testing(screenshot, vision_image=vio.daily_result, threshold=0.7, best_only=False)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 
@@ -85,13 +85,14 @@ def development():
     # empty_slots = count_empty_card_slots(screenshot)
     # print("We have these many empty slots:", empty_slots)
 
-    cards = get_hand_cards(num_units=4)
-    for i, card in enumerate(cards, start=0):
-        card_type = get_card_type_image(card.card_image, num_units=4)
-        card_interior = get_card_interior_image(card.card_image, num_units=4)
-        print("Is it ground?", GroundCardPredictor.is_ground_card(card_interior))
-        print(card.card_type.name, card.card_rank.name)
-        display_image(card_interior)
+    # cards = get_hand_cards(num_units=4)
+    # for i, card in enumerate(cards, start=0):
+    #     card_type = get_card_type_image(card.card_image, num_units=4)
+    #     card_interior = get_card_interior_image(card.card_image, num_units=4)
+    #     print("Is it ground?", GroundCardPredictor.is_ground_card(card_interior))
+    #     print(card.card_type.name, card.card_rank.name)
+    #     display_image(card_interior)
+
     # hand_image = capture_hand_image()
     # display_image(hand_image)
 
