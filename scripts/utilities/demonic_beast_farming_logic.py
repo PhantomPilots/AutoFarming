@@ -231,8 +231,10 @@ class DemonicBeastFarmer(IFarmer):
             )
 
         # We may need to restore stamina
-        if IFarmer.stamina_pots < self.max_stamina_pots and find_and_click(
-            vio.restore_stamina, screenshot, window_location
+        if (
+            IFarmer.stamina_pots < self.max_stamina_pots
+            and find(vio.stamina_pot, screenshot)
+            and find_and_click(vio.restore_stamina, screenshot, window_location)
         ):
             # Keep track of how many stamina pots we used
             IFarmer.stamina_pots += 1

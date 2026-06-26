@@ -112,7 +112,7 @@ class FinalBossFarmer(IFarmer):
             return
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 
@@ -149,7 +149,7 @@ class FinalBossFarmer(IFarmer):
                 return
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 

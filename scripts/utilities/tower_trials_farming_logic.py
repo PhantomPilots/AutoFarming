@@ -42,7 +42,7 @@ class TowerTrialsFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 
@@ -77,7 +77,7 @@ class TowerTrialsFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 
