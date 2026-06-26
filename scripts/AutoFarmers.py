@@ -443,6 +443,10 @@ In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> butt
 the file <code>run_game.png</code> by it.
 </p>
     """,
+    "Gold Farmer": """
+<p><strong>Requirements:</strong><br>
+• If you use skip tickets, make sure to have the <code>"Auto Use Settings"</code> option checked.</p>
+    """,
     "Daily Quests Farmer": """
 <p><strong>Requirements:</strong><br>
 • START runs daily quests immediately from the standard daily mission flow<br>
