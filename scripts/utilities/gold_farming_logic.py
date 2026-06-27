@@ -80,7 +80,9 @@ class GoldFarmer(IFarmer):
         self.maybe_reset_daily_checkin_flag()
 
         # In case we come from fighting with skip tickets...
-        if find_and_click(vio.daily_result, screenshot, window_location):
+        if find_and_click(vio.daily_result, screenshot, window_location) or find_and_click(
+            vio.daily_quest_info, screenshot, window_location
+        ):
             return
 
         # We may need to restore stamina to keep the run going.
