@@ -2953,6 +2953,7 @@ class MainWindow(QMainWindow):
         self._update_check_output = bytearray()
         self._update_check_timed_out = False
         self._manual_update_running = False
+        self._update_available_popup_shown = False
         self._update_check_timeout_timer = QTimer(self)
         self._update_check_timeout_timer.setSingleShot(True)
         self._update_check_timeout_timer.timeout.connect(self._on_update_check_timeout)
@@ -2986,13 +2987,6 @@ class MainWindow(QMainWindow):
         )
         logo.setTextFormat(Qt.RichText)
         top_lay.addWidget(logo)
-
-        self._update_available_label = QLabel("Update available!")
-        self._update_available_label.setStyleSheet(
-            "color: #10b981; font-size: 11px; font-style: italic; background: transparent;"
-        )
-        self._update_available_label.setVisible(False)
-        top_lay.addWidget(self._update_available_label)
 
         top_lay.addStretch(1)
 
@@ -3117,20 +3111,26 @@ class MainWindow(QMainWindow):
         else:
             self._show_grid()
 
-    def _set_update_available(self, available: bool) -> None:
-        self._update_available_label.setVisible(available)
+    def _clear_update_available_notification(self) -> None:
+        self._update_available_popup_shown = False
+
+    def _show_update_available_popup(self) -> None:
+        if self._update_available_popup_shown:
+            return
+        self._update_available_popup_shown = True
+        QMessageBox.information(self, "Update available", "Update available!")
 
     def _on_manual_update_started(self) -> None:
         self._manual_update_running = True
-        self._set_update_available(False)
+        self._clear_update_available_notification()
 
     def _on_manual_update_finished(self) -> None:
         self._manual_update_running = False
+        self._clear_update_available_notification()
         self._check_for_update_available()
 
     def _check_for_update_available(self) -> None:
         """Quietly check whether the configured upstream branch is ahead."""
-        self._set_update_available(False)
         if self._manual_update_running or self._update_check_process is not None:
             return
         self._run_update_check_command("git", ["fetch", "--quiet"], self._after_update_fetch)
@@ -3138,26 +3138,27 @@ class MainWindow(QMainWindow):
     def _after_update_fetch(self, exit_code: int, output: str) -> None:
         del output
         if self._manual_update_running:
-            self._set_update_available(False)
             return
         if exit_code != 0:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
         self._run_update_check_command("git", ["rev-list", "--count", "HEAD..@{u}"], self._after_update_count)
 
     def _after_update_count(self, exit_code: int, output: str) -> None:
         if self._manual_update_running:
-            self._set_update_available(False)
             return
         if exit_code != 0:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
         try:
             commits_behind_upstream = int(output.strip())
         except ValueError:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
-        self._set_update_available(commits_behind_upstream > 0)
+        if commits_behind_upstream > 0:
+            self._show_update_available_popup()
+        else:
+            self._clear_update_available_notification()
 
     def _run_update_check_command(self, program: str, args: list[str], on_finished) -> None:
         if self._update_check_process is not None:
@@ -3176,7 +3177,7 @@ class MainWindow(QMainWindow):
 
         if not self._update_check_process.waitForStarted(3000):
             self._update_check_process = None
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
 
         self._update_check_timeout_timer.start(15000)
@@ -3204,7 +3205,7 @@ class MainWindow(QMainWindow):
             return
         self._update_check_timed_out = True
         self._update_check_process.kill()
-        self._set_update_available(False)
+        self._clear_update_available_notification()
 
     def _toggle_theme(self):
         if self._any_farmer_running():
