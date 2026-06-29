@@ -123,7 +123,8 @@ class GoldFarmer(IFarmer):
                 print(f"We've used {GoldFarmer.used_skip_tickets} skip tickets so far.")
 
         # If not, try to click on auto-clear
-        find_and_click(vio.auto_clear, screenshot, window_location)
+        else:
+            find_and_click(vio.auto_clear, screenshot, window_location)
 
     def setting_up_checkin_state(self):
         """Setting up checkin!"""
