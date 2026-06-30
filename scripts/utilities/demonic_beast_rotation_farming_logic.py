@@ -279,5 +279,5 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
                 RotationStates.RETURNING_TO_TAVERN: self.returning_to_tavern_state,
             },
             login_return_state=DemonicBeastStates.GOING_TO_DB,
-            sleep_seconds=0.1,
+            sleep_seconds=0.6,
         )
