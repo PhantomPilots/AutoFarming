@@ -360,6 +360,11 @@ REQUIREMENTS = {
 <p><strong>Requirements:</strong><br>
 • Any team, but best: Thor, G Tyr, Xion, Merlin/Milim Hel</p>
     """,
+    "Demonic Beast Rotation": """
+<p><strong>Requirements:</strong><br>
+• Select Bird, Deer, and/or Dogs<br>
+• Runs floors 1-3 once for each selected Demonic Beast, then returns to the Tavern</p>
+    """,
     "Deer Farmer": """
 <p><strong>Requirements:</strong><br>
 • Green Jorm, Thor, Red Freyr, Green Tyr/Green Hel<br>
@@ -464,6 +469,7 @@ WHALE_MODE_CONFIG = {
 
 FARMER_IMAGES = {
     "Demon Farmer": "demon_farmer.jpg",
+    "Demonic Beast Rotation": "db_rotation_farmer.jpg",
     "Bird Farmer": "bird_farmer.jpg",
     "Bird Floor 4": "bird_floor_4.jpeg",
     "Deer Farmer": "deer_farmer.png",
@@ -624,6 +630,22 @@ FARMERS = [
         "script": "RatFarmer.py",
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
+        ],
+    },
+    {
+        "name": "Demonic Beast Rotation",
+        "script": "DemonicBeastRotationFarmer.py",
+        "args": [
+            {
+                "name": "--beasts-to-farm",
+                "label": "Beasts to Farm",
+                "type": "multiselect",
+                "choices": ["bird", "deer", "dogs"],
+                "labels": ["Bird", "Deer", "Dogs"],
+                "default": ["bird", "deer", "dogs"],
+            },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
         ],
@@ -1136,6 +1158,7 @@ PASSWORD_CLI_SCRIPTS = frozenset(
         "BirdFloor4Farmer.py",
         "DeerFarmer.py",
         "DeerFloor4Farmer.py",
+        "DemonicBeastRotationFarmer.py",
         "DogsFarmer.py",
         "DogsFloor4Farmer.py",
         "DemonFarmer.py",
