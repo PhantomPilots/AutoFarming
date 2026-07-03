@@ -28,6 +28,9 @@ _CARD_INFO = [
     (vio.indura_ban_att, "ban att", "ranged"),
     (vio.indura_ban_aoe, "ban aoe", "ranged"),
     (vio.indura_ban_ult, "ban ult", "ult"),
+    (vio.indura_enjin_att, "enjin att", "melee"),
+    (vio.indura_enjin_aoe, "enjin aoe", "melee"),
+    (vio.indura_enjin_ult, "enjin ult", "ult"),
 ]
 
 _RANK_LABEL = {
@@ -65,6 +68,27 @@ def _is_ban_card(card: Card) -> bool:
             vio.indura_ban_att,
             vio.indura_ban_aoe,
             vio.indura_ban_ult,
+        )
+    )
+
+
+def _is_enjin_card(card: Card) -> bool:
+    return any(
+        find(img, card.card_image)
+        for img in (
+            vio.indura_enjin_att,
+            vio.indura_enjin_aoe,
+            vio.indura_enjin_ult,
+        )
+    )
+
+
+def _is_enjin_attack_card(card: Card) -> bool:
+    return any(
+        find(img, card.card_image)
+        for img in (
+            vio.indura_enjin_att,
+            vio.indura_enjin_aoe,
         )
     )
 
@@ -142,6 +166,8 @@ class InduraHumanBattleStrategy(IBattleStrategy):
     logs what it finds.
     """
 
+    _seen_enjin: bool = False
+
     # ── Logging helper ────────────────────────────────────────────────────────
 
     def _play(self, idx: int, hand_of_cards: list[Card], card_ranks: np.ndarray) -> int:
@@ -183,6 +209,24 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         ban_ids = ids_where(_is_ban_card)
         ban_aoe_ids = ids_where(lambda c: find(vio.indura_ban_aoe, c.card_image))
         ult_ids = ids_where(lambda c: c.card_type == CardTypes.ULTIMATE)
+        enjin_attack_ids = ids_where(_is_enjin_attack_card)
+
+        ENJIN_CARDS_PER_TURN = 2
+        enjin_cards_played = sum(1 for c in picked_cards if _is_enjin_card(c))
+        enjin_budget_left = enjin_cards_played < ENJIN_CARDS_PER_TURN
+
+        def _best_attack_idx():
+            attack_ids = sorted(
+                [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
+                key=lambda idx: card_ranks[idx],
+            )
+            if not attack_ids:
+                return None
+            if enjin_budget_left:
+                preferred = [i for i in attack_ids if _is_enjin_attack_card(hand_of_cards[i])]
+            else:
+                preferred = [i for i in attack_ids if not _is_enjin_attack_card(hand_of_cards[i])]
+            return (preferred or attack_ids)[-1]
 
         # ── Fixed-sequence helpers ─────────────────────────────────────────
         def _img_in_cards(img, cards) -> bool:
@@ -212,6 +256,18 @@ class InduraHumanBattleStrategy(IBattleStrategy):
             for img in (vio.indura_jin_st, vio.indura_jin_aoe, vio.indura_jin_ult)
         )
 
+        if phase == 1 and phase_turn == 1 and card_turn == 0:
+            InduraHumanBattleStrategy._seen_enjin = False
+
+        enjin_seen_this_pick = any(
+            _img_in_cards(img, hand_of_cards) or _img_in_cards(img, picked_cards)
+            for img in (vio.indura_enjin_att, vio.indura_enjin_aoe, vio.indura_enjin_ult)
+        )
+        if enjin_seen_this_pick and not InduraHumanBattleStrategy._seen_enjin:
+            print("[HumanTeam] Enjin detected — enabling Enjin priorities")
+        InduraHumanBattleStrategy._seen_enjin |= enjin_seen_this_pick
+        enjin_on_team = InduraHumanBattleStrategy._seen_enjin
+
         # Fixed damage-optimal opening burst, shared by the Phase-1 opening turn
         # and the Phase-2 cleanup turn (turn 2+).  Jinwoo team leads with his combo.
         opening_seq = (
@@ -235,6 +291,29 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                 vio.indura_sho_aoe,
                 vio.roxy_aoe,
             ]
+
+            ally_played_stance_cancel = False
+            if stance_up:
+                six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
+                ally_played_stance_cancel = bool(find(vio.mini_king, six_slots))
+
+            if stance_up and not freyr_att_ids and card_turn == 0:
+                print("[HumanTeam] P1 stance up, no freyr counter — watching up to 8s for ally cancel...")
+                deadline = time.time() + 8
+                while time.time() < deadline:
+                    screenshot, _ = capture_window()
+                    six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
+                    stance_up = bool(find(vio.snake_f3p2_counter, screenshot))
+                    ally_played_stance_cancel = bool(find(vio.mini_king, six_slots))
+                    if not stance_up or ally_played_stance_cancel:
+                        break
+                    time.sleep(1)
+                if not stance_up:
+                    print("[HumanTeam] Boss stance cleared — proceeding!")
+                elif ally_played_stance_cancel:
+                    print("[HumanTeam] Ally stance cancel detected — pressing damage")
+                else:
+                    print("[HumanTeam] No ally cancel after 8s — single-target lifesteal to tank counter")
 
             # ── Opening burst: we move first (turn 1, no stance up) ─────────
             # Fixed sequence, supersedes the default ult/attack logic.
@@ -262,6 +341,17 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     chosen = (preferred or freyr_att_ids)[-1]
                     print("[HumanTeam] P1 stance up — nullifying with freyr att")
                     return self._play(chosen, hand_of_cards, card_ranks)
+                if not freyr_att_ids and not ally_played_stance_cancel:
+                    lifesteal_idx = _next_in_sequence(
+                        [
+                            vio.indura_enjin_att,
+                            vio.indura_jin_st,
+                            vio.roxy_st,
+                        ]
+                    )
+                    if lifesteal_idx is not None:
+                        print("[HumanTeam] P1 stance persists — single-target lifesteal (enjin/jin/roxy st)")
+                        return self._play(lifesteal_idx, hand_of_cards, card_ranks)
                 # Stance handled (or no freyr): clear phase 1 ASAP with damage.
                 dmg_idx = _next_in_sequence(DMG_PRIORITY)
                 if dmg_idx is not None:
@@ -297,6 +387,19 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     return self._play(freyr_cleanse_ids[-1], hand_of_cards, card_ranks)
 
             if phase_turn == 1:
+                if enjin_on_team:
+                    st_idx = _next_in_sequence(
+                        [
+                            vio.indura_enjin_att,
+                            vio.roxy_st,
+                            vio.indura_jin_st,
+                            vio.indura_sho_att,
+                        ]
+                    )
+                    if st_idx is not None:
+                        print("[HumanTeam] P2 turn 1 — Enjin overheat opening (enjin_st -> single-target burst)")
+                        return self._play(st_idx, hand_of_cards, card_ranks)
+
                 # Check if an ally King or Freyr is already in the played slots —
                 # either of those can cleanse Sho's potential freeze from P1.
                 six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
@@ -330,18 +433,18 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                 # if our skills are sealed).
                 for idx in ban_ids + freyr_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
+                if enjin_attack_ids and enjin_budget_left:
+                    print("[HumanTeam] P2 cleanup turn — leading with enjin attack")
+                    return self._play(enjin_attack_ids[-1], hand_of_cards, card_ranks)
                 seq_idx = _next_in_sequence(opening_seq)
                 if seq_idx is not None:
                     print("[HumanTeam] P2 cleanup turn — opening-style damage burst")
                     return self._play(seq_idx, hand_of_cards, card_ranks)
 
             # Attack fallback for both P2 turns
-            attack_ids = sorted(
-                [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
-                key=lambda idx: card_ranks[idx],
-            )
-            if attack_ids:
-                return self._play(attack_ids[-1], hand_of_cards, card_ranks)
+            attack_idx = _best_attack_idx()
+            if attack_idx is not None:
+                return self._play(attack_idx, hand_of_cards, card_ranks)
 
             # Nothing left: release the held ults
             for idx in held_ult_ids:
@@ -465,12 +568,9 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     return self._play(freyr_ids[-1], hand_of_cards, card_ranks)
 
         # ── Common fallback: best available attack card ───────────────────
-        attack_ids = sorted(
-            [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
-            key=lambda idx: card_ranks[idx],
-        )
-        if attack_ids:
-            return self._play(attack_ids[-1], hand_of_cards, card_ranks)
+        attack_idx = _best_attack_idx()
+        if attack_idx is not None:
+            return self._play(attack_idx, hand_of_cards, card_ranks)
 
         print("[HumanTeam] No suitable card found — delegating to SmarterBattleStrategy")
         idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

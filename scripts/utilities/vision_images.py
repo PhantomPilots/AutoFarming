@@ -403,6 +403,9 @@ indura_freyr_aoe = Vision("demons\\indura\\freyr_aoe.png")
 indura_ban_att = Vision("demons\\indura\\ban_att.png")
 indura_ban_aoe = Vision("demons\\indura\\ban_aoe.png")
 indura_ban_ult = Vision("demons\\indura\\ban_ult.png")
+indura_enjin_att = Vision("demons\\indura\\enjin_st.png")
+indura_enjin_aoe = Vision("demons\\indura\\enjin_aoe.png")
+indura_enjin_ult = Vision("demons\\indura\\enjin_ult.png")
 
 # Guild Boss
 knighthood_boss = Vision("guild_boss\\knighthood_boss.png")
