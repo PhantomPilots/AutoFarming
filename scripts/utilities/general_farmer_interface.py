@@ -204,6 +204,19 @@ class IFarmer(metaclass=IFarmerMeta):
             msg = "Terminating process: farming cycle completed."
         raise KeyboardInterrupt(msg)
 
+    def _handle_daily_reset_entrypoint(self, screenshot, window_location) -> bool:
+        """Handle daily reset popups from safe navigation states."""
+        if (
+            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
+            or find(vio.fortune_card, screenshot, threshold=0.8)
+            or find_and_click(vio.cross, screenshot, window_location)
+        ):
+            if IFarmer.do_dailies:
+                self.current_state = States.DAILY_RESET
+            return True
+
+        return False
+
     def check_for_dailies(self) -> bool:
         """Return whether we have to do our dailies"""
         now = datetime.now(PACIFIC_TIMEZONE)

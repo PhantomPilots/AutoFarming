@@ -6,14 +6,10 @@ from enum import Enum
 import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from utilities.coordinates import Coordinates
-from utilities.general_farmer_interface import (
-    CHECK_IN_HOUR,
-    IFarmer,
-)
-from utilities.general_farmer_interface import States as GlobalStates
-from utilities.logging_utils import LoggerWrapper
 from utilities.app_config import get_minutes_to_wait_before_login
+from utilities.coordinates import Coordinates
+from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     crop_region,
@@ -121,6 +117,10 @@ class DemonicBeastFarmer(IFarmer):
         if DemonicBeastFarmer.current_floor == 1 and find(vio.floor_3_cleared_db, screenshot):
             print("Detected floor cleared image, moving to RESETTING_DB...")
             self.current_state = States.RESETTING_DB
+            return
+
+        # Limit generic reset-popup detection to the outer entry/reset path; between-floor states can show normal battle skip UI.
+        if DemonicBeastFarmer.current_floor == 1 and self._handle_daily_reset_entrypoint(screenshot, window_location):
             return
 
         # First of all, check whether it's time to do our dailies!

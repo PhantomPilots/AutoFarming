@@ -8,7 +8,6 @@ import utilities.vision_images as vio
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy, IFighter
 from utilities.indura_fighter import InduraFighter
 from utilities.indura_fighting_strategies import InduraBattleStrategy
@@ -158,15 +157,9 @@ class IDemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
             return
 
-        # We may be in the 'daily reset' state!
-        if (
-            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
-            or find(vio.fortune_card, screenshot, threshold=0.8)
-            or find_and_click(vio.cross, screenshot, window_location)
-        ):
+        if self._handle_daily_reset_entrypoint(screenshot, window_location):
             if IFarmer.do_dailies:
                 logger.info("We entered the daily reset state!")
-                self.current_state = GlobalStates.DAILY_RESET
             return
 
         # Click OK if we see it (?)

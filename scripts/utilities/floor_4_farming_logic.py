@@ -13,7 +13,6 @@ from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import capture_window, drag_im, find, find_and_click
 
@@ -153,6 +152,9 @@ class IFloor4Farmer(IFarmer):
         # Just consider that fight as lost...
         if find_and_click(vio.cancel, screenshot, window_location):
             print("We were in the middle of a fight, but let's start it over :(")
+            return
+
+        if self._handle_daily_reset_entrypoint(screenshot, window_location):
             return
 
         # If we're back in the tavern, click on the battle menu.
