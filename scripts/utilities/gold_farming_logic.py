@@ -60,6 +60,9 @@ class GoldFarmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
+        if self._handle_daily_reset_entrypoint(screenshot, window_location):
+            return
+
         if find(vio.auto_clear, screenshot) or find(vio.startbutton, screenshot):
             print("Let's fight!")
             self.current_state = States.FIGHTING
@@ -69,6 +72,19 @@ class GoldFarmer(IFarmer):
         find_and_click(vio.gold_dungeon, screenshot, window_location)
         find_and_click(vio.fs_dungeon, screenshot, window_location)
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
+
+    def _handle_daily_reset_entrypoint(self, screenshot, window_location) -> bool:
+        """Handle daily reset popups from the starting gold navigation state."""
+        if (
+            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
+            or find(vio.fortune_card, screenshot, threshold=0.8)
+            or find_and_click(vio.cross, screenshot, window_location)
+        ):
+            if IFarmer.do_dailies:
+                self.current_state = GlobalStates.DAILY_RESET
+            return True
+
+        return False
 
     def fighting_state(self):
         """Fighting!"""
