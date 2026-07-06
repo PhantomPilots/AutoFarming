@@ -2,6 +2,7 @@ import abc
 import threading
 import time
 from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 
@@ -30,6 +31,13 @@ class States(Enum):
     CHECK_IN = 2
     DAILIES_STATE = 6
     FORTUNE_CARD = 7
+
+
+@dataclass
+class ResetFlowIntent:
+    resume_state: object | None
+    run_check_in: bool
+    run_daily_missions: bool
 
 
 class IFarmerMeta(abc.ABCMeta):
@@ -89,6 +97,7 @@ class IFarmer(metaclass=IFarmerMeta):
         """Just to initialize the Daily Farmer"""
         self._keepalive_until = 0.0
         self._keepalive_reason = None
+        self._reset_flow_intent: ResetFlowIntent | None = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
             do_daily_pvp=do_daily_pvp,
@@ -204,15 +213,58 @@ class IFarmer(metaclass=IFarmerMeta):
             msg = "Terminating process: farming cycle completed."
         raise KeyboardInterrupt(msg)
 
+    def _start_reset_flow(
+        self,
+        *,
+        resume_state=None,
+        run_check_in: bool = True,
+        run_daily_missions: bool = False,
+    ) -> None:
+        """Enter the shared post-reset flow with an explicit completion target."""
+        if resume_state is None:
+            resume_state = self.current_state
+
+        self._reset_flow_intent = ResetFlowIntent(
+            resume_state=resume_state,
+            run_check_in=run_check_in,
+            run_daily_missions=run_daily_missions,
+        )
+        self.current_state = States.DAILY_RESET
+
+    def _get_reset_flow_intent(self) -> ResetFlowIntent:
+        """Return the active reset intent, creating the default scheduled-dailies intent if needed."""
+        if self._reset_flow_intent is None:
+            self._reset_flow_intent = ResetFlowIntent(
+                resume_state=None,
+                run_check_in=True,
+                run_daily_missions=IFarmer.do_dailies or IFarmer.doing_dailies,
+            )
+        return self._reset_flow_intent
+
+    def _complete_check_in_flow(self) -> None:
+        """Finish check-in by either starting daily missions or resuming the interrupted farmer."""
+        intent = self._get_reset_flow_intent()
+        IFarmer.daily_checkin = True
+
+        if intent.run_daily_missions:
+            print("Going to do all dailies!")
+            self.current_state = States.DAILIES_STATE
+            self._reset_flow_intent = None
+            return
+
+        print("Daily check-in complete. Resuming farming.")
+        self.current_state = intent.resume_state
+        self._reset_flow_intent = None
+
     def _handle_daily_reset_entrypoint(self, screenshot, window_location) -> bool:
         """Handle daily reset popups from safe navigation states."""
         if (
             find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
             or find(vio.fortune_card, screenshot, threshold=0.8)
             or find_and_click(vio.cross, screenshot, window_location)
+            or find(vio.membership_perk, screenshot)
         ):
-            if IFarmer.do_dailies:
-                self.current_state = States.DAILY_RESET
+            self._start_reset_flow(run_daily_missions=IFarmer.do_dailies)
             return True
 
         return False
@@ -222,7 +274,7 @@ class IFarmer(metaclass=IFarmerMeta):
         now = datetime.now(PACIFIC_TIMEZONE)
         if self.do_dailies and (not IFarmer.daily_checkin and now.hour == CHECK_IN_HOUR):
             print("Let's do all the dailies!")
-            self.current_state = States.DAILY_RESET
+            self._start_reset_flow(run_daily_missions=True)
             return True
         return False
 
@@ -246,7 +298,10 @@ class IFarmer(metaclass=IFarmerMeta):
 
         if find(vio.tavern, screenshot):
             print("Logged in successfully! Going back to the previous state...")
-            self.current_state = States.DAILY_RESET if IFarmer.doing_dailies else initial_state
+            if IFarmer.doing_dailies:
+                self._start_reset_flow(resume_state=initial_state, run_daily_missions=True)
+            else:
+                self.current_state = initial_state
             login_attempted = True
             # Reset the 'doing_dailies' flag
             IFarmer.doing_dailies = False
@@ -267,13 +322,19 @@ class IFarmer(metaclass=IFarmerMeta):
         # In case we have an update
         find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if find_and_click(vio.skip, screenshot, window_location, threshold=0.6) or find(
-            vio.fortune_card, screenshot, threshold=0.8
+        if (
+            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
+            or find(vio.fortune_card, screenshot, threshold=0.8)
+            or find_and_click(vio.cross, screenshot, window_location)
+            or find(vio.membership_perk, screenshot)
         ):
-            if IFarmer.do_dailies:
-                print("We're seeing a daily reset!")
-                self.current_state = States.DAILY_RESET
+            print("We're seeing a daily reset!")
+            self._start_reset_flow(
+                resume_state=initial_state,
+                run_daily_missions=IFarmer.do_dailies or IFarmer.doing_dailies,
+            )
             login_attempted = True
+            IFarmer.doing_dailies = False
 
         # In case the game needs to update
         elif find_and_click(vio.yes, screenshot, window_location):
@@ -345,6 +406,7 @@ class IFarmer(metaclass=IFarmerMeta):
 
     def daily_reset_state(self):
         """Click on skip as much as needed, check in, then go back to doing whatever we were doing"""
+        intent = self._get_reset_flow_intent()
         screenshot, window_location = capture_window()
 
         if find(vio.fortune_card, screenshot, threshold=0.8):
@@ -372,8 +434,12 @@ class IFarmer(metaclass=IFarmerMeta):
 
         # Go to CHECK IN state
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
-            print("Going to CHECK IN state")
-            self.current_state = States.CHECK_IN
+            if intent.run_check_in:
+                print("Going to CHECK IN state")
+                self.current_state = States.CHECK_IN
+            else:
+                self.current_state = intent.resume_state
+                self._reset_flow_intent = None
             return
 
         # Click on "Knighthood"
@@ -408,9 +474,7 @@ class IFarmer(metaclass=IFarmerMeta):
         if find(vio.search_for_a_kh, screenshot):
             print("We're not in any KH, we cannot check in...")
             press_key("esc")
-            self.current_state = States.DAILIES_STATE
-            # And reset daily checking
-            IFarmer.daily_checkin = True
+            self._complete_check_in_flow()
             return
 
         # Check in
@@ -425,9 +489,7 @@ class IFarmer(metaclass=IFarmerMeta):
             press_key("esc")
 
         if find(vio.battle_menu, screenshot, threshold=0.6):
-            IFarmer.daily_checkin = True
-            print("Going to do all dailies!")
-            self.current_state = States.DAILIES_STATE
+            self._complete_check_in_flow()
 
     def dailies_state(self):
         """Run the thread to do all dailies"""
