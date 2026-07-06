@@ -93,11 +93,13 @@ class IFarmer(metaclass=IFarmerMeta):
     _keepalive_until: float = 0.0
     _keepalive_reason: str | None = None
 
+    # Preserve reset/check-in intent across FarmingFactory farmer-instance recreation.
+    _reset_flow_intent: ResetFlowIntent | None = None
+
     def __init__(self, *, do_daily_pvp: bool = False):
         """Just to initialize the Daily Farmer"""
         self._keepalive_until = 0.0
         self._keepalive_reason = None
-        self._reset_flow_intent: ResetFlowIntent | None = None
         IFarmer.daily_farmer = DailyFarmer(
             starting_state=DailyFarmerStates.IN_TAVERN_STATE,
             do_daily_pvp=do_daily_pvp,
@@ -224,7 +226,7 @@ class IFarmer(metaclass=IFarmerMeta):
         if resume_state is None:
             resume_state = self.current_state
 
-        self._reset_flow_intent = ResetFlowIntent(
+        IFarmer._reset_flow_intent = ResetFlowIntent(
             resume_state=resume_state,
             run_check_in=run_check_in,
             run_daily_missions=run_daily_missions,
@@ -233,13 +235,13 @@ class IFarmer(metaclass=IFarmerMeta):
 
     def _get_reset_flow_intent(self) -> ResetFlowIntent:
         """Return the active reset intent, creating the default scheduled-dailies intent if needed."""
-        if self._reset_flow_intent is None:
-            self._reset_flow_intent = ResetFlowIntent(
+        if IFarmer._reset_flow_intent is None:
+            IFarmer._reset_flow_intent = ResetFlowIntent(
                 resume_state=None,
                 run_check_in=True,
                 run_daily_missions=IFarmer.do_dailies or IFarmer.doing_dailies,
             )
-        return self._reset_flow_intent
+        return IFarmer._reset_flow_intent
 
     def _complete_check_in_flow(self) -> None:
         """Finish check-in by either starting daily missions or resuming the interrupted farmer."""
@@ -249,12 +251,12 @@ class IFarmer(metaclass=IFarmerMeta):
         if intent.run_daily_missions:
             print("Going to do all dailies!")
             self.current_state = States.DAILIES_STATE
-            self._reset_flow_intent = None
+            IFarmer._reset_flow_intent = None
             return
 
         print("Daily check-in complete. Resuming farming.")
         self.current_state = intent.resume_state
-        self._reset_flow_intent = None
+        IFarmer._reset_flow_intent = None
 
     def _handle_daily_reset_entrypoint(self, screenshot, window_location) -> bool:
         """Handle daily reset popups from safe navigation states."""
@@ -439,7 +441,7 @@ class IFarmer(metaclass=IFarmerMeta):
                 self.current_state = States.CHECK_IN
             else:
                 self.current_state = intent.resume_state
-                self._reset_flow_intent = None
+                IFarmer._reset_flow_intent = None
             return
 
         # Click on "Knighthood"
