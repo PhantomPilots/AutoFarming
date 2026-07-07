@@ -530,7 +530,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
             # freyr_att is always included regardless of evasion type: its cleanse
             # fires as a side-effect even if the attack itself is evaded/blocked.
             if evasion_passable_only and has_evasion:
-                if melee_evasion_up:
+                if phase_turn % 2 == 1:
                     passable = sorted(
                         [
                             i
