@@ -1,4 +1,3 @@
-import time
 from dataclasses import dataclass
 from enum import Enum
 
@@ -66,7 +65,6 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
     _selected_beast_keys: tuple[str, ...] = BEAST_ORDER
     _active_beast_index = 0
     _switch_from_beast_key: str | None = None
-    _switch_swipe_attempts = 0
 
     def __init__(
         self,
@@ -105,8 +103,7 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
             return cls.BEAST_ORDER
 
         selected = set(beast_keys)
-        unknown = selected - set(cls.BEAST_ORDER)
-        if unknown:
+        if unknown := selected - set(cls.BEAST_ORDER):
             raise ValueError(f"Unknown demonic beast(s): {', '.join(sorted(unknown))}")
 
         return tuple(key for key in cls.BEAST_ORDER if key in selected)
@@ -117,18 +114,15 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
             cls._selected_beast_keys = beast_keys
             cls._active_beast_index = 0
             cls._switch_from_beast_key = None
-            cls._switch_swipe_attempts = 0
         elif cls._active_beast_index >= len(beast_keys):
             cls._active_beast_index = 0
             cls._switch_from_beast_key = None
-            cls._switch_swipe_attempts = 0
 
     @classmethod
     def reset_rotation_state(cls) -> None:
         cls._selected_beast_keys = cls.BEAST_ORDER
         cls._active_beast_index = 0
         cls._switch_from_beast_key = None
-        cls._switch_swipe_attempts = 0
 
     @property
     def active_beast_key(self) -> str:
@@ -181,11 +175,9 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
                     completed_beast_key = self.active_beast_key
                     if self._advance_to_next_beast():
                         type(self)._switch_from_beast_key = completed_beast_key
-                        type(self)._switch_swipe_attempts = 0
                         self.current_state = RotationStates.SWITCHING_BEAST
                     else:
                         type(self)._switch_from_beast_key = None
-                        type(self)._switch_swipe_attempts = 0
                         print("Finished all selected Demonic Beasts, returning to the tavern.")
                         self.current_state = RotationStates.RETURNING_TO_TAVERN
                 else:
@@ -222,7 +214,6 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
         if find(target_config.db_image, screenshot):
             print(f"Found {target_config.display_name}; resuming Demonic Beast navigation.")
             type(self)._switch_from_beast_key = None
-            type(self)._switch_swipe_attempts = 0
             self.current_state = DemonicBeastStates.GOING_TO_DB
             return
 
@@ -232,17 +223,15 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
             find_and_click(vio.back, screenshot, window_location)
             return
 
-        type(self)._switch_swipe_attempts += 1
-        print(
-            f"{completed_config.display_name} visible; swiping right toward "
-            f"{target_config.display_name} (attempt {type(self)._switch_swipe_attempts})."
-        )
+        print(f"{completed_config.display_name} visible; swiping right toward {target_config.display_name}.")
         drag_im(
             Coordinates.get_coordinates("right_swipe"),
             Coordinates.get_coordinates("left_swipe"),
             window_location,
         )
-        time.sleep(0.5)
+        type(self)._switch_from_beast_key = None
+        DemonicBeastFarmer._swipe_attempts = 0
+        self.current_state = DemonicBeastStates.GOING_TO_DB
 
     def returning_to_tavern_state(self):
         screenshot, window_location = capture_window()
