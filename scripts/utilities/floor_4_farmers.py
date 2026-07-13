@@ -92,6 +92,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
     whale = False
     lillia_in_team = False
     roxy_in_team = False
+    b_thonar_in_team = False
     meli3k_in_team = False
     bluegow_in_team = False
 
@@ -141,6 +142,10 @@ class DogsFloor4Farmer(IFloor4Farmer):
                 return False
             return True
 
+        DogsFloor4Farmer.b_thonar_in_team = find(vio.b_thonar_in_team, screenshot) or type(self).b_thonar_in_team
+        if DogsFloor4Farmer.b_thonar_in_team:
+            print("Blue Thonar is in the team!")
+
         if find(vio.lillia_in_team, screenshot):
             print("Lillia is in the team!")
             DogsFloor4Farmer.lillia_in_team = True
@@ -158,4 +163,5 @@ class DogsFloor4Farmer(IFloor4Farmer):
         return {
             "lillia_in_team": DogsFloor4Farmer.lillia_in_team,
             "roxy_in_team": DogsFloor4Farmer.roxy_in_team,
+            "b_thonar_in_team": DogsFloor4Farmer.b_thonar_in_team,
         }

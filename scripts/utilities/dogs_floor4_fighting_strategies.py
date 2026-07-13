@@ -19,10 +19,10 @@ ESCALIN_TEMPLATES: Final[tuple[str, ...]] = ("escalin_st", "escalin_aoe", "escal
 ROXY_TEMPLATES: Final[tuple[str, ...]] = ("roxy_st", "roxy_aoe", "roxy_ult")
 NASI_TEMPLATES: Final[tuple[str, ...]] = ("nasi_heal", "nasi_stun", "nasi_ult")
 THONAR_TEMPLATES: Final[tuple[str, ...]] = ("thonar_stance", "thonar_gauge", "thonar_ult")
-STANCE_CONTROL_TEMPLATES: Final[tuple[str, ...]] = ("nasi_stun", "thonar_stance")
-# Single-target gauge templates (thonar_gauge, cusack_gauge): same cap-removal / merge / GROUND rules as each other; Lillia AOE separate.
+STANCE_CONTROL_TEMPLATES: Final[tuple[str, ...]] = ("nasi_stun", "thonar_stance", "b_thonar_stance")
+# Single-target gauge templates (thonar_gauge, cusack_gauge): same cap-removal / merge / GROUND rules as each other.
 ST_GAUGE_TEMPLATES: Final[tuple[str, ...]] = ("thonar_gauge", "cusack_gauge")
-GAUGE_REMOVAL_TEMPLATES: Final[tuple[str, ...]] = (*ST_GAUGE_TEMPLATES, "lillia_aoe")
+AOE_GAUGE_TEMPLATES: Final[tuple[str, ...]] = ("lillia_aoe", "b_thonar_gauge")
 
 
 class DogsFloor4BattleStrategy(IBattleStrategy):
@@ -32,6 +32,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
     _last_phase_seen = None
     lillia_in_team = False
     roxy_in_team = False
+    b_thonar_in_team = False
     taunt_removed = True
 
     removed_damage_cap = False
@@ -45,12 +46,62 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         DogsFloor4BattleStrategy._defer_ham_cards_until_after_phase_turn = -1
         DogsFloor4BattleStrategy.taunt_removed = True
 
-    def reset_run_state(self, *, lillia_in_team=False, roxy_in_team=False):
+    def reset_run_state(self, *, lillia_in_team=False, roxy_in_team=False, b_thonar_in_team=False):
         """Called from DogsFloor4Fighter.run before the fight loop."""
-        print("Resetting run state with Lillia in team:", lillia_in_team, "and Roxy in team:", roxy_in_team)
+        print(
+            "Resetting run state with Lillia in team:",
+            lillia_in_team,
+            "Roxy in team:",
+            roxy_in_team,
+            "and Blue Thonar in team:",
+            b_thonar_in_team,
+        )
         DogsFloor4BattleStrategy.lillia_in_team = lillia_in_team
         DogsFloor4BattleStrategy.roxy_in_team = roxy_in_team
+        DogsFloor4BattleStrategy.b_thonar_in_team = b_thonar_in_team
         self._initialize_static_variables()
+
+    def _uses_aoe_gauge_strategy(self) -> bool:
+        """Whether this team clears the phase-3 cap with one AOE-style gauge card."""
+        return type(self).lillia_in_team or type(self).b_thonar_in_team
+
+    def _aoe_gauge_templates(self) -> tuple[str, ...]:
+        """Return the one-card gauge-removal template for the active team variant."""
+        if type(self).b_thonar_in_team:
+            return AOE_GAUGE_TEMPLATES[1:]
+        if type(self).lillia_in_team:
+            return AOE_GAUGE_TEMPLATES[:1]
+        return ()
+
+    def _gauge_removal_templates(self) -> tuple[str, ...]:
+        return (*ST_GAUGE_TEMPLATES, *self._aoe_gauge_templates())
+
+    def _stance_control_card_ids(
+        self, hand_of_cards: list[Card], *, include_unplayable: bool = False
+    ) -> list[int]:
+        """Find eligible stance cancels for the active team.
+
+        Nasiens and original Thonar require SILVER/GOLD. Blue Thonar's stance
+        cancel follows the same timing but is also valid at BRONZE.
+        """
+        high_ranks = (CardRanks.SILVER, CardRanks.GOLD)
+        high_rank_ids = self._matching_card_ids(
+            hand_of_cards,
+            STANCE_CONTROL_TEMPLATES[:2],
+            ranks=high_ranks,
+            include_unplayable=include_unplayable,
+        )
+        if not type(self).b_thonar_in_team:
+            return high_rank_ids
+
+        blue_ids = self._matching_card_ids(
+            hand_of_cards,
+            STANCE_CONTROL_TEMPLATES[2:],
+            include_unplayable=include_unplayable,
+        )
+        return sorted(
+            (*high_rank_ids, *blue_ids), key=lambda idx: (hand_of_cards[idx].card_rank.value, idx)
+        )
 
     def _maybe_reset(self, phase_id: str):
         if phase_id not in DogsFloor4BattleStrategy._phase_initialized:
@@ -64,9 +115,9 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
 
         DogsFloor4BattleStrategy._last_phase_seen = phase
 
-        ## Common logic -- Protect gauge removal cards at all costs (non-Lillia teams only)!
+        ## Common logic -- Protect gauge removal cards at all costs (non-AOE-gauge teams only)!
 
-        if not type(self).lillia_in_team:
+        if not self._uses_aoe_gauge_strategy():
             # Mark ST gauge cards GROUND so Smarter skips them unless phase logic explicitly plays them.
             ids = [i for i, c in enumerate(hand_of_cards) if self._card_matches_any(c, ST_GAUGE_TEMPLATES)]
             if ids:
@@ -82,17 +133,17 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                     hand_of_cards[i].card_type = CardTypes.GROUND
 
         else:
-            # Lillia teams: save the best AOE in phases 1/2, but hide all AOEs in phase 3 until cap-removal logic uses one.
-            lillia_aoe_ids = self._matching_card_ids(
+            # AOE-gauge teams: save the best card in phases 1/2, but hide all in phase 3 until cap-removal logic uses one.
+            aoe_gauge_ids = self._matching_card_ids(
                 hand_of_cards,
-                ("lillia_aoe",),
+                self._aoe_gauge_templates(),
                 include_unplayable=True,
             )
             if phase == 3:
-                for i in lillia_aoe_ids:
+                for i in aoe_gauge_ids:
                     hand_of_cards[i].card_type = CardTypes.GROUND
-            elif lillia_aoe_ids:
-                hand_of_cards[lillia_aoe_ids[-1]].card_type = CardTypes.GROUND
+            elif aoe_gauge_ids:
+                hand_of_cards[aoe_gauge_ids[-1]].card_type = CardTypes.GROUND
 
         # Phase-specify logic here
 
@@ -112,13 +163,9 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Phase 1: activating Escalin talent!")
                 time.sleep(2.5)
 
-        # First, play one stance-control card on odd turns; otherwise hide them from Smarter.
-        # Only SILVER/GOLD stance-control (rank > BRONZE); leave BRONZE to Smarter.
-        stance_hi_ranks = (CardRanks.SILVER, CardRanks.GOLD)
-        attack_debuff_ids = self._matching_card_ids(hand_of_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks)
-        played_attack_debuff_ids = self._matching_card_ids(
-            picked_cards, STANCE_CONTROL_TEMPLATES, ranks=stance_hi_ranks
-        )
+        # First, play one eligible stance-control card on odd turns; otherwise hide it from Smarter.
+        attack_debuff_ids = self._stance_control_card_ids(hand_of_cards)
+        played_attack_debuff_ids = self._stance_control_card_ids(picked_cards)
         if attack_debuff_ids:
             last_ad = attack_debuff_ids[-1]
             even_phase_turn = IBattleStrategy.phase_turn % 2 == 0
@@ -174,7 +221,9 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Desired card not found...")
 
         # Disable stance cancel cards even if level 1
-        stance_cancel_ids = self._matching_card_ids(hand_of_cards, ("nasi_stun", "thonar_stance"))
+        stance_cancel_ids = self._matching_card_ids(
+            hand_of_cards, STANCE_CONTROL_TEMPLATES, include_unplayable=True
+        )
         for i in stance_cancel_ids:
             hand_of_cards[i].card_type = CardTypes.DISABLED
             print("Disabling future stance cancel cards.")
@@ -195,7 +244,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Moving Nasiens card to get ult...")
                 return [nasiens_ids[-1], nasiens_ids[-1] + 1]
 
-            if not type(self).lillia_in_team:
+            if not self._uses_aoe_gauge_strategy():
                 # On the first pick only, spend one pick merging any available gauge-removal pair.
                 drag = self._best_merge_drag_indices(hand_of_cards, ST_GAUGE_TEMPLATES, log_label="phase 2 gauge merge")
                 if drag is not None:
@@ -208,9 +257,9 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Unfreezing with Nasiens ult.")
                 return nasiens_ult_ids[-1]
 
-        # Play one stance-control card on odd turns; otherwise hide them from Smarter.
-        if attack_debuff_ids := self._matching_card_ids(hand_of_cards, STANCE_CONTROL_TEMPLATES):
-            played_attack_debuff_ids = self._matching_card_ids(picked_cards, STANCE_CONTROL_TEMPLATES)
+        # Play one eligible stance-control card on odd turns; otherwise hide it from Smarter.
+        if attack_debuff_ids := self._stance_control_card_ids(hand_of_cards):
+            played_attack_debuff_ids = self._stance_control_card_ids(picked_cards)
             last_ad = attack_debuff_ids[-1]
             # Even turns: disable stance cancel. Odd + already played one: ground another. Odd + none played: play one.
             if IBattleStrategy.phase_turn % 2 == 0 or played_attack_debuff_ids:
@@ -225,13 +274,15 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         if heal_ids := self._matching_card_ids(hand_of_cards, ("nasi_heal",), include_unplayable=True):
             print("Disabling Nasiens heal.")
             hand_of_cards[heal_ids[-1]].card_type = CardTypes.GROUND
-        elif stun_ids := self._matching_card_ids(hand_of_cards, ("nasi_stun",), include_unplayable=True):
+        elif stun_ids := self._matching_card_ids(
+            hand_of_cards, STANCE_CONTROL_TEMPLATES, include_unplayable=True
+        ):
             print("Disabling Nasiens stun.")
             hand_of_cards[stun_ids[-1]].card_type = CardTypes.GROUND
 
-        # Phase 2: Tuck one SILVER/GOLD roxy_st so Smarter skips it (same pattern as _smarter_phase3).
+        # Legacy Roxy teams: tuck one SILVER/GOLD roxy_st so Smarter skips it (same pattern as _smarter_phase3).
         roxy_st_hi = (CardRanks.SILVER, CardRanks.GOLD)
-        if type(self).roxy_in_team:
+        if type(self).roxy_in_team and not self._uses_aoe_gauge_strategy():
             if roxy_st_saveable := self._matching_card_ids(
                 hand_of_cards,
                 ("roxy_st",),
@@ -240,7 +291,11 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             ):
                 hand_of_cards[roxy_st_saveable[-1]].card_type = CardTypes.GROUND
         # All-GROUND confuses downstream; unstick one SILVER/GOLD roxy_st to DISABLED if needed.
-        if hand_of_cards and all(c.card_type == CardTypes.GROUND for c in hand_of_cards):
+        if (
+            not self._uses_aoe_gauge_strategy()
+            and hand_of_cards
+            and all(c.card_type == CardTypes.GROUND for c in hand_of_cards)
+        ):
             if rx := self._matching_card_ids(
                 hand_of_cards,
                 ("roxy_st",),
@@ -293,6 +348,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             not DogsFloor4BattleStrategy.removed_damage_cap
             and not DogsFloor4BattleStrategy.taunt_removed
             and type(self).roxy_in_team
+            and not self._uses_aoe_gauge_strategy()
         ):
             if roxy_st_ids := self._matching_card_ids(
                 hand_of_cards,
@@ -313,10 +369,10 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
             if drag is not None:
                 return drag
 
-        # Early turns: wait before damage-cap removal. Non-Lillia can merge ST gauge cards;
-        # Lillia must not merge those cards, but still must not spend GOLD lillia_aoe before turn 3.
+        # Early turns: wait before damage-cap removal. Legacy teams can merge ST gauge cards;
+        # AOE-gauge teams must not spend their one-card removal before turn 3.
         if IBattleStrategy.phase_turn <= 2:
-            if not DogsFloor4BattleStrategy.lillia_in_team:
+            if not self._uses_aoe_gauge_strategy():
                 drag = self._best_merge_drag_indices(
                     hand_of_cards, ST_GAUGE_TEMPLATES, log_label="gauge merge (insufficient gold)"
                 )
@@ -337,13 +393,16 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 ranks=(CardRanks.GOLD,),
                 include_unplayable=True,
             )
-            played_lillia_ids = self._matching_card_ids(
+            played_aoe_gauge_ids = self._matching_card_ids(
                 picked_cards,
-                ("lillia_aoe",),
+                self._aoe_gauge_templates(),
                 ranks=(CardRanks.GOLD,),
                 include_unplayable=True,
             )
-            if len(played_st_gauge_ids) >= 2 or played_lillia_ids:
+            if (
+                (not type(self).b_thonar_in_team and len(played_st_gauge_ids) >= 2)
+                or played_aoe_gauge_ids
+            ):
                 DogsFloor4BattleStrategy.removed_damage_cap = True
                 DogsFloor4BattleStrategy._defer_ham_cards_until_after_phase_turn = IBattleStrategy.phase_turn + 1
                 return self._smarter_phase3(hand_of_cards, picked_cards)
@@ -354,20 +413,32 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 ranks=(CardRanks.GOLD,),
                 include_unplayable=True,
             )
-            lillia_aoe_ids = self._matching_card_ids(
+            aoe_gauge_ids = self._matching_card_ids(
                 hand_of_cards,
-                ("lillia_aoe",),
+                self._aoe_gauge_templates(),
                 ranks=(CardRanks.GOLD,),
                 include_unplayable=True,
             )
             print(
-                "These many gold ST gauge and lillia_aoe cards available:",
+                "These many gold ST gauge and AOE gauge cards available:",
                 len(st_gauge_ids),
-                len(lillia_aoe_ids),
+                len(aoe_gauge_ids),
             )
 
+            # Blue Thonar clears the cap exclusively with her gauge card. Never
+            # fall back to the legacy two-card ST gauge route when it is missing.
+            if type(self).b_thonar_in_team:
+                if aoe_gauge_ids:
+                    DogsFloor4BattleStrategy.removed_damage_cap = True
+                    DogsFloor4BattleStrategy._defer_ham_cards_until_after_phase_turn = (
+                        IBattleStrategy.phase_turn + 1
+                    )
+                    print("Playing a GOLD Blue Thonar gauge card!")
+                    return aoe_gauge_ids[-1]
+                return self._smarter_phase3(hand_of_cards, picked_cards)
+
             # Count GOLD ST gauge in hand plus already played this turn (picked_cards).
-            if not lillia_aoe_ids and (len(played_st_gauge_ids) + len(st_gauge_ids)) < 2:
+            if not aoe_gauge_ids and (len(played_st_gauge_ids) + len(st_gauge_ids)) < 2:
                 drag = self._best_merge_drag_indices(
                     hand_of_cards, ST_GAUGE_TEMPLATES, log_label="gauge merge (insufficient gold)"
                 )
@@ -386,7 +457,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 return self._smarter_phase3(hand_of_cards, picked_cards)
 
             if (
-                not type(self).lillia_in_team  # We need Escalin talent to remove taunt with Roxy
+                not self._uses_aoe_gauge_strategy()  # Legacy teams need Escalin talent to remove taunt with Roxy.
                 and not DogsFloor4BattleStrategy.taunt_removed
                 and find_and_click(vio.talent_escalin, screenshot, window_location, threshold=0.7)
                 and card_turn == 0
@@ -401,18 +472,18 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 click_im(Coordinates.get_coordinates("light_dog"), window_location)
                 time.sleep(1)
 
-            if lillia_aoe_ids:
+            if aoe_gauge_ids:
                 DogsFloor4BattleStrategy.removed_damage_cap = True
                 DogsFloor4BattleStrategy._defer_ham_cards_until_after_phase_turn = IBattleStrategy.phase_turn + 1
-                print("Playing a GOLD Lillia card!")
-                return lillia_aoe_ids[-1]
+                print("Playing a GOLD AOE gauge card!")
+                return aoe_gauge_ids[-1]
 
             if len(played_st_gauge_ids) <= 1:
                 if not DogsFloor4BattleStrategy.taunt_removed:
                     print("We have enough gold cards but taunt isn't removed :(")
                     return self._smarter_phase3(hand_of_cards, picked_cards)
 
-                # Play gold ST gauge cards (two total to clear cap when no Lillia AOE).
+                # Play gold ST gauge cards (two total to clear cap when no AOE gauge card).
                 st_gauge_pick_id = st_gauge_ids[-1] if st_gauge_ids else -1
                 if st_gauge_pick_id != -1:
                     print("Playing a GOLD ST gauge card!")
@@ -431,7 +502,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         else:
             # Do not use Escalin talent here; it may remove Nasiens buffs.
             for i, card in enumerate(hand_of_cards):
-                if self._card_matches_any(card, GAUGE_REMOVAL_TEMPLATES):
+                if self._card_matches_any(card, self._gauge_removal_templates()):
                     hand_of_cards[i].card_type = CardTypes.ATTACK
 
             # Damage cap not visible: go HAM — play Escalin and Roxy's cards like crazy
@@ -462,7 +533,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                     "roxy_ult",
                     "thonar_ult",
                 ),
-                ("lillia_aoe",),
+                self._aoe_gauge_templates(),
             ):
                 if ids := self._matching_card_ids(hand_of_cards, templates):
                     return ids[-1]
@@ -499,7 +570,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         chosen until explicit phase-3 logic plays it.
         """
         roxy_st_hi = (CardRanks.SILVER, CardRanks.GOLD)
-        escalin_hide_type = CardTypes.GROUND if type(self).lillia_in_team else CardTypes.DISABLED
+        escalin_hide_type = CardTypes.GROUND if self._uses_aoe_gauge_strategy() else CardTypes.DISABLED
         # Keep Escalin off Smarter's pick list for this delegation.
         for item in hand_of_cards:
             if self._card_matches_any(item, ("escalin_st", "escalin_aoe")):
@@ -509,7 +580,11 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
                 print("Disabling Escalin ult")
                 item.card_type = CardTypes.GROUND
         # Pre-cap: hide one high-rank Roxy ST from Smarter until phase-3 logic plays it.
-        if type(self).roxy_in_team and not DogsFloor4BattleStrategy.removed_damage_cap:
+        if (
+            type(self).roxy_in_team
+            and not self._uses_aoe_gauge_strategy()
+            and not DogsFloor4BattleStrategy.removed_damage_cap
+        ):
             if roxy_st_saveable := self._matching_card_ids(
                 hand_of_cards,
                 ("roxy_st",),
@@ -540,8 +615,8 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
         screenshot=None,
         window_location=None,
     ) -> None:
-        if type(self).lillia_in_team:
-            # If we're using Lillia, let's not remove taunt with Escalin ever!
+        if self._uses_aoe_gauge_strategy():
+            # AOE-gauge teams must not remove taunt with Escalin.
             return
 
         if drag is None or card_turn != 0 or DogsFloor4BattleStrategy.taunt_removed:
@@ -549,7 +624,7 @@ class DogsFloor4BattleStrategy(IBattleStrategy):
 
         future_hand = deepcopy(hand_of_cards)
         for card in future_hand:
-            if self._card_matches_any(card, GAUGE_REMOVAL_TEMPLATES):
+            if self._card_matches_any(card, self._gauge_removal_templates()):
                 card.card_type = CardTypes.ATTACK
 
         future_hand = self._update_hand_of_cards(future_hand, [drag])

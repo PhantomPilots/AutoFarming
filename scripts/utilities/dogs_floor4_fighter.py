@@ -167,8 +167,12 @@ class DogsFloor4Fighter(DogsFighter):
         screenshot, _ = capture_window()
         return find(vio.skill_locked, screenshot, threshold=0.6)
 
-    def run(self, floor=4, lillia_in_team=False, roxy_in_team=False):
-        self.battle_strategy.reset_run_state(lillia_in_team=lillia_in_team, roxy_in_team=roxy_in_team)
+    def run(self, floor=4, lillia_in_team=False, roxy_in_team=False, b_thonar_in_team=False):
+        self.battle_strategy.reset_run_state(
+            lillia_in_team=lillia_in_team,
+            roxy_in_team=roxy_in_team,
+            b_thonar_in_team=b_thonar_in_team,
+        )
         DogsFloor4Fighter._f4_first_my_turn_pending = True
 
         super().run(floor=floor)
