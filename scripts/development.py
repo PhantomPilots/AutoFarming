@@ -44,7 +44,7 @@ def development():
     # determine_relative_coordinates(screenshot)
 
     # print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.daily_result, threshold=0.7, best_only=False)
+    screenshot_testing(screenshot, vision_image=vio.canopy_hel, threshold=0.6, best_only=True)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 

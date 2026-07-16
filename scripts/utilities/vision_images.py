@@ -413,6 +413,7 @@ indura_enjin_ult = Vision("demons\\indura\\enjin_ult.png")
 # Guild Boss
 knighthood_boss = Vision("guild_boss\\knighthood_boss.png")
 belgius_hel = Vision("guild_boss\\belguis_hel.png")
+canopy_hel = Vision("guild_boss\\canopy_hel.png")
 kh_rank = Vision("guild_boss\\knighthood_rank.png")
 
 # Demon King

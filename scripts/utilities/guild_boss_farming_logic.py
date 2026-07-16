@@ -3,12 +3,11 @@ from enum import Enum, auto
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
-from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -16,7 +15,7 @@ from utilities.utilities import (
     find_and_click,
     press_key,
 )
-from utilities.vision import Vision
+from utilities.vision_images import Vision
 
 logger = LoggerWrapper(name="GuildBossLogger", log_to_file=False)
 
@@ -139,6 +138,57 @@ class GuildBossFarmer(IFarmer):
             self.current_state = States.FINDING_BOSS
             # TODO: The line below may cause a bot lock, may have to fix it
             find_and_click(vio.ok_main_button, screenshot, window_location)
+
+    def run(self):
+
+        self.run_state_loop(
+            {
+                States.GOING_TO_GB: self.going_to_gb_state,
+                States.FINDING_BOSS: self.finding_boss_state,
+                States.FIGHTING: self.fighting_state,
+            },
+            login_return_state=States.GOING_TO_GB,
+            sleep_seconds=0.7,
+        )
+
+
+class CanopusFarmer(GuildBossFarmer):
+    """Farmer for pushing the week's Guild Boss."""
+
+    def __init__(
+        self,
+        starting_state=States.GOING_TO_GB,
+        battle_strategy: IBattleStrategy = None,  # No need
+        guild_boss: Vision = vio.canopus_hel,
+    ):
+        super().__init__(
+            starting_state=starting_state,
+            battle_strategy=battle_strategy,
+            do_dailies=False,
+        )
+
+        self.guild_boss_image = guild_boss
+
+    def finding_boss_state(self):
+        screenshot, window_location = capture_window()
+
+        if find(vio.startbutton, screenshot):
+            self.current_state = States.FIGHTING
+            print(f"Moving to state {self.current_state}")
+            return
+
+        # If we find it, go into the fight!
+        find_and_click(self.guild_boss_image, screenshot, window_location)
+
+        # Search until we find the KH boss we want
+        if not find(self.guild_boss_image, screenshot):
+            click_im(Coordinates.get_coordinates("change_gb"), window_location)
+            time.sleep(1)
+
+    def fighting_state(self):
+        """TODO: In this function, we want the same exact fighting state logic as parent; however,
+        we *need* to use an `IFighter` in this case, similar to how demon_farming_logic works with Indura"""
+        super().fighting_state()
 
     def run(self):
 
