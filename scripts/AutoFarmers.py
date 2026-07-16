@@ -552,6 +552,14 @@ FARMERS = [
         "name": "Guild Boss Farmer",
         "script": "GuildBossFarmer.py",
         "args": [
+            {"name": "--push-week", "label": "Push week", "type": "checkbox", "default": False},
+            {
+                "name": "--guild-boss",
+                "label": "Guild boss (pw)",
+                "type": "dropdown",
+                "choices": ["Canopus"],
+                "default": "Canopus",
+            },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
         ],
@@ -1347,12 +1355,10 @@ class AboutTab(QWidget):
         desc_label = QLabel()
         desc_label.setWordWrap(True)
         desc_label.setAlignment(Qt.AlignLeft)
-        desc_label.setText(
-            """
+        desc_label.setText("""
 <h3>🎮 AutoFarmers for 7DS Grand Cross</h3>
 <p>Automate your farming in Seven Deadly Sins: Grand Cross with this collection of specialized bots.</p>
-        """
-        )
+        """)
         desc_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         layout.addWidget(desc_label)
 
@@ -1363,15 +1369,13 @@ class AboutTab(QWidget):
         farmers_label = QLabel()
         farmers_label.setWordWrap(True)
         farmers_label.setAlignment(Qt.AlignTop)
-        farmers_label.setText(
-            """
+        farmers_label.setText("""
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
 • Final Boss and boss battle farming<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
-        """
-        )
+        """)
         farmers_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         farmers_req_layout.addWidget(farmers_label)
 
@@ -1379,15 +1383,13 @@ class AboutTab(QWidget):
         req_label = QLabel()
         req_label.setWordWrap(True)
         req_label.setAlignment(Qt.AlignTop)
-        req_label.setText(
-            """
+        req_label.setText("""
 <p><strong>⚙️ Requirements:</strong><br>
 • Official 7DS PC Beta Client<br>
 • Portrait mode (disable landscape)<br>
 • Game set to English<br>
 • Disable all game notifications</p>
-        """
-        )
+        """)
         req_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         farmers_req_layout.addWidget(req_label)
 
@@ -2586,8 +2588,7 @@ class FarmerTile(QFrame):
     def _set_style(self, running: bool):
         border = "#10b981" if running else C["border"]
         hover_border = "#10b981" if running else C["accent"]
-        self.setStyleSheet(
-            f"""
+        self.setStyleSheet(f"""
             FarmerTile {{
                 background: {C['tile_bg']};
                 border: 2px solid {border};
@@ -2597,8 +2598,7 @@ class FarmerTile(QFrame):
                 border-color: {hover_border};
                 background: {C['tile_hover']};
             }}
-        """
-        )
+        """)
 
     def _init_ui(self, farmer):
         layout = QVBoxLayout(self)

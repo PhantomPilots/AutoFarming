@@ -18,6 +18,9 @@ from utilities.utilities import (
 from utilities.vision_images import Vision
 
 logger = LoggerWrapper(name="GuildBossLogger", log_to_file=False)
+PUSH_WEEK_FIGHTER_UNAVAILABLE_MESSAGE = (
+    "Push-week Guild Boss farming requires a dedicated IFighter implementation, which is not available yet."
+)
 
 
 class States(Enum):
@@ -37,7 +40,15 @@ class GuildBossFarmer(IFarmer):
         do_dailies=False,  # Do we halt demon farming to do dailies?
         do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
+        push_week: bool = False,
+        guild_boss: Vision = vio.belgius_hel,
     ):
+        self.push_week = push_week
+        self.guild_boss = guild_boss if push_week else vio.belgius_hel
+
+        if self.push_week:
+            raise NotImplementedError(PUSH_WEEK_FIGHTER_UNAVAILABLE_MESSAGE)
+
         # To initialize the Daily Farmer thread
         super().__init__(do_daily_pvp=do_daily_pvp)
 
@@ -48,7 +59,6 @@ class GuildBossFarmer(IFarmer):
             print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         self.current_state = starting_state
-
         # Set specific properties of our DailyFarmer
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
         IFarmer.do_dailies = do_dailies
@@ -83,10 +93,10 @@ class GuildBossFarmer(IFarmer):
             return
 
         # If we find it, go into the fight!
-        find_and_click(vio.belgius_hel, screenshot, window_location)
+        find_and_click(self.guild_boss, screenshot, window_location)
 
-        # Search until we find the Belgius hel
-        if not find(vio.belgius_hel, screenshot):
+        # Search until we find the selected Guild Boss
+        if not find(self.guild_boss, screenshot):
             click_im(Coordinates.get_coordinates("change_gb"), window_location)
             time.sleep(1)
 
@@ -94,7 +104,7 @@ class GuildBossFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # First, check if we should go back to the initial state
-        if find(vio.belgius_hel, screenshot, threshold=0.8):
+        if find(self.guild_boss, screenshot, threshold=0.8):
             print("We're somehow not fighting anymore, let's go back to fighting...")
             self.current_state = States.FINDING_BOSS
             return
@@ -138,57 +148,6 @@ class GuildBossFarmer(IFarmer):
             self.current_state = States.FINDING_BOSS
             # TODO: The line below may cause a bot lock, may have to fix it
             find_and_click(vio.ok_main_button, screenshot, window_location)
-
-    def run(self):
-
-        self.run_state_loop(
-            {
-                States.GOING_TO_GB: self.going_to_gb_state,
-                States.FINDING_BOSS: self.finding_boss_state,
-                States.FIGHTING: self.fighting_state,
-            },
-            login_return_state=States.GOING_TO_GB,
-            sleep_seconds=0.7,
-        )
-
-
-class CanopusFarmer(GuildBossFarmer):
-    """Farmer for pushing the week's Guild Boss."""
-
-    def __init__(
-        self,
-        starting_state=States.GOING_TO_GB,
-        battle_strategy: IBattleStrategy = None,  # No need
-        guild_boss: Vision = vio.canopus_hel,
-    ):
-        super().__init__(
-            starting_state=starting_state,
-            battle_strategy=battle_strategy,
-            do_dailies=False,
-        )
-
-        self.guild_boss_image = guild_boss
-
-    def finding_boss_state(self):
-        screenshot, window_location = capture_window()
-
-        if find(vio.startbutton, screenshot):
-            self.current_state = States.FIGHTING
-            print(f"Moving to state {self.current_state}")
-            return
-
-        # If we find it, go into the fight!
-        find_and_click(self.guild_boss_image, screenshot, window_location)
-
-        # Search until we find the KH boss we want
-        if not find(self.guild_boss_image, screenshot):
-            click_im(Coordinates.get_coordinates("change_gb"), window_location)
-            time.sleep(1)
-
-    def fighting_state(self):
-        """TODO: In this function, we want the same exact fighting state logic as parent; however,
-        we *need* to use an `IFighter` in this case, similar to how demon_farming_logic works with Indura"""
-        super().fighting_state()
 
     def run(self):
 
