@@ -72,6 +72,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from GuildBossFarmer import GUILD_BOSSES
 from utilities.app_config import (
     APP_CONFIG_DEFAULTS,
     config,
@@ -557,7 +558,7 @@ FARMERS = [
                 "name": "--guild-boss",
                 "label": "Guild boss (pw)",
                 "type": "dropdown",
-                "choices": ["Canopus"],
+                "choices": list(GUILD_BOSSES),
                 "default": "Canopus",
             },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
