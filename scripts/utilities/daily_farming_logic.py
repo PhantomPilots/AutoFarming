@@ -491,10 +491,14 @@ class DailyFarmer:
 
         if find(vio.cancel, screenshot):
             print("Finished Patrol mission")
-            DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             press_key("esc")
+            time.sleep(2)
+            screenshot, window_location = capture_window()
+            if not find(vio.cancel, screenshot):
+                DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
             return
 
+        find_and_click(vio.patrol_reward_obtained, screenshot, window_location)
         find_and_click(vio.patrol_setting_complete, screenshot, window_location)
 
         patrol_rectangle = vio.hp_patrol.find(screenshot, threshold=0.7)

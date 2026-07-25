@@ -477,6 +477,7 @@ patrol_dispatched = Vision("dailies\\patrol_dispatched.png")
 patrol_setting_complete = Vision("dailies\\patrol_setting_complete.png")
 hp_patrol = Vision("dailies\\HP_patrol.png")
 dispatch = Vision("dailies\\dispatch.png")
+patrol_reward_obtained = Vision("dailies\\patrol_reward_obtained.png")
 # Fort Solgress
 fort_solgress_special = Vision("dailies\\fs_special.png")
 fs_event_dungeon = Vision("dailies\\event_dungeon.png")
