@@ -1,11 +1,42 @@
 import logging
 import os
 import threading
+import time
+from collections.abc import Iterable
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
-import numpy as np
-from PIL import Image
+
+def remove_expired_logged_images(
+    log_subdirs: Iterable[str],
+    *,
+    max_age_days: int = 7,
+    logs_dir: str = "logs",
+) -> int:
+    """Silently remove expired PNG image logs from the given ``logs`` subdirectories."""
+    cutoff = time.time() - max_age_days * 24 * 60 * 60
+    return sum(
+        _remove_if_expired(image, cutoff)
+        for subdir in log_subdirs
+        for image in _png_files(Path(logs_dir) / subdir)
+    )
+
+
+def _png_files(directory: Path) -> Iterable[Path]:
+    try:
+        yield from (path for path in directory.iterdir() if path.is_file() and path.suffix.lower() == ".png")
+    except OSError:
+        return
+
+
+def _remove_if_expired(path: Path, cutoff: float) -> int:
+    try:
+        if path.stat().st_mtime >= cutoff:
+            return 0
+        path.unlink()
+        return 1
+    except OSError:
+        return 0
 
 
 class LoggerWrapper:
@@ -73,6 +104,9 @@ class LoggerWrapper:
         Returns:
           Absolute path to the saved file.
         """
+        import numpy as np
+        from PIL import Image
+
         ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         base = f"{name or 'img'}_{ts}.png"
         out_dir = os.path.join("logs", subdir)

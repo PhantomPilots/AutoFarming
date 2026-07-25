@@ -80,6 +80,7 @@ from utilities.app_config import (
     save_config_updates,
     test_ntfy_connection,
 )
+from utilities.logging_utils import remove_expired_logged_images
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
@@ -520,6 +521,7 @@ FARMERS = [
     {
         "name": "Demon Farmer",
         "script": "DemonFarmer.py",
+        "image_log_subdirs": ["demons"],
         "args": [
             {
                 "name": "--indura-diff",
@@ -710,6 +712,7 @@ FARMERS = [
     {
         "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
+        "image_log_subdirs": ["sa_images"],
         "args": [
             {
                 "name": "--min-chest-type",
@@ -867,6 +870,7 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
+        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
         script_path = os.path.join(os.path.dirname(__file__), self.farmer["script"])
