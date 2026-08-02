@@ -90,10 +90,12 @@ change_stats = MultiVision(
     "change_stats.png",
     image_name="Change stats",
 )
+stamina_pot = Vision("stamina_pot.png")
 
 # Gold farming
 gold_dungeon = Vision("gold_dungeon\\gold_dungeon.png")
 sixth_floor = Vision("gold_dungeon\\6th_floor.png")
+max_skip_tickets = Vision("gold_dungeon\\max_clears.png")
 
 # SA coin farmer
 clock_tower = Vision("sa_coin_dungeon\\clock_tower.png")
@@ -107,6 +109,10 @@ chest_gold = Vision("sa_coin_dungeon\\chest_gold.png")
 fs_loading_screen = Vision("fs_loading_screen.png")
 fs_dungeon_lock = Vision("sa_coin_dungeon\\fs_dungeon_lock.png")
 finished_auto_repeat_fight = Vision("finished_auto_repeat_fight.png")
+sa_coin_dungeon_menu = Vision("sa_coin_dungeon\\coin_dungeon.png")
+sa_tower_of_chaos = Vision("sa_coin_dungeon\\tower_of_chaos.png")
+sa_broken_clock_tower = Vision("sa_coin_dungeon\\broken_clock_tower.png")
+sa_no_keys = Vision("sa_coin_dungeon\\no_keys.png")
 
 
 # Equipment farming
@@ -125,13 +131,13 @@ db_victory = Vision("demonic_beasts\\db_victory.png")
 demonic_beast_battle = Vision("demonic_beasts\\demonic_beast_battle.png")
 set_db_party = Vision("demonic_beasts\\set_party.png")
 extra_clear = Vision("demonic_beasts\\extra.png")
+challenge_restrictions_removed = Vision("demonic_beasts\\challenge_restrictions_removed.png")
 
 # For Bird farming
 demonic_beast = Vision("demonic_beasts\\creature_nest.png")
 hraesvelgr = Vision("demonic_beasts\\hraesvelgr.png")
 empty_party = Vision("demonic_beasts\\empty_party.png")
 save_party = Vision("demonic_beasts\\save_party.png")
-skip_bird = Vision("demonic_beasts\\skip_masked.png")
 db_loading_screen = Vision("demonic_beasts\\loading_screen.png")
 reset_demonic_beast = Vision("demonic_beasts\\reset_demonic_beast.png")
 floor_3_cleared_db = MultiVision(
@@ -195,10 +201,6 @@ roxy_ult = Vision("cards\\roxy_ult.png")
 escanor_st = Vision("deer\\escanor_st.png")
 escanor_aoe = Vision("deer\\escanor_aoe.png")
 escanor_ult = Vision("deer\\escanor_ult.png")
-# Whale Deer strat additions
-albedo_1 = Vision("deer\\albedo_1.png")
-albedo_taunt = Vision("deer\\albedo_taunt.png")
-albedo_ult = Vision("deer\\albedo_ult.png")
 # For the new Deer F4 team
 thor_1 = Vision("deer\\thor_1.png")
 thor_2 = Vision("demonic_beasts\\thor_thunderstorm.png")
@@ -249,6 +251,9 @@ lillia_in_team = Vision("dogs\\lillia_in_team.png")
 lillia_ult = Vision("dogs\\lillia_ult.png")
 meli3k_in_team = Vision("dogs\\meli3k_in_team.png")
 bluegow_in_team = Vision("dogs\\bluegow_in_team.png")
+b_thonar_in_team = Vision("dogs\\b_thonar_in_team.png")
+b_thonar_gauge = Vision("dogs\\b_thonar_gauge.png")
+b_thonar_stance = Vision("dogs\\b_thonar_stance.png")
 gow_atk = Vision("dogs\\gow_atk.png")
 gow_debuff = Vision("dogs\\gow_debuff.png")
 gow_ult = Vision("dogs\\gow_ult.png")
@@ -260,24 +265,8 @@ dogs_left_target_sel = Vision("dogs\\left_target_sel.png")
 dogs_right_target_sel = Vision("dogs\\right_target_sel.png")
 dogs_right_target_sel2 = Vision("dogs\\right_target_sel2.png")
 dogs_p1targetleft = Vision("dogs\\p1targetleft.png")
-# Dogs whale strat
+# Dogs Floor 4 freeze recovery.
 freeze_icon = Vision("dogs\\freeze_icon.png")
-lolimerl_aoe = Vision("dogs\\lolimerl_aoe.png")
-lolimerl_st = Vision("dogs\\lolimerl_st.png")
-lolimerl_ult = Vision("dogs\\lolimerl_ult.png")
-milim_st = Vision("dogs\\milim_st.png")
-milim_aoe = Vision("dogs\\milim_aoe.png")
-milim_ult = Vision("dogs\\milim_ult.png")
-unv_ghel_aoe1 = Vision("dogs\\unv_ghel_aoe1.png")
-unv_ghel_aoe2 = Vision("dogs\\unv_ghel_aoe2.png")
-unv_ghel_ult = Vision("dogs\\unv_ghel_ult.png")
-unv_lolimerl_aoe = Vision("dogs\\unv_lolimerl_aoe.png")
-unv_lolimerl_st = Vision("dogs\\unv_lolimerl_st.png")
-unv_milim_st = Vision("dogs\\unv_milim_st.png")
-unv_milim_aoe = Vision("dogs\\unv_milim_aoe.png")
-unv_thor_1 = Vision("dogs\\unv_thor_1.png")
-unv_thor_2 = Vision("dogs\\unv_thor_2.png")
-unv_thor_ult = Vision("dogs\\unv_thor_ult.png")
 
 # For Snake
 nidhoggr = Vision("snake\\nidhoggr.png")
@@ -331,10 +320,34 @@ talent_escalin = Vision("rat\\talent_escalin.png")
 
 # For final boss
 final_boss_menu = Vision("final_boss\\final_boss_menu.png")
-hell_difficulty = Vision("final_boss\\hell_difficulty.png")
-challenge_difficulty = Vision("final_boss\\challenge_difficulty.png")
-extreme_difficulty = Vision("final_boss\\extreme_difficulty.png")
-hard_difficulty = Vision("final_boss\\hard_difficulty.png")
+normal_difficulty = Vision("demons\\normal.png", image_name="normal_difficulty")
+hard_difficulty = MultiVision(
+    "final_boss\\hard_difficulty.png",
+    "demons\\hard.png",
+    "demon_king\\dk_hard.png",
+    image_name="hard_difficulty",
+)
+extreme_difficulty = MultiVision(
+    "final_boss\\extreme_difficulty.png",
+    "legendary_boss\\lb_extreme.png",
+    "demons\\extreme.png",
+    "demon_king\\dk_extreme.png",
+    "boss_battle\\boss_floor_extreme.png",
+    image_name="extreme_difficulty",
+)
+hell_difficulty = MultiVision(
+    "final_boss\\hell_difficulty.png",
+    "legendary_boss\\lb_hell.png",
+    "demons\\hell.png",
+    "demon_king\\dk_hell.png",
+    image_name="hell_difficulty",
+)
+challenge_difficulty = MultiVision(
+    "final_boss\\challenge_difficulty.png",
+    "legendary_boss\\lb_challenge.png",
+    image_name="challenge_difficulty",
+)
+chaos_difficulty = Vision("demons\\chaos.png", image_name="chaos_difficulty")
 boss_destroyed = Vision("final_boss\\boss_destroyed.png")
 boss_results = Vision("final_boss\\boss_results.png")
 boss_mission = Vision("final_boss\\boss_mission.png")
@@ -345,10 +358,6 @@ failed = Vision("final_boss\\failed.png")
 
 # For Legendary Boss
 legendary_boss_menu = Vision("legendary_boss\\legendary_boss_menu.png")
-legendary_boss_roxy = Vision("legendary_boss\\lb_roxy.png")
-legendary_boss_extreme = Vision("legendary_boss\\lb_extreme.png")
-legendary_boss_hell = Vision("legendary_boss\\lb_hell.png")
-legendary_boss_challenge = Vision("legendary_boss\\lb_challenge.png")
 legendary_boss_left_arrow = Vision("legendary_boss\\lb_left.png")
 legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
 legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")
@@ -364,11 +373,6 @@ og_demon = Vision("demons\\og_demon.png")
 indura_demon = Vision("demons\\indura_demon.png")
 accept_invitation = Vision("demons\\accept.png")
 real_time = Vision("demons\\RT.png")
-demon_hell_diff = Vision("demons\\hell.png")
-demon_normal_diff = Vision("demons\\normal.png")
-demon_hard_diff = Vision("demons\\hard.png")
-demon_extreme_diff = Vision("demons\\extreme.png")
-demon_chaos_diff = Vision("demons\\chaos.png")
 cancel_realtime = Vision("demons\\cancel.png")
 demons_loading_screen = Vision("demons\\demons_loading_screen.png")
 preparation_incomplete = Vision("demons\\preparation_incomplete.png")
@@ -403,6 +407,9 @@ indura_freyr_aoe = Vision("demons\\indura\\freyr_aoe.png")
 indura_ban_att = Vision("demons\\indura\\ban_att.png")
 indura_ban_aoe = Vision("demons\\indura\\ban_aoe.png")
 indura_ban_ult = Vision("demons\\indura\\ban_ult.png")
+indura_enjin_att = Vision("demons\\indura\\enjin_st.png")
+indura_enjin_aoe = Vision("demons\\indura\\enjin_aoe.png")
+indura_enjin_ult = Vision("demons\\indura\\enjin_ult.png")
 
 # Guild Boss
 knighthood_boss = Vision("guild_boss\\knighthood_boss.png")
@@ -411,8 +418,6 @@ kh_rank = Vision("guild_boss\\knighthood_rank.png")
 
 # Demon King
 demon_king = Vision("demon_king\\demon_king.png")
-dk_hell = Vision("demon_king\\dk_hell.png")
-dk_hard = Vision("demon_king\\dk_hard.png")
 x3 = Vision("demon_king\\x3.png")
 register_coins = Vision("demon_king\\register_coins.png")
 switch_dk_team = Vision("demon_king\\switch_dk_team.png")
@@ -470,6 +475,10 @@ reward = Vision("dailies\\patrol_reward.png", image_name="reward")
 set_all_patrol = Vision("dailies\\set_all.png")
 patrol_all = Vision("dailies\\patrol_all.png")
 patrol_dispatched = Vision("dailies\\patrol_dispatched.png")
+patrol_setting_complete = Vision("dailies\\patrol_setting_complete.png")
+hp_patrol = Vision("dailies\\HP_patrol.png")
+dispatch = Vision("dailies\\dispatch.png")
+patrol_reward_obtained = Vision("dailies\\patrol_reward_obtained.png")
 # Fort Solgress
 fort_solgress_special = Vision("dailies\\fs_special.png")
 fs_event_dungeon = Vision("dailies\\event_dungeon.png")
@@ -509,7 +518,6 @@ sim_clear_on = Vision("boss_battle\\sim_clear_on.png")
 activate_all_on = Vision("boss_battle\\activate_all_on.png")
 boss_one_star = Vision("boss_battle\\boss_one_star.png")
 stage_melee_of_phantasms = Vision("boss_battle\\stage_melee_of_phantasms.png")
-boss_floor_extreme = Vision("boss_battle\\boss_floor_extreme.png")
 death_match_vanya = Vision("boss_battle\\death_match_vanya.png")
 boss_battle_loading_screen = Vision("boss_battle\\boss_battle_loading_screen.png")
 

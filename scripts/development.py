@@ -10,6 +10,7 @@ from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
 from utilities.dk_fighter import DemonKingFighter
 from utilities.dogs_fighter import DogsFighter
+from utilities.models import GroundCardPredictor
 from utilities.rat_fighter import RatFighter
 from utilities.utilities import (
     capture_hand_image,
@@ -43,7 +44,7 @@ def development():
     # determine_relative_coordinates(screenshot)
 
     # print("Screenshot shape:", screenshot.shape)
-    screenshot_testing(screenshot, vision_image=vio.startbutton, threshold=0.7, best_only=False)
+    screenshot_testing(screenshot, vision_image=vio.patrol_setting_complete, threshold=0.7, best_only=False)
 
     # print("These many needle images found:", count_needle_image(vio.lvl_1_rule, screenshot, threshold=0.8))
 
@@ -86,9 +87,12 @@ def development():
 
     # cards = get_hand_cards(num_units=4)
     # for i, card in enumerate(cards, start=0):
-    #     card_interior = get_card_type_image(card.card_image, num_units=4)
-    #     display_image(card_interior)
+    #     card_type = get_card_type_image(card.card_image, num_units=4)
+    #     card_interior = get_card_interior_image(card.card_image, num_units=4)
+    #     print("Is it ground?", GroundCardPredictor.is_ground_card(card_interior))
     #     print(card.card_type.name, card.card_rank.name)
+    #     display_image(card_interior)
+
     # hand_image = capture_hand_image()
     # display_image(hand_image)
 

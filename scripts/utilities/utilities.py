@@ -298,7 +298,7 @@ def find_and_click(
         print(f"Clicked on '{vision_image.image_name}'")
         click_tracker.record_image_click(vision_image.image_name)
 
-        time.sleep(0.1 + max(0, sleep_time))
+        time.sleep(0.2 + max(0, sleep_time))
 
         return True
 
@@ -344,6 +344,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, *, sleep_after_click=0.02, dr
     - Requests 1 ms timer resolution only during the drag for smoother motion.
     - Slightly bumps thread priority (best-effort) to reduce scheduling hiccups.
     """
+    wait_if_paused()
 
     # --- Best-effort: give this thread a little priority boost
     with contextlib.suppress(Exception):
@@ -549,7 +550,7 @@ def get_card_interior_image(card_image: np.ndarray, num_units=4) -> np.ndarray:
         return crop_image(
             card_image,
             (border, border + 4),
-            (card_image.shape[1] - border, card_image.shape[0] - border - 12),
+            (card_image.shape[1] - border - 5, card_image.shape[0] - border - 12),
         )
     elif num_units == 3:
         border = 8
@@ -584,7 +585,10 @@ def get_hand_cards(num_units=4) -> list[Card]:
         for i in range(8)
     ]
 
-    return [Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1])) for card in house_of_cards]
+    return [
+        Card(determine_card_type(card[-1]), *card, determine_card_rank(card[-1]), num_units=num_units)
+        for card in house_of_cards
+    ]
 
 
 def get_hand_cards_3_cards() -> list[Card]:
@@ -608,7 +612,12 @@ def get_hand_cards_3_cards() -> list[Card]:
     ]
 
     return [
-        Card(determine_card_type(card[-1], three_cards=True), *card, determine_card_rank(card[-1], three_cards=True))
+        Card(
+            determine_card_type(card[-1], three_cards=True),
+            *card,
+            determine_card_rank(card[-1], three_cards=True),
+            num_units=3,
+        )
         for card in house_of_cards
     ]
 
@@ -754,11 +763,13 @@ def is_ground_card(card: Card) -> bool:
     return card.card_type in [CardTypes.GROUND, CardTypes.NONE]
 
 
-def is_ground_region(screenshot: np.ndarray, rectangle: tuple[float, float, float, float], plot: bool = False) -> bool:
-    """Given an entire screenshot and a rectangle of a region with [x,y,w,h], return whether the region is ground"""
+def is_ground_region(screenshot: np.ndarray, card: Card, plot: bool = False) -> bool:
+    """Given an entire screenshot and a card, return whether the card region is ground."""
+    rectangle = card.rectangle
     region_image = crop_image(
         screenshot, (rectangle[0], rectangle[1]), (rectangle[0] + rectangle[2], rectangle[1] + rectangle[3])
     )
+    region_image = get_card_interior_image(region_image, num_units=card.num_units)
 
     is_ground = GroundCardPredictor.is_ground_card(region_image)
     if plot and is_ground:
@@ -843,6 +854,7 @@ def re_open_7ds_window() -> bool:
         if find_and_click(vio.server_cancel, entire_screen) or find_and_click(vio.update_game_ok, entire_screen):
             print("We cannot open the game...")
         time.sleep(5)  # Let's sleep to allow the game to be closed properly...
+        entire_screen = capture_screen()  # Let's re-capture it to avoid clicking on a stale image
         if find_and_click(vio.run_game, entire_screen):
             print("Trying to re-open the game...")
             time.sleep(5)  # Let's wait for a while

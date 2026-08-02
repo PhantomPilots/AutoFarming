@@ -65,9 +65,7 @@ class DemonKingFighter(IFighter):
             print(f"MY TURN, selecting {available_card_slots} cards...")
             self.current_state = FightingStates.MY_TURN
 
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
-                IFighter.current_phase = new_phase
+            self._apply_detected_phase(self._identify_phase(screenshot))
 
             if DemonKingFighter._first_turn and DemonKingFighter._unit_colors:
                 hand = get_hand_cards()
@@ -80,7 +78,7 @@ class DemonKingFighter(IFighter):
             return 2
         elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
-        return 1
+        return None
 
     def my_turn_state(self):
         """Select and play the cards"""
@@ -101,7 +99,6 @@ class DemonKingFighter(IFighter):
 
         with self._lock:
             self.exit_thread = True
-            self.battle_strategy.reset_fight_turn()
 
         self.complete_callback(find(vio.victory, screenshot))
 

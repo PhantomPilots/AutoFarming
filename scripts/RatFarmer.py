@@ -12,6 +12,12 @@ def main():
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
+    parser.add_argument(
+        "--daily-pvp",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Do daily PVP when dailies run (default: True)",
+    )
     args = parser.parse_args()
 
     FarmingFactory.main_loop(
@@ -21,6 +27,7 @@ def main():
         num_floor_3_clears=args.clears,  # A number or "inf"
         password=args.password,  # Account password
         do_dailies=args.do_dailies,  # Should we do our dailies?
+        do_daily_pvp=args.daily_pvp,
     )
 
 

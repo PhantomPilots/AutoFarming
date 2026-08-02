@@ -21,6 +21,8 @@ from utilities.utilities import (
 
 logger = LoggerWrapper(name="FightingStrategies", log_file="fighter.log")
 
+CardAction = int | tuple[int, int] | list[int] | None
+
 
 class IBattleStrategy(abc.ABC):
     """Interface that groups all battle fighting strategies"""
@@ -30,18 +32,20 @@ class IBattleStrategy(abc.ABC):
     # In case the fighter dies!
     picked_cards: list[Card] = []
 
-    # What's the current fight turn?
-    fight_turn = 0
+    # How many turns have started in the current phase? The first started turn is 1.
+    phase_turn = 0
 
-    def increment_fight_turn(self):
-        """Increment the fight turn"""
-        IBattleStrategy.fight_turn += 1
+    def increment_phase_turn(self):
+        """Advance to the next started turn within the current phase."""
+        IBattleStrategy.phase_turn += 1
 
-    def reset_fight_turn(self):
-        """Reset IBattleStrategy.fight_turn. Normally IFighter.run_wrapper (finally); mid-fight resets are rare (e.g. Indura phase 3)."""
-        IBattleStrategy.fight_turn = 0
+    def reset_phase_turn(self):
+        """Reset the shared phase-turn counter so the next started turn becomes 1."""
+        IBattleStrategy.phase_turn = 0
 
-    def pick_cards(self, picked_cards: list[Card] = None, num_units=4, **kwargs) -> tuple[list[Card], list[int]]:
+    def pick_cards(
+        self, picked_cards: list[Card] = None, num_units=4, **kwargs
+    ) -> tuple[list[Card], list[CardAction]]:
         """**kwargs just for compatibility across classes and subclasses. Probably not the best coding..."""
 
         if picked_cards is None:
@@ -61,12 +65,17 @@ class IBattleStrategy(abc.ABC):
         # print("Card ranks:", [card.card_rank.name for card in hand_of_cards])
         # print("Picked cards:", [card.card_type.name for card in IBattleStrategy.picked_cards])
 
-        card_indices = []
+        card_indices: list[CardAction] = []
 
         for _ in range(1):  # Now we only have to pick one card at a time! Will make it much faster
 
             # Extract the next index to click on
             next_index = self.get_next_card_index(hand_of_cards, IBattleStrategy.picked_cards, **kwargs)
+            if next_index is None:
+                # The strategy already performed the UI action and deliberately has no card action to return.
+                card_indices.append(None)
+                continue
+
             if isinstance(next_index, Integral):
                 # print(f"Picked index {next_index} with card {hand_of_cards[next_index].card_type.name}")
                 if IBattleStrategy.card_turn < len(IBattleStrategy.picked_cards):
@@ -93,7 +102,7 @@ class IBattleStrategy(abc.ABC):
         # Return the result afterwards
         return original_hand_of_cards, card_indices
 
-    def _update_hand_of_cards(self, house_of_cards: list[Card], indices: list[int]) -> list[Card]:
+    def _update_hand_of_cards(self, house_of_cards: list[Card], indices: list[CardAction]) -> list[Card]:
         """Given the selected indices, select the cards accounting for card shifts.
 
         Args:
@@ -117,7 +126,7 @@ class IBattleStrategy(abc.ABC):
         return house_of_cards
 
     @abc.abstractmethod
-    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> int:
+    def get_next_card_index(self, hand_of_cards: list[Card], picked_cards: list[Card], **kwargs) -> CardAction:
         """Return the indices for the cards to use in order, based on the current 'state'.
         NOTE: This method needs to be implemented by a subclass.
         """

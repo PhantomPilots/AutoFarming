@@ -24,6 +24,10 @@ class InduraFighter(IFighter):
 
     card_turn = 0
 
+    def _reset_phase_tracking(self):
+        super()._reset_phase_tracking()
+        InduraFighter.card_turn = 0
+
     def fighting_state(self):
         screenshot, _ = capture_window()
 
@@ -39,21 +43,17 @@ class InduraFighter(IFighter):
             self.current_state = FightingStates.MY_TURN
 
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
-                IFighter.current_phase = new_phase
-                if new_phase == 3:
-                    self.battle_strategy.reset_fight_turn()
+            self._apply_detected_phase(self._identify_phase(screenshot))
 
-    def _identify_phase(self, screenshot: np.ndarray):
-        """Read the screenshot and identify the phase we're currently in"""
+    def _identify_phase(self, screenshot: np.ndarray) -> int | None:
+        """Read the screenshot and identify the phase we're currently in."""
         if find(vio.phase_2, screenshot, threshold=0.8):
             return 2
-        elif find(vio.phase_3, screenshot, threshold=0.8):
+        if find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
-        return 1
+        # Unknown / unreadable frame: keep the current confirmed phase.
+        return None
 
     def my_turn_state(self):
         """Select and play the cards"""
@@ -86,6 +86,8 @@ class InduraFighter(IFighter):
         slot_index = InduraFighter.card_turn
 
         if empty_card_slots > 0:
+            self._start_phase_turn_if_needed()
+
             # KEY: Read the hand of cards
             current_hand = self.battle_strategy.pick_cards(
                 picked_cards=self.picked_cards,
@@ -120,8 +122,7 @@ class InduraFighter(IFighter):
         elif empty_card_slots == 0:  # or slot_index >= len(current_hand[1]):
             print("Finished my turn!")
             InduraFighter.card_turn = 0
-            # Increment to the next fight turn
-            self.battle_strategy.increment_fight_turn()
+            IFighter._phase_turn_started_for_current_turn = False
             # And reset instance variables
             self._reset_instance_variables()
             return 1

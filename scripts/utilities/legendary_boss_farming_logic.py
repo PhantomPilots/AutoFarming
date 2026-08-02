@@ -31,6 +31,12 @@ class LegendaryBossFarmer(IFarmer):
     # Keep track of how many fights have been done
     num_fights = 0
 
+    difficulty_visions = {
+        "extreme": vio.extreme_difficulty,
+        "hell": vio.hell_difficulty,
+        "challenge": vio.challenge_difficulty,
+    }
+
     def __init__(self, battle_strategy: IBattleStrategy = None, starting_state=States.GOING_TO_LB, **kwargs):
         super().__init__()
 
@@ -62,7 +68,11 @@ class LegendaryBossFarmer(IFarmer):
         # If we're in the battle menu, click on Legendary Boss
         find_and_click(vio.legendary_boss_menu, screenshot, window_location, threshold=0.8)
 
-        if find(vio.legendary_boss_roxy, screenshot):
+        if (
+            find(vio.hell_difficulty, screenshot)
+            or find(vio.extreme_difficulty, screenshot)
+            or find(vio.challenge_difficulty, screenshot)
+        ):
             # We're in the legendary boss menu, move to the next state
             print("Moving to IN_LEGENDARY_BOSS_MENU")
             self.current_state = States.IN_LEGENDARY_BOSS_MENU
@@ -82,12 +92,10 @@ class LegendaryBossFarmer(IFarmer):
 
         difficulty_rect = None
         difficulty_on_screen = None
-        if (difficulty_rect := find_rect(vio.legendary_boss_extreme, screenshot)) is not None:
-            difficulty_on_screen = "extreme"
-        elif (difficulty_rect := find_rect(vio.legendary_boss_hell, screenshot)) is not None:
-            difficulty_on_screen = "hell"
-        elif (difficulty_rect := find_rect(vio.legendary_boss_challenge, screenshot)) is not None:
-            difficulty_on_screen = "challenge"
+        for difficulty_name, vision_image in self.difficulty_visions.items():
+            if (difficulty_rect := find_rect(vision_image, screenshot)) is not None:
+                difficulty_on_screen = difficulty_name
+                break
 
         if difficulty_rect is None or difficulty_on_screen is None:
             print("Couldn't find the current difficulty on screen, retry...")
@@ -122,7 +130,7 @@ class LegendaryBossFarmer(IFarmer):
             return
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             print(f"We've used {IFarmer.stamina_pots} stamina pots so far")
             return
@@ -143,13 +151,16 @@ class LegendaryBossFarmer(IFarmer):
     def fighting_state(self):
         screenshot, window_location = capture_window()
 
+        # Needed here because of the phase1->phase2 transition skip
+        find_and_click(vio.skip, screenshot, window_location)
+
         # If we've ended the fight...
         find_and_click(vio.legendary_boss_final_score, screenshot, window_location, threshold=0.7)
         find_and_click(vio.episode_clear, screenshot, window_location)
         find_and_click(vio.boss_mission, screenshot, window_location)
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location):
+        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
             IFarmer.stamina_pots += 1
             return
 
@@ -174,9 +185,6 @@ class LegendaryBossFarmer(IFarmer):
             self.current_state = States.IN_LEGENDARY_BOSS_MENU
 
         else:
-            # Skip to the fight
-            find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
-
             # Ensure AUTO is on
             find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 

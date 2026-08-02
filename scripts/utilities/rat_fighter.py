@@ -62,11 +62,9 @@ class RatFighter(IFighter):
             # We see empty card slots, it means its our turn
             self.available_card_slots = available_card_slots
             # Update the current phase
-            if (new_phase := self._identify_phase(screenshot)) != IFighter.current_phase:
-                print(f"MOVING TO PHASE {new_phase}!")
+            if self._apply_detected_phase(self._identify_phase(screenshot)):
                 RatFighter.next_stump = 1
                 RatFighter.current_stump = -1
-                IFighter.current_phase = new_phase
 
             # Detect rat stump from screen
             detected = detect_stump_from_screen(screenshot)
@@ -89,8 +87,7 @@ class RatFighter(IFighter):
         elif find(vio.phase_3, screenshot, threshold=0.8):
             return 3
 
-        # Default to phase 1 in case we don't see anything
-        return 1
+        return None
 
     def update_stump(self, screenshot, window_location):
         """Click on a new stump if applicable, and activate the talent"""
@@ -117,7 +114,7 @@ class RatFighter(IFighter):
         screenshot, _ = capture_window()
 
         # First, update the current phase
-        IFighter.current_phase = self._identify_phase(screenshot)
+        self._apply_detected_phase(self._identify_phase(screenshot))
 
         # Then, play the cards
         self.play_cards(current_stump=RatFighter.current_stump)

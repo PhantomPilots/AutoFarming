@@ -87,11 +87,11 @@ class DogsFloor4WhaleBattleStrategy(IBattleStrategy):
     ) -> int | list[int]:
         self._maybe_reset("phase_1_whale")
 
-        if IBattleStrategy.fight_turn > 2:
+        if IBattleStrategy.phase_turn > 2:
             self.request_fight_reset("Dogs Floor 4 whale mode: phase 1 went off script, resetting the fight.")
             return 0
 
-        if IBattleStrategy.fight_turn == 1:
+        if IBattleStrategy.phase_turn == 1:
             if card_turn in {0, 1}:
                 move_action = self._best_nasi_setup_move(hand_of_cards)
                 if move_action is None:
@@ -141,10 +141,10 @@ class DogsFloor4WhaleBattleStrategy(IBattleStrategy):
     ) -> int | list[int]:
         self._maybe_reset("phase_2_whale")
 
-        if IBattleStrategy.fight_turn == 1:
+        if IBattleStrategy.phase_turn == 1:
             return self._phase2_turn1_whale_action(hand_of_cards, picked_cards, card_turn)
 
-        if IBattleStrategy.fight_turn % 2 == 0:
+        if IBattleStrategy.phase_turn % 2 == 0:
             return self._phase2_even_turn_whale_action(hand_of_cards, picked_cards, card_turn)
 
         return self._phase2_odd_turn_whale_action(hand_of_cards, picked_cards, card_turn)
@@ -324,11 +324,11 @@ class DogsFloor4WhaleBattleStrategy(IBattleStrategy):
     ) -> int | list[int]:
         self._maybe_reset("phase_3_whale")
 
-        if IBattleStrategy.fight_turn == 1:
+        if IBattleStrategy.phase_turn == 1:
             return self._phase3_turn1_whale_action(hand_of_cards, picked_cards, card_turn)
-        if IBattleStrategy.fight_turn == 2:
+        if IBattleStrategy.phase_turn == 2:
             return self._phase3_turn2_whale_action(hand_of_cards, picked_cards, card_turn)
-        if IBattleStrategy.fight_turn == 3:
+        if IBattleStrategy.phase_turn == 3:
             return self._phase3_turn3_whale_action(hand_of_cards, picked_cards, card_turn)
         return self._phase3_nuke_action(hand_of_cards, picked_cards)
 

@@ -486,18 +486,38 @@ class DailyFarmer:
             # Go to the mission
             self.go_to_mission(vio.daily_patrol, screenshot, window_location, threshold=0.89)
 
-        if find(vio.cancel, screenshot):
-            print("Finished Patrol mission")
-            DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
+        if find_and_click(vio.ok_main_button, screenshot, window_location):
             return
 
-        find_and_click(vio.claim_reward, screenshot, window_location, sleep_time=1)
-        find_and_click(vio.patrol_all, screenshot, window_location)
-        # First click on complete all
-        find_and_click(vio.complete_all, screenshot, window_location, sleep_time=1)
-        # Then click on set all
-        find_and_click(vio.set_all_patrol, screenshot, window_location)
+        if find(vio.cancel, screenshot):
+            print("Finished Patrol mission")
+            press_key("esc")
+            time.sleep(2)
+            screenshot, window_location = capture_window()
+            if not find(vio.cancel, screenshot):
+                DailyFarmer.current_state = States.MISSION_COMPLETE_STATE
+            return
+
         find_and_click(vio.reward, screenshot, window_location)
+        find_and_click(vio.patrol_reward_obtained, screenshot, window_location)
+        find_and_click(vio.patrol_setting_complete, screenshot, window_location)
+
+        patrol_rectangle = vio.hp_patrol.find(screenshot, threshold=0.7)
+        if len(patrol_rectangle):
+            patrol_image = crop_image(screenshot, patrol_rectangle[:2], patrol_rectangle[:2] + patrol_rectangle[2:])
+            find_and_click(
+                vio.dispatch,
+                patrol_image,
+                window_location=(window_location[0] + patrol_rectangle[0], window_location[1] + patrol_rectangle[1]),
+            )
+
+        # find_and_click(vio.claim_reward, screenshot, window_location, sleep_time=1)
+        # find_and_click(vio.patrol_all, screenshot, window_location)
+        # # First click on complete all
+        # find_and_click(vio.complete_all, screenshot, window_location, sleep_time=1)
+        # # Then click on set all
+        # find_and_click(vio.set_all_patrol, screenshot, window_location)
+        # find_and_click(vio.reward, screenshot, window_location)
 
     def friendship_coins_state(self):
         """Handle the Friendship Coins state."""

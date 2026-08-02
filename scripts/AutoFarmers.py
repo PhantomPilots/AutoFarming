@@ -80,6 +80,7 @@ from utilities.app_config import (
     save_config_updates,
     test_ntfy_connection,
 )
+from utilities.logging_utils import remove_expired_logged_images
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
@@ -349,7 +350,7 @@ QTextEdit {{
 
 APP_STYLESHEET = _make_stylesheet()
 
-# Requirements for whale farmers (displayed in GUI)
+# Farmer requirements displayed in the GUI.
 REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
@@ -359,6 +360,11 @@ REQUIREMENTS = {
     "Bird Floor 4": """
 <p><strong>Requirements:</strong><br>
 • Any team, but best: Thor, G Tyr, Xion, Merlin/Milim Hel</p>
+    """,
+    "Demonic Beast Rotation": """
+<p><strong>Requirements:</strong><br>
+• Select Bird, Deer, and/or Dogs<br>
+• Runs floors 1-3 once for each selected Demonic Beast, then returns to the Tavern</p>
     """,
     "Deer Farmer": """
 <p><strong>Requirements:</strong><br>
@@ -374,7 +380,7 @@ Tune your gear so you can guarantee that.<br>
     """,
     "Deer Floor 4 Whale": """
 <p><strong>Requirements (Whale mode):</strong><br>
-• Same team as normal Deer Floor 4 — <em>not</em> the separate Deer Whale comp<br>
+• Same team as normal Deer Floor 4 — <em>not</em> the removed floors 1-3 whale comp<br>
 • Targets finishing <strong>Phase 1 in 1</strong> player turn<br>
 • Tune your gear/CC to support the aggressive opener<br>
 • <strong>IMPORTANT</strong>: NO SKULD</p>
@@ -405,21 +411,6 @@ Tune your gear so you can guarantee that.<br>
 <p><strong>Requirements:</strong><br>
 • Red Jorm, LR Liz, Blue Valenti, King-Diane/EscaMerlin<br>
 • If using King-Diane, place them to the very right</p>
-    """,
-    "Deer Whale": """
-<p><strong>Requirements:</strong><br>
-• 16M+ CC • 5th+ Constellation<br>
-• UR Atk/Crit gear (14.5%+ atk pieces)<br>
-• Team order: Jorm → Loli Merlin → Freyr → Albedo<br>
-• All units need relics</p>
-    """,
-    "Dogs Whale": """
-<p><strong>Requirements:</strong><br>
-• 14-16M+ CC • 6th Constellation (5th ok)<br>
-• UR Atk/Crit gear (14.5%+ top pieces)<br>
-• Team: Milim LR, Loli Merlin LR, Thor, Green Hel<br>
-• Links: Ludo on Milim, OG Red Sariel on Merlin, Sab on Thor, Mael on Hel<br>
-• Artifacts #37 or #29</p>
     """,
     "Snake Whale": """
 <p><strong>Requirements:</strong><br>
@@ -458,19 +449,28 @@ In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> butt
 the file <code>run_game.png</code> by it.
 </p>
     """,
+    "Gold Farmer": """
+<p><strong>Requirements:</strong><br>
+• If you use skip tickets, make sure to have the <code>"Auto Use Settings"</code> option checked.</p>
+    """,
+    "Daily Quests Farmer": """
+<p><strong>Requirements:</strong><br>
+• START runs daily quests immediately from the standard daily mission flow<br>
+• Start from the tavern/tasks context<br>
+• Daily PVP can be enabled or disabled with the checkbox above</p>
+    """,
 }
 
 # Maps base farmer names to whale-mode display overrides.
 WHALE_MODE_CONFIG = {
-    "Deer Farmer": {"requirements_key": "Deer Whale", "image": "deer_whale.jpg"},
     "Deer Floor 4": {"requirements_key": "Deer Floor 4 Whale", "image": "deer_floor_4.png"},
     "Dogs Floor 4": {"requirements_key": "Dogs Floor 4 Whale", "image": "dogs_whale.png"},
-    "Dogs Farmer": {"requirements_key": "Dogs Whale", "image": "dogs_whale_farmer.jpg"},
     "Snake Farmer": {"requirements_key": "Snake Whale", "image": "snake_whale_farmer.png"},
 }
 
 FARMER_IMAGES = {
     "Demon Farmer": "demon_farmer.jpg",
+    "Demonic Beast Rotation": "db_rotation_farmer.jpg",
     "Bird Farmer": "bird_farmer.jpg",
     "Bird Floor 4": "bird_floor_4.jpeg",
     "Deer Farmer": "deer_farmer.png",
@@ -483,6 +483,7 @@ FARMER_IMAGES = {
     "Final Boss": "final_boss.png",
     "Legendary Boss": "legendary_boss.png",
     "Accounts Farmer": "accounts_farmer.jpg",
+    "Daily Quests Farmer": "daily_farmer.png",
     "Reroll Constellation": "reroll_constellation_whale.jpg",
     "SA Coin Dungeon Farmer": "sa_coin_farmer.png",
     "Guild Boss Farmer": "guild_boss_farmer.jpg",
@@ -507,10 +508,20 @@ def get_farmer_display_content(farmer_name: str, whale_enabled: bool = False) ->
 
 
 # Farmer script definitions (argument structure)
+DAILY_PVP_ARG = {
+    "name": "--daily-pvp",
+    "false_name": "--no-daily-pvp",
+    "label": "Daily PVP",
+    "type": "checkbox",
+    "default": True,
+}
+
+
 FARMERS = [
     {
         "name": "Demon Farmer",
         "script": "DemonFarmer.py",
+        "image_log_subdirs": ["demons"],
         "args": [
             {
                 "name": "--indura-diff",
@@ -524,7 +535,7 @@ FARMERS = [
                 "label": "Indura Team",
                 "type": "dropdown",
                 "choices": ["fairies", "humans"],
-                "default": "fairies",
+                "default": "humans",
             },
             {
                 "name": "--demons-to-farm",
@@ -536,6 +547,7 @@ FARMERS = [
             },
             {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -543,6 +555,7 @@ FARMERS = [
         "script": "GuildBossFarmer.py",
         "args": [
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -551,6 +564,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -560,6 +574,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -568,7 +583,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -578,6 +593,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -587,7 +603,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
-            {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -597,6 +613,7 @@ FARMERS = [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--extra-clears", "label": "Extra Clears", "type": "text", "default": "0"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -606,6 +623,7 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
             {"name": "--whale", "label": "Whale mode", "type": "checkbox", "default": False},
         ],
     },
@@ -615,6 +633,23 @@ FARMERS = [
         "args": [
             {"name": "--clears", "label": "Clears", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
+        ],
+    },
+    {
+        "name": "Demonic Beast Rotation",
+        "script": "DemonicBeastRotationFarmer.py",
+        "args": [
+            {
+                "name": "--beasts-to-farm",
+                "label": "Beasts to Farm",
+                "type": "multiselect",
+                "choices": ["bird", "deer", "dogs"],
+                "labels": ["Bird", "Deer", "Dogs"],
+                "default": ["bird", "deer", "dogs"],
+            },
+            {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -625,7 +660,7 @@ FARMERS = [
                 "name": "--dk-diff",
                 "label": "Difficulty",
                 "type": "dropdown",
-                "choices": ["hard", "extreme", "hell"],
+                "choices": ["hard", "hell"],
                 "default": "hard",
             },
             {"name": "--num-clears", "label": "Num clears", "type": "text", "default": "10"},
@@ -649,7 +684,15 @@ FARMERS = [
         "name": "Gold Farmer",
         "script": "GoldFarmer.py",
         "args": [
+            {"name": "--use-skip-tickets", "label": "Use skip tickets", "type": "checkbox", "default": False},
+            {
+                "name": "--max-skip-tickets-to-use",
+                "label": "Max skip tickets to use",
+                "type": "text",
+                "default": "inf",
+            },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
+            DAILY_PVP_ARG,
         ],
     },
     {
@@ -669,6 +712,7 @@ FARMERS = [
     {
         "name": "SA Coin Dungeon Farmer",
         "script": "SADungeonFarmer.py",
+        "image_log_subdirs": ["sa_images"],
         "args": [
             {
                 "name": "--min-chest-type",
@@ -681,9 +725,11 @@ FARMERS = [
         ],
     },
     {
-        "name": "Tower Trials",
-        "script": "TowerTrialsFarmer.py",
-        "args": [],
+        "name": "Daily Quests Farmer",
+        "script": "DailyQuestsFarmer.py",
+        "args": [
+            DAILY_PVP_ARG,
+        ],
     },
     {
         "name": "Accounts Farmer",
@@ -824,6 +870,7 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
+        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
         script_path = os.path.join(os.path.dirname(__file__), self.farmer["script"])
@@ -1010,6 +1057,8 @@ class FarmerController(QObject):
             elif arg["type"] == "checkbox":
                 if value:
                     args.append(arg["name"])
+                elif arg.get("false_name"):
+                    args.append(arg["false_name"])
             elif arg["type"] == "multiselect":
                 selected = [str(item) for item in (value or []) if str(item)]
                 if selected:
@@ -1113,6 +1162,7 @@ PASSWORD_CLI_SCRIPTS = frozenset(
         "BirdFloor4Farmer.py",
         "DeerFarmer.py",
         "DeerFloor4Farmer.py",
+        "DemonicBeastRotationFarmer.py",
         "DogsFarmer.py",
         "DogsFloor4Farmer.py",
         "DemonFarmer.py",
@@ -1145,8 +1195,8 @@ class AboutTab(QWidget):
         ("Daily Quests Farmer", ("dailyquestsfarmer.py", "daily_farming", "/dailies/")),
         ("Equipment Farmer", ("equipmentfarmer.py", "equipment")),
         ("Demon Farmer", ("demonfarmer.py", "demon_farming", "demons/", "indura_")),
-        ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "dogs_whale", "/dogs/")),
-        ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "deer_whale", "/deer/")),
+        ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "/dogs/")),
+        ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "/deer/")),
         ("Bird Farmer", ("birdfarmer.py", "bird_farming", "bird_fighter", "/bird")),
         (
             "Snake Farmer",
@@ -1321,7 +1371,7 @@ class AboutTab(QWidget):
             """
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
-• Final Boss battles and Tower Trials<br>
+• Final Boss and boss battle farming<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
         """
@@ -1398,8 +1448,7 @@ class AboutTab(QWidget):
     def after_stash(self, exit_code):
         """Handle completion of git stash command"""
         if exit_code != 0:
-            self.status_label.setText("❌ git stash failed")
-            self._finish_update()
+            self._start_update_recovery()
             return
 
         # Stash successful, now run git pull
@@ -1411,10 +1460,79 @@ class AboutTab(QWidget):
     def after_pull(self, exit_code):
         """Handle completion of git pull command"""
         if exit_code != 0:
-            self.status_label.setText("❌ git pull failed")
-            self._finish_update()
+            self._start_update_recovery()
             return
 
+        self._start_post_update_summary()
+
+    def _start_update_recovery(self):
+        """Fetch fresh remote state before attempting a destructive recovery."""
+        if self._pre_update_gui_hash is None:
+            self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
+            self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
+
+        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.run_process("git", ["fetch", "--prune"], self.after_recovery_fetch)
+
+    def after_recovery_fetch(self, exit_code):
+        """Resolve the configured upstream only after its remote state is fresh."""
+        if exit_code != 0:
+            self._fail_update_recovery("Unable to download the official version; check your connection and repository")
+            return
+
+        self.run_process(
+            "git",
+            ["rev-parse", "--verify", "@{upstream}^{commit}"],
+            self.after_recovery_upstream_resolution,
+            capture_output=True,
+        )
+
+    def after_recovery_upstream_resolution(self, exit_code):
+        """Prefer the branch upstream, falling back to origin's default branch."""
+        if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
+            return
+
+        self.run_process(
+            "git",
+            ["rev-parse", "--verify", "origin/HEAD^{commit}"],
+            self.after_recovery_origin_head_resolution,
+            capture_output=True,
+        )
+
+    def after_recovery_origin_head_resolution(self, exit_code):
+        """Reset to origin/HEAD when the current branch has no configured upstream."""
+        if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
+            return
+
+        self._fail_update_recovery("Unable to identify the official update branch")
+
+    def _reset_to_recovery_commit(self, output):
+        """Validate a resolved commit ID and start the destructive reset."""
+        commit = output.strip()
+        if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
+            return False
+
+        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.run_process("git", ["reset", "--hard", commit], self.after_recovery_reset)
+        return True
+
+    def after_recovery_reset(self, exit_code):
+        """Resume the normal post-update workflow after a successful reset."""
+        if exit_code != 0:
+            self._fail_update_recovery(
+                "Unable to restore the official version; the repository may be locked or damaged"
+            )
+            return
+
+        self._start_post_update_summary()
+
+    def _fail_update_recovery(self, message):
+        """Finish a failed recovery while keeping its actionable status visible."""
+        self.status_label.setText(f"❌ {message}")
+        self._finish_update(clear_status=False)
+
+    def _start_post_update_summary(self):
+        """Enter the shared post-pull/reset summary workflow."""
         self.status_label.setText("🔄 Summarizing what you just downloaded...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
@@ -2136,16 +2254,18 @@ class FarmerTab(QWidget):
 
         if normalized_type == "silver":
             self.sa_chest_warning_label.setText(
-                "Warning: Selecting silver minimum is expected to use many stamina pots for a full run.\n"
-                "5% silver + 2% gold: ~15 retries or ~7 pots per chest!\nExpect over 150 pots for a full run!"
+                "Warning: Selecting silver minimum can take a long time.\n"
+                "5% silver + 2% gold: ~15 retries per chest on average.\n"
+                "Estimated ~12-13 minutes per chest."
             )
             self.sa_chest_warning_label.show()
             return
 
         if normalized_type == "gold":
             self.sa_chest_warning_label.setText(
-                "Warning: Selecting gold minimum is extremely costly.\n"
-                "2% gold: ~50 retries or ~23 pots per chest!\nExpect over 600 pots for a full run!"
+                "Warning: Selecting gold minimum is extremely time-consuming.\n"
+                "2% gold: ~50 retries per chest on average.\n"
+                "Estimated ~40 minutes per chest."
             )
             self.sa_chest_warning_label.show()
             return
@@ -2860,6 +2980,7 @@ class MainWindow(QMainWindow):
         self._update_check_output = bytearray()
         self._update_check_timed_out = False
         self._manual_update_running = False
+        self._update_available_popup_shown = False
         self._update_check_timeout_timer = QTimer(self)
         self._update_check_timeout_timer.setSingleShot(True)
         self._update_check_timeout_timer.timeout.connect(self._on_update_check_timeout)
@@ -2893,13 +3014,6 @@ class MainWindow(QMainWindow):
         )
         logo.setTextFormat(Qt.RichText)
         top_lay.addWidget(logo)
-
-        self._update_available_label = QLabel("Update available!")
-        self._update_available_label.setStyleSheet(
-            "color: #10b981; font-size: 11px; font-style: italic; background: transparent;"
-        )
-        self._update_available_label.setVisible(False)
-        top_lay.addWidget(self._update_available_label)
 
         top_lay.addStretch(1)
 
@@ -3024,20 +3138,26 @@ class MainWindow(QMainWindow):
         else:
             self._show_grid()
 
-    def _set_update_available(self, available: bool) -> None:
-        self._update_available_label.setVisible(available)
+    def _clear_update_available_notification(self) -> None:
+        self._update_available_popup_shown = False
+
+    def _show_update_available_popup(self) -> None:
+        if self._update_available_popup_shown:
+            return
+        self._update_available_popup_shown = True
+        QMessageBox.information(self, "Update available", "Update available!")
 
     def _on_manual_update_started(self) -> None:
         self._manual_update_running = True
-        self._set_update_available(False)
+        self._clear_update_available_notification()
 
     def _on_manual_update_finished(self) -> None:
         self._manual_update_running = False
+        self._clear_update_available_notification()
         self._check_for_update_available()
 
     def _check_for_update_available(self) -> None:
         """Quietly check whether the configured upstream branch is ahead."""
-        self._set_update_available(False)
         if self._manual_update_running or self._update_check_process is not None:
             return
         self._run_update_check_command("git", ["fetch", "--quiet"], self._after_update_fetch)
@@ -3045,26 +3165,27 @@ class MainWindow(QMainWindow):
     def _after_update_fetch(self, exit_code: int, output: str) -> None:
         del output
         if self._manual_update_running:
-            self._set_update_available(False)
             return
         if exit_code != 0:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
         self._run_update_check_command("git", ["rev-list", "--count", "HEAD..@{u}"], self._after_update_count)
 
     def _after_update_count(self, exit_code: int, output: str) -> None:
         if self._manual_update_running:
-            self._set_update_available(False)
             return
         if exit_code != 0:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
         try:
             commits_behind_upstream = int(output.strip())
         except ValueError:
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
-        self._set_update_available(commits_behind_upstream > 0)
+        if commits_behind_upstream > 0:
+            self._show_update_available_popup()
+        else:
+            self._clear_update_available_notification()
 
     def _run_update_check_command(self, program: str, args: list[str], on_finished) -> None:
         if self._update_check_process is not None:
@@ -3083,7 +3204,7 @@ class MainWindow(QMainWindow):
 
         if not self._update_check_process.waitForStarted(3000):
             self._update_check_process = None
-            self._set_update_available(False)
+            self._clear_update_available_notification()
             return
 
         self._update_check_timeout_timer.start(15000)
@@ -3111,7 +3232,7 @@ class MainWindow(QMainWindow):
             return
         self._update_check_timed_out = True
         self._update_check_process.kill()
-        self._set_update_available(False)
+        self._clear_update_available_notification()
 
     def _toggle_theme(self):
         if self._any_farmer_running():

@@ -28,6 +28,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         extra_clears: int = 0,
     ):
@@ -38,6 +39,7 @@ class BirdFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.hraesvelgr,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )
@@ -58,6 +60,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         *,
         whale: bool = False,
@@ -70,6 +73,7 @@ class DeerFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.eikthyrnir,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )
@@ -88,6 +92,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
     whale = False
     lillia_in_team = False
     roxy_in_team = False
+    b_thonar_in_team = False
     meli3k_in_team = False
     bluegow_in_team = False
 
@@ -97,6 +102,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
         starting_state: States,
         max_runs="inf",
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         *,
         whale: bool = False,
@@ -109,6 +115,7 @@ class DogsFloor4Farmer(IFloor4Farmer):
             max_runs=max_runs,
             demonic_beast_image=vio.skollandhati,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
             password=password,
             extra_clears=extra_clears,
         )
@@ -135,6 +142,10 @@ class DogsFloor4Farmer(IFloor4Farmer):
                 return False
             return True
 
+        DogsFloor4Farmer.b_thonar_in_team = find(vio.b_thonar_in_team, screenshot) or type(self).b_thonar_in_team
+        if DogsFloor4Farmer.b_thonar_in_team:
+            print("Blue Thonar is in the team!")
+
         if find(vio.lillia_in_team, screenshot):
             print("Lillia is in the team!")
             DogsFloor4Farmer.lillia_in_team = True
@@ -152,4 +163,5 @@ class DogsFloor4Farmer(IFloor4Farmer):
         return {
             "lillia_in_team": DogsFloor4Farmer.lillia_in_team,
             "roxy_in_team": DogsFloor4Farmer.roxy_in_team,
+            "b_thonar_in_team": DogsFloor4Farmer.b_thonar_in_team,
         }

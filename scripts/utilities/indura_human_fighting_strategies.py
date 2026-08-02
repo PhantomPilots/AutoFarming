@@ -28,6 +28,9 @@ _CARD_INFO = [
     (vio.indura_ban_att, "ban att", "ranged"),
     (vio.indura_ban_aoe, "ban aoe", "ranged"),
     (vio.indura_ban_ult, "ban ult", "ult"),
+    (vio.indura_enjin_att, "enjin att", "melee"),
+    (vio.indura_enjin_aoe, "enjin aoe", "melee"),
+    (vio.indura_enjin_ult, "enjin ult", "ult"),
 ]
 
 _RANK_LABEL = {
@@ -69,6 +72,27 @@ def _is_ban_card(card: Card) -> bool:
     )
 
 
+def _is_enjin_card(card: Card) -> bool:
+    return any(
+        find(img, card.card_image)
+        for img in (
+            vio.indura_enjin_att,
+            vio.indura_enjin_aoe,
+            vio.indura_enjin_ult,
+        )
+    )
+
+
+def _is_enjin_attack_card(card: Card) -> bool:
+    return any(
+        find(img, card.card_image)
+        for img in (
+            vio.indura_enjin_att,
+            vio.indura_enjin_aoe,
+        )
+    )
+
+
 def _is_melee_card(card: Card) -> bool:
     return any(atype == "melee" and find(img, card.card_image) for img, _, atype in _CARD_INFO)
 
@@ -87,19 +111,29 @@ class InduraHumanBattleStrategy(IBattleStrategy):
 
     Phase overview
     ──────────────
-    Phase 1 — Burst to try to one-shot.
-              Turn 0: only freyr cards and ban_aoe are restricted — everything
-              else (ults, attacks) is fair game for maximum burst.
-              Turn 1+ (if boss survived): check for the counter stance and play
-              a silver+ freyr_att to safely absorb it.  If no counter is up,
-              freyr_att stays benched and normal attacks proceed.
+    Phase 1 — Burst to try to one-shot, with a fixed damage-optimal opening.
+              Opening (turn 1, no boss stance up — i.e. we move first):
+                play a fixed sequence that supersedes the default logic.
+                  · Default team : roxy_att -> sho_att -> sho_aoe
+                    (sho_att before sho_aoe makes the AoE hit harder; the two
+                     Sho cards self-freeze him, cleansed next turn by freyr_att)
+                  · Jinwoo team  : jin_st -> jin_aoe -> roxy_att
+                    (auto-selected when any Jinwoo card is seen on the team)
+              Stance up (turn 2+, or turn 1 if we moved second):
+                play a silver+ freyr_att to nullify the counter (also cleanses
+                Sho's freeze), then press damage in the order
+                sho_att, roxy_att, sho_aoe, roxy_aoe to clear the phase ASAP.
+              No stance on a later turn: freyr_att benched, same damage order.
+              Ults remain a fallback after the prioritized cards in every case.
 
     Phase 2 — Boss is tanky and loses damage reduction each turn.
-              Turn 0: check if Sho's potential freeze can be handled — prefer
+              Turn 1: check if Sho's potential freeze can be handled — prefer
               freyr_att (cleanses + starts Freyr passive).  If no freyr on the
               team, check whether an ally King or Freyr card is already in the
               played slots and log it; fall through to ban/attack filler.
-              Turn 1+: ban falls off; switch to harder attack cards.
+              Turn 2+ (cleanup): ban falls off AND freyr is avoided — the
+              priority is ending the phase fast, so the fixed opening damage
+              burst is replicated (an emergency card-seal cleanse still fires).
               Ultimates are held for P3 throughout; released only as a last
               resort if the hand is empty of anything else.
 
@@ -111,8 +145,10 @@ class InduraHumanBattleStrategy(IBattleStrategy):
               if evasion is still active, cards are filtered to those that can
               bypass the active restriction (melee cards for ranged evasion,
               ranged cards for melee evasion).
-              Turn 0: hold ults, observe the teammate, play attack cards.
-              Turn 1+: full-send with roxy_ult / sho_ult, then any other ult.
+              Turn 1: the boss debuffs the whole team on entry — lead with
+              freyr_att when available to cleanse it (team-wide heal), then
+              hold ults, observe the teammate, and play attack cards.
+              Turn 2+: full-send with roxy_ult / sho_ult, then any other ult.
               Freyr's att and ult carry a built-in cleanse for both the boss's
               card-seal debuff and Sho's freeze.
 
@@ -130,9 +166,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
     logs what it finds.
     """
 
-    # Fight-turn value snapshotted on first entry into phase 2; used to derive
-    # the turn number within that phase.  Phase 3 resets fight_turn externally.
-    _p2_entry_fight_turn: int = -1
+    _seen_enjin: bool = False
 
     # ── Logging helper ────────────────────────────────────────────────────────
 
@@ -155,21 +189,8 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         screenshot, _ = capture_window()
         card_ranks = np.array([card.card_rank.value for card in hand_of_cards])
 
-        # ── Phase-2 entry tracking ─────────────────────────────────────────
-        if phase == 2 and InduraHumanBattleStrategy._p2_entry_fight_turn == -1:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = IBattleStrategy.fight_turn
-            print(f"[HumanTeam] Entered phase 2 at fight turn {IBattleStrategy.fight_turn}")
-        elif phase != 2:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = -1
-
         # Turn number relative to the start of the current phase.
-        # Phase 3 resets fight_turn to 0 externally (InduraFighter.fighting_state).
-        if phase == 1:
-            phase_turn = IBattleStrategy.fight_turn
-        elif phase == 2:
-            phase_turn = IBattleStrategy.fight_turn - InduraHumanBattleStrategy._p2_entry_fight_turn
-        else:
-            phase_turn = IBattleStrategy.fight_turn
+        phase_turn = IBattleStrategy.phase_turn
 
         print(f"[HumanTeam] phase={phase}  phase_turn={phase_turn}  card_turn={card_turn}")
 
@@ -188,32 +209,166 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         ban_ids = ids_where(_is_ban_card)
         ban_aoe_ids = ids_where(lambda c: find(vio.indura_ban_aoe, c.card_image))
         ult_ids = ids_where(lambda c: c.card_type == CardTypes.ULTIMATE)
+        enjin_attack_ids = ids_where(_is_enjin_attack_card)
+
+        ENJIN_CARDS_PER_TURN = 2
+        enjin_cards_played = sum(1 for c in picked_cards if _is_enjin_card(c))
+        enjin_budget_left = enjin_cards_played < ENJIN_CARDS_PER_TURN
+
+        def _best_attack_idx():
+            attack_ids = sorted(
+                [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
+                key=lambda idx: card_ranks[idx],
+            )
+            if not attack_ids:
+                return None
+            if enjin_budget_left:
+                preferred = [i for i in attack_ids if _is_enjin_attack_card(hand_of_cards[i])]
+            else:
+                preferred = [i for i in attack_ids if not _is_enjin_attack_card(hand_of_cards[i])]
+            return (preferred or attack_ids)[-1]
+
+        # ── Fixed-sequence helpers ─────────────────────────────────────────
+        def _img_in_cards(img, cards) -> bool:
+            return any(find(img, c.card_image) for c in cards)
+
+        def _next_in_sequence(sequence_imgs):
+            """Index of the first card in `sequence_imgs` that is currently in
+            hand AND has not already been played this turn.  Picks the highest
+            rank if a card appears more than once.  Returns None if none match —
+            the caller then falls through to its default logic.
+            """
+            for img in sequence_imgs:
+                if _img_in_cards(img, picked_cards):
+                    continue  # already played this turn — advance the sequence
+                matches = sorted(
+                    [i for i, c in enumerate(hand_of_cards) if find(img, c.card_image)],
+                    key=lambda idx: card_ranks[idx],
+                )
+                if matches:
+                    return matches[-1]
+            return None
+
+        # Jinwoo is on the team if any of his cards are seen this turn (hand or
+        # already played).  Drives the alternate opening sequence below.
+        jin_on_team = any(
+            _img_in_cards(img, hand_of_cards) or _img_in_cards(img, picked_cards)
+            for img in (vio.indura_jin_st, vio.indura_jin_aoe, vio.indura_jin_ult)
+        )
+
+        if phase == 1 and phase_turn == 1 and card_turn == 0:
+            InduraHumanBattleStrategy._seen_enjin = False
+
+        enjin_seen_this_pick = any(
+            _img_in_cards(img, hand_of_cards) or _img_in_cards(img, picked_cards)
+            for img in (vio.indura_enjin_att, vio.indura_enjin_aoe, vio.indura_enjin_ult)
+        )
+        if enjin_seen_this_pick and not InduraHumanBattleStrategy._seen_enjin:
+            print("[HumanTeam] Enjin detected — enabling Enjin priorities")
+        InduraHumanBattleStrategy._seen_enjin |= enjin_seen_this_pick
+        enjin_on_team = InduraHumanBattleStrategy._seen_enjin
+
+        # Fixed damage-optimal opening burst, shared by the Phase-1 opening turn
+        # and the Phase-2 cleanup turn (turn 2+).  Jinwoo team leads with his combo.
+        opening_seq = (
+            [vio.indura_jin_st, vio.indura_jin_aoe, vio.roxy_st]
+            if jin_on_team
+            else [vio.roxy_st, vio.indura_sho_att, vio.indura_sho_aoe]
+        )
 
         # ── PHASE 1 ───────────────────────────────────────────────────────
         if phase == 1:
-            InduraHumanBattleStrategy._p2_entry_fight_turn = -1  # keep clean
+            # Boss stance/counter detection.  When it's up, freyr_att nullifies
+            # it (and cleanses Sho's freeze); when it's down on the opening turn
+            # we go for the fixed damage-optimal burst instead.
+            stance_up = bool(find(vio.snake_f3p2_counter, screenshot))
 
-            if phase_turn == 0:
-                # Hard restrictions only: freyr triggers the counter early;
-                # ban_aoe wastes burst.  Everything else is fair game.
+            # Damage-priority order used once the stance is dealt with (and on
+            # later no-stance turns): single-target hits first, then the AoEs.
+            DMG_PRIORITY = [
+                vio.indura_sho_att,
+                vio.roxy_st,
+                vio.indura_sho_aoe,
+                vio.roxy_aoe,
+            ]
+
+            ally_played_stance_cancel = False
+            if stance_up:
+                six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
+                ally_played_stance_cancel = bool(find(vio.mini_king, six_slots))
+
+            if stance_up and not freyr_att_ids and card_turn == 0:
+                print("[HumanTeam] P1 stance up, no freyr counter — watching up to 8s for ally cancel...")
+                deadline = time.time() + 8
+                while time.time() < deadline:
+                    screenshot, _ = capture_window()
+                    six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
+                    stance_up = bool(find(vio.snake_f3p2_counter, screenshot))
+                    ally_played_stance_cancel = bool(find(vio.mini_king, six_slots))
+                    if not stance_up or ally_played_stance_cancel:
+                        break
+                    time.sleep(1)
+                if not stance_up:
+                    print("[HumanTeam] Boss stance cleared — proceeding!")
+                elif ally_played_stance_cancel:
+                    print("[HumanTeam] Ally stance cancel detected — pressing damage")
+                else:
+                    print("[HumanTeam] No ally cancel after 8s — single-target lifesteal to tank counter")
+
+            # ── Opening burst: we move first (turn 1, no stance up) ─────────
+            # Fixed sequence, supersedes the default ult/attack logic.
+            #   Jinwoo team : jin_st  -> jin_aoe -> roxy_att
+            #   Default     : roxy_att -> sho_att -> sho_aoe
+            # (Default deliberately uses two Sho cards; the resulting self-freeze
+            #  is cleansed next turn by the freyr_att stance-nullify.)
+            if phase_turn == 1 and not stance_up:
+                seq_name = "Jinwoo: jin_st -> jin_aoe -> roxy_att" if jin_on_team else "roxy_att -> sho_att -> sho_aoe"
+                print(f"[HumanTeam] P1 opening ({seq_name})")
+                seq_idx = _next_in_sequence(opening_seq)
+                if seq_idx is not None:
+                    return self._play(seq_idx, hand_of_cards, card_ranks)
+                # Requested card not in hand this pick — fall back to defaults.
                 for idx in freyr_ids + ban_aoe_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
 
-            else:
-                # Turn 1+: counter stance check.
-                # A silver+ freyr_att safely absorbs the boss's retaliation.
-                played_freyr_att = [c for c in picked_cards if find(vio.indura_freyr_att, c.card_image)]
-                if freyr_att_ids and find(vio.snake_f3p2_counter, screenshot) and not played_freyr_att:
+            # ── Stance up (turn 2+, or turn 1 if we moved second) ───────────
+            elif stance_up:
+                # A silver+ freyr_att safely absorbs the counter and cleanses
+                # Sho's freeze.  Play it once per turn before pressing damage.
+                played_freyr_att = _img_in_cards(vio.indura_freyr_att, picked_cards)
+                if freyr_att_ids and not played_freyr_att:
                     preferred = [idx for idx in freyr_att_ids if card_ranks[idx] >= CardRanks.SILVER.value]
                     chosen = (preferred or freyr_att_ids)[-1]
-                    print(f"[HumanTeam] Counter present — absorbing with freyr att")
+                    print("[HumanTeam] P1 stance up — nullifying with freyr att")
                     return self._play(chosen, hand_of_cards, card_ranks)
+                if not freyr_att_ids and not ally_played_stance_cancel:
+                    lifesteal_idx = _next_in_sequence(
+                        [
+                            vio.indura_enjin_att,
+                            vio.indura_jin_st,
+                            vio.roxy_st,
+                        ]
+                    )
+                    if lifesteal_idx is not None:
+                        print("[HumanTeam] P1 stance persists — single-target lifesteal (enjin/jin/roxy st)")
+                        return self._play(lifesteal_idx, hand_of_cards, card_ranks)
+                # Stance handled (or no freyr): clear phase 1 ASAP with damage.
+                dmg_idx = _next_in_sequence(DMG_PRIORITY)
+                if dmg_idx is not None:
+                    print("[HumanTeam] P1 stance handled — pressing damage (sho/roxy)")
+                    return self._play(dmg_idx, hand_of_cards, card_ranks)
 
-                # No counter: bench freyr_att, leave freyr_ult/aoe available
+            # ── No stance on a later turn: keep pressing damage ─────────────
+            else:
+                # Bench freyr_att (nothing to absorb); leave freyr_ult/aoe live.
                 for idx in freyr_att_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
+                dmg_idx = _next_in_sequence(DMG_PRIORITY)
+                if dmg_idx is not None:
+                    print("[HumanTeam] P1 no stance — pressing damage (sho/roxy)")
+                    return self._play(dmg_idx, hand_of_cards, card_ranks)
 
-            # P1 common: ults first, then fall through to common attack logic
+            # P1 common: ults as fallback, then common attack logic
             if ult_ids:
                 return self._play(ult_ids[-1], hand_of_cards, card_ranks)
 
@@ -231,7 +386,20 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     print("[HumanTeam] Card-seal debuff (P2) — using freyr cleanse")
                     return self._play(freyr_cleanse_ids[-1], hand_of_cards, card_ranks)
 
-            if phase_turn == 0:
+            if phase_turn == 1:
+                if enjin_on_team:
+                    st_idx = _next_in_sequence(
+                        [
+                            vio.indura_enjin_att,
+                            vio.roxy_st,
+                            vio.indura_jin_st,
+                            vio.indura_sho_att,
+                        ]
+                    )
+                    if st_idx is not None:
+                        print("[HumanTeam] P2 turn 1 — Enjin overheat opening (enjin_st -> single-target burst)")
+                        return self._play(st_idx, hand_of_cards, card_ranks)
+
                 # Check if an ally King or Freyr is already in the played slots —
                 # either of those can cleanse Sho's potential freeze from P1.
                 six_slots = crop_region(screenshot, Coordinates.get_coordinates("6_cards_region"))
@@ -239,37 +407,44 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     find(img, six_slots) for img in (vio.indura_freyr_att, vio.freyr_ult)
                 )
                 if ally_has_cleanse:
-                    print("[HumanTeam] P2 turn 0 — ally cleanse (King or Freyr) detected in played slots")
+                    print("[HumanTeam] P2 turn 1 — ally cleanse (King or Freyr) detected in played slots")
 
                 # Lead with freyr_att: cleanses Sho freeze + starts passive stack
                 if freyr_att_ids:
-                    print("[HumanTeam] P2 turn 0 — playing freyr att (passive + Sho cleanse)")
+                    print("[HumanTeam] P2 turn 1 — playing freyr att (passive + Sho cleanse)")
                     return self._play(freyr_att_ids[-1], hand_of_cards, card_ranks)
                 if freyr_ids:
-                    print("[HumanTeam] P2 turn 0 — playing freyr card (passive + cleanse)")
+                    print("[HumanTeam] P2 turn 1 — playing freyr card (passive + cleanse)")
                     return self._play(freyr_ids[-1], hand_of_cards, card_ranks)
 
                 # No freyr on team
                 if ally_has_cleanse:
-                    print("[HumanTeam] P2 turn 0 — no freyr; ally handling Sho cleanse")
+                    print("[HumanTeam] P2 turn 1 — no freyr; ally handling Sho cleanse")
                 else:
-                    print("[HumanTeam] P2 turn 0 — no freyr on team; no ally cleanse detected")
+                    print("[HumanTeam] P2 turn 1 — no freyr on team; no ally cleanse detected")
 
                 if ban_ids:
                     return self._play(ban_ids[-1], hand_of_cards, card_ranks)
 
             else:
-                # Turn 1+: ban falls off
-                for idx in ban_ids:
+                # Turn 2+ (cleanup): ban falls off and freyr is avoided — the
+                # priority is clearing the phase ASAP, so replicate the opening
+                # damage burst (an emergency card-seal cleanse above still fires
+                # if our skills are sealed).
+                for idx in ban_ids + freyr_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
+                if enjin_attack_ids and enjin_budget_left:
+                    print("[HumanTeam] P2 cleanup turn — leading with enjin attack")
+                    return self._play(enjin_attack_ids[-1], hand_of_cards, card_ranks)
+                seq_idx = _next_in_sequence(opening_seq)
+                if seq_idx is not None:
+                    print("[HumanTeam] P2 cleanup turn — opening-style damage burst")
+                    return self._play(seq_idx, hand_of_cards, card_ranks)
 
             # Attack fallback for both P2 turns
-            attack_ids = sorted(
-                [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
-                key=lambda idx: card_ranks[idx],
-            )
-            if attack_ids:
-                return self._play(attack_ids[-1], hand_of_cards, card_ranks)
+            attack_idx = _best_attack_idx()
+            if attack_idx is not None:
+                return self._play(attack_idx, hand_of_cards, card_ranks)
 
             # Nothing left: release the held ults
             for idx in held_ult_ids:
@@ -282,7 +457,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
         # ── PHASE 3 ───────────────────────────────────────────────────────
         elif phase == 3:
             # ── Evasion pre-check ─────────────────────────────────────────
-            # Boss applies melee or ranged evasion each turn after turn 0.
+            # Boss applies melee or ranged evasion each turn after turn 1.
             # Ults always bypass and remove it.  If no ult is available, wait
             # to see if an ally clears it before filtering down to passable cards.
             melee_evasion_up = find(vio.melee_evasion, screenshot)
@@ -323,7 +498,13 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     return self._play(freyr_cleanse_ids[-1], hand_of_cards, card_ranks)
 
             # ── Turn-based priority ───────────────────────────────────────
-            if phase_turn == 0:
+            if phase_turn == 1:
+                # Entering P3, the boss debuffs the whole team.  freyr_att
+                # cleanses it for a team-wide heal — lead with it when available.
+                played_freyr_att = _img_in_cards(vio.indura_freyr_att, picked_cards)
+                if freyr_att_ids and not played_freyr_att:
+                    print("[HumanTeam] P3 turn 1 — leading with freyr att (entry-debuff cleanse + team heal)")
+                    return self._play(freyr_att_ids[-1], hand_of_cards, card_ranks)
                 # Observe the teammate; hold ults; play attack cards
                 for idx in ult_ids:
                     hand_of_cards[idx].card_type = CardTypes.DISABLED
@@ -349,7 +530,7 @@ class InduraHumanBattleStrategy(IBattleStrategy):
             # freyr_att is always included regardless of evasion type: its cleanse
             # fires as a side-effect even if the attack itself is evaded/blocked.
             if evasion_passable_only and has_evasion:
-                if melee_evasion_up:
+                if phase_turn % 2 == 1:
                     passable = sorted(
                         [
                             i
@@ -387,12 +568,9 @@ class InduraHumanBattleStrategy(IBattleStrategy):
                     return self._play(freyr_ids[-1], hand_of_cards, card_ranks)
 
         # ── Common fallback: best available attack card ───────────────────
-        attack_ids = sorted(
-            [i for i, c in enumerate(hand_of_cards) if c.card_type == CardTypes.ATTACK],
-            key=lambda idx: card_ranks[idx],
-        )
-        if attack_ids:
-            return self._play(attack_ids[-1], hand_of_cards, card_ranks)
+        attack_idx = _best_attack_idx()
+        if attack_idx is not None:
+            return self._play(attack_idx, hand_of_cards, card_ranks)
 
         print("[HumanTeam] No suitable card found — delegating to SmarterBattleStrategy")
         idx = SmarterBattleStrategy.get_next_card_index(hand_of_cards, picked_cards)

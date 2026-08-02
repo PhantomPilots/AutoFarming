@@ -13,7 +13,6 @@ from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import capture_window, drag_im, find, find_and_click
 
@@ -44,11 +43,12 @@ class IFloor4Farmer(IFarmer):
         max_runs="inf",
         demonic_beast_image: vio.Vision | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
         password: str | None = None,
         extra_clears: int = 0,
     ):
 
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # Store the account password in this instance if given
         if password:
@@ -81,7 +81,6 @@ class IFloor4Farmer(IFarmer):
         self._swipe_attempts = 0
 
         # For the login/dailies
-        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def on_ready_to_fight_before_start(self, screenshot):
@@ -155,6 +154,9 @@ class IFloor4Farmer(IFarmer):
             print("We were in the middle of a fight, but let's start it over :(")
             return
 
+        if self._handle_daily_reset_entrypoint(screenshot, window_location):
+            return
+
         # If we're back in the tavern, click on the battle menu.
         find_and_click(vio.battle_menu, screenshot, window_location, threshold=0.6)
 
@@ -208,7 +210,9 @@ class IFloor4Farmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Restore stamina if we need to
-        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
+        if find(vio.stamina_pot, screenshot) and find_and_click(
+            vio.restore_stamina, screenshot, window_location, threshold=0.8
+        ):
             IFarmer.stamina_pots += 1
             # screenshot_testing(screenshot, vio.restore_stamina)
             return
@@ -229,11 +233,12 @@ class IFloor4Farmer(IFarmer):
 
         screenshot, window_location = capture_window()
 
-        find_and_click(vio.skip_bird, screenshot, window_location)
+        find_and_click(vio.skip, screenshot, window_location)
 
         # Set the fighter thread
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and self.current_state == States.FIGHTING:
             print("Floor4 fight started!")
+            self.fighter.prepare_for_new_fight()
             self.fight_thread = threading.Thread(
                 target=self.fighter.run,
                 name="Floor4FighterThread",

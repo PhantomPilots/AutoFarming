@@ -14,3 +14,4 @@ build/
 analysis_outputs/
 AutoFarmers.spec
 ground_classifier_analysis.py
+AGENTS.md

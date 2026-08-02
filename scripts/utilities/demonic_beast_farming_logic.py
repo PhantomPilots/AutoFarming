@@ -6,14 +6,10 @@ from enum import Enum
 import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from utilities.coordinates import Coordinates
-from utilities.general_farmer_interface import (
-    CHECK_IN_HOUR,
-    IFarmer,
-)
-from utilities.general_farmer_interface import States as GlobalStates
-from utilities.logging_utils import LoggerWrapper
 from utilities.app_config import get_minutes_to_wait_before_login
+from utilities.coordinates import Coordinates
+from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
+from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
     crop_region,
@@ -57,9 +53,10 @@ class DemonicBeastFarmer(IFarmer):
         reset_after_defeat=False,
         password: str | None = None,
         do_dailies=False,
+        do_daily_pvp=True,
         logger=logger,
     ):
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # NOTE: In derived classes, make sure to initialize a `self.fighter` instance with the desired fighter and battle strategy
 
@@ -103,7 +100,6 @@ class DemonicBeastFarmer(IFarmer):
             print(f"We're gonna clear floor 3 at most {int(self.max_floor_3_clears)} times.")
 
         # For the login/dailies
-        IFarmer.daily_farmer.set_daily_pvp(True)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):
@@ -123,6 +119,10 @@ class DemonicBeastFarmer(IFarmer):
             self.current_state = States.RESETTING_DB
             return
 
+        # Limit generic reset-popup detection to the outer entry/reset path; between-floor states can show normal battle skip UI.
+        if DemonicBeastFarmer.current_floor == 1 and self._handle_daily_reset_entrypoint(screenshot, window_location):
+            return
+
         # First of all, check whether it's time to do our dailies!
         if self.check_for_dailies():
             return
@@ -136,6 +136,9 @@ class DemonicBeastFarmer(IFarmer):
 
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
+
+        # First fight of the week
+        find_and_click(vio.challenge_restrictions_removed, screenshot, window_location)
 
         # If we see we're inside the DB selection screen but don't see our DemonicBeast,
         # swipe right (or left after 4 attempts) and try again
@@ -231,8 +234,10 @@ class DemonicBeastFarmer(IFarmer):
             )
 
         # We may need to restore stamina
-        if IFarmer.stamina_pots < self.max_stamina_pots and find_and_click(
-            vio.restore_stamina, screenshot, window_location
+        if (
+            IFarmer.stamina_pots < self.max_stamina_pots
+            and find(vio.stamina_pot, screenshot)
+            and find_and_click(vio.restore_stamina, screenshot, window_location)
         ):
             # Keep track of how many stamina pots we used
             IFarmer.stamina_pots += 1
@@ -266,7 +271,7 @@ class DemonicBeastFarmer(IFarmer):
         screenshot, window_location = capture_window()
 
         # Skip the Demonic Beast screen
-        find_and_click(vio.skip_bird, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
 
         # In case we see a 'Close' pop-up
         find_and_click(vio.close, screenshot, window_location, threshold=0.8)
@@ -278,6 +283,7 @@ class DemonicBeastFarmer(IFarmer):
         if (self.fight_thread is None or not self.fight_thread.is_alive()) and (
             self.current_state == States.FIGHTING_FLOOR
         ):
+            self.fighter.prepare_for_new_fight()
             self.fight_thread = threading.Thread(
                 target=self.fighter.run, daemon=True, args=(DemonicBeastFarmer.current_floor,)
             )

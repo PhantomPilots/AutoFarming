@@ -1,6 +1,7 @@
 import argparse
 
 from utilities.dogs_farming_logic import DogsFarmer, States
+from utilities.dogs_fighting_strategies import DogsBattleStrategy
 from utilities.farming_factory import FarmingFactory
 
 
@@ -10,13 +11,13 @@ def main():
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument("--clears", type=str, default="inf", help="Number of clears or 'inf'")
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
-    parser.add_argument("--whale", action="store_true", default=False, help="Use whale strategy")
+    parser.add_argument(
+        "--daily-pvp",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Do daily PVP when dailies run (default: True)",
+    )
     args = parser.parse_args()
-
-    if args.whale:
-        from utilities.dogs_fighting_strategies_whale import DogsBattleStrategy
-    else:
-        from utilities.dogs_fighting_strategies import DogsBattleStrategy
 
     FarmingFactory.main_loop(
         farmer=DogsFarmer,
@@ -27,6 +28,7 @@ def main():
         max_floor_3_clears=args.clears,
         password=args.password,
         do_dailies=args.do_dailies,
+        do_daily_pvp=args.daily_pvp,
     )
 
 

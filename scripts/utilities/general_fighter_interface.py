@@ -41,8 +41,12 @@ class IFighter(abc.ABC):
     """Interface that will encompass all different types of fights (Demonic beasts, KH boss, FB boss...)"""
 
     # Every battle has a floor and a phase, so this should be generalized here
+    initial_phase = 1
     current_phase = 1
     current_floor = 1
+    _phase_turn_started_for_current_turn = False
+    turn_end_zero_slot_confirmations = 1
+    turn_end_zero_slot_confirmation_delay = 0.25
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         """Initialize the fighter instance with a (optional) callback to call when the fight has finished,
@@ -65,6 +69,7 @@ class IFighter(abc.ABC):
             self.exit_thread = False
             self.current_state = FightingStates.FIGHTING
             self.available_card_slots = 0
+            self._consecutive_zero_empty_slot_observations = 0
             # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
             self.current_hand: tuple[list[Card], list[int]] = None
             # Reset the list of picked cards
@@ -74,6 +79,66 @@ class IFighter(abc.ABC):
         with self._lock:
             print("Manually stopping the fighter thread.")
             self.exit_thread = True
+
+    def prepare_for_new_fight(self):
+        """Reset per-fight phase tracking right before a brand-new fight starts."""
+        self._reset_phase_tracking()
+
+    def _reset_phase_tracking(self):
+        """Reset shared phase-tracking state for this fighter instance."""
+        IFighter.current_phase = self.initial_phase
+        IFighter._phase_turn_started_for_current_turn = False
+        self.battle_strategy.reset_phase_turn()
+
+    def _identify_phase(self, screenshot: np.ndarray) -> int | None:
+        """Return a positively identified phase, or ``None`` if the frame is unreadable."""
+        return None
+
+    def _apply_detected_phase(self, detected_phase: int | None) -> bool:
+        """Apply only confirmed, monotonic phase transitions."""
+        if detected_phase is None:
+            print(f"Phase unreadable; keeping confirmed phase {IFighter.current_phase}.")
+            return False
+
+        current_phase = IFighter.current_phase
+        if current_phase is None or current_phase < 0:
+            return self._set_phase(detected_phase)
+
+        if detected_phase == current_phase:
+            return False
+
+        if detected_phase < current_phase:
+            print(
+                "Ignoring backward phase detection:",
+                f"detected={detected_phase}",
+                f"current={current_phase}",
+            )
+            return False
+
+        return self._set_phase(detected_phase)
+
+    def _set_phase(self, new_phase: int) -> bool:
+        """Apply an active-fight phase transition and reset shared per-phase turn state."""
+        if new_phase == IFighter.current_phase:
+            return False
+
+        print(f"MOVING TO PHASE {new_phase}!")
+        IFighter.current_phase = new_phase
+        self.battle_strategy.reset_phase_turn()
+        IFighter._phase_turn_started_for_current_turn = False
+        return True
+
+    def _start_phase_turn_if_needed(self, *, reason: str | None = None) -> bool:
+        """Start the current phase turn once, using a shared 1-based started-turn contract."""
+        if IFighter._phase_turn_started_for_current_turn:
+            return False
+
+        if reason:
+            print(reason)
+
+        self.battle_strategy.increment_phase_turn()
+        IFighter._phase_turn_started_for_current_turn = True
+        return True
 
     def _run_manual_forfeit_flow(self) -> None:
         """Standard pause/forfeit flow shared by beast fighters."""
@@ -100,6 +165,12 @@ class IFighter(abc.ABC):
     def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
+        if (
+            self._consecutive_zero_empty_slot_observations > 0
+            and self.turn_end_zero_slot_confirmation_delay > 0
+        ):
+            time.sleep(self.turn_end_zero_slot_confirmation_delay)
+
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
@@ -118,6 +189,9 @@ class IFighter(abc.ABC):
         slot_index = max(0, self.available_card_slots - empty_card_slots)
 
         if empty_card_slots > 0:
+            self._consecutive_zero_empty_slot_observations = 0
+            self._start_phase_turn_if_needed()
+
             # KEY: Read the hand of cards here
             current_hand = self.battle_strategy.pick_cards(
                 picked_cards=self.picked_cards,
@@ -140,22 +214,35 @@ class IFighter(abc.ABC):
                 print("slot index:", slot_index, "len indices:", len(current_hand[1]))
                 raise e
 
+            if index_to_play is None:
+                print("Strategy already handled this card turn; skipping normal card action.")
+                return
+
             # Return the card played to use this in the corresponding fighting strategy
             card_played = self._play_card(
                 current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
             )
 
-            # Add this played card to the corresponding slot in picked cards
-            self.picked_cards[slot_index] = card_played
+            # Only card clicks fill a battle slot. Hand drags return an empty Card and must not
+            # overwrite a card that was already queued in this slot.
+            if isinstance(index_to_play, Integral):
+                self.picked_cards[slot_index] = card_played
 
         elif empty_card_slots == 0:
+            self._consecutive_zero_empty_slot_observations += 1
+            if self._consecutive_zero_empty_slot_observations < self.turn_end_zero_slot_confirmations:
+                print(
+                    "Waiting to confirm turn end: "
+                    f"{self._consecutive_zero_empty_slot_observations}/"
+                    f"{self.turn_end_zero_slot_confirmations} zero-slot observations."
+                )
+                return
             return self.finish_turn()
 
     def finish_turn(self):
         """May need to re-implement (like on Rat Fighter)"""
         print("Finished my turn!")
-        # Increment to the next fight turn
-        self.battle_strategy.increment_fight_turn()
+        IFighter._phase_turn_started_for_current_turn = False
         # Reset variables
         self._reset_instance_variables()
         return 1
@@ -177,11 +264,11 @@ class IFighter(abc.ABC):
                 prev_card: Card = list_of_cards[index - 1]
                 while (
                     index != -1
-                    and is_ground_region(screenshot, card_to_play.rectangle)
+                    and is_ground_region(screenshot, card_to_play)
                     and is_ground_region(  # Double check that we have 2 grounds before assuming it's a ground
-                        screenshot, prev_card.rectangle
+                        screenshot, prev_card
                     )
-                ) or (index == 0 and is_ground_region(screenshot, card_to_play.rectangle)):
+                ) or (index == 0 and is_ground_region(screenshot, card_to_play)):
                     # print("We're clicking on a ground region! We should click on the next card.")
                     index += 1
                     if index >= len(list_of_cards) - 1:
@@ -228,7 +315,6 @@ class IFighter(abc.ABC):
                 func(self, *args, **kwargs)
             finally:
                 print("Resetting fighter...")
-                self.battle_strategy.reset_fight_turn()
                 self._reset_instance_variables()
 
         return wrapper_func

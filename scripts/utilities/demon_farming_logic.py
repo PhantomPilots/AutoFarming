@@ -8,7 +8,6 @@ import utilities.vision_images as vio
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy, IFighter
 from utilities.indura_fighter import InduraFighter
 from utilities.indura_fighting_strategies import InduraBattleStrategy
@@ -68,12 +67,12 @@ class IDemonFarmer(IFarmer):
         demon_to_farm: Vision = vio.og_demon,
         time_to_sleep=9.3,
         do_dailies=False,
-        do_daily_pvp=False,
+        do_daily_pvp=True,
         password: str | None = None,
         indura_difficulty: str = "extreme",  # Difficulty of Indura demon
         indura_team: str = "fairies",
     ):
-        super().__init__()
+        super().__init__(do_daily_pvp=do_daily_pvp)
 
         # Store the account password in this instance if given
         if password:
@@ -94,7 +93,6 @@ class IDemonFarmer(IFarmer):
         self.sleep_before_accept = time_to_sleep
 
         # Set specific properties of our DailyFarmer
-        IFarmer.daily_farmer.set_daily_pvp(do_daily_pvp)
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
         # For the Indura fight!
@@ -159,15 +157,9 @@ class IDemonFarmer(IFarmer):
             print(f"Moving to {self.current_state}.")
             return
 
-        # We may be in the 'daily reset' state!
-        if (
-            find_and_click(vio.skip, screenshot, window_location, threshold=0.6)
-            or find(vio.fortune_card, screenshot, threshold=0.8)
-            or find_and_click(vio.cross, screenshot, window_location)
-        ):
+        if self._handle_daily_reset_entrypoint(screenshot, window_location):
             if IFarmer.do_dailies:
                 logger.info("We entered the daily reset state!")
-                self.current_state = GlobalStates.DAILY_RESET
             return
 
         # Click OK if we see it (?)
@@ -189,26 +181,26 @@ class IDemonFarmer(IFarmer):
 
         if self.demon_to_farm == vio.indura_demon:
             if self.indura_difficulty == "extreme":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_normal_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.normal_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.extreme_difficulty, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "hell":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_hard_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.hard_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.hell_difficulty, screenshot, window_location, threshold=0.6)
             elif self.indura_difficulty == "chaos":
-                if find(vio.demon_normal_diff, screenshot):
-                    find_and_click(vio.demon_extreme_diff, screenshot, window_location, threshold=0.6)
+                if find(vio.normal_difficulty, screenshot):
+                    find_and_click(vio.extreme_difficulty, screenshot, window_location, threshold=0.6)
                 else:
-                    find_and_click(vio.demon_chaos_diff, screenshot, window_location, threshold=0.6)
+                    find_and_click(vio.chaos_difficulty, screenshot, window_location, threshold=0.6)
             else:
                 raise RuntimeError(f"Unknown Indura difficulty: {self.indura_difficulty}")
             return
 
         # Click on the difficuly -- ONLY HELL
-        find_and_click(vio.demon_hell_diff, screenshot, window_location, threshold=0.6)
+        find_and_click(vio.hell_difficulty, screenshot, window_location, threshold=0.6)
 
     def wait_for_accepting_invite(self):
         """Wait for 9 seconds before accepting the invite. This should be a threading event!"""
@@ -342,6 +334,7 @@ class IDemonFarmer(IFarmer):
         if self.demon_to_farm == vio.indura_demon and (
             (self.indura_fight_thread is None) or not self.indura_fight_thread.is_alive()
         ):
+            self.fighter.prepare_for_new_fight()
             self.indura_fight_thread = threading.Thread(target=self.fighter.run, daemon=True)
             self.indura_fight_thread.start()
             print("Indura demon fighter started!")
@@ -355,7 +348,7 @@ class IDemonFarmer(IFarmer):
             IDemonFarmer.sent_emoji = False
 
         # If we see a skip
-        find_and_click(vio.skip_bird, screenshot, window_location)
+        find_and_click(vio.skip, screenshot, window_location)
 
         # When we've destroyed the demon
         find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5)
@@ -432,7 +425,7 @@ class DemonFarmer(IDemonFarmer):
         time_to_sleep=9.4,
         time_between_demons=2,
         do_dailies=False,  # Do we halt demon farming to do dailies?
-        do_daily_pvp=False,  # If we do dailies, do we do PVP?
+        do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
         indura_difficulty: str = "extreme",  # Difficulty of Indura demon
         indura_team: str = "fairies",

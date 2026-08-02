@@ -22,6 +22,7 @@ class SnakeFarmer(DemonicBeastFarmer):
         password=None,
         logger=logger,
         do_dailies=False,
+        do_daily_pvp=True,
     ):
 
         super().__init__(
@@ -33,6 +34,7 @@ class SnakeFarmer(DemonicBeastFarmer):
             password=password,
             logger=logger,
             do_dailies=do_dailies,
+            do_daily_pvp=do_daily_pvp,
         )
 
         # Using composition to decouple the main farmer logic from the actual fight.

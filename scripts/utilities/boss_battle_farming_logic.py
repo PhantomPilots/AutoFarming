@@ -92,7 +92,7 @@ class BossBattleFarmer(IFarmer):
             print(f"Going to {self.current_state}")
             return
 
-        find_and_click(vio.boss_floor_extreme, screenshot, window_location)
+        find_and_click(vio.extreme_difficulty, screenshot, window_location)
 
     def get_ready_state(self):
         """Prepare the fight and go!"""
@@ -128,7 +128,9 @@ class BossBattleFarmer(IFarmer):
             self.keep_alive(120, "Completed a run, going next")  # reset the runtime watchdog since we're making progress
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
+        if find(vio.stamina_pot, screenshot) and find_and_click(
+            vio.restore_stamina, screenshot, window_location, threshold=0.8
+        ):
             IFarmer.stamina_pots += 1
             return
 

@@ -129,15 +129,16 @@ class SADungeonFarmer(IFarmer):
         if rect is None or len(rect) == 0:
             return True, "no chest"
 
-        SADungeonFarmer.chest_found = (
-            True  # We found the chest, let's set the flag to avoid re-checking until next fight
-        )
         roi = crop_roi_from_rect(screenshot, rect)
         label, score = self.classify_chest_type(roi)
 
         if label == "unknown" or score < 0.70:
             # Conservative keep on low-confidence classification
-            return False, f"unknown chest (score={score:.3f}), keeping run"
+            return True, f"unknown chest (score={score:.3f}), retrying classification"
+
+        SADungeonFarmer.chest_found = (
+            True  # We found the chest, let's set the flag to avoid re-checking until next fight
+        )
 
         chest_tier = {
             "bronze": ChestTier.BRONZE,
@@ -172,6 +173,29 @@ class SADungeonFarmer(IFarmer):
 
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
+
+        # If we somehow opened the wrong dungeon, back out and try again. let's make sure we don't accidentally consume a key on the wrong dungeon
+        if find(vio.sa_coin_dungeon_menu, screenshot, threshold=0.85):
+            print("Wrong dungeon, Coin Dungeon detected, backing out and retrying")
+            press_key("esc")
+            return
+
+        if find(vio.sa_tower_of_chaos, screenshot, threshold=0.85):
+            print("Wrong dungeon, Clock Tower of Chaos detected, backing out and retrying")
+            press_key("esc")
+            return
+
+        if find(vio.sa_broken_clock_tower, screenshot, threshold=0.85):
+            print("Wrong dungeon, Broken Clock Tower detected, backing out and retrying")
+            press_key("esc")
+            return
+
+        # If no keys are detected, retry a few times before exiting in case detection is temporarily wrong.
+        # Has to be very high confidence, hence the 0.9 threshold
+        if find(vio.sa_no_keys, screenshot, threshold=0.9):
+            print_clr("We have no keys to open the dungeon, stopping the farmer", color=Color.RED)
+            exit(0)
+
 
         if find(vio.clock_tower_floor, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE
@@ -266,7 +290,9 @@ class SADungeonFarmer(IFarmer):
             return
 
         # We may need to restore stamina
-        if find_and_click(vio.restore_stamina, screenshot, window_location, threshold=0.8):
+        if find(vio.stamina_pot, screenshot) and find_and_click(
+            vio.restore_stamina, screenshot, window_location, threshold=0.8
+        ):
             IFarmer.stamina_pots += 1
             return
 
@@ -291,15 +317,15 @@ class SADungeonFarmer(IFarmer):
             should_restart, reason = self.should_restart_for_chest(screenshot)
             if not should_restart:
                 print_clr(f"Keeping run: {reason}", color=Color.GREEN)
-            elif reason == "no chest":
+            elif reason == "no chest" or reason.startswith("unknown chest"):
                 SADungeonFarmer.retry_count += 1
                 if SADungeonFarmer.retry_count <= self.num_image_detection_retries:
                     print(
                         f"[RETRY {SADungeonFarmer.retry_count}/{self.num_image_detection_retries}] "
-                        f"No chest detected yet, retrying image detection before restarting."
+                        f"Chest not ready ({reason}), retrying image detection before restarting."
                     )
                 else:
-                    print_clr("Restarting run: no chest after retry limit", color=Color.RED)
+                    print_clr(f"Restarting run: {reason} after retry limit", color=Color.RED)
                     print("[LOSS]")
                     self.lets_restart_fight(screenshot)
             else:
