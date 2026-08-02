@@ -156,12 +156,6 @@ class DogsFloor4Fighter(DogsFighter):
             reason=f"{slots_log_prefix}: available_card_slots={self.available_card_slots}"
         )
 
-    def finish_turn(self):
-        IFighter._phase_turn_started_for_current_turn = False
-        self._reset_instance_variables()
-        print("Finished my turn!")
-        return 1
-
     def _check_disabled_hand(self) -> bool:
         """If we have a disabled hand (same criteria as BirdFighter)."""
         screenshot, _ = capture_window()

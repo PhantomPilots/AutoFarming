@@ -535,7 +535,7 @@ FARMERS = [
                 "label": "Indura Team",
                 "type": "dropdown",
                 "choices": ["fairies", "humans"],
-                "default": "fairies",
+                "default": "humans",
             },
             {
                 "name": "--demons-to-farm",

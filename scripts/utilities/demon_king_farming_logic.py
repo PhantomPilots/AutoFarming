@@ -180,11 +180,13 @@ class DemonKingFarmer(IFarmer):
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
-        if find(vio.startbutton, screenshot):
+        if find(vio.startbutton, screenshot) and (
+            self.dk_fighting_thread is None or not self.dk_fighting_thread.is_alive()
+        ):
             print("Let's store unit types...")
             self.store_unit_types()
-            find_and_click(vio.startbutton, screenshot, window_location)
 
+        find_and_click(vio.startbutton, screenshot, window_location)
         find_and_click(vio.skip, screenshot, window_location)
 
         with IFarmer._lock:

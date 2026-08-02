@@ -131,6 +131,7 @@ db_victory = Vision("demonic_beasts\\db_victory.png")
 demonic_beast_battle = Vision("demonic_beasts\\demonic_beast_battle.png")
 set_db_party = Vision("demonic_beasts\\set_party.png")
 extra_clear = Vision("demonic_beasts\\extra.png")
+challenge_restrictions_removed = Vision("demonic_beasts\\challenge_restrictions_removed.png")
 
 # For Bird farming
 demonic_beast = Vision("demonic_beasts\\creature_nest.png")

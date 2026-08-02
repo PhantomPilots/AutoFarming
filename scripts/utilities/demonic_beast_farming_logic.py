@@ -137,6 +137,9 @@ class DemonicBeastFarmer(IFarmer):
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
+        # First fight of the week
+        find_and_click(vio.challenge_restrictions_removed, screenshot, window_location)
+
         # If we see we're inside the DB selection screen but don't see our DemonicBeast,
         # swipe right (or left after 4 attempts) and try again
         if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):

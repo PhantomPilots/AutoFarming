@@ -45,6 +45,8 @@ class IFighter(abc.ABC):
     current_phase = 1
     current_floor = 1
     _phase_turn_started_for_current_turn = False
+    turn_end_zero_slot_confirmations = 1
+    turn_end_zero_slot_confirmation_delay = 0.25
 
     def __init__(self, battle_strategy: IBattleStrategy, callback: Callable | None = None):
         """Initialize the fighter instance with a (optional) callback to call when the fight has finished,
@@ -67,6 +69,7 @@ class IFighter(abc.ABC):
             self.exit_thread = False
             self.current_state = FightingStates.FIGHTING
             self.available_card_slots = 0
+            self._consecutive_zero_empty_slot_observations = 0
             # The hand will be a tuple of: the list of original cards in hand, and the list of indices to play
             self.current_hand: tuple[list[Card], list[int]] = None
             # Reset the list of picked cards
@@ -162,6 +165,12 @@ class IFighter(abc.ABC):
     def play_cards(self, **kwargs):
         """Read the current hand of cards, and play them based on the available card slots."""
 
+        if (
+            self._consecutive_zero_empty_slot_observations > 0
+            and self.turn_end_zero_slot_confirmation_delay > 0
+        ):
+            time.sleep(self.turn_end_zero_slot_confirmation_delay)
+
         screenshot, window_location = capture_window()
         empty_card_slots = self.count_empty_card_slots(screenshot)
 
@@ -180,6 +189,7 @@ class IFighter(abc.ABC):
         slot_index = max(0, self.available_card_slots - empty_card_slots)
 
         if empty_card_slots > 0:
+            self._consecutive_zero_empty_slot_observations = 0
             self._start_phase_turn_if_needed()
 
             # KEY: Read the hand of cards here
@@ -204,15 +214,29 @@ class IFighter(abc.ABC):
                 print("slot index:", slot_index, "len indices:", len(current_hand[1]))
                 raise e
 
+            if index_to_play is None:
+                print("Strategy already handled this card turn; skipping normal card action.")
+                return
+
             # Return the card played to use this in the corresponding fighting strategy
             card_played = self._play_card(
                 current_hand[0], index=index_to_play, window_location=window_location, screenshot=screenshot
             )
 
-            # Add this played card to the corresponding slot in picked cards
-            self.picked_cards[slot_index] = card_played
+            # Only card clicks fill a battle slot. Hand drags return an empty Card and must not
+            # overwrite a card that was already queued in this slot.
+            if isinstance(index_to_play, Integral):
+                self.picked_cards[slot_index] = card_played
 
         elif empty_card_slots == 0:
+            self._consecutive_zero_empty_slot_observations += 1
+            if self._consecutive_zero_empty_slot_observations < self.turn_end_zero_slot_confirmations:
+                print(
+                    "Waiting to confirm turn end: "
+                    f"{self._consecutive_zero_empty_slot_observations}/"
+                    f"{self.turn_end_zero_slot_confirmations} zero-slot observations."
+                )
+                return
             return self.finish_turn()
 
     def finish_turn(self):

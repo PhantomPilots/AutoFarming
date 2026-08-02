@@ -344,6 +344,7 @@ def click_and_drag(start_x, start_y, end_x, end_y, *, sleep_after_click=0.02, dr
     - Requests 1 ms timer resolution only during the drag for smoother motion.
     - Slightly bumps thread priority (best-effort) to reduce scheduling hiccups.
     """
+    wait_if_paused()
 
     # --- Best-effort: give this thread a little priority boost
     with contextlib.suppress(Exception):
