@@ -80,6 +80,11 @@ from utilities.app_config import (
     save_config_updates,
     test_ntfy_connection,
 )
+from utilities.image_assets import (
+    GameVersion,
+    get_saved_game_version,
+    normalize_game_version,
+)
 from utilities.logging_utils import remove_expired_logged_images
 
 # Free software message to display in GUI
@@ -876,6 +881,7 @@ class FarmerController(QObject):
         script_path = os.path.join(os.path.dirname(__file__), self.farmer["script"])
         args = self._build_cli_args()
         display_args = self._build_display_args(args)
+        game_version = get_saved_game_version()
 
         self.process = QProcess(self)
         env = QProcessEnvironment.systemEnvironment()
@@ -904,7 +910,7 @@ class FarmerController(QObject):
         self.process.start(sys.executable, ["-u", script_path] + args)
         self._cleanup_pause_flag()
         self._append_output(
-            f"<color=#10b981>Started {self.farmer['name']} with:\n"
+            f"<color=#10b981>Started {self.farmer['name']} for {game_version.display_name} with:\n"
             f"{' '.join([sys.executable, '-u', script_path] + display_args)}\n</color>"
         )
         self._output_timer.start(100)
@@ -2984,6 +2990,7 @@ class MainWindow(QMainWindow):
         self._update_check_timeout_timer = QTimer(self)
         self._update_check_timeout_timer.setSingleShot(True)
         self._update_check_timeout_timer.timeout.connect(self._on_update_check_timeout)
+        self._saved_game_version = get_saved_game_version()
 
         self._controllers = {
             farmer["name"]: FarmerController(
@@ -3017,6 +3024,20 @@ class MainWindow(QMainWindow):
 
         top_lay.addStretch(1)
 
+        game_version_label = QLabel("Game Version:")
+        game_version_label.setStyleSheet(f"color: {C['muted']};")
+        top_lay.addWidget(game_version_label)
+
+        self._game_version_combo = QComboBox()
+        self._game_version_combo.addItem(GameVersion.GLOBAL.display_name, GameVersion.GLOBAL.value)
+        self._game_version_combo.addItem(GameVersion.JAPAN.display_name, GameVersion.JAPAN.value)
+        self._game_version_combo.setMinimumWidth(165)
+        self._game_version_combo.setToolTip("Choose which game client the next farmer will recognize.")
+        saved_index = self._game_version_combo.findData(self._saved_game_version.value)
+        self._game_version_combo.setCurrentIndex(max(0, saved_index))
+        self._game_version_combo.currentIndexChanged.connect(self._on_game_version_changed)
+        top_lay.addWidget(self._game_version_combo)
+
         self._view_toggle_btn = QPushButton("⊞  Grid")
         self._view_toggle_btn.setStyleSheet(_BTN_TOP_STYLE)
         self._view_toggle_btn.clicked.connect(self._toggle_view)
@@ -3048,6 +3069,7 @@ class MainWindow(QMainWindow):
         self.grid_view.farmer_selected.connect(self._on_farmer_selected)
         for name, controller in self._controllers.items():
             controller.running_changed.connect(lambda running, pid, n=name: self.grid_view.set_running(n, running))
+            controller.running_changed.connect(self._refresh_game_version_enabled)
             self.grid_view.set_running(name, controller.is_running)
 
         self.list_view = ListView(FARMERS, self._controllers, about_tab_factory=self._make_about_tab)
@@ -3060,6 +3082,37 @@ class MainWindow(QMainWindow):
 
         self.stack.setCurrentWidget(self.list_view)
         QTimer.singleShot(1000, self._check_for_update_available)
+
+    def _selected_game_version(self) -> GameVersion:
+        return normalize_game_version(self._game_version_combo.currentData())
+
+    def _on_game_version_changed(self, _index: int) -> None:
+        selected = self._selected_game_version()
+        if selected is self._saved_game_version:
+            return
+
+        previous = self._saved_game_version
+        try:
+            save_config_updates({"game_version": selected.value})
+            config.reload()
+            self._saved_game_version = selected
+        except Exception as exc:
+            self._game_version_combo.blockSignals(True)
+            self._game_version_combo.setCurrentIndex(self._game_version_combo.findData(previous.value))
+            self._game_version_combo.blockSignals(False)
+            QMessageBox.critical(
+                self,
+                "Game Version Save Failed",
+                f"Could not save the game version. The selection was restored.\n\n{exc}",
+            )
+
+    def _refresh_game_version_enabled(self, *_args) -> None:
+        enabled = not any(controller.process is not None for controller in self._controllers.values())
+        self._game_version_combo.setEnabled(enabled)
+        if enabled:
+            self._game_version_combo.setToolTip("Choose which game client the next farmer will recognize.")
+        else:
+            self._game_version_combo.setToolTip("Stop all running farmers before changing the game version.")
 
     @property
     def settings_tab(self) -> "SettingsTab":

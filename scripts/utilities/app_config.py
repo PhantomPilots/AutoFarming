@@ -21,6 +21,7 @@ APP_CONFIG_KEYS = frozenset(
         "notification_cooldown_minutes",
         "max_notifications_per_incident",
         "game_password",
+        "game_version",
         "minutes_to_wait_before_login",
     }
 )
@@ -31,6 +32,7 @@ APP_CONFIG_DEFAULTS = {
     "notification_cooldown_minutes": 5,
     "max_notifications_per_incident": 5,
     "game_password": "",
+    "game_version": "global",
     "minutes_to_wait_before_login": 30,
 }
 

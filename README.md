@@ -26,7 +26,7 @@ Join the community if you want quick replies to issues, have new feature request
 
 * Works on the official 7DS PC Beta Client: https://7dsgc.netmarble.com/en/pcclient.
 * Disable "landscape mode" in Settings within the game (that means, enable portrait mode).
-* Set the game in English!
+* Both the Global (English) and Japan (Japanese) game clients are supported. Select the matching **Game Version** in the GUI.
 * Disable all notifications within the game (e.g., random battle invites.)
 
 ## Installation
@@ -59,13 +59,20 @@ Now, simply via the `Update` button in the "About" tab of the GUI!
 ### How to run the bots
 
 1. Inside `scripts`, click on `main.exe`. This should open an interface to interact with.
-2. Select the farmer tab you want to use
-3. Configure the arguments in the left panel
-4. Click "START" to begin farming
-5. Monitor progress in the terminal output window
-6. Click "STOP" when finished
+2. Select **Global (English)** or **Japan (Japanese)** from the **Game Version** selector in the top bar.
+3. Select the farmer tab you want to use
+4. Configure the arguments in the left panel
+5. Click "START" to begin farming
+6. Monitor progress in the terminal output window
+7. Click "STOP" when finished
 
 You can PAUSE/RESUME the bot at any time with the corresponding button.
+
+### Game version
+
+Global is selected by default on first run, and the GUI remembers the last version you selected. Stop all running farmers before switching versions. Japanese runs use matching templates from `scripts/images/japan/` when available and automatically fall back to the corresponding Global template when a Japanese file is absent.
+
+Farmer scripts launched directly use the `game_version` preference saved in `scripts/config/config.yaml`.
 
 ### Game password (optional)
 
@@ -88,6 +95,7 @@ Saving from the GUI rewrites `config.yaml` with PyYAML; **inline comments in tha
 | `notification_cooldown_minutes` | 5 | Minimum gap between repeated stuck alerts |
 | `max_notifications_per_incident` | 5 | Hard cap on alerts per stuck incident |
 | `game_password` | (empty) | Account password for re-login after logout (sensitive) |
+| `game_version` | `global` | Game client whose image templates should be used (`global` or `japan`) |
 | `minutes_to_wait_before_login` | 30 | Minutes to wait after logout before attempting login again |
 
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.

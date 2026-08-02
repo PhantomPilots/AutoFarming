@@ -3,6 +3,7 @@ import os
 import cv2
 import numpy as np
 from termcolor import cprint
+from utilities.image_assets import ImageAssetResolver, get_default_image_asset_resolver
 from utilities.pattern_match_strategies import (
     IMatchingStrategy,
     TemplateMatchingStrategy,
@@ -17,11 +18,13 @@ class Vision:
         needle_basename,
         image_name: str | None = None,
         matching_strategy: IMatchingStrategy = TemplateMatchingStrategy,
+        asset_resolver: ImageAssetResolver | None = None,
     ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
 
         self._needle_basename = needle_basename
-        self._needle_path = os.path.join("images", needle_basename)
+        self._asset_resolver = asset_resolver or get_default_image_asset_resolver()
+        self._needle_path = str(self._asset_resolver.resolve(needle_basename))
         self.matching_strategy = matching_strategy
 
         if image_name is None:
@@ -42,7 +45,11 @@ class Vision:
         if not self._needle_loaded:
             self._needle_img = cv2.imread(self._needle_path)
             if self._needle_img is None:
-                cprint(f"No image can be found for '{self._needle_basename}'", "yellow")
+                cprint(
+                    f"No image can be loaded for '{self._needle_basename}' "
+                    f"({self._asset_resolver.game_version.value}: {self._needle_path})",
+                    "yellow",
+                )
             self._needle_loaded = True
         return self._needle_img
 
@@ -103,15 +110,18 @@ class MultiVision(Vision):
         *needle_basenames: str,
         image_name: str | None = None,
         matching_strategy: IMatchingStrategy = TemplateMatchingStrategy,
+        asset_resolver: ImageAssetResolver | None = None,
     ):
         """Receives the needle image to search on a haystack, and the matching algorithm to use"""
 
         if image_name is None:
             raise ValueError("For a MultiVision instance, the 'image_name' argument must be provided")
 
-        self._needle_paths = [os.path.join("images", needle_basename) for needle_basename in needle_basenames]
+        self._asset_resolver = asset_resolver or get_default_image_asset_resolver()
+        self._needle_basenames = list(needle_basenames)
+        self._needle_paths = [str(self._asset_resolver.resolve(path)) for path in self._needle_basenames]
         self._image_names_list = [
-            os.path.basename(needle_basename).split(".")[0] for needle_basename in needle_basenames
+            os.path.basename(needle_basename).split(".")[0] for needle_basename in self._needle_basenames
         ]
         self._image_name = image_name
         self.matching_strategy = matching_strategy
@@ -122,9 +132,23 @@ class MultiVision(Vision):
     def needle_imgs(self) -> list[np.ndarray]:
         """Lazily-loaded template images; raises ``ValueError`` on first access if all paths missing."""
         if self._needle_imgs is None:
-            loaded = [img for img in (cv2.imread(path) for path in self._needle_paths) if img is not None]
+            loaded = []
+            for basename, path in zip(self._needle_basenames, self._needle_paths):
+                image = cv2.imread(path)
+                if image is None:
+                    cprint(
+                        f"No image can be loaded for '{basename}' "
+                        f"({self._asset_resolver.game_version.value}: {path})",
+                        "yellow",
+                    )
+                else:
+                    loaded.append(image)
             if not loaded:
-                raise ValueError(f"No image can be found to create the MultiVision instance '{self._image_name}'")
+                raise ValueError(
+                    f"No image can be loaded to create the MultiVision instance '{self._image_name}' "
+                    f"for game version '{self._asset_resolver.game_version.value}'. "
+                    f"Resolved paths: {self._needle_paths}"
+                )
             self._needle_imgs = loaded
         return self._needle_imgs
 

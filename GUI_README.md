@@ -7,6 +7,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Tabbed Interface**: Each farmer has its own tab with dedicated controls and images
 - **Real-time Terminal Output**: See live output from running farmers as they work
 - **Easy Configuration**: Simple forms for each farmer's settings - no need to remember command lines
+- **Global and Japanese Clients**: Choose the game version from the top bar and keep the same farmer workflows
 - **Process Management**: Start and stop farmers with dedicated buttons
 - **Farmer Images**: Visual representation of each farming type
 - **Window Resizing**: Automatically resizes your game window for optimal performance
@@ -22,8 +23,9 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 
 ### Using the Interface
 
-1. **Select a Farmer**: Click on the tab for the farmer you want to use (Bird, Deer, Dogs, etc.)
-2. **Configure Settings**: Fill in the required settings in the left panel:
+1. **Select a Game Version**: Choose **Global (English)** or **Japan (Japanese)** from the top bar
+2. **Select a Farmer**: Click on the tab for the farmer you want to use (Bird, Deer, Dogs, etc.)
+3. **Configure Settings**: Fill in the required settings in the left panel:
    - **Password**: Your account password (optional, for auto-login)
    - **Clears**: Number of runs or "inf" for infinite farming
    - **Difficulty**: For applicable farmers (Demon, Final Boss)
@@ -31,9 +33,9 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
    - **Time to Sleep**: How long to wait between actions (in seconds)
    - **Do Dailies**: Check this box to complete daily missions automatically
    - **Whale mode**: For Floor 4 Deer/Dogs and Snake farmers — enables the high-gear strategy (image and requirements update dynamically)
-3. **Start Farming**: Click the green "START" button
-4. **Monitor Progress**: Watch the real-time output in the terminal window on the right
-5. **Stop Farming**: Click the red "STOP" button when done
+4. **Start Farming**: Click the green "START" button
+5. **Monitor Progress**: Watch the real-time output in the terminal window on the right
+6. **Stop Farming**: Click the red "STOP" button when done
 
 ### Available Farmers
 
@@ -56,6 +58,10 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 
 - **Game Window**: The GUI automatically resizes your 7DS Grand Cross window to 538x921 pixels for optimal performance
 - **Independent Farmers**: Each farmer runs separately, so you can stop one without affecting others
+- **Remembered Game Version**: Global is the first-run default; afterward the GUI restores the last successful selection
+- **Safe Version Switching**: The selector is locked while any farmer is running
+- **Japanese Asset Fallback**: Japanese runs prefer `scripts/images/japan/` and use the corresponding Global image when a Japanese file is missing
+- **Direct Script Launches**: Standalone farmer scripts use the `game_version` preference saved in `scripts/config/config.yaml`
 - **Memory Efficient**: Output is limited to prevent memory issues during long farming sessions
 - **Free Software**: This is completely free - if you paid for it, you were scammed!
 
