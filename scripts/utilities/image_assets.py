@@ -22,6 +22,13 @@ class GameVersion(str, Enum):
             return "Japan (Japanese)"
         return "Global (English)"
 
+    @property
+    def window_title(self) -> str:
+        """Return the exact top-level Windows title for this game client."""
+        if self is GameVersion.JAPAN:
+            return "グラクロ"
+        return "7DS"
+
 
 def normalize_game_version(value, *, source: str = "game version") -> GameVersion:
     """Return a supported game version, defaulting invalid or missing values to Global."""

@@ -9,10 +9,22 @@ import win32con
 import win32gui
 import win32ui
 
+from utilities.image_assets import get_saved_game_version
+
 
 _CAPTURE_LOCK = threading.RLock()
 _DEFAULT_CAPTURE_RETRIES = 3
 _RETRY_DELAY_SECONDS = 0.05
+
+
+def get_game_window_title() -> str:
+    """Return the configured game client's exact Windows window title."""
+    return get_saved_game_version().window_title
+
+
+def find_game_window() -> int:
+    """Find the configured game client's top-level window."""
+    return win32gui.FindWindow(None, get_game_window_title())
 
 
 class _RECT(ctypes.Structure):
@@ -48,16 +60,16 @@ def _get_required_window_size_for_client(
 
 
 def get_window_size():
-    """Get the size of the 7DS window"""
-    hwnd_target = win32gui.FindWindow(None, r"7DS")
+    """Get the size of the configured game window."""
+    hwnd_target = find_game_window()
     window_rect = win32gui.GetWindowRect(hwnd_target)
     return window_rect[2] - window_rect[0], window_rect[3] - window_rect[1]
 
 
 def calculate_exact_border_sizes():
-    """Calculate the exact border sizes of the 7DS window"""
+    """Calculate the exact border sizes of the configured game window."""
     try:
-        hwnd_target = win32gui.FindWindow(None, r"7DS")
+        hwnd_target = find_game_window()
         if hwnd_target == 0:
             return None, None
 
@@ -132,9 +144,9 @@ def _safe_release_capture_objects(
 def _get_7ds_capture_region(*, kind: str, attempt: int, max_attempts: int) -> tuple[int, tuple[int, int], int, int]:
     stage = "FindWindow"
     try:
-        hwnd_target = win32gui.FindWindow(None, r"7DS")
+        hwnd_target = find_game_window()
         if hwnd_target == 0:
-            raise RuntimeError("7DS window not found")
+            raise RuntimeError(f"Game window '{get_game_window_title()}' not found")
 
         stage = "GetWindowRect"
         window_rect = win32gui.GetWindowRect(hwnd_target)
@@ -147,7 +159,7 @@ def _get_7ds_capture_region(*, kind: str, attempt: int, max_attempts: int) -> tu
         h = h - 20
 
         if w <= 0 or h <= 0:
-            raise RuntimeError(f"Invalid 7DS capture dimensions: {w}x{h}")
+            raise RuntimeError(f"Invalid game capture dimensions: {w}x{h}")
 
         return hwnd_target, capture_origin, w, h
     except Exception as exc:
@@ -233,9 +245,9 @@ def resize_7ds_window(width=540, height=960):
     """
     with _CAPTURE_LOCK:
         try:
-            hwnd_target = win32gui.FindWindow(None, r"7DS")
+            hwnd_target = find_game_window()
             if hwnd_target == 0:
-                print("[ERROR] 7DS window not found!")
+                print(f"[ERROR] Game window '{get_game_window_title()}' not found!")
                 return False
 
             current_rect = win32gui.GetWindowRect(hwnd_target)
@@ -368,7 +380,7 @@ def resize_7ds_window(width=540, height=960):
             client_height_diff = abs(final_client_height - height)
 
             if client_width_diff <= 1 and client_height_diff <= 1:
-                print(f"[SUCCESS] 7DS window client area resized to {final_client_width}x{final_client_height}")
+                print(f"[SUCCESS] Game window client area resized to {final_client_width}x{final_client_height}")
                 print(f"[INFO] Target was {width}x{height}, difference: {client_width_diff}x{client_height_diff}")
 
                 move_window_to_visible_area(hwnd_target, final_width, final_height)
@@ -510,9 +522,9 @@ def capture_screen() -> np.ndarray:
 
 
 def is_7ds_window_open() -> bool:
-    """Check if the 7DS window is open and visible.
+    """Check if the configured game window is open and visible.
     Returns:
         bool: True if the window exists and is visible, False otherwise
     """
-    hwnd = win32gui.FindWindow(None, r"7DS")
+    hwnd = find_game_window()
     return hwnd != 0

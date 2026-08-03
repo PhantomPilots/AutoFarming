@@ -29,6 +29,8 @@ from utilities.app_config import (
 from utilities.capture_window import (
     capture_screen,
     capture_window,
+    find_game_window,
+    get_game_window_title,
     get_window_size,
     is_7ds_window_open,
 )
@@ -430,9 +432,9 @@ def press_key(key: str):
 
 def close_game():
     # Find the window by title
-    hwnd = win32gui.FindWindow(None, "7DS")
+    hwnd = find_game_window()
     if hwnd == 0:
-        print("[WARN] '7DS' window not found.")
+        print(f"[WARN] Game window '{get_game_window_title()}' not found.")
         return
 
     # Bring the window to the foreground
@@ -447,9 +449,9 @@ def close_game():
 
 def close_game_if_not_in_login_screen():
     # Find the window by title
-    hwnd = win32gui.FindWindow(None, "7DS")
+    hwnd = find_game_window()
     if hwnd == 0:
-        print("[WARN] '7DS' window not found.")
+        print(f"[WARN] Game window '{get_game_window_title()}' not found.")
         return
 
     # Bring the window to the foreground
