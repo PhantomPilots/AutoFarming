@@ -1168,6 +1168,7 @@ PASSWORD_CLI_SCRIPTS = frozenset(
         "BirdFloor4Farmer.py",
         "DeerFarmer.py",
         "DeerFloor4Farmer.py",
+        "DailyQuestsFarmer.py",
         "DemonicBeastRotationFarmer.py",
         "DogsFarmer.py",
         "DogsFloor4Farmer.py",
