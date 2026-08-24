@@ -8,12 +8,12 @@ from enum import Enum
 
 import utilities.vision_images as vio
 from utilities.capture_window import capture_window
-from utilities.constants import *
+from utilities.constants import PACIFIC_TIMEZONE
 from utilities.coordinates import Coordinates
 from utilities.daily_farming_logic import DailyFarmer
 from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_fighter_interface import IFighter
-from utilities.app_config import get_minutes_to_wait_before_login
+from utilities.app_config import get_check_in_hour, get_minutes_to_wait_before_login
 from utilities.utilities import (
     check_for_reconnect,
     close_game,
@@ -23,6 +23,9 @@ from utilities.utilities import (
     press_key,
     type_word,
 )
+
+
+CHECK_IN_HOUR = get_check_in_hour()
 
 
 class States(Enum):

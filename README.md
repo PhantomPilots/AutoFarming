@@ -97,6 +97,7 @@ Saving from the GUI rewrites `config.yaml` with PyYAML; **inline comments in tha
 | `game_password` | (empty) | Account password for re-login after logout (sensitive) |
 | `game_version` | `global` | Game client whose image templates should be used (`global` or `japan`) |
 | `minutes_to_wait_before_login` | 30 | Minutes to wait after logout before attempting login again |
+| `check_in_hour` | 3 | Daily check-in hour on a 24-hour Pacific Time clock |
 
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 

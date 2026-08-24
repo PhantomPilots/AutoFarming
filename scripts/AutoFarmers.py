@@ -1868,6 +1868,19 @@ class SettingsTab(QWidget):
         stuck_group.setLayout(stuck_form)
         layout.addWidget(stuck_group)
 
+        daily_group = QGroupBox("Daily schedule")
+        daily_form = QFormLayout()
+        self.check_in_hour_spin = QSpinBox()
+        self.check_in_hour_spin.setRange(0, 23)
+        self.check_in_hour_spin.setSuffix(":00 PT")
+        daily_form.addRow("Daily check-in time:", self.check_in_hour_spin)
+        daily_hint = QLabel("Uses a 24-hour clock in Pacific Time.")
+        daily_hint.setWordWrap(True)
+        daily_hint.setStyleSheet(f"color: {C['muted']}; font-size: 13px;")
+        daily_form.addRow("", daily_hint)
+        daily_group.setLayout(daily_form)
+        layout.addWidget(daily_group)
+
         pwd_group = QGroupBox("Game login")
         pwd_outer = QVBoxLayout()
         pwd_help = QLabel(
@@ -1936,6 +1949,7 @@ class SettingsTab(QWidget):
         self.stuck_spin.setValue(self._int_from_data(data, "stuck_timeout_minutes"))
         self.cooldown_spin.setValue(self._int_from_data(data, "notification_cooldown_minutes"))
         self.max_notif_spin.setValue(self._int_from_data(data, "max_notifications_per_incident"))
+        self.check_in_hour_spin.setValue(self._int_from_data(data, "check_in_hour"))
         pw = data.get("game_password", APP_CONFIG_DEFAULTS["game_password"])
         if pw is None or str(pw).strip() == "":
             legacy = data.get("default_game_password")
@@ -1956,6 +1970,7 @@ class SettingsTab(QWidget):
                     "stuck_timeout_minutes": self.stuck_spin.value(),
                     "notification_cooldown_minutes": self.cooldown_spin.value(),
                     "max_notifications_per_incident": self.max_notif_spin.value(),
+                    "check_in_hour": self.check_in_hour_spin.value(),
                     "game_password": stripped_pwd,
                     "minutes_to_wait_before_login": self.login_wait_spin.value(),
                 }

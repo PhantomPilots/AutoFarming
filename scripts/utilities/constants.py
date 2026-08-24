@@ -5,4 +5,3 @@ import pytz
 
 # For dailies and logging back in after being logged out
 PACIFIC_TIMEZONE = pytz.timezone("America/Los_Angeles")
-CHECK_IN_HOUR = 2  # Pacific Time

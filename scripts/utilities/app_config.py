@@ -23,6 +23,7 @@ APP_CONFIG_KEYS = frozenset(
         "game_password",
         "game_version",
         "minutes_to_wait_before_login",
+        "check_in_hour",
     }
 )
 
@@ -34,6 +35,7 @@ APP_CONFIG_DEFAULTS = {
     "game_password": "",
     "game_version": "global",
     "minutes_to_wait_before_login": 30,
+    "check_in_hour": 3,
 }
 
 
@@ -72,6 +74,16 @@ class Config:
 
 
 config = Config(get_config_yaml_path())
+
+
+def get_check_in_hour() -> int:
+    """Daily check-in hour in Pacific Time (from config.yaml)."""
+    raw = config.get("check_in_hour", APP_CONFIG_DEFAULTS["check_in_hour"])
+    try:
+        hour = int(raw)
+        return max(0, min(23, hour))
+    except (TypeError, ValueError):
+        return int(APP_CONFIG_DEFAULTS["check_in_hour"])
 
 
 def get_minutes_to_wait_before_login() -> int:
