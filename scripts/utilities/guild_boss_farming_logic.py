@@ -100,11 +100,15 @@ class GuildBossFarmer(IFarmer):
             self.current_state = States.FINDING_BOSS
             return
 
+        clicked_image = False
+
         # If we've ended the fight...
-        find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
-        find_and_click(vio.episode_clear, screenshot, window_location)
-        find_and_click(vio.daily_quest_info, screenshot, window_location)
-        if find_and_click(vio.boss_mission, screenshot, window_location):
+        clicked_image |= find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
+        clicked_image |= find_and_click(vio.episode_clear, screenshot, window_location)
+        clicked_image |= find_and_click(vio.daily_quest_info, screenshot, window_location)
+        boss_mission_clicked = find_and_click(vio.boss_mission, screenshot, window_location)
+        clicked_image |= boss_mission_clicked
+        if boss_mission_clicked:
             GuildBossFarmer.num_fights += 1
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
             print("[CLEAR]")
@@ -112,16 +116,20 @@ class GuildBossFarmer(IFarmer):
         find_and_click(vio.boss_results, screenshot, window_location)
 
         # We may need to restore stamina
-        if find(vio.stamina_pot, screenshot) and find_and_click(vio.restore_stamina, screenshot, window_location):
+        restore_stamina_clicked = find(vio.stamina_pot, screenshot) and find_and_click(
+            vio.restore_stamina, screenshot, window_location
+        )
+        clicked_image |= restore_stamina_clicked
+        if restore_stamina_clicked:
             IFarmer.stamina_pots += 1
             logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
             return
 
-        find_and_click(vio.skip, screenshot, window_location)
+        clicked_image |= find_and_click(vio.skip, screenshot, window_location)
         # Weird that here, we need a threshold of 0.7 for the AUTO button... But seems to work?
-        find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
+        clicked_image |= find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 
-        find_and_click(vio.startbutton, screenshot, window_location)
+        clicked_image |= find_and_click(vio.startbutton, screenshot, window_location)
 
         if find(vio.again, screenshot):
             # First, if it's time to check in, do it
@@ -132,13 +140,16 @@ class GuildBossFarmer(IFarmer):
             self.maybe_reset_daily_checkin_flag()
 
             # If we're not checking in, let's keep fighting
-            find_and_click(vio.again, screenshot, window_location)
+            clicked_image |= find_and_click(vio.again, screenshot, window_location)
 
         elif find(vio.failed, screenshot):
             print("Oh no, we have lost :( Retrying...")
             self.current_state = States.FINDING_BOSS
             # TODO: The line below may cause a bot lock, may have to fix it
-            find_and_click(vio.ok_main_button, screenshot, window_location)
+            clicked_image |= find_and_click(vio.ok_main_button, screenshot, window_location)
+
+        if not clicked_image:
+            click_im((279, 197), window_location)
 
     def run(self):
 
