@@ -205,6 +205,15 @@ def get_click_point_from_rectangle(rectangle):
     return [center_x, center_y]
 
 
+def is_game_window_focused() -> bool:
+    """Return whether the configured game window is foreground and not minimized."""
+    try:
+        hwnd = find_game_window()
+        return bool(hwnd and hwnd == win32gui.GetForegroundWindow() and not win32gui.IsIconic(hwnd))
+    except win32gui.error:
+        return False
+
+
 def click_im(rectangle_or_point: Union[np.ndarray, tuple], window_location: list[float], sleep_after_click=0.01):
     """Clicks on an image using the mouse event.
 

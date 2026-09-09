@@ -14,6 +14,7 @@ from utilities.utilities import (
     click_im,
     find,
     find_and_click,
+    is_game_window_focused,
     press_key,
 )
 from utilities.vision import Vision
@@ -113,7 +114,7 @@ class GuildBossFarmer(IFarmer):
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
             print("[CLEAR]")
             return
-        find_and_click(vio.boss_results, screenshot, window_location)
+        clicked_image |= find_and_click(vio.boss_results, screenshot, window_location)
 
         # We may need to restore stamina
         restore_stamina_clicked = find(vio.stamina_pot, screenshot) and find_and_click(
@@ -148,7 +149,7 @@ class GuildBossFarmer(IFarmer):
             # TODO: The line below may cause a bot lock, may have to fix it
             clicked_image |= find_and_click(vio.ok_main_button, screenshot, window_location)
 
-        if not clicked_image:
+        if not clicked_image and is_game_window_focused():
             click_im((279, 197), window_location)
 
     def run(self):
