@@ -71,6 +71,7 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
         battle_strategy=None,
         starting_state=DemonicBeastStates.GOING_TO_DB,
         beasts_to_farm: list[str] | tuple[str, ...] | None = None,
+        repeat_rotation: bool = False,
         max_stamina_pots="inf",
         logger=logger,
         password: str | None = None,
@@ -81,6 +82,7 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
 
         beast_keys = self.normalize_beast_keys(beasts_to_farm)
         type(self)._set_selected_beasts(beast_keys)
+        self.repeat_rotation = repeat_rotation
 
         super().__init__(
             starting_state=starting_state,
@@ -94,7 +96,10 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
             do_daily_pvp=do_daily_pvp,
         )
         self._apply_current_beast()
-        print(f"We'll run floors 1-3 once for: {self.selected_beast_names}.")
+        if self.repeat_rotation:
+            print(f"We'll continuously rotate through floors 1-3 for: {self.selected_beast_names}.")
+        else:
+            print(f"We'll run floors 1-3 once for: {self.selected_beast_names}.")
         print(f"Starting with {self.current_beast_config.display_name}.")
 
     @classmethod
@@ -149,13 +154,21 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
     def _advance_to_next_beast(self) -> bool:
         next_index = type(self)._active_beast_index + 1
         if next_index >= len(type(self)._selected_beast_keys):
-            return False
+            if not self.repeat_rotation:
+                return False
+            next_index = 0
+            completed_rotation = True
+        else:
+            completed_rotation = False
 
         type(self)._active_beast_index = next_index
         DemonicBeastFarmer.current_floor = 1
         DemonicBeastFarmer._swipe_attempts = 0
         self._apply_current_beast()
-        print(f"Switching to {self.current_beast_config.display_name}.")
+        if completed_rotation:
+            print(f"Rotation complete; repeating from {self.current_beast_config.display_name}.")
+        else:
+            print(f"Switching to {self.current_beast_config.display_name}.")
         return True
 
     def fight_complete_callback(self, victory=True, phase="unknown"):

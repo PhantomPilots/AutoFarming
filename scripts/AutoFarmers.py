@@ -369,7 +369,8 @@ REQUIREMENTS = {
     "Demonic Beast Rotation": """
 <p><strong>Requirements:</strong><br>
 • Select Bird, Deer, and/or Dogs<br>
-• Runs floors 1-3 once for each selected Demonic Beast, then returns to the Tavern</p>
+• Runs floors 1-3 once for each selected Demonic Beast, then returns to the Tavern<br>
+• Enable Repeat Rotation Indefinitely to loop through the selection until stopped</p>
     """,
     "Deer Farmer": """
 <p><strong>Requirements:</strong><br>
@@ -652,6 +653,12 @@ FARMERS = [
                 "choices": ["bird", "deer", "dogs"],
                 "labels": ["Bird", "Deer", "Dogs"],
                 "default": ["bird", "deer", "dogs"],
+            },
+            {
+                "name": "--repeat-rotation",
+                "label": "Repeat Rotation Indefinitely",
+                "type": "checkbox",
+                "default": False,
             },
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,

@@ -14,7 +14,13 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="+",
         choices=["bird", "deer", "dogs"],
         default=["bird", "deer", "dogs"],
-        help="List of Demonic Beasts to run floors 1-3 once each.",
+        help="List of Demonic Beasts to run floors 1-3 in rotation order.",
+    )
+    parser.add_argument(
+        "--repeat-rotation",
+        action="store_true",
+        default=False,
+        help="Repeat the selected Demonic Beast rotation indefinitely (default: False).",
     )
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     parser.add_argument(
@@ -37,6 +43,7 @@ def main(argv=None):
         farmer=DemonicBeastRotationFarmer,
         starting_state=States.GOING_TO_DB,
         beasts_to_farm=args.beasts_to_farm,
+        repeat_rotation=args.repeat_rotation,
         password=args.password,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
