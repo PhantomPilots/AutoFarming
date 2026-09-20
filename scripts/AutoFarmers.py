@@ -459,6 +459,9 @@ the file <code>run_game.png</code> by it.
 <p><strong>Requirements:</strong><br>
 • If you use skip tickets, make sure to have the <code>"Auto Use Settings"</code> option checked.</p>
     """,
+    "Auto Clear Farmer": """
+<p>This Farmer will just spend as many skip tickets as you specify on any activity that allows so.</p>
+    """,
     "Daily Quests Farmer": """
 <p><strong>Requirements:</strong><br>
 • START runs daily quests immediately from the standard daily mission flow<br>
@@ -496,6 +499,7 @@ FARMER_IMAGES = {
     "Demon King Farmer": "dk_farmer.jpg",
     "Boss Battle Farmer": "boss_battle_farmer.png",
     "Gold Farmer": "gold_farmer.jpg",
+    "Auto Clear Farmer": "autoticket_farmer.jpg",
 }
 
 
@@ -759,6 +763,11 @@ FARMERS = [
         "name": "Boss Battle Farmer",
         "script": "BossBattleFarmer.py",
         "args": [],
+    },
+    {
+        "name": "Auto Clear Farmer",
+        "script": "AutoClearFarmer.py",
+        "args": [{"name": "--max-tickets", "label": "Max tickets", "type": "text", "default": "50"}],
     },
 ]
 
