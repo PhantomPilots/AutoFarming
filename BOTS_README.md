@@ -2,8 +2,8 @@
 
 ## Demon farming script
 
-In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It accepts any demon, from Red to Indura.
-So far, it only accepts the "Hell" difficulty (except for Indura, which accepts all).
+In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It supports Red, Gray, Crimson, Bell, and Original Demon.
+It accepts the "Hell" difficulty.
 
 * You can find all the setup options inside the corresponding GUI tab.
 * You may need to play with "time to sleep" value, which determines how many seconds to wait before accepting an invite.

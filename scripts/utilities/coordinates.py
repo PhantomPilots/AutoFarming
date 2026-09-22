@@ -56,10 +56,6 @@ class Coordinates:
         # Demon farming
         "stamp_box": (515, 662),
         "first_stamp": (83, 762),
-        "team_invite_region": (233, 615, 449, 669),
-        "6_cards_region": (75, 693, 471, 793),  # 6 empty card slots region
-        # For Indura
-        "half_screen_region": (247, 438, 491, 689),  # To detect Alpha buffs only on our side
         # Guild Boss
         "change_gb": (50, 451),  # To change to the GB to the left until Belgius is found
         # Demon King

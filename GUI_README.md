@@ -11,7 +11,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Process Management**: Start and stop farmers with dedicated buttons
 - **Farmer Images**: Visual representation of each farming type
 - **Window Resizing**: Automatically resizes your game window for optimal performance
-- **Free Software**: This is completely free and open source software
+- **Open-source Core**: The AutoFarmers core is free and open source; optional compiled extensions may have separate terms
 
 ## How to Use
 
@@ -39,7 +39,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 
 ### Available Farmers
 
-- **Demon Farmer**: Battle various demons (Indura, OG, Bell, Red, Gray, Crimson) with difficulty settings
+- **Demon Farmer**: Battle OG, Bell, Red, Gray, and Crimson demons
 - **Bird Farmer**: Farm Hraesvelgr floors 1-3 for bird materials
 - **Bird Floor 4**: Farm Hraesvelgr floor 4 (hardest bird content)
 - **Deer Farmer**: Farm Eikthyrnir floors 1-3 for deer materials
@@ -51,7 +51,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 
 ### Requirements
 
-- **Python 3.10 or 3.11**: Download from Microsoft Store (recommended) or python.org
+- **Python 3.12 (64-bit)**: Download from Microsoft Store (recommended) or python.org. Compiled extensions require this exact version.
 - **All AutoFarmers Dependencies**: Run `python -m pip install -r requirements.txt` in the main `AutoFarmers/` folder
 
 ### Important Notes
@@ -63,13 +63,13 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Japanese Asset Fallback**: Japanese runs prefer `scripts/images/japan/` and use the corresponding Global image when a Japanese file is missing
 - **Direct Script Launches**: Standalone farmer scripts use the `game_version` preference saved in `scripts/config/config.yaml`
 - **Memory Efficient**: Output is limited to prevent memory issues during long farming sessions
-- **Free Software**: This is completely free - if you paid for it, you were scammed!
+- **Licensing**: The core is free and open source. Check the license included with each optional compiled extension.
 
 ### Troubleshooting
 
 - **GUI won't start**: 
   - Make sure you're running from the `scripts\` directory
-  - Ensure Python 3.10 or 3.11 is installed
+  - Ensure 64-bit Python 3.12 is installed
   - Try running PowerShell as Administrator
 - **Farmer won't start**: 
   - Check that all dependencies are installed (`pip install -r requirements.txt`)

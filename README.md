@@ -127,7 +127,7 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Farmer for floors 1-3 of Dogs.
 - [X] Farmer for floors 1-3 of Snake.
 - [X] Bot for all daily missions.
-- [X] Farmer for Indura Extreme/Hell/Chaos.
+- [X] Optional compiled Farmer for Indura Extreme/Hell/Chaos.
 - [X] Unify all farmers in a single GUI.
 - [ ] Buy daily stamina pots with friend coins, and get friend coins from mail.
 
@@ -137,4 +137,6 @@ For detailed information on all the bots available, go to the [bots README file]
 - [X] Make them work in 4k monitors.
 
 ## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+The AutoFarmers core is licensed under the MIT License; see [LICENSE](LICENSE).
+
+Optional compiled extensions under `scripts/vendor/` may carry their own license. A bundle's own license file governs that bundle and is excluded from the root MIT grant. Those extensions are distributed as native binaries; their implementation source is not part of this public repository.

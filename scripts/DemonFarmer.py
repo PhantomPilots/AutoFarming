@@ -11,27 +11,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
     parser.add_argument(
-        "--indura-diff",
-        "-d",
-        type=str,
-        choices=["extreme", "hell", "chaos"],
-        default="chaos",
-        help="Difficulty for Indura demon (choices: extreme, hell, chaos)",
-    )
-    parser.add_argument(
         "--demons-to-farm",
         type=str,
         nargs="+",
-        choices=["red_demon", "gray_demon", "crimson_demon", "bell_demon", "og_demon", "indura_demon"],
-        default=["indura_demon"],
+        choices=["red_demon", "gray_demon", "crimson_demon", "bell_demon", "og_demon"],
+        default=["og_demon"],
         help="List of demons to farm (space-separated).",
-    )
-    parser.add_argument(
-        "--indura-team",
-        type=str,
-        choices=["fairies", "humans"],
-        default="fairies",
-        help="Team strategy to use for Indura demon (choices: fairies, humans)",
     )
     parser.add_argument(
         "--time-to-sleep",
@@ -49,7 +34,6 @@ def main():
     args = parser.parse_args()
 
     demon_map = {
-        "indura_demon": vio.indura_demon,
         "og_demon": vio.og_demon,
         "bell_demon": vio.bell_demon,
         "red_demon": vio.red_demon,
@@ -62,8 +46,6 @@ def main():
         farmer=DemonFarmer,
         starting_state=States.GOING_TO_DEMONS,
         demons_to_farm=demons_to_farm,
-        indura_difficulty=args.indura_diff,
-        indura_team=args.indura_team,
         time_to_sleep=args.time_to_sleep,
         time_between_demons=2,
         do_dailies=args.do_dailies,

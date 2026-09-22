@@ -2,13 +2,13 @@
 # ╔══════════════════════════════════════════════════════════════════════════╗
 # ║                           🆓 FREE SOFTWARE 🆓                           ║
 # ║                                                                          ║
-# ║  This program is FREE and open source. You should NOT have paid         ║
-# ║  anything for it. If you paid money, you were scammed!                  ║
+# ║  The AutoFarmers core is FREE and open source. Optional compiled        ║
+# ║  extensions may be distributed under separate license terms.           ║
 # ║                                                                          ║
 # ║  This software is provided "as is" without warranty of any kind.        ║
 # ║  Use at your own risk.                                                   ║
 # ║                                                                          ║
-# ║  License: MIT License                                                    ║
+# ║  Core license: MIT License                                               ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 # =============================================================================
 
@@ -19,6 +19,7 @@ import ctypes
 import ctypes.wintypes
 import datetime
 import hashlib
+import json
 import os
 import re
 import sys
@@ -86,18 +87,27 @@ from utilities.image_assets import (
     normalize_game_version,
 )
 from utilities.logging_utils import remove_expired_logged_images
+from utilities.compiled_extensions import merge_compiled_extensions
+from utilities.extension_secrets import load_suite_license_key
+
+
+_COMPILED_EXTENSION_RUNNER_FLAG = "--compiled-extension-runner"
+if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
+    from compiled_extension_runner import main as _compiled_extension_runner_main
+
+    raise SystemExit(_compiled_extension_runner_main(sys.argv[2:]))
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
                            🆓 FREE SOFTWARE 🆓
 
-  This program is FREE and open source. You should NOT have paid
-  anything for it. If you paid money, you were scammed!
+  The AutoFarmers core is FREE and open source. Optional compiled
+  extensions may be distributed under separate license terms.
 
   This software is provided "as is" without warranty of any kind.
   Use at your own risk.
 
-  License: MIT License
+  Core license: MIT License
 =====================================================================
 
 """
@@ -359,8 +369,6 @@ APP_STYLESHEET = _make_stylesheet()
 REQUIREMENTS = {
     "Demon Farmer": """
 <p>If multiple demons are selected, the bot will rotate between them every 2h.</p>
-<p><strong>Indura Humans:</strong><br>
-• Team: SJW/Ban/Sho/Roxy/Freyr (pick any 3), any 4th (Mikasa preferred)<br>
     """,
     "Bird Floor 4": """
 <p><strong>Requirements:</strong><br>
@@ -517,6 +525,17 @@ def get_farmer_display_content(farmer_name: str, whale_enabled: bool = False) ->
     return requirements_key, image_filename
 
 
+def get_farmer_image_path(farmer: dict, image_filename=None) -> str | None:
+    """Return the normalized image path for a built-in or compiled farmer."""
+    if image_filename is None and farmer.get("compiled_extension"):
+        return farmer.get("image_path")
+    if image_filename is None:
+        image_filename = FARMER_IMAGES.get(farmer["name"])
+    if image_filename is None:
+        return None
+    return os.path.join(_GUI_IMAGES_DIR, image_filename)
+
+
 # Farmer script definitions (argument structure)
 DAILY_PVP_ARG = {
     "name": "--daily-pvp",
@@ -534,26 +553,12 @@ FARMERS = [
         "image_log_subdirs": ["demons"],
         "args": [
             {
-                "name": "--indura-diff",
-                "label": "Indura Difficulty",
-                "type": "dropdown",
-                "choices": ["extreme", "hell", "chaos"],
-                "default": "chaos",
-            },
-            {
-                "name": "--indura-team",
-                "label": "Indura Team",
-                "type": "dropdown",
-                "choices": ["fairies", "humans"],
-                "default": "humans",
-            },
-            {
                 "name": "--demons-to-farm",
                 "label": "Demons to Farm",
                 "type": "multiselect",
-                "choices": ["indura_demon", "og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
-                "labels": ["Indura Demon", "OG Demon", "Bell Demon", "Red Demon", "Gray Demon", "Crimson Demon"],
-                "default": ["indura_demon"],
+                "choices": ["og_demon", "bell_demon", "red_demon", "gray_demon", "crimson_demon"],
+                "labels": ["OG Demon", "Bell Demon", "Red Demon", "Gray Demon", "Crimson Demon"],
+                "default": ["og_demon"],
             },
             {"name": "--time-to-sleep", "label": "Wait before Accept (s)", "type": "text", "default": "9.3"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
@@ -771,6 +776,12 @@ FARMERS = [
     },
 ]
 
+FARMERS, _COMPILED_EXTENSION_WARNINGS = merge_compiled_extensions(
+    FARMERS, os.path.join(_BASE_DIR, "vendor")
+)
+for _extension_warning in _COMPILED_EXTENSION_WARNINGS:
+    print(f"[WARNING] {_extension_warning}", file=sys.stderr)
+
 _UPTIME_CYCLE_SECS = 12 * 3600  # Session uptime bar resets every 12 hours
 
 
@@ -888,21 +899,68 @@ class FarmerController(QObject):
         if self.process is not None:
             return
 
+        availability_error = self.farmer.get("availability_error")
+        if availability_error:
+            message = f"[ERROR] {self.farmer['name']} is unavailable: {availability_error}\n"
+            self._append_output(message)
+            self.error_occurred.emit(availability_error)
+            return
+
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
         remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
-        script_path = os.path.join(os.path.dirname(__file__), self.farmer["script"])
         args = self._build_cli_args()
+        extension_secrets = self._build_extension_secrets()
         display_args = self._build_display_args(args)
         game_version = get_saved_game_version()
+
+        if self.farmer.get("compiled_extension"):
+            script_path = os.path.join(_BASE_DIR, "compiled_extension_runner.py")
+            is_bundled_launcher = getattr(sys, "frozen", False) or os.path.basename(
+                sys.executable
+            ).lower() == "main.exe"
+            if is_bundled_launcher:
+                process_args = [
+                    _COMPILED_EXTENSION_RUNNER_FLAG,
+                    "--bundle",
+                    self.farmer["bundle_dir"],
+                    "--",
+                ] + args
+                display_process_args = [
+                    _COMPILED_EXTENSION_RUNNER_FLAG,
+                    "--bundle",
+                    self.farmer["bundle_dir"],
+                    "--",
+                ] + display_args
+            else:
+                process_args = ["-u", script_path, "--bundle", self.farmer["bundle_dir"], "--"] + args
+                display_process_args = [
+                    "-u",
+                    script_path,
+                    "--bundle",
+                    self.farmer["bundle_dir"],
+                    "--",
+                ] + display_args
+        else:
+            script_path = os.path.join(_BASE_DIR, self.farmer["script"])
+            process_args = ["-u", script_path] + args
+            display_process_args = ["-u", script_path] + display_args
 
         self.process = QProcess(self)
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUNBUFFERED", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
+        if self.farmer.get("compiled_extension"):
+            env.insert("AUTOFARMERS_ROOT", os.path.dirname(_BASE_DIR))
+            env.insert("AUTOFARMERS_EXTENSION_DIR", self.farmer["bundle_dir"])
+            if extension_secrets:
+                env.insert(
+                    "AUTOFARMERS_EXTENSION_SECRETS",
+                    json.dumps(extension_secrets, separators=(",", ":")),
+                )
         self.process.setProcessEnvironment(env)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
         self.process.readyReadStandardOutput.connect(self.handle_stdout)
@@ -923,11 +981,12 @@ class FarmerController(QObject):
         self._uptime_timer.start(1000)
         self.session_progress_changed.emit()
 
-        self.process.start(sys.executable, ["-u", script_path] + args)
+        self.process.start(sys.executable, process_args)
+        self._clear_secret_args()
         self._cleanup_pause_flag()
         self._append_output(
             f"<color=#10b981>Started {self.farmer['name']} for {game_version.display_name} with:\n"
-            f"{' '.join([sys.executable, '-u', script_path] + display_args)}\n</color>"
+            f"{' '.join([sys.executable] + display_process_args)}\n</color>"
         )
         self._output_timer.start(100)
         self.running_changed.emit(True, self.process.processId())
@@ -1045,9 +1104,13 @@ class FarmerController(QObject):
 
     def _build_default_arg_values(self) -> dict[str, object]:
         values = {}
+        persisted_suite_key = load_suite_license_key() if self.farmer.get("license") else ""
+        license_key_argument = (self.farmer.get("license") or {}).get("key_argument")
         for arg in self.farmer["args"]:
             default = arg.get("default")
-            if arg["type"] == "multiselect":
+            if arg["type"] == "secret" and arg["name"] == license_key_argument:
+                values[arg["name"]] = persisted_suite_key
+            elif arg["type"] == "multiselect":
                 values[arg["name"]] = list(default or [])
             elif arg["type"] == "checkbox":
                 values[arg["name"]] = bool(default)
@@ -1073,6 +1136,8 @@ class FarmerController(QObject):
         args = []
         for arg in self.farmer["args"]:
             value = self._arg_values.get(arg["name"])
+            if arg["type"] == "secret":
+                continue
             if arg["type"] == "dropdown":
                 if value:
                     args.extend([arg["name"], str(value)])
@@ -1087,7 +1152,7 @@ class FarmerController(QObject):
                     args.extend([arg["name"]] + selected)
             elif value:
                 args.extend([arg["name"], str(value)])
-        if self.farmer["script"] in PASSWORD_CLI_SCRIPTS:
+        if self.farmer.get("accepts_game_password") or self.farmer.get("script") in PASSWORD_CLI_SCRIPTS:
             pw = ""
             if self._password_supplier:
                 try:
@@ -1104,6 +1169,27 @@ class FarmerController(QObject):
             if pw:
                 args.extend(["--password", pw])
         return args
+
+    def _build_extension_secrets(self) -> dict[str, str]:
+        if not self.farmer.get("compiled_extension"):
+            return {}
+        secrets = {}
+        for arg in self.farmer["args"]:
+            if arg["type"] != "secret":
+                continue
+            value = self._arg_values.get(arg["name"])
+            if value:
+                secrets[arg["name"]] = str(value)
+        return secrets
+
+    def _clear_secret_args(self):
+        changed = False
+        for arg in self.farmer["args"]:
+            if arg["type"] == "secret" and self._arg_values.get(arg["name"]):
+                self._arg_values[arg["name"]] = ""
+                changed = True
+        if changed:
+            self.arg_values_changed.emit(self.get_arg_values())
 
     def _build_display_args(self, args: list[str]) -> list[str]:
         display_args = []
@@ -1203,6 +1289,7 @@ class AboutTab(QWidget):
     _MAX_UPDATE_MESSAGE_CHARS = 1000
     _MAX_CHANGED_AREAS_SHOWN = 6
     _UPDATE_AREA_PATTERNS = (
+        ("Compiled Extensions", ("scripts/vendor/", "private_sources/", ".gitmodules")),
         ("Dogs Floor 4", ("dogsfloor4farmer.py", "dogs_floor4", "dogs_floor_4")),
         ("Bird Floor 4", ("birdfloor4farmer.py", "bird_floor4", "bird_floor_4")),
         ("Deer Floor 4", ("deerfloor4farmer.py", "deer_floor4", "deer_floor_4")),
@@ -1217,7 +1304,7 @@ class AboutTab(QWidget):
         ("Accounts Farmer", ("accountsfarmer.py", "accounts_farming", "accounts.yaml")),
         ("Daily Quests Farmer", ("dailyquestsfarmer.py", "daily_farming", "/dailies/")),
         ("Equipment Farmer", ("equipmentfarmer.py", "equipment")),
-        ("Demon Farmer", ("demonfarmer.py", "demon_farming", "demons/", "indura_")),
+        ("Demon Farmer", ("demonfarmer.py", "demon_farming", "demons/")),
         ("Dogs Farmer", ("dogsfarmer.py", "dogs_farming", "dogs_fighter", "dogs_fighting", "/dogs/")),
         ("Deer Farmer", ("deerfarmer.py", "deer_farming", "deer_fighter", "deer_fighting", "/deer/")),
         ("Bird Farmer", ("birdfarmer.py", "bird_farming", "bird_fighter", "/bird")),
@@ -1248,6 +1335,7 @@ class AboutTab(QWidget):
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
+        self._pending_extension_changed = False
         self._capture_process_output = False
         self._process_output = bytearray()
         self._last_process_output = ""
@@ -1615,6 +1703,12 @@ class AboutTab(QWidget):
         if exit_code == 0:
             changed_paths = [path.strip() for path in self._last_process_output.splitlines() if path.strip()]
             self._changed_update_areas = self._classify_changed_update_areas(changed_paths)
+            self._pending_extension_changed = any(
+                path.replace("\\", "/").lower().startswith("scripts/vendor/")
+                or path.replace("\\", "/").lower().startswith("private_sources/")
+                or path.replace("\\", "/").lower() == ".gitmodules"
+                for path in changed_paths
+            )
 
         self._handle_post_pull_completion()
 
@@ -1692,6 +1786,7 @@ class AboutTab(QWidget):
         self._latest_update_message = ""
         self._update_count = 0
         self._changed_update_areas = []
+        self._pending_extension_changed = False
 
     def _truncate_update_message(self, message):
         """Keep verbose update messages from creating oversized dialogs."""
@@ -1773,13 +1868,14 @@ class AboutTab(QWidget):
         """Decide whether the update should trigger a GUI restart."""
         self._show_update_summary_dialog()
 
-        if not self._pending_gui_changed:
+        restart_required = self._pending_gui_changed or self._pending_extension_changed
+        if not restart_required:
             self.status_label.setText("✅ Update complete")
             self._finish_update()
             return
 
         if not self._restart_safe_supplier():
-            self.status_label.setText("✅ Update complete - restart required because AutoFarmers.py changed")
+            self.status_label.setText("✅ Update complete - restart required to load updated components")
             self._finish_update(clear_status=False)
             return
 
@@ -1797,6 +1893,7 @@ class AboutTab(QWidget):
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
+        self._pending_extension_changed = False
         self._reset_update_summary()
         self.update_finished.emit()
         if clear_status:
@@ -2094,6 +2191,8 @@ class FarmerTab(QWidget):
                 else:
                     widget = QLineEdit()
                     widget.setText(arg["default"])
+                    if arg["type"] == "secret":
+                        widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget
                 args_layout.addRow(arg["label"] + ":", widget)
                 self._bind_arg_widget(arg, widget)
@@ -2120,11 +2219,23 @@ class FarmerTab(QWidget):
 
         # Requirements text (dynamically updated for whale-capable farmers)
         self.req_label = None
-        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG:
+        extension_requirements = self.farmer.get("requirements_html", "")
+        availability_error = self.farmer.get("availability_error")
+        if availability_error:
+            extension_requirements = (
+                f"<p><strong>Unavailable:</strong> {availability_error}</p>" + extension_requirements
+            )
+        if (
+            self.farmer["name"] in REQUIREMENTS
+            or self.farmer["name"] in WHALE_MODE_CONFIG
+            or extension_requirements
+        ):
             self.req_label = QLabel()
             self.req_label.setWordWrap(True)
             self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            self.req_label.setText(REQUIREMENTS.get(self.farmer["name"], ""))
+            self.req_label.setText(
+                extension_requirements or REQUIREMENTS.get(self.farmer["name"], "")
+            )
             self.req_label.setStyleSheet(
                 f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
                 f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
@@ -2145,6 +2256,9 @@ class FarmerTab(QWidget):
         self.start_btn = QPushButton("START")
         self.start_btn.setStyleSheet(BTN_START)
         self.start_btn.clicked.connect(self._on_start_clicked)
+        if availability_error:
+            self.start_btn.setEnabled(False)
+            self.start_btn.setToolTip(availability_error)
         self.stop_btn = QPushButton("STOP")
         self.stop_btn.setStyleSheet(BTN_STOP)
         self.stop_btn.setEnabled(False)
@@ -2477,7 +2591,7 @@ class FarmerTab(QWidget):
 
     def _on_running_changed(self, running: bool, pid: int):
         del pid
-        self.start_btn.setEnabled(not running)
+        self.start_btn.setEnabled(not running and not self.farmer.get("availability_error"))
         self.stop_btn.setEnabled(running)
         self.pause_btn.setEnabled(running)
         if not running:
@@ -2555,12 +2669,10 @@ class FarmerTab(QWidget):
 
     def load_farmer_image(self, image_filename=None):
         """Load and display a farmer image into self.image_label."""
-        if image_filename is None:
-            image_filename = FARMER_IMAGES.get(self.farmer["name"])
-        if image_filename is None:
+        image_path = get_farmer_image_path(self.farmer, image_filename)
+        if image_path is None:
             return
 
-        image_path = os.path.join(_GUI_IMAGES_DIR, image_filename)
         if os.path.exists(image_path):
             pixmap = QPixmap(image_path)
             if not pixmap.isNull():
@@ -2568,9 +2680,9 @@ class FarmerTab(QWidget):
                 self.image_label.setPixmap(scaled)
                 self.image_label.setStyleSheet("border: 1px solid #252535; border-radius: 5px;")
             else:
-                self.image_label.setText(f"Failed to load image:\n{image_filename}")
+                self.image_label.setText(f"Failed to load image:\n{os.path.basename(image_path)}")
         else:
-            self.image_label.setText(f"Image not found:\n{image_filename}")
+            self.image_label.setText(f"Image not found:\n{os.path.basename(image_path)}")
 
     def _refresh_whale_mode(self):
         """Update image and requirements when whale-mode checkbox changes."""
@@ -2619,6 +2731,7 @@ class FarmerTile(QFrame):
 
     def __init__(self, farmer, parent=None):
         super().__init__(parent)
+        self.farmer = farmer
         self.farmer_name = farmer["name"]
         self.setFixedWidth(self._TILE_W)
         self.setCursor(Qt.PointingHandCursor)
@@ -2663,17 +2776,15 @@ class FarmerTile(QFrame):
         layout.addWidget(img_wrapper)
 
         # Load image
-        image_filename = FARMER_IMAGES.get(farmer["name"])
-        if image_filename:
-            image_path = os.path.join(_GUI_IMAGES_DIR, image_filename)
-            if os.path.exists(image_path):
-                pixmap = QPixmap(image_path)
-                if not pixmap.isNull():
-                    scaled = pixmap.scaled(_img_w, self._IMG_H, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
-                    x = max(0, (scaled.width() - _img_w) // 2)
-                    y = max(0, (scaled.height() - self._IMG_H) // 2)
-                    cropped = scaled.copy(x, y, _img_w, self._IMG_H)
-                    self.img_label.setPixmap(_rounded_pixmap(cropped, 9))
+        image_path = get_farmer_image_path(farmer)
+        if image_path and os.path.exists(image_path):
+            pixmap = QPixmap(image_path)
+            if not pixmap.isNull():
+                scaled = pixmap.scaled(_img_w, self._IMG_H, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+                x = max(0, (scaled.width() - _img_w) // 2)
+                y = max(0, (scaled.height() - self._IMG_H) // 2)
+                cropped = scaled.copy(x, y, _img_w, self._IMG_H)
+                self.img_label.setPixmap(_rounded_pixmap(cropped, 9))
 
         # Body
         body = QWidget()
@@ -2696,6 +2807,12 @@ class FarmerTile(QFrame):
         self.status_dot.hide()
         self.status_text = QLabel("")
         self.status_text.setStyleSheet("font-size: 10px; color: #3f3f5a;")
+        if farmer.get("availability_error"):
+            self.status_dot.setStyleSheet(f"color: {C['warning']}; font-size: 8px;")
+            self.status_dot.show()
+            self.status_text.setStyleSheet(f"font-size: 10px; color: {C['warning']};")
+            self.status_text.setText("Unavailable")
+            self.setToolTip(farmer["availability_error"])
         status_row.addStretch(1)
         status_row.addWidget(self.status_dot)
         status_row.addWidget(self.status_text)
@@ -2712,8 +2829,14 @@ class FarmerTile(QFrame):
             self.status_text.setStyleSheet("font-size: 10px; color: #10b981;")
             self.status_text.setText("Running")
         else:
-            self.status_dot.hide()
-            self.status_text.setText("")
+            if self.farmer.get("availability_error"):
+                self.status_dot.setStyleSheet(f"color: {C['warning']}; font-size: 8px;")
+                self.status_dot.show()
+                self.status_text.setStyleSheet(f"font-size: 10px; color: {C['warning']};")
+                self.status_text.setText("Unavailable")
+            else:
+                self.status_dot.hide()
+                self.status_text.setText("")
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

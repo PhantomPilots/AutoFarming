@@ -16,7 +16,7 @@ from utilities.utilities import (
 
 
 class DemonKingFighter(IFighter):
-    """The Indura fighter!"""
+    """The Demon King fighter."""
 
     current_team = 0
 
