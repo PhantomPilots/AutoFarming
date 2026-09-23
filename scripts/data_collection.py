@@ -282,7 +282,7 @@ class UnitTypeDataCollector(DataCollector):
 
     def collect_hand_data(self, **kwargs) -> list[np.ndarray]:
 
-        unit_color_types = extract_units_types()
+        unit_color_types = extract_units_types(team_count=2)
 
         data = []
         labels = []
