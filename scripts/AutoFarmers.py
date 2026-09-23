@@ -81,15 +81,14 @@ from utilities.app_config import (
     save_config_updates,
     test_ntfy_connection,
 )
+from utilities.compiled_extensions import merge_compiled_extensions
+from utilities.extension_secrets import load_suite_license_key
 from utilities.image_assets import (
     GameVersion,
     get_saved_game_version,
     normalize_game_version,
 )
 from utilities.logging_utils import remove_expired_logged_images
-from utilities.compiled_extensions import merge_compiled_extensions
-from utilities.extension_secrets import load_suite_license_key
-
 
 _COMPILED_EXTENSION_RUNNER_FLAG = "--compiled-extension-runner"
 if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
@@ -776,9 +775,7 @@ FARMERS = [
     },
 ]
 
-FARMERS, _COMPILED_EXTENSION_WARNINGS = merge_compiled_extensions(
-    FARMERS, os.path.join(_BASE_DIR, "vendor")
-)
+FARMERS, _COMPILED_EXTENSION_WARNINGS = merge_compiled_extensions(FARMERS, os.path.join(_BASE_DIR, "vendor"))
 for _extension_warning in _COMPILED_EXTENSION_WARNINGS:
     print(f"[WARNING] {_extension_warning}", file=sys.stderr)
 
@@ -919,9 +916,9 @@ class FarmerController(QObject):
 
         if self.farmer.get("compiled_extension"):
             script_path = os.path.join(_BASE_DIR, "compiled_extension_runner.py")
-            is_bundled_launcher = getattr(sys, "frozen", False) or os.path.basename(
-                sys.executable
-            ).lower() == "main.exe"
+            is_bundled_launcher = (
+                getattr(sys, "frozen", False) or os.path.basename(sys.executable).lower() == "main.exe"
+            )
             if is_bundled_launcher:
                 process_args = [
                     _COMPILED_EXTENSION_RUNNER_FLAG,
@@ -1396,7 +1393,7 @@ class AboutTab(QWidget):
 
         # Try to load the GUI image from readme_images
         image_paths = [
-            os.path.join(_GUI_IMAGES_DIR, "main_gui.jpg"),
+            os.path.join(_GUI_IMAGES_DIR, "main_gui.png"),
         ]
 
         image_loaded = False
@@ -1404,7 +1401,7 @@ class AboutTab(QWidget):
             if os.path.exists(image_path):
                 pixmap = QPixmap(image_path)
                 if not pixmap.isNull():
-                    # Scale to match the widescreen aspect ratio of main_gui.jpg (16:9)
+                    # Scale to match the widescreen aspect ratio of main_gui.png (16:9)
                     scaled_pixmap = pixmap.scaled(640, 360, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                     img_label.setPixmap(scaled_pixmap)
                     img_label.setFixedSize(scaled_pixmap.size())
@@ -1462,12 +1459,10 @@ class AboutTab(QWidget):
         desc_label = QLabel()
         desc_label.setWordWrap(True)
         desc_label.setAlignment(Qt.AlignLeft)
-        desc_label.setText(
-            """
+        desc_label.setText("""
 <h3>🎮 AutoFarmers for 7DS Grand Cross</h3>
 <p>Automate your farming in Seven Deadly Sins: Grand Cross with this collection of specialized bots.</p>
-        """
-        )
+        """)
         desc_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         layout.addWidget(desc_label)
 
@@ -1478,15 +1473,13 @@ class AboutTab(QWidget):
         farmers_label = QLabel()
         farmers_label.setWordWrap(True)
         farmers_label.setAlignment(Qt.AlignTop)
-        farmers_label.setText(
-            """
+        farmers_label.setText("""
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
 • Final Boss and boss battle farming<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
-        """
-        )
+        """)
         farmers_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         farmers_req_layout.addWidget(farmers_label)
 
@@ -1494,15 +1487,13 @@ class AboutTab(QWidget):
         req_label = QLabel()
         req_label.setWordWrap(True)
         req_label.setAlignment(Qt.AlignTop)
-        req_label.setText(
-            """
+        req_label.setText("""
 <p><strong>⚙️ Requirements:</strong><br>
 • Official 7DS PC Beta Client<br>
 • Portrait mode (disable landscape)<br>
 • Game set to English<br>
 • Disable all game notifications</p>
-        """
-        )
+        """)
         req_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
         farmers_req_layout.addWidget(req_label)
 
@@ -2225,17 +2216,11 @@ class FarmerTab(QWidget):
             extension_requirements = (
                 f"<p><strong>Unavailable:</strong> {availability_error}</p>" + extension_requirements
             )
-        if (
-            self.farmer["name"] in REQUIREMENTS
-            or self.farmer["name"] in WHALE_MODE_CONFIG
-            or extension_requirements
-        ):
+        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG or extension_requirements:
             self.req_label = QLabel()
             self.req_label.setWordWrap(True)
             self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            self.req_label.setText(
-                extension_requirements or REQUIREMENTS.get(self.farmer["name"], "")
-            )
+            self.req_label.setText(extension_requirements or REQUIREMENTS.get(self.farmer["name"], ""))
             self.req_label.setStyleSheet(
                 f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
                 f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
@@ -2741,8 +2726,7 @@ class FarmerTile(QFrame):
     def _set_style(self, running: bool):
         border = "#10b981" if running else C["border"]
         hover_border = "#10b981" if running else C["accent"]
-        self.setStyleSheet(
-            f"""
+        self.setStyleSheet(f"""
             FarmerTile {{
                 background: {C['tile_bg']};
                 border: 2px solid {border};
@@ -2752,8 +2736,7 @@ class FarmerTile(QFrame):
                 border-color: {hover_border};
                 background: {C['tile_hover']};
             }}
-        """
-        )
+        """)
 
     def _init_ui(self, farmer):
         layout = QVBoxLayout(self)
