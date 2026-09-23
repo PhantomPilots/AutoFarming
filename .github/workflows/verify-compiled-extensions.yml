@@ -1,0 +1,37 @@
+name: Verify compiled extensions
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/verify-compiled-extensions.yml"
+      - ".gitmodules"
+      - "private_sources/**"
+      - "scripts/compiled_extension_runner.py"
+      - "scripts/utilities/compiled_extension*.py"
+      - "scripts/vendor/**"
+  push:
+    paths:
+      - ".github/workflows/verify-compiled-extensions.yml"
+      - ".gitmodules"
+      - "private_sources/**"
+      - "scripts/compiled_extension_runner.py"
+      - "scripts/utilities/compiled_extension*.py"
+      - "scripts/vendor/**"
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+          cache: pip
+      - name: Install public runtime dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Verify provenance, wheel contents, extraction, import, and self-test
+        working-directory: scripts
+        run: python -m utilities.compiled_extension_verifier --repo-root .. --self-test

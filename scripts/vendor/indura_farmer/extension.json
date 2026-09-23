@@ -1,0 +1,75 @@
+{
+  "schema_version": 2,
+  "id": "indura_farmer",
+  "display_name": "Indura Farmer",
+  "version": "1.2.0",
+  "core_api_version": 1,
+  "placement_after": "Demon Farmer",
+  "accepts_game_password": true,
+  "requirements_html": "<p><strong>License key needed.</strong> Paste your key here the first time you use a private Farmer. Don't have a key yet? Ask us for a free one. Once it works, we'll remember it securely on this Windows account.</p><p>You'll need an internet connection whenever Indura Farmer starts. Each key can only be used on the first computer it activates.</p><p><strong>Human team:</strong> Pick any three of SJW, Ban, Sho, Roxy, or Freyr. Mikasa is the preferred fourth unit.</p>",
+  "image": "assets/gui/indura_farmer.jpg",
+  "source": {
+    "submodule_path": "private_sources/private_farmers",
+    "commit": "033a9b5767a954c2df99419952c7a5055805414d"
+  },
+  "artifact": {
+    "python_tag": "cp312",
+    "platform_tag": "win_amd64",
+    "wheel": "wheels/autofarmers_indura_core-1.2.0-cp312-cp312-win_amd64.whl",
+    "sha256": "547d472bf13486b81389fdf0a94f753fd3914a7bd6018453a4b679f978383dd8",
+    "module": "autofarmers_indura_core",
+    "callable": "main"
+  },
+  "license": {
+    "scope": "private_farmers_suite",
+    "key_argument": "--license-key"
+  },
+  "args": [
+    {
+      "name": "--license-key",
+      "label": "Private Suite License Key",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "name": "--indura-diff",
+      "label": "Difficulty",
+      "type": "dropdown",
+      "choices": [
+        "extreme",
+        "hell",
+        "chaos"
+      ],
+      "default": "chaos"
+    },
+    {
+      "name": "--indura-team",
+      "label": "Team",
+      "type": "dropdown",
+      "choices": [
+        "fairies",
+        "humans"
+      ],
+      "default": "humans"
+    },
+    {
+      "name": "--time-to-sleep",
+      "label": "Wait before Accept (s)",
+      "type": "text",
+      "default": "9.3"
+    },
+    {
+      "name": "--do-dailies",
+      "label": "Do Dailies (2am PST)",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "name": "--daily-pvp",
+      "false_name": "--no-daily-pvp",
+      "label": "Daily PVP",
+      "type": "checkbox",
+      "default": true
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "id": "surtr_farmer",
+  "display_name": "Surtr Farmer",
+  "version": "0.4.0",
+  "core_api_version": 1,
+  "placement_after": "Rat Farmer",
+  "accepts_game_password": true,
+  "requirements_html": "<p><strong>License key needed.</strong> Paste your key here the first time you use a private Farmer. Don't have a key yet? Ask us for a free one. Once it works, we'll remember it securely on this Windows account, so you won't need to enter it again.</p><p>You'll need an internet connection whenever you start a private Farmer. Each key can only be used on the first computer it activates.</p><p>Surtr Farmer is still being prepared. You can test your license now, but farming won't start just yet.</p>",
+  "image": "assets/gui/surtr_farmer.png",
+  "source": {
+    "submodule_path": "private_sources/private_farmers",
+    "commit": "033a9b5767a954c2df99419952c7a5055805414d"
+  },
+  "artifact": {
+    "python_tag": "cp312",
+    "platform_tag": "win_amd64",
+    "wheel": "wheels/autofarmers_surtr_core-0.4.0-cp312-cp312-win_amd64.whl",
+    "sha256": "11a208f01157f5338f734d251bbf7d7ad77c8a340c38ae5e8bb5f71fcf81d82e",
+    "module": "autofarmers_surtr_core",
+    "callable": "main"
+  },
+  "license": {
+    "scope": "private_farmers_suite",
+    "key_argument": "--license-key"
+  },
+  "args": [
+    {
+      "name": "--license-key",
+      "label": "Private Suite License Key",
+      "type": "secret",
+      "default": ""
+    },
+    {
+      "name": "--clears",
+      "label": "Clears",
+      "type": "text",
+      "default": "inf"
+    },
+    {
+      "name": "--do-dailies",
+      "label": "Do Dailies (2am PST)",
+      "type": "checkbox",
+      "default": true
+    },
+    {
+      "name": "--daily-pvp",
+      "false_name": "--no-daily-pvp",
+      "label": "Daily PVP",
+      "type": "checkbox",
+      "default": true
+    }
+  ]
+}

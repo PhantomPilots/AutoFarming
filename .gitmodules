@@ -1,0 +1,4 @@
+[submodule "private-farmers-source"]
+	path = private_sources/private_farmers
+	url = https://github.com/PhantomPilots/PrivateFarmers.git
+	update = none

@@ -1,0 +1,19 @@
+Private AutoFarmers Binary License
+
+Copyright (c) 2026 PhantomPilots. All rights reserved.
+
+Permission is granted to an individual who lawfully obtains a proprietary
+AutoFarmers binary distributed from this repository to install and run it for
+personal, non-commercial use.
+
+This permission is non-exclusive, non-transferable, and revocable. You may not
+redistribute, resell, sublicense, publish, modify, or create derivative works
+from those binaries. You may not reverse engineer, decompile, or
+disassemble it except to the limited extent that applicable law expressly
+permits such activity despite this restriction.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
