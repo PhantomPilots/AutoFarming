@@ -24,6 +24,8 @@ APP_CONFIG_KEYS = frozenset(
         "game_version",
         "minutes_to_wait_before_login",
         "check_in_hour",
+        "demon_wait_before_accept_seconds",
+        "indura_wait_before_accept_seconds",
     }
 )
 

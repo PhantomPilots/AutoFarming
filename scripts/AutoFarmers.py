@@ -20,6 +20,7 @@ import ctypes.wintypes
 import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -780,6 +781,20 @@ for _extension_warning in _COMPILED_EXTENSION_WARNINGS:
     print(f"[WARNING] {_extension_warning}", file=sys.stderr)
 
 _UPTIME_CYCLE_SECS = 12 * 3600  # Session uptime bar resets every 12 hours
+_WAIT_BEFORE_ACCEPT_CONFIG_KEYS = {
+    "DemonFarmer.py": "demon_wait_before_accept_seconds",
+    "indura_farmer": "indura_wait_before_accept_seconds",
+}
+
+
+def _valid_wait_before_accept(value: object) -> bool:
+    if isinstance(value, bool):
+        return False
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(seconds) and seconds >= 0
 
 
 @dataclass(frozen=True)
@@ -906,6 +921,19 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
+        wait_save_failed = False
+        wait_config_key = self._wait_before_accept_config_key()
+        if wait_config_key:
+            wait_value = str(self._arg_values.get("--time-to-sleep", "")).strip()
+            if not _valid_wait_before_accept(wait_value):
+                self._append_output("[ERROR] Enter a wait time of 0 or more seconds.\n")
+                return
+            try:
+                save_config_updates({wait_config_key: wait_value})
+                config.reload()
+            except Exception:
+                wait_save_failed = True
+
         remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
@@ -965,6 +993,8 @@ class FarmerController(QObject):
 
         self.output_lines = []
         self.output_reset.emit()
+        if wait_save_failed:
+            self._append_output("[WARNING] Could not save the wait time. Starting with this value anyway.\n")
 
         self._session_clears = 0
         self._session_pots = 0
@@ -1099,14 +1129,22 @@ class FarmerController(QObject):
         if self.process.bytesAvailable() > 0:
             self.handle_stdout()
 
+    def _wait_before_accept_config_key(self) -> str | None:
+        farmer_id = self.farmer.get("extension_id") or self.farmer.get("script")
+        return _WAIT_BEFORE_ACCEPT_CONFIG_KEYS.get(farmer_id)
+
     def _build_default_arg_values(self) -> dict[str, object]:
         values = {}
         persisted_suite_key = load_suite_license_key() if self.farmer.get("license") else ""
         license_key_argument = (self.farmer.get("license") or {}).get("key_argument")
+        wait_config_key = self._wait_before_accept_config_key()
+        saved_wait = load_full_config_dict().get(wait_config_key) if wait_config_key else None
         for arg in self.farmer["args"]:
             default = arg.get("default")
             if arg["type"] == "secret" and arg["name"] == license_key_argument:
                 values[arg["name"]] = persisted_suite_key
+            elif arg["name"] == "--time-to-sleep" and wait_config_key and _valid_wait_before_accept(saved_wait):
+                values[arg["name"]] = str(saved_wait).strip()
             elif arg["type"] == "multiselect":
                 values[arg["name"]] = list(default or [])
             elif arg["type"] == "checkbox":
@@ -1181,8 +1219,13 @@ class FarmerController(QObject):
 
     def _clear_secret_args(self):
         changed = False
+        license_key_argument = (self.farmer.get("license") or {}).get("key_argument")
         for arg in self.farmer["args"]:
-            if arg["type"] == "secret" and self._arg_values.get(arg["name"]):
+            if (
+                arg["type"] == "secret"
+                and arg["name"] != license_key_argument
+                and self._arg_values.get(arg["name"])
+            ):
                 self._arg_values[arg["name"]] = ""
                 changed = True
         if changed:
