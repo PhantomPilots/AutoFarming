@@ -69,7 +69,7 @@ class GuildBossFarmer(IFarmer):
 
         if find(vio.kh_rank, screenshot):
             self.current_state = States.FINDING_BOSS
-            print(f"Moving to state {self.current_state}")
+            print("Looking for the Guild Boss.")
             return
 
         find_and_click(vio.knighthood_boss, screenshot, window_location)
@@ -81,7 +81,7 @@ class GuildBossFarmer(IFarmer):
 
         if find(vio.startbutton, screenshot):
             self.current_state = States.FIGHTING
-            print(f"Moving to state {self.current_state}")
+            print("Starting the Guild Boss fight.")
             return
 
         # If we find it, go into the fight!

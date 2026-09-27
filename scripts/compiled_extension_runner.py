@@ -211,11 +211,11 @@ def main(argv=None) -> int:
     args = _parse_args(argv)
     try:
         return run_bundle(args.bundle, args.extension_args, self_test=args.self_test)
-    except (ExtensionValidationError, ImportError, OSError, zipfile.BadZipFile) as exc:
-        print(f"Compiled extension could not start: {exc}", file=sys.stderr)
+    except (ExtensionValidationError, ImportError, OSError, zipfile.BadZipFile):
+        print("This Farmer couldn't start. Update AutoFarmers and try again.", file=sys.stderr)
         return 2
-    except Exception as exc:
-        print(f"Compiled extension failed: {exc}", file=sys.stderr)
+    except Exception:
+        print("This Farmer stopped unexpectedly. Please try again.", file=sys.stderr)
         return 1
 
 

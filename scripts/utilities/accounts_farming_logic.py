@@ -200,7 +200,7 @@ class ManyAccountsFarmer:
         find_and_click(vio.skip, screenshot, window_location, threshold=0.6, sleep_time=1)
 
         if find(vio.knighthood, screenshot) or find(vio.search_for_a_kh, screenshot):
-            print("Going to CHECK IN state")
+            print("Checking in.")
             self.current_state = States.CHECK_IN
             return
 

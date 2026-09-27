@@ -67,7 +67,7 @@ class BossBattleFarmer(IFarmer):
         # Find the actual stage
         if find(vio.stage_melee_of_phantasms, screenshot):
             self.current_state = States.OPENING_DUNGEON
-            print(f"Going to {self.current_state}")
+            print("Opening the boss battle.")
 
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
@@ -75,7 +75,7 @@ class BossBattleFarmer(IFarmer):
         if find_and_click(vio.stage_melee_of_phantasms, screenshot, window_location, sleep_time=0.5):
             # We're re-opening the floor!
             self.current_state = States.GOING_TO_FLOOR_STATE
-            print(f"Going to {self.current_state}")
+            print("Choosing the next floor.")
 
     def going_to_floor_state(self):
         """Dungeon is open, let's go to the floor"""
@@ -89,7 +89,7 @@ class BossBattleFarmer(IFarmer):
         if find(vio.startbutton, screenshot):
             # Let's go to proceed to battle!
             self.current_state = States.GET_READY
-            print(f"Going to {self.current_state}")
+            print("Getting ready for the boss battle.")
             return
 
         find_and_click(vio.extreme_difficulty, screenshot, window_location)
@@ -142,7 +142,7 @@ class BossBattleFarmer(IFarmer):
 
         if find(vio.boss_battle_loading_screen, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE
-            print(f"Going to {self.current_state}")
+            print("Choosing the next floor.")
             return
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):

@@ -169,7 +169,7 @@ class SADungeonFarmer(IFarmer):
         # Clock Tower
         if find(vio.sa_coin, screenshot) or find(vio.clock_tower, screenshot) or find(vio.fs_dungeon_lock, screenshot):
             self.current_state = States.OPENING_DUNGEON
-            print(f"Going to {self.current_state}")
+            print("Opening the dungeon.")
 
     def opening_dungeon_state(self):
         screenshot, window_location = capture_window()
@@ -199,7 +199,7 @@ class SADungeonFarmer(IFarmer):
 
         if find(vio.clock_tower_floor, screenshot):
             self.current_state = States.GOING_TO_FLOOR_STATE
-            print(f"Going to {self.current_state}")
+            print("Choosing the next floor.")
             return
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
@@ -256,7 +256,7 @@ class SADungeonFarmer(IFarmer):
         if find(vio.startbutton, screenshot):
             # Let's go to proceed to battle!
             self.current_state = States.GET_READY
-            print(f"Going to {self.current_state}")
+            print("Getting ready to fight.")
             return
 
         if find(vio.clock_tower_floor, screenshot):
@@ -356,7 +356,7 @@ class SADungeonFarmer(IFarmer):
 
         if find(vio.tavern_loading_screen, screenshot):
             self.current_state = States.OPENING_DUNGEON
-            print(f"Going to {self.current_state}")
+            print("Opening the dungeon.")
             return
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
@@ -372,7 +372,7 @@ class SADungeonFarmer(IFarmer):
 
         if find(vio.back, screenshot) or find(vio.sa_coin, screenshot):
             self.current_state = States.GOING_TO_DUNGEON
-            print(f"Going to {self.current_state}")
+            print("Returning to the dungeon menu.")
             return
 
         if not find(vio.fs_loading_screen, screenshot):

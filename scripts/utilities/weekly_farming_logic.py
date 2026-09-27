@@ -114,10 +114,10 @@ class WeeklyFarmer:
             return
 
         if find(vio.kh_boss_battle, screenshot, threshold=0.89):
-            print("Going to KH BOSS BATTLE state")
+            print("Opening the Knighthood boss battle.")
             return States.KH_BOSS_BATTLE
         if find(vio.daily_boss_battle, screenshot, threshold=0.89):
-            print("Going to DEMONIC BEAST state")
+            print("Opening the Demonic Beast fight.")
             return States.DEMONIC_BEAST
 
         # If we're here, means we're done with all dailies.
@@ -147,7 +147,7 @@ class WeeklyFarmer:
         if len(rectangle):
             rectangle_image = crop_image(screenshot, rectangle[:2], rectangle[:2] + rectangle[2:])
 
-            print(f"Going to the '{vision_image.image_name}' mission...")
+            print("Starting the weekly mission.")
 
             # Click on `Go Now`
             find_and_click(
@@ -191,7 +191,7 @@ class WeeklyFarmer:
             print("Picking next daily to complete...")
             next_state = self.find_next_mission()
             if next_state is not None:
-                print(f"Next state will be {next_state}")
+                print("Starting the next weekly mission.")
             else:
                 print("Finished all dailies!")
             WeeklyFarmer.current_state = next_state if next_state is not None else States.IN_TAVERN_STATE

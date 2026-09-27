@@ -122,12 +122,12 @@ class DemonKingFarmer(IFarmer):
 
         if find(vio.register_coins, screenshot):
             self.current_state = States.OPEN_DK
-            print(f"Going to {self.current_state}")
+            print("Opening the Demon King fight.")
             return
 
         if find(vio.startbutton, screenshot):
             self.current_state = States.FIGHTING
-            print(f"Going to {self.current_state}")
+            print("Starting the Demon King fight.")
             return
 
         find_and_click(vio.apply, screenshot, window_location)
@@ -146,7 +146,7 @@ class DemonKingFarmer(IFarmer):
         find_and_click(vio.register_coins, screenshot, window_location, sleep_time=1)
         if find_and_click(vio.apply, screenshot, window_location):
             self.current_state = States.PREPARE_FIGHT
-            print(f"Going to {self.current_state}")
+            print("Getting ready for the Demon King fight.")
 
     def prepare_fight_state(self):
         """Let's prepare the fight"""
@@ -161,7 +161,7 @@ class DemonKingFarmer(IFarmer):
 
         if find(vio.startbutton, screenshot):
             self.current_state = States.FIGHTING
-            print(f"Going to {self.current_state}")
+            print("Starting the Demon King fight.")
 
     def store_unit_types(self):
         """Let's store the colors for each unit in our dictionary..."""

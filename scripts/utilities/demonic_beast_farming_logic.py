@@ -169,12 +169,12 @@ class DemonicBeastFarmer(IFarmer):
 
         if find(vio.empty_party, screenshot) or find(vio.save_party, screenshot):
             # We have to set the party.
-            print("Moving to state SET_PARTY")
+            print("Setting up the team.")
             self.current_state = States.SET_PARTY
 
         elif find(vio.available_floor, screenshot, threshold=0.8):
             # We're in the Bird screen, but assuming the party is set. Go to READY FIGHT FLOOR 1 state!
-            print("Moving to state READY_TO_FIGHT")
+            print("Getting ready to fight.")
             self.current_state = States.READY_TO_FIGHT
 
     def set_party_state(self):
@@ -183,7 +183,7 @@ class DemonicBeastFarmer(IFarmer):
 
         if find_and_click(vio.ok_main_button, screenshot, window_location):
             # We're ready to start fighting floor 1!
-            print("Moving to state READY_TO_FIGHT")
+            print("Getting ready to fight.")
             self.current_state = States.READY_TO_FIGHT
             return
 
@@ -262,7 +262,7 @@ class DemonicBeastFarmer(IFarmer):
 
         if find(vio.db_loading_screen, screenshot):
             # The 'Start' button went through, fight starting!
-            print("Moving to state FIGHTING_FLOOR")
+            print("Starting the floor fight.")
             self.current_state = States.FIGHTING_FLOOR
 
     def fighting_floor(self):
@@ -325,7 +325,7 @@ class DemonicBeastFarmer(IFarmer):
 
                 else:
                     # Go straight to the original states
-                    print("Moving to GOING_TO_DB")
+                    print("Returning to the Demonic Beast menu.")
                     self.current_state = States.GOING_TO_DB
 
             else:
@@ -351,7 +351,7 @@ class DemonicBeastFarmer(IFarmer):
         if find_and_click(vio.ok_main_button, screenshot, window_location) or find(vio.set_db_party, screenshot):
             # Scroll down slightly so the floor image becomes detectable again
             drag_im((530, 530), (530, 430), window_location, sleep_after_click=0.1, drag_duration=0.4)
-            print("Moving to the original state, GOING_TO_DB")
+            print("Returning to the Demonic Beast menu.")
             self.current_state = States.GOING_TO_DB
             return
 

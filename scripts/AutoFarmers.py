@@ -1119,7 +1119,7 @@ class FarmerController(QObject):
         self.process = None
         self._after_stop()
         if not expected_stop:
-            self._append_output("\nProcess finished.\n")
+            self._append_output("\nFarmer stopped.\n")
             self.running_changed.emit(False, 0)
         self._emit_status_snapshot()
 
@@ -1580,14 +1580,14 @@ class AboutTab(QWidget):
             # Clear status after 2 seconds
             QTimer.singleShot(2000, lambda: self.status_label.setText(""))
         except Exception as e:
-            self.status_label.setText(f"❌ Failed to open URL: {e}")
+            self.status_label.setText("❌ Couldn't open the link. Please try again.")
 
     def after_pre_update_head(self, exit_code):
         """Capture the current revision before applying updates."""
         if exit_code == 0:
             self._pre_update_head = self._last_process_output.strip()
 
-        self.status_label.setText("🔄 Running 'git stash'...")
+        self.status_label.setText("🔄 Preparing your update...")
         self.run_process("git", ["stash"], self.after_stash)
 
     def after_stash(self, exit_code):
@@ -1599,7 +1599,7 @@ class AboutTab(QWidget):
         # Stash successful, now run git pull
         self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
         self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
-        self.status_label.setText("🔄 Running 'git pull'...")
+        self.status_label.setText("🔄 Downloading the update...")
         self.run_process("git", ["pull"], self.after_pull)
 
     def after_pull(self, exit_code):
@@ -1616,13 +1616,13 @@ class AboutTab(QWidget):
             self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
             self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
 
-        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.status_label.setText("🔄 The update didn't finish. Trying again...")
         self.run_process("git", ["fetch", "--prune"], self.after_recovery_fetch)
 
     def after_recovery_fetch(self, exit_code):
         """Resolve the configured upstream only after its remote state is fresh."""
         if exit_code != 0:
-            self._fail_update_recovery("Unable to download the official version; check your connection and repository")
+            self._fail_update_recovery("Couldn't download the update. Check your connection and try again.")
             return
 
         self.run_process(
@@ -1649,7 +1649,7 @@ class AboutTab(QWidget):
         if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
             return
 
-        self._fail_update_recovery("Unable to identify the official update branch")
+        self._fail_update_recovery("Couldn't find the update. Please try again.")
 
     def _reset_to_recovery_commit(self, output):
         """Validate a resolved commit ID and start the destructive reset."""
@@ -1657,7 +1657,7 @@ class AboutTab(QWidget):
         if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
             return False
 
-        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.status_label.setText("🔄 The update didn't finish. Trying again...")
         self.run_process("git", ["reset", "--hard", commit], self.after_recovery_reset)
         return True
 
@@ -1665,7 +1665,7 @@ class AboutTab(QWidget):
         """Resume the normal post-update workflow after a successful reset."""
         if exit_code != 0:
             self._fail_update_recovery(
-                "Unable to restore the official version; the repository may be locked or damaged"
+                "Couldn't finish the update. Close other apps using AutoFarmers and try again."
             )
             return
 
@@ -1678,7 +1678,7 @@ class AboutTab(QWidget):
 
     def _start_post_update_summary(self):
         """Enter the shared post-pull/reset summary workflow."""
-        self.status_label.setText("🔄 Summarizing what you just downloaded...")
+        self.status_label.setText("🔄 Checking what changed...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
     def after_post_update_head(self, exit_code):
@@ -1750,7 +1750,7 @@ class AboutTab(QWidget):
         """Handle completion of the requirements install step."""
         if exit_code != 0:
             self.status_label.setText(
-                "❌ Requirements install failed; please run python -m pip install -r requirements.txt"
+                "❌ Couldn't install the update. Please try again."
             )
             self._finish_update(clear_status=False)
             return
@@ -1888,7 +1888,7 @@ class AboutTab(QWidget):
         )
 
         if requirements_changed:
-            self.status_label.setText("🔄 Installing updated add-ons (Python packages)...")
+            self.status_label.setText("🔄 Installing the update...")
             self.run_process(
                 sys.executable,
                 ["-m", "pip", "install", "-r", self.requirements_file_path],
@@ -1909,14 +1909,14 @@ class AboutTab(QWidget):
             return
 
         if not self._restart_safe_supplier():
-            self.status_label.setText("✅ Update complete - restart required to load updated components")
+            self.status_label.setText("✅ Update ready. Restart AutoFarmers to use it.")
             self._finish_update(clear_status=False)
             return
 
-        self.status_label.setText("✅ Update complete - restarting GUI...")
+        self.status_label.setText("✅ Update complete. Restarting AutoFarmers...")
         self._finish_update(clear_status=False)
         if not _restart_application():
-            self.status_label.setText("✅ Update complete - GUI restart failed; please reopen manually")
+            self.status_label.setText("✅ Update complete. Please reopen AutoFarmers.")
             return
         QApplication.instance().quit()
 
