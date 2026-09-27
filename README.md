@@ -135,8 +135,3 @@ For detailed information on all the bots available, go to the [bots README file]
 
 - [X] Auto-size the game automatically when starting/stopping/resuming bots.
 - [X] Make them work in 4k monitors.
-
-## License
-The AutoFarmers core is licensed under the MIT License; see [LICENSE](LICENSE).
-
-Optional compiled extensions under `scripts/vendor/` may carry their own license. A bundle's own license file governs that bundle and is excluded from the root MIT grant. Those extensions are distributed as native binaries; their implementation source is not part of this public repository.
