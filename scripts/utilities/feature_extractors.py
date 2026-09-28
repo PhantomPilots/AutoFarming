@@ -91,6 +91,69 @@ def extract_color_histograms_features(
     return np.concatenate(all_histograms, axis=0)
 
 
+def extract_spatial_color_features(
+    images: np.ndarray | list[np.ndarray], grid: tuple[int, int] = (4, 4)
+) -> np.ndarray:
+    """Keep the color and position of small card icons in a compact feature vector."""
+
+    def process_batch(batch: np.ndarray) -> np.ndarray:
+        if batch.ndim == 3:
+            batch = batch[np.newaxis, ...]
+        if batch.ndim != 4 or batch.shape[-1] != 3:
+            raise ValueError(f"Each batch must have shape (N, H, W, 3), got {batch.shape}")
+        if batch.shape[1] < grid[0] or batch.shape[2] < grid[1]:
+            raise ValueError(f"Images are too small for a {grid[0]}x{grid[1]} grid")
+
+        features = []
+        for image in batch:
+            blocks = [
+                block.mean(axis=(0, 1))
+                for row in np.array_split(image, grid[0], axis=0)
+                for block in np.array_split(row, grid[1], axis=1)
+            ]
+            features.append(np.asarray(blocks, dtype=np.float32).flatten() / 255.0)
+        return np.asarray(features, dtype=np.float32)
+
+    if isinstance(images, np.ndarray):
+        return process_batch(images)
+    if not isinstance(images, list) or not all(isinstance(batch, np.ndarray) for batch in images):
+        raise TypeError("Expected a list of np.ndarray or a single np.ndarray")
+    return np.concatenate([process_batch(batch) for batch in images], axis=0)
+
+
+def extract_ground_card_features(images: np.ndarray | list[np.ndarray]) -> np.ndarray:
+    """Combine color proportions with brightness and texture for empty card slots.
+
+    The square-root histogram prevents a dominant background color from hiding
+    smaller color differences. Texture helps separate plain ground from card art.
+    """
+    histograms = extract_color_histograms_features(images, bins=(8, 8, 8))
+    histograms = np.sqrt(histograms / histograms.sum(axis=1, keepdims=True))
+
+    texture_features = []
+    batches = [images] if isinstance(images, np.ndarray) else images
+    for batch in batches:
+        if batch.ndim == 3:
+            batch = batch[np.newaxis, ...]
+        for image in batch:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            # Use a fixed size so neighboring-pixel changes are comparable
+            # across the three-unit and four-unit card layouts.
+            gray = cv2.resize(gray, (36, 91), interpolation=cv2.INTER_AREA).astype(np.float32) / 255.0
+            texture_features.append(
+                [
+                    gray.std(),
+                    np.abs(np.diff(gray, axis=0)).mean(),
+                    np.abs(np.diff(gray, axis=1)).mean(),
+                    gray.mean(),
+                ]
+            )
+
+    # Keep texture influential alongside the 512 histogram values.
+    texture_features = np.asarray(texture_features, dtype=np.float32) * 10.0
+    return np.concatenate([histograms, texture_features], axis=1)
+
+
 def extract_difference_of_histograms_features(images: np.ndarray) -> np.ndarray:
     """Given two images, compute each one's color histograms and return the norm of the difference as single feature.
 

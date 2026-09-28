@@ -25,7 +25,7 @@ def main():
         starting_state=States.GOING_TO_DB,
         reset_after_defeat=True,
         max_stamina_pots="inf",
-        max_floor_3_clears=args.clears,
+        max_clears=args.clears,
         password=args.password,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
