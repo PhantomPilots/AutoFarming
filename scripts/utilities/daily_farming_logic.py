@@ -159,16 +159,16 @@ class DailyFarmer:
         screenshot, window_location = capture_window()
 
         missions = [
-            (self.do_daily_pvp, vio.daily_pvp, States.PVP_STATE, "PVP_STATE"),
-            (True, vio.daily_boss_battle, States.BOSS_STATE, "BOSS_STATE"),
-            (True, vio.daily_patrol, States.PATROL_STATE, "PATROL_STATE"),
-            (True, vio.daily_vanya_ale, States.VANYA_ALE_STATE, "VANYA_ALE_STATE"),
-            (True, vio.daily_friendship_coins, States.FRIENDSHIP_COINS_STATE, "FRIENDSHIP_COINS_STATE"),
-            (True, vio.daily_fort_solgress, States.FORT_SOLGRESS_STATE, "FORT_SOLGRESS_STATE"),
+            (self.do_daily_pvp, vio.daily_pvp, States.PVP_STATE, "PVP"),
+            (True, vio.daily_boss_battle, States.BOSS_STATE, "the boss battle"),
+            (True, vio.daily_patrol, States.PATROL_STATE, "patrol"),
+            (True, vio.daily_vanya_ale, States.VANYA_ALE_STATE, "Vanya Ale"),
+            (True, vio.daily_friendship_coins, States.FRIENDSHIP_COINS_STATE, "friendship coins"),
+            (True, vio.daily_fort_solgress, States.FORT_SOLGRESS_STATE, "Fort Solgress"),
         ]
         for enabled, vision_image, state, state_name in missions:
             if enabled and find(vision_image, screenshot, threshold=0.89):
-                print(f"Going to {state_name}")
+                print(f"Starting {state_name}.")
                 DailyFarmer._dailies_collected = False  # And let's reset the collected flag!
                 return state
 
@@ -211,7 +211,7 @@ class DailyFarmer:
                 screenshot, (0, rectangle[1]), (screenshot.shape[1], rectangle[1] + rectangle[3])
             )
 
-            print(f"Going to the '{vision_image.image_name}' mission...")
+            print("Starting the daily mission.")
 
             # Click on `Go Now`
             find_and_click(
@@ -270,7 +270,7 @@ class DailyFarmer:
             print("Picking next daily to complete...")
             next_state = self.find_next_mission()
             if next_state is not None:
-                print(f"Next state will be {next_state}")
+                print("Starting the next daily mission.")
             else:
                 print("Finished all dailies!")
             DailyFarmer.current_state = next_state if next_state is not None else States.IN_TAVERN_STATE
@@ -385,7 +385,7 @@ class DailyFarmer:
 
         # To skip the reward
         if find_and_click(vio.ad_wheel_play, screenshot, window_location, threshold=0.6):
-            print("We're seeing ad_wheel_play, going to AD_WHEEL state...")
+            print("Opening the ad wheel.")
             return True
 
         return False
@@ -545,7 +545,7 @@ class DailyFarmer:
         screenshot, window_location = capture_window()
 
         if find(vio.brawl, screenshot):
-            print("Going to BRAWL")
+            print("Opening Brawl.")
             DailyFarmer.current_state = States.BRAWL_STATE
             return
 
@@ -589,7 +589,7 @@ class DailyFarmer:
             # ... And let's play a Brawl match too!
             screenshot, window_location = capture_window()
             if find(vio.back, screenshot):
-                print("Going to PLAYING_BRAWL state")
+                print("Starting Brawl.")
                 DailyFarmer.current_state = States.PLAYING_BRAWL
 
     def playing_brawl_state(self):

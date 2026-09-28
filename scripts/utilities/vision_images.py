@@ -1,3 +1,4 @@
+from utilities.image_assets import GameVersion, get_default_image_asset_resolver
 from utilities.vision import MultiVision, Vision
 
 # TODO:
@@ -119,9 +120,34 @@ sa_no_keys = Vision("sa_coin_dungeon\\no_keys.png")
 auto_repeat_ended = Vision("equipment\\auto_repeat_ended.png")
 
 # Demonic beasts
-floor1 = Vision("demonic_beasts\\floor1.png")
-floor2 = Vision("demonic_beasts\\floor2.png")
-floor3 = Vision("demonic_beasts\\floor3.png")
+if get_default_image_asset_resolver().game_version is GameVersion.JAPAN:
+    floor1 = MultiVision(
+        "demonic_beasts\\Db_multivision\\BirdF1.png",
+        "demonic_beasts\\Db_multivision\\DeerF1.png",
+        "demonic_beasts\\Db_multivision\\DogsF1.png",
+        "demonic_beasts\\Db_multivision\\RatF1.png",
+        "demonic_beasts\\Db_multivision\\SnakeF1.png",
+        "demonic_beasts\\Db_multivision\\SutF1.png",
+        image_name="floor1",
+    )
+    floor2 = MultiVision(
+        "demonic_beasts\\Db_multivision\\BirdF2.png",
+        "demonic_beasts\\Db_multivision\\DeerF2.png",
+        "demonic_beasts\\Db_multivision\\DogsF2.png",
+        "demonic_beasts\\Db_multivision\\SnakeF2.png",
+        image_name="floor2",
+    )
+    floor3 = MultiVision(
+        "demonic_beasts\\Db_multivision\\BirdF3.png",
+        "demonic_beasts\\Db_multivision\\DeerF3.png",
+        "demonic_beasts\\Db_multivision\\DogsF3.png",
+        "demonic_beasts\\Db_multivision\\SnakeF3.png",
+        image_name="floor3",
+    )
+else:
+    floor1 = Vision("demonic_beasts\\floor1.png")
+    floor2 = Vision("demonic_beasts\\floor2.png")
+    floor3 = Vision("demonic_beasts\\floor3.png")
 phase_1 = Vision("demonic_beasts\\phase_1.png")
 phase_2 = Vision("demonic_beasts\\phase_2.png")
 phase_3 = Vision("demonic_beasts\\phase_3.png")

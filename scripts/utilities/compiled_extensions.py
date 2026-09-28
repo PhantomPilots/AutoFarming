@@ -137,17 +137,16 @@ def _compatibility_error(manifest: dict) -> str | None:
     artifact = manifest["artifact"]
     if manifest["core_api_version"] != CORE_EXTENSION_API_VERSION:
         return (
-            f"Requires AutoFarmers extension API {manifest['core_api_version']}; "
-            f"this version provides API {CORE_EXTENSION_API_VERSION}."
+            "This Farmer needs a newer version of AutoFarmers. Please update and try again."
         )
     if artifact["python_tag"] != "cp312":
-        return f"Unsupported Python artifact {artifact['python_tag']}; CPython 3.12 is required."
+        return "This Farmer needs the Windows version of AutoFarmers that uses Python 3.12."
     if artifact["platform_tag"] != "win_amd64":
-        return f"Unsupported platform artifact {artifact['platform_tag']}; 64-bit Windows is required."
+        return "This Farmer needs 64-bit Windows."
     if sys.implementation.name != "cpython" or sys.version_info[:2] != (3, 12):
-        return "This compiled extension requires 64-bit CPython 3.12."
+        return "This Farmer needs the Windows version of AutoFarmers that uses Python 3.12."
     if sys.platform != "win32" or platform.machine().lower() not in {"amd64", "x86_64"}:
-        return "This compiled extension requires 64-bit Windows."
+        return "This Farmer needs 64-bit Windows."
     return None
 
 
@@ -254,7 +253,8 @@ def discover_compiled_extensions(vendor_dir: Path | str) -> tuple[list[dict], li
             seen_names.add(display_name)
             extensions.append(manifest)
         except ExtensionValidationError as exc:
-            warnings.append(f"Skipping compiled extension at {bundle_dir}: {exc}")
+            farmer_name = bundle_dir.name.removesuffix("_farmer").replace("_", " ").title()
+            warnings.append(f"Couldn't load {farmer_name} Farmer. Update AutoFarmers and try again.")
     return extensions, warnings
 
 

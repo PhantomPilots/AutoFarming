@@ -190,7 +190,7 @@ class LegendaryBossFarmer(IFarmer):
 
     def run(self):
 
-        print(f"Farming {self.difficulty} Final Boss, starting from state {self.current_state}.")
+        print(f"Starting {self.difficulty} Legendary Boss Farmer.")
 
         while True:
 

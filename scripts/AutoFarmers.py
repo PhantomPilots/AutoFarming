@@ -20,6 +20,7 @@ import ctypes.wintypes
 import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import sys
@@ -781,6 +782,20 @@ for _extension_warning in _COMPILED_EXTENSION_WARNINGS:
     print(f"[WARNING] {_extension_warning}", file=sys.stderr)
 
 _UPTIME_CYCLE_SECS = 12 * 3600  # Session uptime bar resets every 12 hours
+_WAIT_BEFORE_ACCEPT_CONFIG_KEYS = {
+    "DemonFarmer.py": "demon_wait_before_accept_seconds",
+    "indura_farmer": "indura_wait_before_accept_seconds",
+}
+
+
+def _valid_wait_before_accept(value: object) -> bool:
+    if isinstance(value, bool):
+        return False
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(seconds) and seconds >= 0
 
 
 @dataclass(frozen=True)
@@ -929,6 +944,20 @@ class FarmerController(QObject):
         if self.farmer["name"] in REWARD_SETS:
             log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
         remove_expired_logged_images(log_subdirs)
+        wait_save_failed = False
+        wait_config_key = self._wait_before_accept_config_key()
+        if wait_config_key:
+            wait_value = str(self._arg_values.get("--time-to-sleep", "")).strip()
+            if not _valid_wait_before_accept(wait_value):
+                self._append_output("[ERROR] Enter a wait time of 0 or more seconds.\n")
+                return
+            try:
+                save_config_updates({wait_config_key: wait_value})
+                config.reload()
+            except Exception:
+                wait_save_failed = True
+
+        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
         args = self._build_cli_args()
@@ -987,6 +1016,8 @@ class FarmerController(QObject):
 
         self.output_lines = []
         self.output_reset.emit()
+        if wait_save_failed:
+            self._append_output("[WARNING] Could not save the wait time. Starting with this value anyway.\n")
 
         self._session_clears = 0
         self._session_pots = 0
@@ -1113,7 +1144,7 @@ class FarmerController(QObject):
         self.process = None
         self._after_stop()
         if not expected_stop:
-            self._append_output("\nProcess finished.\n")
+            self._append_output("\nFarmer stopped.\n")
             self.running_changed.emit(False, 0)
         self._emit_status_snapshot()
 
@@ -1123,14 +1154,22 @@ class FarmerController(QObject):
         if self.process.bytesAvailable() > 0:
             self.handle_stdout()
 
+    def _wait_before_accept_config_key(self) -> str | None:
+        farmer_id = self.farmer.get("extension_id") or self.farmer.get("script")
+        return _WAIT_BEFORE_ACCEPT_CONFIG_KEYS.get(farmer_id)
+
     def _build_default_arg_values(self) -> dict[str, object]:
         values = {}
         persisted_suite_key = load_suite_license_key() if self.farmer.get("license") else ""
         license_key_argument = (self.farmer.get("license") or {}).get("key_argument")
+        wait_config_key = self._wait_before_accept_config_key()
+        saved_wait = load_full_config_dict().get(wait_config_key) if wait_config_key else None
         for arg in self.farmer["args"]:
             default = arg.get("default")
             if arg["type"] == "secret" and arg["name"] == license_key_argument:
                 values[arg["name"]] = persisted_suite_key
+            elif arg["name"] == "--time-to-sleep" and wait_config_key and _valid_wait_before_accept(saved_wait):
+                values[arg["name"]] = str(saved_wait).strip()
             elif arg["type"] == "multiselect":
                 values[arg["name"]] = list(default or [])
             elif arg["type"] == "checkbox":
@@ -1205,8 +1244,13 @@ class FarmerController(QObject):
 
     def _clear_secret_args(self):
         changed = False
+        license_key_argument = (self.farmer.get("license") or {}).get("key_argument")
         for arg in self.farmer["args"]:
-            if arg["type"] == "secret" and self._arg_values.get(arg["name"]):
+            if (
+                arg["type"] == "secret"
+                and arg["name"] != license_key_argument
+                and self._arg_values.get(arg["name"])
+            ):
                 self._arg_values[arg["name"]] = ""
                 changed = True
         if changed:
@@ -1670,14 +1714,14 @@ class AboutTab(QWidget):
             # Clear status after 2 seconds
             QTimer.singleShot(2000, lambda: self.status_label.setText(""))
         except Exception as e:
-            self.status_label.setText(f"❌ Failed to open URL: {e}")
+            self.status_label.setText("❌ Couldn't open the link. Please try again.")
 
     def after_pre_update_head(self, exit_code):
         """Capture the current revision before applying updates."""
         if exit_code == 0:
             self._pre_update_head = self._last_process_output.strip()
 
-        self.status_label.setText("🔄 Running 'git stash'...")
+        self.status_label.setText("🔄 Preparing your update...")
         self.run_process("git", ["stash"], self.after_stash)
 
     def after_stash(self, exit_code):
@@ -1689,7 +1733,7 @@ class AboutTab(QWidget):
         # Stash successful, now run git pull
         self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
         self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
-        self.status_label.setText("🔄 Running 'git pull'...")
+        self.status_label.setText("🔄 Downloading the update...")
         self.run_process("git", ["pull"], self.after_pull)
 
     def after_pull(self, exit_code):
@@ -1706,13 +1750,13 @@ class AboutTab(QWidget):
             self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
             self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
 
-        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.status_label.setText("🔄 The update didn't finish. Trying again...")
         self.run_process("git", ["fetch", "--prune"], self.after_recovery_fetch)
 
     def after_recovery_fetch(self, exit_code):
         """Resolve the configured upstream only after its remote state is fresh."""
         if exit_code != 0:
-            self._fail_update_recovery("Unable to download the official version; check your connection and repository")
+            self._fail_update_recovery("Couldn't download the update. Check your connection and try again.")
             return
 
         self.run_process(
@@ -1739,7 +1783,7 @@ class AboutTab(QWidget):
         if exit_code == 0 and self._reset_to_recovery_commit(self._last_process_output):
             return
 
-        self._fail_update_recovery("Unable to identify the official update branch")
+        self._fail_update_recovery("Couldn't find the update. Please try again.")
 
     def _reset_to_recovery_commit(self, output):
         """Validate a resolved commit ID and start the destructive reset."""
@@ -1747,7 +1791,7 @@ class AboutTab(QWidget):
         if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
             return False
 
-        self.status_label.setText("🔄 Normal update failed; restoring official version...")
+        self.status_label.setText("🔄 The update didn't finish. Trying again...")
         self.run_process("git", ["reset", "--hard", commit], self.after_recovery_reset)
         return True
 
@@ -1755,7 +1799,7 @@ class AboutTab(QWidget):
         """Resume the normal post-update workflow after a successful reset."""
         if exit_code != 0:
             self._fail_update_recovery(
-                "Unable to restore the official version; the repository may be locked or damaged"
+                "Couldn't finish the update. Close other apps using AutoFarmers and try again."
             )
             return
 
@@ -1768,7 +1812,7 @@ class AboutTab(QWidget):
 
     def _start_post_update_summary(self):
         """Enter the shared post-pull/reset summary workflow."""
-        self.status_label.setText("🔄 Summarizing what you just downloaded...")
+        self.status_label.setText("🔄 Checking what changed...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
     def after_post_update_head(self, exit_code):
@@ -1840,7 +1884,7 @@ class AboutTab(QWidget):
         """Handle completion of the requirements install step."""
         if exit_code != 0:
             self.status_label.setText(
-                "❌ Requirements install failed; please run python -m pip install -r requirements.txt"
+                "❌ Couldn't install the update. Please try again."
             )
             self._finish_update(clear_status=False)
             return
@@ -1978,7 +2022,7 @@ class AboutTab(QWidget):
         )
 
         if requirements_changed:
-            self.status_label.setText("🔄 Installing updated add-ons (Python packages)...")
+            self.status_label.setText("🔄 Installing the update...")
             self.run_process(
                 sys.executable,
                 ["-m", "pip", "install", "-r", self.requirements_file_path],
@@ -1999,14 +2043,14 @@ class AboutTab(QWidget):
             return
 
         if not self._restart_safe_supplier():
-            self.status_label.setText("✅ Update complete - restart required to load updated components")
+            self.status_label.setText("✅ Update ready. Restart AutoFarmers to use it.")
             self._finish_update(clear_status=False)
             return
 
-        self.status_label.setText("✅ Update complete - restarting GUI...")
+        self.status_label.setText("✅ Update complete. Restarting AutoFarmers...")
         self._finish_update(clear_status=False)
         if not _restart_application():
-            self.status_label.setText("✅ Update complete - GUI restart failed; please reopen manually")
+            self.status_label.setText("✅ Update complete. Please reopen AutoFarmers.")
             return
         QApplication.instance().quit()
 

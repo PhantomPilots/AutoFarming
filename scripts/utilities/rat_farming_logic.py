@@ -1,13 +1,13 @@
 import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
-from utilities.coordinates import Coordinates
 from utilities.demonic_beast_farming_logic import DemonicBeastFarmer, States
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import IFarmer
+from utilities.image_assets import GameVersion, get_default_image_asset_resolver
 from utilities.logging_utils import LoggerWrapper
 from utilities.rat_fighter import IFighter, RatFighter
-from utilities.utilities import crop_region, find, screenshot_testing
+from utilities.utilities import find, screenshot_testing
 
 logger = LoggerWrapper(name="RatLogger", log_file="rat_logger.log")
 
@@ -48,7 +48,7 @@ class RatFarmer(DemonicBeastFarmer):
     def determine_db_floor(self, screenshot: np.ndarray, threshold=0.8) -> int:
         """Determine the Demonic Beast floor"""
         # sourcery skip: assign-if-exp, reintroduce-else
-        floor_img_region = crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
+        floor_img_region = self._floor_search_image(screenshot)
 
         # display_image(floor_img_region)
         # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
@@ -56,7 +56,11 @@ class RatFarmer(DemonicBeastFarmer):
         # Default
         db_floor = -1
 
-        if find(vio.floor2, floor_img_region, threshold=threshold):
+        if get_default_image_asset_resolver().game_version is GameVersion.JAPAN:
+            db_floor = self._japan_floor_match(
+                floor_img_region, ((2, vio.floor2), (1, vio.floor1)), threshold
+            )
+        elif find(vio.floor2, floor_img_region, threshold=threshold):
             db_floor = 2
         elif find(vio.floor1, floor_img_region, threshold=threshold):
             db_floor = 1

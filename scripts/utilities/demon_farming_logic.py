@@ -151,13 +151,13 @@ class IDemonFarmer(IFarmer):
         if find(vio.preparation_incomplete, screenshot):
             # We're waiting to click on preparation incomplete!
             self.current_state = States.READY_TO_FIGHT
-            print(f"Moving to {self.current_state}.")
+            print("Preparing for the demon fight.")
             return
 
         # If we see a 'CANCEL', change the state
         if find(vio.cancel_realtime, screenshot):
             self.current_state = States.LOOKING_FOR_DEMON
-            print(f"Moving to {self.current_state}.")
+            print("Looking for a demon fight.")
             return
 
         if self._handle_daily_reset_entrypoint(screenshot, window_location):
@@ -229,7 +229,7 @@ class IDemonFarmer(IFarmer):
         if find(vio.demons_loading_screen, screenshot) or find(vio.preparation_incomplete, screenshot):
             # Going to the raid screen
             self.current_state = States.READY_TO_FIGHT
-            print(f"Moving to {self.current_state}.")
+            print("Preparing for the demon fight.")
             return
 
         if not find(vio.cancel_realtime, screenshot):
@@ -269,13 +269,13 @@ class IDemonFarmer(IFarmer):
         # We may have been kicked, move to initial state if so
         if find(vio.ok_main_button, screenshot) or find(vio.battle_menu, screenshot, threshold=0.6):
             self.current_state = States.GOING_TO_DEMONS
-            print(f"We've been kicked out... Moving to {self.current_state}.")
+            print("The fight ended early. Returning to the demon menu.")
             return
 
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
             self.current_state = States.FIGHTING_DEMON
-            print(f"Moving to {self.current_state}.")
+            print("Starting the demon fight.")
 
     def fighting_demon_state(self):
         # sourcery skip: extract-duplicate-method, extract-method, split-or-ifs
@@ -332,7 +332,7 @@ class IDemonFarmer(IFarmer):
             if victory:
                 print("[CLEAR]")
             print(f"We've missed {IDemonFarmer.missed_invites} invites.")
-            print(f"Moving to {self.current_state}.")
+            print("Looking for the next demon fight.")
 
             # And kill the fighter in case we have it
             self.stop_active_fight()
@@ -403,7 +403,7 @@ class DemonFarmer(IDemonFarmer):
 
     def run(self):
 
-        print(f"Farming demons, starting from {self.current_state}.")
+        print("Starting Demon Farmer.")
         print(f"We'll be farming {[demon.image_name for demon in self.demon_roulette]} demon(s).")
 
         def fighting_demon_state():

@@ -167,11 +167,11 @@ class FarmingFactory:
                     farmer_instance.run()
 
                 except KeyboardInterrupt as e:
-                    print(f"{e}: Exiting the program.")
+                    print(str(e) or "Farmer stopped.")
                     break
 
                 except Exception as e:
-                    print(f"An error occurred:\n{e}")
+                    print("Something went wrong. Trying to restart the game...")
 
                     if farmer_instance is not None and hasattr(farmer_instance, "current_state"):
                         starting_state = farmer_instance.current_state
@@ -184,7 +184,6 @@ class FarmingFactory:
                     with runtime_context_lock:
                         runtime_context["farmer_instance"] = None
 
-                    print("FINALLY:")
                     if farmer_instance is not None and hasattr(farmer_instance, "exit_message"):
                         farmer_instance.exit_message()
 

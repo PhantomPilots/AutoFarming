@@ -307,7 +307,7 @@ class IFloor4Farmer(IFarmer):
 
     def run(self):
 
-        print(f"Fighting Floor 4 hard, starting in state {self.current_state}.")
+        print("Starting Floor 4 Farmer.")
 
         self.run_state_loop(
             {
