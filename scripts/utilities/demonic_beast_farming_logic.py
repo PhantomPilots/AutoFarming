@@ -3,12 +3,14 @@ import threading
 import time
 from enum import Enum
 
+import cv2
 import numpy as np
 import pyautogui as pyautogui
 import utilities.vision_images as vio
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
+from utilities.image_assets import GameVersion, get_default_image_asset_resolver
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
     capture_window,
@@ -193,10 +195,34 @@ class DemonicBeastFarmer(IFarmer):
         # Save the party
         find_and_click(vio.save_party, screenshot, window_location)
 
+    @staticmethod
+    def _floor_search_image(screenshot: np.ndarray) -> np.ndarray:
+        if get_default_image_asset_resolver().game_version is GameVersion.JAPAN:
+            return screenshot[: screenshot.shape[0] // 2, :]
+        return crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
+
+    @staticmethod
+    def _japan_floor_match(
+        floor_img_region: np.ndarray, floor_images: tuple, threshold: float
+    ) -> int:
+        """Choose the strongest JP floor match when similar labels both pass the threshold."""
+        best_floor = -1
+        best_score = threshold
+        for floor, floor_image in floor_images:
+            for needle in floor_image.needle_imgs:
+                if needle.shape[0] > floor_img_region.shape[0] or needle.shape[1] > floor_img_region.shape[1]:
+                    continue
+                _, score, _, _ = cv2.minMaxLoc(
+                    cv2.matchTemplate(floor_img_region, needle, cv2.TM_CCOEFF_NORMED)
+                )
+                if score >= threshold and (best_floor == -1 or score > best_score):
+                    best_floor, best_score = floor, score
+        return best_floor
+
     def determine_db_floor(self, screenshot: np.ndarray, threshold=0.9) -> int:
         """Determine the Demonic Beast floor"""
         # sourcery skip: assign-if-exp, reintroduce-else
-        floor_img_region = crop_region(screenshot, Coordinates.get_coordinates("floor_region"))
+        floor_img_region = self._floor_search_image(screenshot)
 
         # display_image(floor_img_region)
         # screenshot_testing(floor_img_region, vio.floor2, threshold=threshold)
@@ -204,7 +230,13 @@ class DemonicBeastFarmer(IFarmer):
         # Default
         db_floor = -1
 
-        if find(vio.floor2, floor_img_region, threshold=threshold):
+        if get_default_image_asset_resolver().game_version is GameVersion.JAPAN:
+            db_floor = self._japan_floor_match(
+                floor_img_region,
+                ((2, vio.floor2), (3, vio.floor3), (1, vio.floor1)),
+                threshold,
+            )
+        elif find(vio.floor2, floor_img_region, threshold=threshold):
             db_floor = 2
         elif find(vio.floor3, floor_img_region, threshold=threshold):
             db_floor = 3
