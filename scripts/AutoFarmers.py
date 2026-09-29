@@ -31,6 +31,7 @@ from PyQt5.QtCore import (
     QObject,
     QProcess,
     QProcessEnvironment,
+    QRegularExpression,
     Qt,
     QTimer,
     QUrl,
@@ -45,6 +46,7 @@ from PyQt5.QtGui import (
     QPainter,
     QPainterPath,
     QPixmap,
+    QRegularExpressionValidator,
     QTextBlockFormat,
     QTextCharFormat,
     QTextCursor,
@@ -920,6 +922,17 @@ class FarmerController(QObject):
 
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
+
+        for arg in self.farmer["args"]:
+            if arg["type"] == "text" and "choices" in arg:
+                value = str(self._arg_values.get(arg["name"], ""))
+                if value not in arg["choices"]:
+                    choices = arg["choices"]
+                    options = choices[0] if len(choices) == 1 else (
+                        " or ".join(choices) if len(choices) == 2 else ", ".join(choices[:-1]) + f", or {choices[-1]}"
+                    )
+                    self._append_output(f"[ERROR] Enter {options} for {arg['label']}.\n")
+                    return
 
         wait_save_failed = False
         wait_config_key = self._wait_before_accept_config_key()
@@ -2228,6 +2241,9 @@ class FarmerTab(QWidget):
                 else:
                     widget = QLineEdit()
                     widget.setText(arg["default"])
+                    if arg["type"] == "text" and "choices" in arg:
+                        choices_pattern = "|".join(re.escape(choice) for choice in arg["choices"])
+                        widget.setValidator(QRegularExpressionValidator(QRegularExpression(f"(?:{choices_pattern})")))
                     if arg["type"] == "secret":
                         widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget

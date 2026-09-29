@@ -97,9 +97,9 @@ def _validate_arg(arg: object, index: int) -> dict:
         if arg_type != "checkbox" or not false_name.startswith("--"):
             raise ExtensionValidationError(f"{context}.false_name is only valid for checkboxes")
 
-    if arg_type in ("dropdown", "multiselect"):
+    if arg_type in ("dropdown", "multiselect") or (arg_type == "text" and "choices" in arg):
         choices = _required(arg, "choices", list, context)
-        if not choices or any(not isinstance(choice, str) or not choice for choice in choices):
+        if not choices or any(not isinstance(choice, str) or not choice for choice in choices) or len(set(choices)) != len(choices):
             raise ExtensionValidationError(f"{context}.choices must contain non-empty strings")
         if "labels" in arg:
             labels = _required(arg, "labels", list, context)
@@ -113,6 +113,8 @@ def _validate_arg(arg: object, index: int) -> dict:
         raise ExtensionValidationError(f"{context}.default must be a list")
     if arg_type in ("text", "secret", "dropdown") and not isinstance(default, str):
         raise ExtensionValidationError(f"{context}.default must be a string")
+    if arg_type == "text" and "choices" in arg and default not in choices:
+        raise ExtensionValidationError(f"{context}.default must be one of its choices")
     return normalized
 
 
