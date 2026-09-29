@@ -14,9 +14,24 @@ from pathlib import Path, PurePosixPath
 CORE_EXTENSION_API_VERSION = 1
 SUPPORTED_SCHEMA_VERSION = 2
 _ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+_VERSION_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$")
 _HEX_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _COMMIT_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 _ARG_TYPES = frozenset({"text", "secret", "checkbox", "dropdown", "multiselect"})
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {
+        "CON",
+        "PRN",
+        "AUX",
+        "NUL",
+        "CONIN$",
+        "CONOUT$",
+        *(f"COM{number}" for number in range(1, 10)),
+        *(f"LPT{number}" for number in range(1, 10)),
+        *(f"COM{number}" for number in "¹²³"),
+        *(f"LPT{number}" for number in "¹²³"),
+    }
+)
 
 
 class ExtensionValidationError(ValueError):
@@ -46,20 +61,51 @@ def _required_string(mapping: dict, key: str, context: str) -> str:
     return value
 
 
+def validate_extension_version(version: object) -> str:
+    """Return a version string safe to use as one Windows cache path component."""
+    if (
+        not isinstance(version, str)
+        or not _VERSION_PATTERN.fullmatch(version)
+    ):
+        raise ExtensionValidationError(
+            "manifest.version must be a short, portable path component"
+        )
+    _validate_windows_path_component(version, "manifest.version")
+    return version
+
+
+def _validate_windows_path_component(component: str, context: str) -> None:
+    if (
+        not component
+        or component in {".", ".."}
+        or component.endswith((".", " "))
+        or any(ord(character) < 32 or character in '<>:"|?*' for character in component)
+    ):
+        raise ExtensionValidationError(f"Unsafe {context.lower()}: {component!r}")
+
+    device_name = component.split(".", 1)[0].rstrip(" .").upper()
+    if device_name in _WINDOWS_RESERVED_NAMES:
+        raise ExtensionValidationError(f"Unsafe {context.lower()}: {component!r}")
+
+
 def _validate_relative_path(relative_path: str, context: str = "Bundle path") -> PurePosixPath:
     if not isinstance(relative_path, str) or not relative_path.strip():
         raise ExtensionValidationError(f"{context} must be a non-empty string")
     if "\\" in relative_path:
         raise ExtensionValidationError(f"{context} must use forward slashes: {relative_path!r}")
 
+    raw_parts = relative_path.split("/")
     pure_path = PurePosixPath(relative_path)
     if (
-        not pure_path.parts
+        len(relative_path) > 4096
+        or not pure_path.parts
         or pure_path.is_absolute()
-        or ".." in pure_path.parts
-        or ":" in pure_path.parts[0]
+        or any(part in ("", ".", "..") for part in raw_parts)
+        or any(len(part) > 255 for part in raw_parts)
     ):
         raise ExtensionValidationError(f"Unsafe {context.lower()}: {relative_path!r}")
+    for part in raw_parts:
+        _validate_windows_path_component(part, context)
     return pure_path
 
 
@@ -173,7 +219,7 @@ def load_extension_manifest(bundle_dir: Path | str, *, verify_hash: bool = True)
     if not _ID_PATTERN.fullmatch(extension_id):
         raise ExtensionValidationError("manifest.id must use lowercase letters, digits, and underscores")
     _required_string(manifest, "display_name", "manifest")
-    _required_string(manifest, "version", "manifest")
+    version = validate_extension_version(_required_string(manifest, "version", "manifest"))
     core_api_version = _required(manifest, "core_api_version", int, "manifest")
     if isinstance(core_api_version, bool) or core_api_version < 1:
         raise ExtensionValidationError("manifest.core_api_version must be a positive integer")
@@ -216,6 +262,7 @@ def load_extension_manifest(bundle_dir: Path | str, *, verify_hash: bool = True)
     normalized_license = _validate_license(manifest, normalized_args)
 
     normalized = dict(manifest)
+    normalized["version"] = version
     normalized["source"] = dict(source)
     normalized["source"]["commit"] = source_commit
     normalized["artifact"] = dict(artifact)
