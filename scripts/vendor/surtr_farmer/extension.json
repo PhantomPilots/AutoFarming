@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "surtr_farmer",
   "display_name": "Surtr Farmer",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "core_api_version": 1,
   "placement_after": "Rat Farmer",
   "accepts_game_password": true,
@@ -10,13 +10,13 @@
   "image": "assets/gui/surtr_farmer.png",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "eb1ecfe9f049ccb2bc8c3624985effd3b04f8897"
+    "commit": "4155a46a5b61ee6cf894fcba3f3924644c19d2f3"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_surtr_core-0.6.3-cp312-cp312-win_amd64.whl",
-    "sha256": "989601f67a4200df797e502c43ff36ea6de9d99430d38a78a8b321d8f89f4d01",
+    "wheel": "wheels/autofarmers_surtr_core-0.6.4-cp312-cp312-win_amd64.whl",
+    "sha256": "b432ec154e531157f0b5f9111c076a6873cd1d73381a44626a9fb2f44ba203e2",
     "module": "autofarmers_surtr_core",
     "callable": "main"
   },
