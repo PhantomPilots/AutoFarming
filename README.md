@@ -76,7 +76,15 @@ Farmer scripts launched directly use the `game_version` preference saved in `scr
 
 ### Game password (optional)
 
-If the game logs you out, put your password in **Settings** so the bot can sign back in; change how long it waits after logout there too if you need to. The GUI passes it to the farmer process through a short-lived environment variable. Direct script launches still accept `--password` or `-p`, with a warning because command-line passwords may appear in process listings.
+If the game logs you out, enter your password in **Settings** so the bot can sign back in; change how long it waits after logout there too if you need to. AutoFarmers saves the password with Windows current-user protection in %LOCALAPPDATA%\AutoFarmers\game_password.dpapi. It does not save the password in scripts/config/config.yaml. If an older config contains a password, AutoFarmers encrypts it first and then removes it from the YAML file. If encryption fails, the original config is preserved and the GUI reports the error.
+
+The GUI passes a password to a farmer through a short-lived child environment variable. Direct script launches still accept --password or -p, with a warning because command-line passwords may appear in process listings.
+
+### Multiple accounts
+
+Run python scripts/ImportAccounts.py from the repository root to add multiple accounts. The importer hides sync-code and password input and stores the account list with Windows current-user protection. Existing entries in scripts/config/accounts.yaml are imported automatically on first use; the YAML file is cleared only after the encrypted save succeeds. If the old file contains conflicting entries, review it and use python scripts/ImportAccounts.py --replace to enter the complete list.
+
+Only credentials in the current working config are migrated automatically. Credentials saved inside an older Git stash are not restored by this migration; enter them again in Settings or ImportAccounts.py.
 
 ### Push Notifications
 The bot can send push notifications to your phone when it detects a stuck state, including a screenshot for quick diagnosis. Once the bot recovers, you get a recovery alert.
@@ -94,7 +102,6 @@ Saving from the GUI rewrites `config.yaml` with PyYAML; **inline comments in tha
 | `stuck_timeout_minutes` | 10 | Minutes without state change *and* click activity before alerting |
 | `notification_cooldown_minutes` | 5 | Minimum gap between repeated stuck alerts |
 | `max_notifications_per_incident` | 5 | Hard cap on alerts per stuck incident |
-| `game_password` | (empty) | Account password for re-login after logout (sensitive) |
 | `game_version` | `global` | Game client whose image templates should be used (`global` or `japan`) |
 | `minutes_to_wait_before_login` | 30 | Minutes to wait after logout before attempting login again |
 | `check_in_hour` | 3 | Daily check-in hour on a 24-hour Pacific Time clock |

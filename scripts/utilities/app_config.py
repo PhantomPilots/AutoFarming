@@ -14,13 +14,18 @@ import time
 import requests
 import yaml
 
+from utilities.secure_store import (
+    CredentialStoreError,
+    load_game_password as load_protected_game_password,
+    save_game_password as save_protected_game_password,
+)
+
 APP_CONFIG_KEYS = frozenset(
     {
         "ntfy_private_channel",
         "stuck_timeout_minutes",
         "notification_cooldown_minutes",
         "max_notifications_per_incident",
-        "game_password",
         "game_version",
         "minutes_to_wait_before_login",
         "check_in_hour",
@@ -34,7 +39,6 @@ APP_CONFIG_DEFAULTS = {
     "stuck_timeout_minutes": 10,
     "notification_cooldown_minutes": 5,
     "max_notifications_per_incident": 5,
-    "game_password": "",
     "game_version": "global",
     "minutes_to_wait_before_login": 30,
     "check_in_hour": 3,
@@ -175,25 +179,109 @@ def load_full_config_dict() -> dict:
         return {}
 
 
-def save_config_updates(updates: dict) -> None:
-    """Merge allowed keys into config.yaml and atomically replace the file."""
+def _write_full_config_dict(data: dict) -> None:
     path = get_config_yaml_path()
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    merged = load_full_config_dict()
-    for key, value in updates.items():
-        if key in APP_CONFIG_KEYS:
-            merged[key] = value
-    merged.pop("default_game_password", None)
     parent = os.path.dirname(path)
     fd, tmp_path = tempfile.mkstemp(prefix="config_", suffix=".yaml.tmp", dir=parent)
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            yaml.safe_dump(merged, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
+            yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
         os.replace(tmp_path, path)
     except Exception:
         with contextlib.suppress(OSError):
             os.remove(tmp_path)
         raise
+
+
+def _load_config_for_credential_ops() -> dict:
+    """Load config strictly so a failed read can never turn into an empty-file rewrite."""
+    try:
+        with open(get_config_yaml_path(), "r", encoding="utf-8") as stream:
+            data = yaml.safe_load(stream)
+    except FileNotFoundError:
+        return {}
+    except (OSError, yaml.YAMLError) as exc:
+        raise CredentialStoreError(
+            "The config file could not be read safely. Its contents were preserved."
+        ) from exc
+    if data is None:
+        return {}
+    if not isinstance(data, dict):
+        raise CredentialStoreError(
+            "The config file has an invalid format. Its contents were preserved."
+        )
+    return data
+
+
+def _legacy_game_password(data: dict) -> str:
+    for key in ("game_password", "default_game_password"):
+        raw = data.get(key)
+        if raw is not None and str(raw).strip():
+            return str(raw).strip()
+    return ""
+
+
+def load_game_password() -> str:
+    """Load the protected password, migrating legacy YAML only after DPAPI succeeds."""
+    data = _load_config_for_credential_ops()
+    legacy_password = _legacy_game_password(data)
+    protected_password = load_protected_game_password()
+    has_legacy_keys = "game_password" in data or "default_game_password" in data
+
+    if protected_password:
+        if legacy_password and legacy_password != protected_password:
+            raise CredentialStoreError(
+                "The protected password differs from the legacy config value. "
+                "Choose the password to keep in Settings before migration can continue."
+            )
+        if has_legacy_keys:
+            data.pop("game_password", None)
+            data.pop("default_game_password", None)
+            try:
+                _write_full_config_dict(data)
+            except Exception as exc:
+                raise CredentialStoreError(
+                    "The password is protected, but the legacy config could not be cleared. "
+                    "The original config was preserved."
+                ) from exc
+        return protected_password
+
+    if legacy_password:
+        save_protected_game_password(legacy_password)
+        data.pop("game_password", None)
+        data.pop("default_game_password", None)
+        try:
+            _write_full_config_dict(data)
+        except Exception as exc:
+            raise CredentialStoreError(
+                "The password was protected, but the legacy config could not be cleared. "
+                "The original config was preserved."
+            ) from exc
+        return legacy_password
+
+    return ""
+
+
+def save_config_updates(updates: dict) -> None:
+    """Save preferences and keep game passwords in the current-user DPAPI store."""
+    merged = _load_config_for_credential_ops()
+    if "game_password" in updates:
+        raw_password = updates["game_password"]
+        save_protected_game_password("" if raw_password is None else str(raw_password))
+    else:
+        # A legacy password must be protected before any config rewrite can remove it.
+        if _legacy_game_password(merged):
+            load_game_password()
+            merged = _load_config_for_credential_ops()
+
+    for key, value in updates.items():
+        if key in APP_CONFIG_KEYS:
+            merged[key] = value
+    merged.pop("game_password", None)
+    merged.pop("default_game_password", None)
+    _write_full_config_dict(merged)
+    config.reload()
 
 
 def test_ntfy_connection() -> tuple[bool, str]:

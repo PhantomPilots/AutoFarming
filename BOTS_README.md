@@ -1,5 +1,9 @@
 # AVAILABLE BOTS
 
+## Accounts Farmer
+
+Use python scripts/ImportAccounts.py from the repository root to add or replace accounts. The importer hides sync-code and password input and saves them in the current Windows user's protected store. Legacy entries in scripts/config/accounts.yaml are migrated after a successful encrypted save.
+
 ## Demon farming script
 
 In `scripts/DemonFarmer.py`, it's a script that looks for real-time demon fights in a non-stopping loop. It's an infinite source of demon materials without wasting any resource! It supports Red, Gray, Crimson, Bell, and Original Demon.

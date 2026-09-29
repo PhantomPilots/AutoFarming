@@ -78,8 +78,10 @@ from PyQt5.QtWidgets import (
 )
 from utilities.app_config import (
     APP_CONFIG_DEFAULTS,
+    CredentialStoreError,
     config,
     get_pause_flag_path,
+    load_game_password,
     load_full_config_dict,
     save_config_updates,
     test_ntfy_connection,
@@ -458,8 +460,8 @@ Tune your gear so you can guarantee that.<br>
     """,
     "Accounts Farmer": """
 <p>This bot is for people who pilot multiple accounts.<br>
-In <code>config\\accounts.yaml</code>, fill the fields with the sync and passwords of each account.
-The <code>name</code> field can be any account identifier.
+Run <code>python ImportAccounts.py</code> from the scripts folder to add account labels, sync codes, and passwords.
+The values are saved in the current Windows user's protected store.
 The bot will then rotate through the multiple accounts by closing and re-opening the game.</p>
 <strong></p>Requirement:</strong><br>
 In the Netmarble Launcher, take a screenshot of the <code>"Run Game"</code> button, and replace
@@ -948,11 +950,16 @@ class FarmerController(QObject):
             except Exception:
                 wait_save_failed = True
 
+        try:
+            game_password = self._get_game_password_for_launch()
+        except CredentialStoreError as exc:
+            self._append_output(f"[ERROR] Could not load the saved password safely: {exc}\n")
+            return
+
         remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
         self.resize_window()
 
         args = self._build_cli_args()
-        game_password = self._get_game_password_for_launch()
         extension_secrets = self._build_extension_secrets()
         display_args = self._build_display_args(args)
         game_version = get_saved_game_version()
@@ -1190,6 +1197,7 @@ class FarmerController(QObject):
         if not accepts_password:
             return ""
 
+        saved_password = load_game_password()
         pw = ""
         if self._password_supplier:
             try:
@@ -1197,13 +1205,7 @@ class FarmerController(QObject):
             except Exception:
                 pw = ""
         pw = (pw or "").strip()
-        if not pw:
-            data = load_full_config_dict()
-            raw = data.get("game_password", APP_CONFIG_DEFAULTS["game_password"])
-            if raw is None or str(raw).strip() == "":
-                raw = data.get("default_game_password")
-            pw = ("" if raw is None else str(raw)).strip()
-        return pw
+        return pw or saved_password
 
     def _build_cli_args(self) -> list[str]:
         args = []
@@ -1962,6 +1964,8 @@ class AboutTab(QWidget):
 class SettingsTab(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._password_load_failed = False
+        self._password_user_edited = False
         self.init_ui()
         self.reload_from_disk()
 
@@ -2068,6 +2072,7 @@ class SettingsTab(QWidget):
         self.password_edit = QLineEdit()
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.setPlaceholderText("Same as in the game (optional)")
+        self.password_edit.textEdited.connect(self._mark_password_edited)
         pwd_row.addWidget(self.password_edit)
         pwd_outer.addLayout(pwd_row)
         login_wait_form = QFormLayout()
@@ -2113,6 +2118,14 @@ class SettingsTab(QWidget):
         except (TypeError, ValueError):
             return int(APP_CONFIG_DEFAULTS[key])
 
+    def _mark_password_edited(self, _text: str):
+        self._password_user_edited = True
+
+    def _password_update_for_save(self) -> dict:
+        if self._password_load_failed and not self._password_user_edited:
+            return {}
+        return {"game_password": self.password_edit.text().strip()}
+
     def reload_from_disk(self):
         config.reload()
         data = load_full_config_dict()
@@ -2122,32 +2135,41 @@ class SettingsTab(QWidget):
         self.cooldown_spin.setValue(self._int_from_data(data, "notification_cooldown_minutes"))
         self.max_notif_spin.setValue(self._int_from_data(data, "max_notifications_per_incident"))
         self.check_in_hour_spin.setValue(self._int_from_data(data, "check_in_hour"))
-        pw = data.get("game_password", APP_CONFIG_DEFAULTS["game_password"])
-        if pw is None or str(pw).strip() == "":
-            legacy = data.get("default_game_password")
-            if legacy is not None and str(legacy).strip() != "":
-                pw = legacy
-        self.password_edit.setText("" if pw is None else str(pw))
+        self._password_user_edited = False
+        self._password_load_failed = False
+        password_load_error = None
+        try:
+            self.password_edit.setText(load_game_password())
+        except CredentialStoreError as exc:
+            self.password_edit.clear()
+            password_load_error = str(exc)
+            self._password_load_failed = True
         self.login_wait_spin.setValue(self._int_from_data(data, "minutes_to_wait_before_login"))
-        self.status_label.setText("Loaded saved settings.")
-        self.status_label.setStyleSheet(f"color: {C['muted']};")
+        if password_load_error:
+            self.status_label.setText(f"Saved password needs attention: {password_load_error}")
+            self.status_label.setStyleSheet("color: #ef4444;")
+        else:
+            self.status_label.setText("Loaded saved settings.")
+            self.status_label.setStyleSheet(f"color: {C['muted']};")
 
     def on_save(self):
         try:
-            stripped_pwd = self.password_edit.text().strip()
-            self.password_edit.setText(stripped_pwd)
-            save_config_updates(
-                {
-                    "ntfy_private_channel": self.topic_edit.text().strip(),
-                    "stuck_timeout_minutes": self.stuck_spin.value(),
-                    "notification_cooldown_minutes": self.cooldown_spin.value(),
-                    "max_notifications_per_incident": self.max_notif_spin.value(),
-                    "check_in_hour": self.check_in_hour_spin.value(),
-                    "game_password": stripped_pwd,
-                    "minutes_to_wait_before_login": self.login_wait_spin.value(),
-                }
-            )
+            updates = {
+                "ntfy_private_channel": self.topic_edit.text().strip(),
+                "stuck_timeout_minutes": self.stuck_spin.value(),
+                "notification_cooldown_minutes": self.cooldown_spin.value(),
+                "max_notifications_per_incident": self.max_notif_spin.value(),
+                "check_in_hour": self.check_in_hour_spin.value(),
+                "minutes_to_wait_before_login": self.login_wait_spin.value(),
+            }
+            password_update = self._password_update_for_save()
+            if "game_password" in password_update:
+                self.password_edit.setText(password_update["game_password"])
+            updates.update(password_update)
+            save_config_updates(updates)
             config.reload()
+            self._password_load_failed = False
+            self._password_user_edited = False
             self.status_label.setText("Saved.")
             self.status_label.setStyleSheet("color: #10b981;")
             QTimer.singleShot(5000, lambda: self.status_label.setText(""))

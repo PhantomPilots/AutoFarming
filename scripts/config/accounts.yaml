@@ -1,12 +1,3 @@
-
-# List of accounts and their passwords
-accounts:
-  - user: "user1" # Whatever identifiable name for user 1
-    sync: "..." 
-    password: "..."
-  - user: "user2" # Whatever identifiable name for user 2
-    sync: "..." 
-    password: "..."
-  - user: "user3" # Whatever identifiable name for user 3
-    sync: "..."
-    password: "..."
+# Account credentials are stored in the current Windows user's protected store.
+# Run python scripts/ImportAccounts.py from the repository root to add accounts.
+accounts: []

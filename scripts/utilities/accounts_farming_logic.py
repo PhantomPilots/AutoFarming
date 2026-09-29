@@ -14,7 +14,7 @@ from utilities.daily_farming_logic import DailyFarmer
 from utilities.daily_farming_logic import States as DailyFarmerStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
-from utilities.app_config import load_yaml_config
+from utilities.account_credentials import load_accounts_with_migration
 from utilities.utilities import (
     capture_window,
     close_game,
@@ -106,8 +106,13 @@ class ManyAccountsFarmer:
         ManyAccountsFarmer.weekly_farmer.add_complete_callback(self.weeklies_done)
 
     def load_accounts(self) -> list[dict[str, str]]:
-        """Load accounts from a configuration file"""
-        return load_yaml_config("config/accounts.yaml")["accounts"]
+        """Load current-user protected accounts, migrating legacy YAML when needed."""
+        accounts = load_accounts_with_migration()
+        if not accounts:
+            raise RuntimeError(
+                "No accounts are saved. Run python ImportAccounts.py from the scripts folder to add them."
+            )
+        return accounts
 
     def exit_message(self):
         """Final message to display on the screen farming is done"""

@@ -26,7 +26,7 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 1. **Select a Game Version**: Choose **Global (English)** or **Japan (Japanese)** from the top bar
 2. **Select a Farmer**: Click on the tab for the farmer you want to use (Bird, Deer, Dogs, etc.)
 3. **Configure Settings**: Fill in the required settings in the left panel:
-   - **Password**: Your account password (optional, for auto-login)
+   - **Password**: Your account password (optional, for auto-login). The GUI saves it in Windows current-user protected storage outside the repository.
    - **Clears**: Number of runs or "inf" for infinite farming
    - **Difficulty**: For applicable farmers (Demon, Final Boss)
    - **Demons to Farm**: For Demon Farmer, select which demons to battle
@@ -65,7 +65,11 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 - **Memory Efficient**: Output is limited to prevent memory issues during long farming sessions
 - **Licensing**: The core is free and open source. Check the license included with each optional compiled extension.
 
+- **Protected Credentials**: Game passwords and multi-account credentials are encrypted for the current Windows user and are not saved in tracked YAML files
+
 ### Troubleshooting
+
+- **Accounts Farmer setup**: Run python ImportAccounts.py from the scripts folder to add account labels, sync codes, and passwords. Secret input is hidden while typing.
 
 - **GUI won't start**: 
   - Make sure you're running from the `scripts\` directory
