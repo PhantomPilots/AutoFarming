@@ -1,6 +1,5 @@
 import os
 
-import dill as pickle
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -15,6 +14,7 @@ from utilities.feature_extractors import (
     extract_ground_card_features,
     extract_spatial_color_features,
 )
+from utilities.artifact_security import load_trusted_model
 
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"  # Replace '4' with the number of cores you want to use
 
@@ -30,16 +30,14 @@ class IModel:
     @classmethod
     def _load_feature_transform_model(cls, model_filename: str):
         if cls.feature_transform_model is None:
-            with open(os.path.join("models", model_filename), "rb") as model_file:
-                print("Loading model!")
-                cls.feature_transform_model = pickle.load(model_file)
+            print("Loading model!")
+            cls.feature_transform_model = load_trusted_model(model_filename)
 
     @classmethod
     def _load_model(cls, model_filename: str):
         """Load the model and assign it to the class variable."""
         if cls.model is None:
-            with open(os.path.join("models", model_filename), "rb") as model_file:
-                cls.model = pickle.load(model_file)
+            cls.model = load_trusted_model(model_filename)
             print(f"Loaded model: {model_filename}")
 
     @classmethod

@@ -1,9 +1,7 @@
 import abc
 import argparse
-import os
 
 import cv2
-import dill as pickle
 import numpy as np
 from utilities.card_data import CardTypes
 from utilities.feature_extractors import (
@@ -14,6 +12,7 @@ from utilities.feature_extractors import (
     extract_single_channel_features,
     plot_orb_keypoints,
 )
+from utilities.artifact_security import dataset_path_for, labels_to_numpy_values, save_dataset_file
 from utilities.utilities import (
     capture_hand_image,
     capture_window,
@@ -95,7 +94,7 @@ class CardTypeCollector(DataCollector):
             labels.append(CardTypes(card_label))
 
         data = np.stack(data, axis=0)
-        labels = np.stack(labels, axis=0)
+        labels = labels_to_numpy_values(labels)
 
         return data, labels
 
@@ -306,25 +305,17 @@ class UnitTypeDataCollector(DataCollector):
 
 
 def save_data(dataset: np.ndarray, all_labels: np.ndarray, filename: str):
-    """Creates a dictionary with the data and saves it under 'data/'"""
-
-    data_dict = {"data": dataset, "labels": all_labels}
-
+    """Save a newly collected dataset as numeric NPZ under scripts/data."""
     i = 0
-    filepath = os.path.join("data", f"{filename}_{i}")
-    while os.path.exists(f"{filepath}.npy"):
-        idx = int(filepath.split("_")[-1]) + 1
-        filepath = filepath.replace(str(i), str(idx))
+    filepath = dataset_path_for(f"data/{filename}_{i}.npz")
+    while filepath.exists():
         i += 1
+        filepath = dataset_path_for(f"data/{filename}_{i}.npz")
 
-    # Append the numpy extension
-    filepath += ".npy"
-    # Save the dataset
     save = input(f"About to save dataset in {filepath}, continue? (Y/n) ")
     if not save or "y" in save.lower():
-        with open(filepath, "wb") as pfile:
-            pickle.dump(data_dict, pfile)
-            print(f"New dataset saved in {filepath}")
+        saved_path = save_dataset_file(filepath, dataset, all_labels)
+        print(f"New dataset saved in {saved_path}")
     else:
         print("Not saving dataset!")
 

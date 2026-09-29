@@ -1,7 +1,5 @@
-import glob
 import os
 
-import dill as pickle
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
@@ -18,6 +16,7 @@ from utilities.feature_extractors import (
     extract_ground_card_features,
     extract_spatial_color_features,
 )
+from utilities.artifact_security import dataset_paths, labels_to_numpy_values, load_dataset_file
 from utilities.utilities import display_image, load_dataset, save_model
 
 
@@ -92,13 +91,12 @@ def load_thor_cards_features() -> list[np.ndarray]:
 def load_ground_cards_features() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Load ground samples and preserve their capture-file groups for validation."""
     batches, labels, file_groups = [], [], []
-    for file_index, filepath in enumerate(sorted(glob.glob("data/ground_data*.npy"))):
+    for file_index, filepath in enumerate(dataset_paths("data/ground_data*")):
         print(f"Loading {filepath}...")
-        with open(filepath, "rb") as data_file:
-            data = pickle.load(data_file)
-        batches.append(data["data"])
-        labels.append(data["labels"])
-        file_groups.extend([file_index] * len(data["labels"]))
+        batch, batch_labels = load_dataset_file(filepath)
+        batches.append(batch)
+        labels.append(batch_labels)
+        file_groups.extend([file_index] * len(batch_labels))
 
     return extract_ground_card_features(batches), np.concatenate(labels), np.asarray(file_groups)
 
@@ -283,7 +281,7 @@ def test_card_types_model(knn_model: KNeighborsClassifier | LogisticRegression, 
 def train_card_types_model():
     """Evaluate card type recognition, then train the saved model on all samples."""
     features, labels = load_card_type_features()
-    labels_values = np.asarray([label.value for label in labels])
+    labels_values = labels_to_numpy_values(labels)
 
     # Keep identical feature vectors in the same fold so duplicates cannot
     # appear in both training and validation data.

@@ -1,5 +1,4 @@
 import contextlib
-import glob
 import os
 import random
 import threading
@@ -26,6 +25,7 @@ from utilities.app_config import (
     config,
     wait_if_paused,
 )
+from utilities.artifact_security import dataset_paths, load_dataset_file, model_path_for
 from utilities.capture_window import (
     capture_screen,
     capture_window,
@@ -855,10 +855,13 @@ def load_dataset(glob_pattern: str) -> tuple[list | np.ndarray, np.ndarray]:
     dataset = []
     all_labels = []
 
-    for filepath in glob.iglob(glob_pattern):
+    filepaths = dataset_paths(glob_pattern)
+    if not filepaths:
+        raise FileNotFoundError(f"No dataset files matched {glob_pattern!r} under scripts/data")
+
+    for filepath in filepaths:
         print(f"Loading {filepath}...")
-        local_data = pickle.load(open(filepath, "rb"))
-        data, labels = local_data["data"], local_data["labels"]
+        data, labels = load_dataset_file(filepath)
 
         dataset.append(data)
         all_labels.append(labels)
@@ -875,7 +878,7 @@ def load_dataset(glob_pattern: str) -> tuple[list | np.ndarray, np.ndarray]:
 
 def save_model(model: KNeighborsClassifier | LogisticRegression, filename: str):
     """Save the model in file"""
-    model_path = os.path.join("models", f"{filename}")
+    model_path = model_path_for(filename)
     with open(model_path, "wb") as pfile:
         pickle.dump(model, pfile)
 
