@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "surtr_farmer",
   "display_name": "Surtr Farmer",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "core_api_version": 1,
   "placement_after": "Rat Farmer",
   "accepts_game_password": true,
@@ -10,13 +10,13 @@
   "image": "assets/gui/surtr_farmer.png",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "c76fe65fd6291e31cdf8281c5a129e683cb774fe"
+    "commit": "f1e230a5daf2168a61890d2a8f1f478539f9bf25"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_surtr_core-0.6.1-cp312-cp312-win_amd64.whl",
-    "sha256": "334fa7f3404490b14e0cd51da6934ba29ab668c4232c412a992efe8608677715",
+    "wheel": "wheels/autofarmers_surtr_core-0.6.2-cp312-cp312-win_amd64.whl",
+    "sha256": "f275abc826c02249da1eaa3ce1bdebddabf3eb913f8c4c316759d31fde4ea710",
     "module": "autofarmers_surtr_core",
     "callable": "main"
   },
@@ -36,6 +36,17 @@
       "label": "Clears",
       "type": "text",
       "default": "inf"
+    },
+    {
+      "name": "--max-floor",
+      "label": "Max Floor",
+      "type": "text",
+      "choices": [
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "2"
     },
     {
       "name": "--do-dailies",
