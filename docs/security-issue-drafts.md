@@ -1,8 +1,16 @@
-# Security issue drafts for Telepatya/AutoFarming
+# Security issues for Telepatya/AutoFarming
 
-These issues are intended only for the personal fork. GitHub rejected the connector's
-create requests with `403 Resource not accessible by integration`; no fork issues
-have been created yet. The accidental upstream issues 34–38 were closed.
+All five issues were created in the personal fork and linked to their separate fix
+commits on `codex/security-revamp`. They remain open for tracking until integration.
+The accidental upstream issues 34–38 were closed.
+
+| Issue | Fix commit |
+| --- | --- |
+| [#1: Serialized artifacts](https://github.com/Telepatya/AutoFarming/issues/1) | `225688b` |
+| [#2: Extension paths](https://github.com/Telepatya/AutoFarming/issues/2) | `95dd9f6` |
+| [#3: Extension cache integrity](https://github.com/Telepatya/AutoFarming/issues/3) | `28569cf` |
+| [#4: Password arguments](https://github.com/Telepatya/AutoFarming/issues/4) | `e4b2166` |
+| [#5: Credential storage](https://github.com/Telepatya/AutoFarming/issues/5) | `90505fb` |
 
 ## Security: verify serialized models and training data before loading
 
