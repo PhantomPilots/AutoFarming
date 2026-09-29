@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib
+import importlib.machinery
+import importlib.util
 import json
 import os
 import re
@@ -127,8 +130,11 @@ def _safe_wheel_members(archive: zipfile.ZipFile):
         seen_members.add(normalized_parts)
         member_kinds[normalized_parts] = "directory" if is_directory else "file"
         unix_mode = member.external_attr >> 16
+        file_type = stat.S_IFMT(unix_mode)
         if stat.S_ISLNK(unix_mode):
             raise ExtensionValidationError(f"Wheel contains a symbolic link: {name!r}")
+        if file_type not in (0, stat.S_IFDIR if is_directory else stat.S_IFREG):
+            raise ExtensionValidationError(f"Wheel contains an unsupported file type: {name!r}")
         yield member, pure_path
 
 
@@ -183,13 +189,145 @@ def _extract_wheel_safely(wheel_path: Path, destination: Path):
                 shutil.copyfileobj(source, output)
 
 
-def _cache_marker_matches(cache_dir: Path, expected_hash: str) -> bool:
-    marker_path = cache_dir / ".autofarmers-extension.json"
+def _copy_verified_wheel_snapshot(wheel_path: Path, snapshot_path: Path, expected_hash: str):
+    _ensure_contained(snapshot_path.parent, snapshot_path, "Verified wheel snapshot")
+    digest = hashlib.sha256()
     try:
-        marker = json.loads(marker_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeError, json.JSONDecodeError):
+        with wheel_path.open("rb") as source, snapshot_path.open("xb") as destination:
+            for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                digest.update(chunk)
+                destination.write(chunk)
+            destination.flush()
+            os.fsync(destination.fileno())
+    except OSError as exc:
+        raise ExtensionValidationError("Cannot create a verified extension wheel snapshot") from exc
+    if digest.hexdigest() != expected_hash:
+        raise ExtensionValidationError("Compiled extension wheel changed after manifest verification")
+
+
+def _wheel_inventory(wheel_path: Path):
+    """Return exact extracted file digests and directories from one wheel snapshot."""
+    files = {}
+    directories = set()
+    with zipfile.ZipFile(wheel_path) as archive:
+        safe_members = list(_safe_wheel_members(archive))
+        for member, pure_path in safe_members:
+            parts = tuple(pure_path.parts)
+            if member.is_dir():
+                directories.add(parts)
+            for index in range(1, len(parts)):
+                directories.add(parts[:index])
+            if member.is_dir():
+                continue
+            digest = hashlib.sha256()
+            size = 0
+            with archive.open(member) as source:
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    digest.update(chunk)
+                    size += len(chunk)
+            files[parts] = (size, digest.hexdigest())
+    return files, directories
+
+
+def _is_reparse_point(file_stat) -> bool:
+    return bool(getattr(file_stat, "st_file_attributes", 0) & 0x400)
+
+
+def _same_file_identity(first, second) -> bool:
+    return (
+        first.st_dev,
+        first.st_ino,
+        first.st_size,
+        getattr(first, "st_mtime_ns", None),
+    ) == (
+        second.st_dev,
+        second.st_ino,
+        second.st_size,
+        getattr(second, "st_mtime_ns", None),
+    )
+
+
+def _hash_cache_file(root: Path, path: Path):
+    _ensure_contained(root, path, "Cached extension file")
+    try:
+        before = path.lstat()
+        if not stat.S_ISREG(before.st_mode) or _is_reparse_point(before):
+            raise ExtensionValidationError("Extension cache contains a non-regular file")
+        flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(path, flags)
+        with os.fdopen(descriptor, "rb") as file_obj:
+            opened = os.fstat(file_obj.fileno())
+            if (
+                not stat.S_ISREG(opened.st_mode)
+                or _is_reparse_point(opened)
+                or not _same_file_identity(before, opened)
+            ):
+                raise ExtensionValidationError("Extension cache file changed while being checked")
+            digest = hashlib.sha256()
+            size = 0
+            for chunk in iter(lambda: file_obj.read(1024 * 1024), b""):
+                digest.update(chunk)
+                size += len(chunk)
+            after = path.lstat()
+            if (
+                _is_reparse_point(after)
+                or not _same_file_identity(opened, after)
+            ):
+                raise ExtensionValidationError("Extension cache file changed while being checked")
+        _ensure_contained(root, path, "Cached extension file")
+        return size, digest.hexdigest()
+    except ExtensionValidationError:
+        raise
+    except OSError as exc:
+        raise ExtensionValidationError("Cannot safely read an extension cache file") from exc
+
+
+def _cache_contents_match(cache_dir: Path, expected_hash: str, expected_files: dict, expected_directories: set) -> bool:
+    marker_name = ".autofarmers-extension.json"
+    marker_path = cache_dir / marker_name
+    try:
+        _ensure_contained(cache_dir.parent, cache_dir, "Extension cache path")
+        if cache_dir.is_symlink() or _is_junction(cache_dir) or not cache_dir.is_dir():
+            return False
+
+        actual_files = {}
+        actual_directories = set()
+        pending = [cache_dir]
+        while pending:
+            current_dir = pending.pop()
+            _ensure_contained(cache_dir, current_dir, "Extension cache directory")
+            with os.scandir(current_dir) as entries:
+                for entry in entries:
+                    path = Path(entry.path)
+                    if entry.is_symlink() or _is_junction(path):
+                        return False
+                    _ensure_contained(cache_dir, path, "Extension cache entry")
+                    relative = path.relative_to(cache_dir)
+                    parts = tuple(relative.parts)
+                    _validate_relative_path("/".join(parts), "Extension cache path")
+                    if entry.is_dir(follow_symlinks=False):
+                        actual_directories.add(parts)
+                        pending.append(path)
+                    elif entry.is_file(follow_symlinks=False):
+                        actual_files[parts] = _hash_cache_file(cache_dir, path)
+                    else:
+                        return False
+
+        expected_marker = json.dumps({"wheel_sha256": expected_hash}).encode("utf-8")
+        marker_parts = (marker_name,)
+        if actual_directories != expected_directories:
+            return False
+        if set(actual_files) != set(expected_files) | {marker_parts}:
+            return False
+        for parts, expected_digest in expected_files.items():
+            if actual_files[parts] != expected_digest:
+                return False
+        return _hash_cache_file(cache_dir, marker_path) == (
+            len(expected_marker),
+            hashlib.sha256(expected_marker).hexdigest(),
+        )
+    except (OSError, ExtensionValidationError, ValueError, RuntimeError):
         return False
-    return marker == {"wheel_sha256": expected_hash}
 
 
 def _prepare_cache(manifest: dict) -> Path:
@@ -212,33 +350,44 @@ def _prepare_cache(manifest: dict) -> Path:
     _ensure_contained(cache_root, extension_root, "Extension cache root")
     cache_dir = extension_root / f"{version}-{expected_hash[:12]}"
     _ensure_contained(extension_root, cache_dir, "Extension cache path")
-
-    if cache_dir.is_dir() and _cache_marker_matches(cache_dir, expected_hash):
-        _remove_stale_caches(extension_root, cache_dir)
-        return cache_dir
-    if cache_dir.exists():
-        _remove_path_safely(extension_root, cache_dir)
-        if cache_dir.exists() or cache_dir.is_symlink() or _is_junction(cache_dir):
-            raise ExtensionValidationError(f"Cannot replace invalid extension cache: {cache_dir}")
-
-    temp_dir = extension_root / f".{cache_dir.name}.{uuid.uuid4().hex}.tmp"
+    wheel_path = Path(manifest["wheel_path"])
+    token = uuid.uuid4().hex
+    temp_dir = extension_root / f".{cache_dir.name}.{token}.tmp"
+    snapshot_path = extension_root / f".{cache_dir.name}.{token}.wheel.tmp"
     try:
-        _extract_wheel_safely(Path(manifest["wheel_path"]), temp_dir)
+        _copy_verified_wheel_snapshot(wheel_path, snapshot_path, expected_hash)
+        expected_files, expected_directories = _wheel_inventory(snapshot_path)
+
+        if cache_dir.is_dir() and _cache_contents_match(
+            cache_dir, expected_hash, expected_files, expected_directories
+        ):
+            _remove_stale_caches(extension_root, cache_dir)
+            return cache_dir
+        if cache_dir.exists() or cache_dir.is_symlink() or _is_junction(cache_dir):
+            _remove_path_safely(extension_root, cache_dir)
+            if cache_dir.exists() or cache_dir.is_symlink() or _is_junction(cache_dir):
+                raise ExtensionValidationError(f"Cannot replace invalid extension cache: {cache_dir}")
+
+        _extract_wheel_safely(snapshot_path, temp_dir)
         marker_path = temp_dir / ".autofarmers-extension.json"
         _ensure_contained(extension_root, marker_path, "Extension cache marker")
-        marker_path.write_text(json.dumps({"wheel_sha256": expected_hash}), encoding="utf-8")
+        marker_path.write_bytes(json.dumps({"wheel_sha256": expected_hash}).encode("utf-8"))
+        if not _cache_contents_match(temp_dir, expected_hash, expected_files, expected_directories):
+            raise ExtensionValidationError("Extracted extension cache does not match its wheel")
         try:
             _ensure_contained(extension_root, cache_dir, "Extension cache path")
             os.replace(temp_dir, cache_dir)
         except FileExistsError:
             _ensure_contained(extension_root, cache_dir, "Extension cache path")
-            if not _cache_marker_matches(cache_dir, expected_hash):
+            if not _cache_contents_match(cache_dir, expected_hash, expected_files, expected_directories):
                 raise
     finally:
         if temp_dir.exists() or temp_dir.is_symlink() or _is_junction(temp_dir):
             _remove_path_safely(extension_root, temp_dir)
+        if snapshot_path.exists() or snapshot_path.is_symlink() or _is_junction(snapshot_path):
+            _remove_path_safely(extension_root, snapshot_path)
 
-    if not _cache_marker_matches(cache_dir, expected_hash):
+    if not _cache_contents_match(cache_dir, expected_hash, expected_files, expected_directories):
         raise ExtensionValidationError("Compiled extension cache did not pass verification")
     _remove_stale_caches(extension_root, cache_dir)
     return cache_dir
@@ -256,10 +405,78 @@ def _remove_stale_caches(extension_root: Path, current_cache: Path):
             pass
 
 
-def _load_module(manifest: dict, cache_dir: Path):
-    sys.path.insert(0, str(cache_dir))
+def _validate_module_spec(spec, cache_dir: Path, module_name: str):
+    if spec is None:
+        raise ImportError(f"Compiled module {module_name!r} is not present in the verified wheel")
+    if spec.origin and spec.origin not in {"built-in", "frozen"}:
+        origin = Path(spec.origin)
+        if origin.is_symlink() or _is_junction(origin):
+            raise ExtensionValidationError("Compiled module origin is a link")
+        resolved_origin = _ensure_contained(cache_dir, origin, "Compiled module origin")
+        if not resolved_origin.is_file():
+            raise ExtensionValidationError("Compiled module origin is not a file in the extension cache")
+    elif spec.submodule_search_locations:
+        for location in spec.submodule_search_locations:
+            _ensure_contained(cache_dir, Path(location), "Compiled package origin")
+    else:
+        raise ExtensionValidationError("Compiled module has no filesystem origin in the extension cache")
+
+
+def _import_module_from_cache(module_name: str, cache_dir: Path):
+    """Load each module component from this cache, without sys.path fallback."""
+    module_parts = module_name.split(".")
+    qualified_names = [".".join(module_parts[:index]) for index in range(1, len(module_parts) + 1)]
+    for qualified_name in qualified_names:
+        sys.modules.pop(qualified_name, None)
+
+    cache_path = cache_dir.resolve()
+    search_locations = [str(cache_path)]
+    imported_module = None
     importlib.invalidate_caches()
-    module = importlib.import_module(manifest["artifact"]["module"])
+    for index, qualified_name in enumerate(qualified_names):
+        spec = importlib.machinery.PathFinder.find_spec(qualified_name, search_locations)
+        _validate_module_spec(spec, cache_path, qualified_name)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[qualified_name] = module
+        if spec.loader is not None:
+            try:
+                spec.loader.exec_module(module)
+            except BaseException:
+                sys.modules.pop(qualified_name, None)
+                raise
+        imported_module = module
+        if index < len(qualified_names) - 1:
+            locations = spec.submodule_search_locations
+            if not locations:
+                raise ImportError(f"Compiled module parent {qualified_name!r} is not a package")
+            search_locations = list(locations)
+    return imported_module
+
+
+def _validate_imported_module_origin(module, cache_dir: Path) -> None:
+    module_file = getattr(module, "__file__", None)
+    module_spec = getattr(module, "__spec__", None)
+    spec_origin = getattr(module_spec, "origin", None)
+    if not module_file or not spec_origin or spec_origin in {"built-in", "frozen"}:
+        raise ExtensionValidationError("Compiled module has no verified cache origin")
+    module_path = Path(module_file)
+    spec_path = Path(spec_origin)
+    if module_path.is_symlink() or _is_junction(module_path) or spec_path.is_symlink() or _is_junction(spec_path):
+        raise ExtensionValidationError("Compiled module origin is a link")
+    resolved_module = _ensure_contained(cache_dir, module_path, "Compiled module file")
+    resolved_spec = _ensure_contained(cache_dir, spec_path, "Compiled module specification")
+    if resolved_module != resolved_spec or not resolved_module.is_file():
+        raise ExtensionValidationError("Imported compiled module did not originate in its verified cache")
+
+
+def _load_module(manifest: dict, cache_dir: Path):
+    cache_dir = cache_dir.resolve()
+    if cache_dir.is_symlink() or _is_junction(cache_dir):
+        raise ExtensionValidationError("Compiled extension cache directory is a link")
+    _ensure_contained(cache_dir.parent, cache_dir, "Extension cache path")
+    sys.path.insert(0, str(cache_dir))
+    module = _import_module_from_cache(manifest["artifact"]["module"], cache_dir)
+    _validate_imported_module_origin(module, cache_dir)
     if getattr(module, "__version__", None) != manifest["version"]:
         raise ExtensionValidationError(
             f"Compiled module version {getattr(module, '__version__', None)!r} "
