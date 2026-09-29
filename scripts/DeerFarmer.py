@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.deer_farming_logic import DeerFarmer, States
 from utilities.deer_fighting_strategies import DeerBattleStrategy
 from utilities.farming_factory import FarmingFactory
@@ -18,6 +20,7 @@ def main():
         help="Do daily PVP when dailies run (default: True)",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=DeerFarmer,
@@ -26,7 +29,7 @@ def main():
         reset_after_defeat=True,
         max_stamina_pots="inf",
         max_clears=args.clears,
-        password=args.password,
+        password=game_password,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
     )

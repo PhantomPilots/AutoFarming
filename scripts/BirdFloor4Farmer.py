@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.bird_floor4_fighting_strategies import BirdFloor4BattleStrategy
 from utilities.farming_factory import FarmingFactory
 from utilities.floor_4_farmers import BirdFloor4Farmer, States
@@ -20,6 +22,7 @@ def main():
         help="Do daily PVP when dailies run (default: True)",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=BirdFloor4Farmer,
@@ -27,7 +30,7 @@ def main():
         starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_FLOOR' or 'FIGHTING', to start the script from outside or within the fight
         max_runs=args.clears,  # Can be a number or "inf"
         extra_clears=args.extra_clears,
-        password=args.password,  # Account password
+        password=game_password,  # Account password
         do_dailies=args.do_dailies,  # Should we do our dailies?
         do_daily_pvp=args.daily_pvp,
     )

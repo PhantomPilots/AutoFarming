@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.farming_factory import FarmingFactory
 from utilities.gold_farming_logic import GoldFarmer, States
 
@@ -22,11 +24,12 @@ def main():
         help="Do daily PVP when dailies run (default: True)",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=GoldFarmer,
         starting_state=States.GOING_TO_DUNGEON,
-        password=args.password,
+        password=game_password,
         use_skip_tickets=args.use_skip_tickets,
         max_skip_tickets_to_use=args.max_skip_tickets_to_use,
         do_dailies=args.do_dailies,

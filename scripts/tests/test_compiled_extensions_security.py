@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import sys
 import tempfile
 import unittest
+import warnings
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -17,6 +19,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from compiled_extension_runner import (  # noqa: E402
     _extract_wheel_safely,
+    _consume_extension_game_password,
     _prepare_cache,
     _remove_path_safely,
     _remove_stale_caches,
@@ -172,6 +175,29 @@ class ExtensionPathSecurityTests(unittest.TestCase):
 
             _remove_stale_caches(extension_root, extension_root / "current-cache")
             self.assertTrue(outside_sentinel.is_file())
+
+    def test_compiled_extension_consumes_the_environment_password_without_native_execution(self):
+        environment_name = "AUTOFARMERS_GAME_PASSWORD"
+        manifest = {"accepts_game_password": True}
+        with patch.dict(os.environ, {environment_name: "test-password"}):
+            args, password = _consume_extension_game_password(manifest, ["--mode", "fast"])
+
+        self.assertEqual(args, ["--mode", "fast"])
+        self.assertEqual(password, "test-password")
+        self.assertNotIn(environment_name, os.environ)
+
+    def test_compiled_extension_retains_cli_password_compatibility_with_a_warning(self):
+        manifest = {"accepts_game_password": True}
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            args, password = _consume_extension_game_password(
+                manifest,
+                ["--mode", "fast", "--password", "legacy-cli-value"],
+            )
+
+        self.assertEqual(args, ["--mode", "fast"])
+        self.assertEqual(password, "legacy-cli-value")
+        self.assertTrue(any("process listings" in str(item.message) for item in caught))
 
 
 if __name__ == "__main__":

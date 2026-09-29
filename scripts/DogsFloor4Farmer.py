@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.dogs_floor4_fighting_strategies import DogsFloor4BattleStrategy
 from utilities.dogs_floor4_fighting_strategies_whale import DogsFloor4WhaleBattleStrategy
 from utilities.farming_factory import FarmingFactory
@@ -27,6 +29,7 @@ def main():
         help="Use the stacked-account Gowther + Meli3k Dogs Floor 4 strat.",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=DogsFloor4Farmer,
@@ -34,7 +37,7 @@ def main():
         starting_state=States.GOING_TO_DB,
         max_runs=args.clears,
         extra_clears=args.extra_clears,
-        password=args.password,
+        password=game_password,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
         whale=args.whale,

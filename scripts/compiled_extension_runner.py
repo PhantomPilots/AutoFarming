@@ -22,6 +22,7 @@ from utilities.compiled_extensions import (
     load_extension_manifest,
     validate_extension_version,
 )
+from utilities.credential_handoff import consume_game_password
 
 
 _SECRETS_ENVIRONMENT_VARIABLE = "AUTOFARMERS_EXTENSION_SECRETS"
@@ -63,6 +64,40 @@ def _reject_secret_command_line_args(manifest: dict, extension_args: list[str]):
         raise ExtensionValidationError(
             "Secret extension arguments must be transferred through the protected environment payload"
         )
+
+
+def _remove_game_password_argument(extension_args: list[str]) -> tuple[list[str], str | None]:
+    cleaned_args = []
+    cli_password = None
+    saw_password = False
+    index = 0
+    while index < len(extension_args):
+        argument = extension_args[index]
+        if argument in ("--password", "-p"):
+            if saw_password or index + 1 >= len(extension_args):
+                raise ExtensionValidationError("Compiled extension --password needs exactly one value")
+            saw_password = True
+            cli_password = extension_args[index + 1]
+            index += 2
+            continue
+        if argument.startswith("--password="):
+            if saw_password:
+                raise ExtensionValidationError("Compiled extension --password may only be supplied once")
+            saw_password = True
+            cli_password = argument.partition("=")[2]
+            index += 1
+            continue
+        cleaned_args.append(argument)
+        index += 1
+    return cleaned_args, cli_password
+
+
+def _consume_extension_game_password(manifest: dict, extension_args: list[str]) -> tuple[list[str], str | None]:
+    if manifest["accepts_game_password"]:
+        cleaned_args, cli_password = _remove_game_password_argument(extension_args)
+        return cleaned_args, consume_game_password(cli_password)
+    consume_game_password()
+    return extension_args, None
 
 
 def _safe_wheel_members(archive: zipfile.ZipFile):
@@ -253,6 +288,7 @@ def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool =
     manifest = load_extension_manifest(bundle_dir, verify_hash=True)
     if manifest["availability_error"]:
         raise ExtensionValidationError(manifest["availability_error"])
+    extension_args, game_password = _consume_extension_game_password(manifest, extension_args)
     _reject_secret_command_line_args(manifest, extension_args)
     secret_args = _consume_extension_secrets(manifest)
 
@@ -270,7 +306,8 @@ def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool =
     entrypoint = getattr(module, callable_name, None)
     if not callable(entrypoint):
         raise ExtensionValidationError(f"Compiled module does not expose callable {callable_name!r}")
-    result = entrypoint(extension_args + secret_args)
+    password_args = ["--password", game_password] if game_password else []
+    result = entrypoint(extension_args + password_args + secret_args)
     return 0 if result is None else int(result)
 
 

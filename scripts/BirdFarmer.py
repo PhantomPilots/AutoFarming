@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.bird_farming_logic import BirdFarmer, States
 from utilities.farming_factory import FarmingFactory
 from utilities.fighting_strategies import DummyBattleStrategy, SmarterBattleStrategy
@@ -19,13 +21,14 @@ def main():
         help="Do daily PVP when dailies run (default: True)",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=BirdFarmer,
         battle_strategy=SmarterBattleStrategy,  # The AI that will pick the cards
         starting_state=States.GOING_TO_DB,  # Should be 'GOING_TO_BIRD'
         max_clears=args.clears,  # A number or "inf"
-        password=args.password,  # Account password
+        password=game_password,  # Account password
         do_dailies=args.do_dailies,  # Should we do our dailies?
         do_daily_pvp=args.daily_pvp,
     )

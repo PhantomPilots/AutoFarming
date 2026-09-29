@@ -84,6 +84,7 @@ from utilities.app_config import (
     save_config_updates,
     test_ntfy_connection,
 )
+from utilities.credential_handoff import GAME_PASSWORD_ENV
 from utilities.compiled_extensions import merge_compiled_extensions
 from utilities.extension_secrets import load_suite_license_key
 from utilities.image_assets import (
@@ -951,6 +952,7 @@ class FarmerController(QObject):
         self.resize_window()
 
         args = self._build_cli_args()
+        game_password = self._get_game_password_for_launch()
         extension_secrets = self._build_extension_secrets()
         display_args = self._build_display_args(args)
         game_version = get_saved_game_version()
@@ -991,6 +993,9 @@ class FarmerController(QObject):
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONUNBUFFERED", "1")
         env.insert("PYTHONIOENCODING", "utf-8")
+        env.remove(GAME_PASSWORD_ENV)
+        if game_password:
+            env.insert(GAME_PASSWORD_ENV, game_password)
         if self.farmer.get("compiled_extension"):
             env.insert("AUTOFARMERS_ROOT", os.path.dirname(_BASE_DIR))
             env.insert("AUTOFARMERS_EXTENSION_DIR", self.farmer["bundle_dir"])
@@ -1180,6 +1185,26 @@ class FarmerController(QObject):
                 return None
         return None
 
+    def _get_game_password_for_launch(self) -> str:
+        accepts_password = self.farmer.get("accepts_game_password") or self.farmer.get("script") in PASSWORD_CLI_SCRIPTS
+        if not accepts_password:
+            return ""
+
+        pw = ""
+        if self._password_supplier:
+            try:
+                pw = self._password_supplier() or ""
+            except Exception:
+                pw = ""
+        pw = (pw or "").strip()
+        if not pw:
+            data = load_full_config_dict()
+            raw = data.get("game_password", APP_CONFIG_DEFAULTS["game_password"])
+            if raw is None or str(raw).strip() == "":
+                raw = data.get("default_game_password")
+            pw = ("" if raw is None else str(raw)).strip()
+        return pw
+
     def _build_cli_args(self) -> list[str]:
         args = []
         for arg in self.farmer["args"]:
@@ -1200,22 +1225,6 @@ class FarmerController(QObject):
                     args.extend([arg["name"]] + selected)
             elif value:
                 args.extend([arg["name"], str(value)])
-        if self.farmer.get("accepts_game_password") or self.farmer.get("script") in PASSWORD_CLI_SCRIPTS:
-            pw = ""
-            if self._password_supplier:
-                try:
-                    pw = self._password_supplier() or ""
-                except Exception:
-                    pw = ""
-            pw = (pw or "").strip()
-            if not pw:
-                data = load_full_config_dict()
-                raw = data.get("game_password", APP_CONFIG_DEFAULTS["game_password"])
-                if raw is None or str(raw).strip() == "":
-                    raw = data.get("default_game_password")
-                pw = ("" if raw is None else str(raw)).strip()
-            if pw:
-                args.extend(["--password", pw])
         return args
 
     def _build_extension_secrets(self) -> dict[str, str]:

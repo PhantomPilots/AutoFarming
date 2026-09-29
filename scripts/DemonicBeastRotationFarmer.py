@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.demonic_beast_farming_logic import States
 from utilities.demonic_beast_rotation_farming_logic import DemonicBeastRotationFarmer
 from utilities.farming_factory import FarmingFactory
@@ -38,13 +40,14 @@ def parse_args(argv=None):
 
 def main(argv=None):
     args = parse_args(argv)
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=DemonicBeastRotationFarmer,
         starting_state=States.GOING_TO_DB,
         beasts_to_farm=args.beasts_to_farm,
         repeat_rotation=args.repeat_rotation,
-        password=args.password,
+        password=game_password,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
     )

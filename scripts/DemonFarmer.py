@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 import utilities.vision_images as vio
 from utilities.demon_farming_logic import DemonFarmer, States
 from utilities.farming_factory import FarmingFactory
@@ -32,6 +34,7 @@ def main():
         help="Do daily PVP when dailies run (default: True)",
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     demon_map = {
         "og_demon": vio.og_demon,
@@ -50,7 +53,7 @@ def main():
         time_between_demons=2,
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
-        password=args.password,
+        password=game_password,
     )
 
 

@@ -76,7 +76,7 @@ Farmer scripts launched directly use the `game_version` preference saved in `scr
 
 ### Game password (optional)
 
-If the game logs you out, put your password in **Settings** so the bot can sign back in; change how long it waits after logout there too if you need to. 
+If the game logs you out, put your password in **Settings** so the bot can sign back in; change how long it waits after logout there too if you need to. The GUI passes it to the farmer process through a short-lived environment variable. Direct script launches still accept `--password` or `-p`, with a warning because command-line passwords may appear in process listings.
 
 ### Push Notifications
 The bot can send push notifications to your phone when it detects a stuck state, including a screenshot for quick diagnosis. Once the bot recovers, you get a recovery alert.

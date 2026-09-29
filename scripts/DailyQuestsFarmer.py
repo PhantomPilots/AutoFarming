@@ -1,5 +1,7 @@
 import argparse
 
+from utilities.credential_handoff import consume_game_password
+
 from utilities.daily_farming_logic import States as DailyStates
 from utilities.farming_factory import FarmingFactory
 from utilities.general_farmer_interface import IFarmer
@@ -59,11 +61,12 @@ def main():
         help=argparse.SUPPRESS,
     )
     args = parser.parse_args()
+    game_password = consume_game_password(args.password)
 
     FarmingFactory.main_loop(
         farmer=StandaloneDailyFarmer,
         starting_state=GlobalStates.DAILIES_STATE,
-        password=args.password,
+        password=game_password,
         do_daily_pvp=args.daily_pvp,  # Whether to auto a PVP match (you may win, who knows 🤷‍♂️)
     )
 
