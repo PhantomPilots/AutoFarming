@@ -148,3 +148,20 @@ It's in `scripts/FinalBossFarmer.py`, and it accepts all difficulties. To change
 
 <img src="readme_images/final_boss_difficulty.png" width="400"/>
 
+## Supreme Deity farmer
+
+It's in `scripts/SupremeDeityFarmer.py`. It fights the Supreme Deity Battle (Hell by default) with a manual card strategy, since the fight can't be done in AUTO.
+The strategy follows [this video](https://youtu.be/pI9a1lRGgGA) turn by turn (`scripts/utilities/supreme_deity_fighting_strategies.py`).
+
+**Requirements:**
+* Team (in this order): Festival Odin, LoliMerlin, Hel, Gawain.
+* Start the bot from the Supreme Deity difficulty menu (or from its team screen).
+* The chosen difficulty must already be unlocked with Hero Coins.
+
+**How the fight goes:**
+* Phases 1 to 4 (First to Fourth Judgment, waves of messengers), phase 5 (Heavenly Punishment Forces of Protection) and phase 6 (final boss): each turn plays the 4 cards of the video. If a card is missing, the bot plays another card of the same hero, then another attack, and keeps the ults planned for later.
+* The phases are read on the "First... Fourth Judgment" and "New Supreme Deity's Messengers have been sent." banners, then on the VS screens. A turn only starts after a banner ("ENEMY TURN" or a phase banner) and once the hand is visible.
+* First turn: the 2 Odin cards, then 2 moves of LoliMerlin cards.
+* The Odin talent (Omnipotence) is used on the 1st turn of phases 1, 4 and 5, and on the 2nd turn of phase 6.
+* `--stigmata auto` (default) uses the Stigmata of Weakening on the 2nd turn of phase 3, then against the final boss from its 2nd turn. `never` disables it.
+* Phase 6 (final boss, Ludociel or Sariel depending on the week): no need to win, each 10% of the boss HP gives an extra chest.

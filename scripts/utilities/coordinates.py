@@ -42,6 +42,8 @@ class Coordinates:
         # Dogs farming
         "light_dog": (346, 386),
         "dark_dog": (160, 412),
+        # Supreme Deity farming
+        "sd_stigmata_button": (69, 675),  # Diamond on the left of the card slots, opens the Stigmata menu
         # Card slots
         "first_slot": (161, 746),
         "second_slot": (227, 746),
