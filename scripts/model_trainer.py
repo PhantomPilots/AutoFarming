@@ -1,3 +1,4 @@
+import glob
 import os
 
 import dill as pickle
@@ -5,7 +6,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import LeaveOneGroupOut, StratifiedGroupKFold, train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
@@ -14,18 +15,18 @@ from utilities.feature_extractors import (
     extract_color_features,
     extract_color_histograms_features,
     extract_difference_of_histograms_features,
+    extract_ground_card_features,
+    extract_spatial_color_features,
 )
 from utilities.utilities import display_image, load_dataset, save_model
 
 
-def load_card_type_features() -> list[np.ndarray]:
+def load_card_type_features() -> tuple[np.ndarray, np.ndarray]:
     """Load all available data inside the 'data/' directory"""
 
     dataset, all_labels = load_dataset("data/card_types*")
 
-    # Load the features
-    # card_features = extract_color_features(images=dataset, type="median")
-    card_features = extract_color_histograms_features(images=dataset, bins=(4, 4, 4))
+    card_features = extract_spatial_color_features(images=dataset)
 
     return card_features, all_labels
 
@@ -88,13 +89,18 @@ def load_thor_cards_features() -> list[np.ndarray]:
     return features, all_labels
 
 
-def load_ground_cards_features_raw() -> list[np.ndarray]:
-    """Load raw histogram features for GROUND/NO GROUND card slots, without PCA"""
-    dataset, all_labels = load_dataset("data/ground_data*")
+def load_ground_cards_features() -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Load ground samples and preserve their capture-file groups for validation."""
+    batches, labels, file_groups = [], [], []
+    for file_index, filepath in enumerate(sorted(glob.glob("data/ground_data*.npy"))):
+        print(f"Loading {filepath}...")
+        with open(filepath, "rb") as data_file:
+            data = pickle.load(data_file)
+        batches.append(data["data"])
+        labels.append(data["labels"])
+        file_groups.extend([file_index] * len(data["labels"]))
 
-    features = extract_color_histograms_features(images=dataset, bins=(8, 8, 8))
-
-    return features, all_labels
+    return extract_ground_card_features(batches), np.concatenate(labels), np.asarray(file_groups)
 
 
 def apply_pca_transform(features: np.ndarray, n_components: int) -> tuple[np.ndarray, PCA]:
@@ -275,16 +281,32 @@ def test_card_types_model(knn_model: KNeighborsClassifier | LogisticRegression, 
 
 
 def train_card_types_model():
-    """Train a K-NN model to distinguis between card types"""
+    """Evaluate card type recognition, then train the saved model on all samples."""
     features, labels = load_card_type_features()
+    labels_values = np.asarray([label.value for label in labels])
 
-    # Extract the labels fvalues
-    labels_values = [label.value for label in labels]
-    # knn_model = train_knn(X=features, labels=labels_values, k=3)
-    svm_model = train_svm_classifier(X=features, labels=labels_values)  # DOESN'T WORK WELL
+    # Keep identical feature vectors in the same fold so duplicates cannot
+    # appear in both training and validation data.
+    _, groups = np.unique(features, axis=0, return_inverse=True)
+    conflicting_groups = [group for group in np.unique(groups) if np.unique(labels_values[groups == group]).size > 1]
+    if conflicting_groups:
+        print(
+            f"{len(conflicting_groups)} set(s) of identical features have different labels; "
+            "100% training accuracy is impossible with these labels."
+        )
+    cross_validation = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+    accuracies = []
+    for train_indices, test_indices in cross_validation.split(features, labels_values, groups):
+        trial_model = SVC(kernel="rbf", C=100)
+        trial_model.fit(features[train_indices], labels_values[train_indices])
+        accuracies.append(accuracy_score(labels_values[test_indices], trial_model.predict(features[test_indices])))
 
-    ## Save the trained model
-    # save_model(knn_model, filename="card_type_predictor.knn")
+    print(f"Card type validation accuracy (5 folds): {np.mean(accuracies) * 100:.2f}%")
+    print("Fold accuracies:", ", ".join(f"{accuracy * 100:.2f}%" for accuracy in accuracies))
+
+    svm_model = SVC(kernel="rbf", C=100)
+    svm_model.fit(features, labels_values)
+    print(f"Card type training accuracy: {svm_model.score(features, labels_values) * 100:.2f}%")
     save_model(svm_model, filename="card_type_predictor.svm")
 
 
@@ -335,17 +357,34 @@ def train_thor_cards_classifier():
 
 
 def train_ground_cards_classifier():
-    """Train a model that distinguished between ground vs. no ground cards"""
+    """Validate ground recognition on unseen samples and capture files, then refit."""
+    features, labels, file_groups = load_ground_cards_features()
+    _, duplicate_groups = np.unique(features, axis=0, return_inverse=True)
+    cross_validation = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
+    accuracies = []
+    for train_indices, test_indices in cross_validation.split(features, labels, duplicate_groups):
+        trial_model = SVC(kernel="rbf", C=10)
+        trial_model.fit(features[train_indices], labels[train_indices])
+        accuracies.append(trial_model.score(features[test_indices], labels[test_indices]))
+    print(f"Ground validation accuracy (5 folds): {np.mean(accuracies) * 100:.2f}%")
+    print("Fold accuracies:", ", ".join(f"{accuracy * 100:.2f}%" for accuracy in accuracies))
 
-    # ## Current behavior: raw histogram + scaling + logistic regression
-    # features, labels = load_ground_cards_features_raw()
-    # model, scaler_model = train_logistic_regressor_with_scaling(X=features, labels=labels)
-    # save_model(model, filename="ground_cards_predictor.lr")
-    # save_model(scaler_model, filename="scaler_ground_cards_model.scaler")
+    correct, total = 0, 0
+    for train_indices, test_indices in LeaveOneGroupOut().split(features, labels, file_groups):
+        # Copies of held-out samples must also be excluded from other files.
+        train_indices = train_indices[
+            ~np.isin(duplicate_groups[train_indices], duplicate_groups[test_indices])
+        ]
+        trial_model = SVC(kernel="rbf", C=10)
+        trial_model.fit(features[train_indices], labels[train_indices])
+        predictions = trial_model.predict(features[test_indices])
+        correct += np.count_nonzero(predictions == labels[test_indices])
+        total += len(test_indices)
+    print(f"Ground validation accuracy (held-out files): {correct / total * 100:.2f}%")
 
-    # Alternative behavior: raw histogram + SVC
-    features, labels = load_ground_cards_features_raw()
-    model = train_svc_classifier_raw(X=features, labels=labels)
+    model = SVC(kernel="rbf", C=10)
+    model.fit(features, labels)
+    print(f"Ground training accuracy: {model.score(features, labels) * 100:.2f}%")
     save_model(model, filename="ground_cards_predictor.svc")
 
 

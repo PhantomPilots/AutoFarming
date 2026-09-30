@@ -1,6 +1,5 @@
 import abc
 import threading
-import time
 from enum import Enum
 
 import cv2
@@ -10,6 +9,7 @@ import utilities.vision_images as vio
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
+from utilities.general_fighter_interface import FightingStates, IFighter
 from utilities.image_assets import GameVersion, get_default_image_asset_resolver
 from utilities.logging_utils import LoggerWrapper
 from utilities.utilities import (
@@ -19,6 +19,7 @@ from utilities.utilities import (
     find,
     find_and_click,
     find_floor_coordinates,
+    navigate_to_demonic_beast,
     screenshot_testing,
 )
 
@@ -37,20 +38,18 @@ class States(Enum):
 class DemonicBeastFarmer(IFarmer):
 
     current_floor = 1
+    cycle_length = 3
 
-    # Keep track of how many times we've defeated floor 3
-    num_floor_3_victories = 0
+    # Keep completed cycles across farmer recovery.
+    num_clears = 0
     num_victories = 0
     num_losses = 0
-
-    # Beast search swipe counter; class-level to survive FarmingFactory crash recovery (same pattern as num_victories).
-    _swipe_attempts = 0
 
     def __init__(
         self,
         starting_state=States.GOING_TO_DB,
         max_stamina_pots="inf",
-        max_floor_3_clears="inf",
+        max_clears="inf",
         demonic_beast_image: vio.Vision | None = None,
         reset_after_defeat=False,
         password: str | None = None,
@@ -92,25 +91,33 @@ class DemonicBeastFarmer(IFarmer):
 
         # Ending conditions:
         # * One will just stop using stamina pots and wait till enough stamina is available.
-        # * The other will exit the farmer when enough floor 3 clears have been reached (especially useful for floor 4's)
+        # * The other stops farming after the requested number of completed cycles.
         self.max_stamina_pots = float(max_stamina_pots)
         if self.max_stamina_pots < float("inf"):
             print(f"We're gonna use at most {self.max_stamina_pots} stamina pots.")
 
-        self.max_floor_3_clears = float(max_floor_3_clears)
-        if self.max_floor_3_clears < float("inf"):
-            print(f"We're gonna clear floor 3 at most {int(self.max_floor_3_clears)} times.")
+        self.max_clears = float(max_clears)
+        if self.max_clears < float("inf"):
+            print(f"We'll stop after {int(self.max_clears)} clears.")
 
         # For the login/dailies
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
 
     def exit_message(self):
         self.logger.info(
-            f"We beat {DemonicBeastFarmer.num_victories} floors, {DemonicBeastFarmer.num_floor_3_victories} times floor 3, and lost {DemonicBeastFarmer.num_losses} times."
+            f"We completed {DemonicBeastFarmer.num_clears} cycles, won {DemonicBeastFarmer.num_victories} floors, and lost {DemonicBeastFarmer.num_losses} fights."
         )
         self.logger.info(f"We used {IFarmer.stamina_pots} stamina pots.")
 
         self.print_defeats()
+
+    def beast_navigation_images(self):
+        """Let extensions add their own selector to the shared beast order."""
+        return None
+
+    def is_fight_loading_screen(self, screenshot) -> bool:
+        """Let extensions recognize an additional fight loading screen."""
+        return bool(find(vio.db_loading_screen, screenshot))
 
     def going_to_db_state(self):
         """This should be the original state. Let's go to the Demonic Beast menu"""
@@ -142,29 +149,11 @@ class DemonicBeastFarmer(IFarmer):
         # First fight of the week
         find_and_click(vio.challenge_restrictions_removed, screenshot, window_location)
 
-        # If we see we're inside the DB selection screen but don't see our DemonicBeast,
-        # swipe right (or left after 4 attempts) and try again
-        if find(vio.demonic_beast_battle, screenshot) and not find(self.db_image, screenshot):
-            DemonicBeastFarmer._swipe_attempts += 1
-            if DemonicBeastFarmer._swipe_attempts > 4:
-                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping left...")
-                drag_im(
-                    Coordinates.get_coordinates("left_swipe"),
-                    Coordinates.get_coordinates("right_swipe"),
-                    window_location,
-                )
-            else:
-                print(f"Wrong demonic beast, attempt {DemonicBeastFarmer._swipe_attempts}, swiping right...")
-                drag_im(
-                    Coordinates.get_coordinates("right_swipe"),
-                    Coordinates.get_coordinates("left_swipe"),
-                    window_location,
-                )
-            time.sleep(0.5)
+        # Use the visible beast's position to move toward our target.
+        if not navigate_to_demonic_beast(
+            self.db_image, screenshot, window_location, ordered_beasts=self.beast_navigation_images()
+        ):
             return
-
-        # Reset swipe counter once the beast is found
-        DemonicBeastFarmer._swipe_attempts = 0
 
         # Go into the 'Demonic Beast' section
         find_and_click(self.db_image, screenshot, window_location)
@@ -243,9 +232,16 @@ class DemonicBeastFarmer(IFarmer):
         elif find(vio.floor1, floor_img_region, threshold=threshold):
             db_floor = 1
 
+        if db_floor > self.cycle_length:
+            db_floor = -1
+
         print(f"We're gonna fight floor {db_floor}.")
 
         return db_floor
+
+    def on_ready_to_fight_before_start(self, screenshot) -> bool:
+        """Let each farmer inspect the team before starting a valid floor."""
+        return True
 
     def proceed_to_floor_state(self):
         """Start the floor fight!"""
@@ -289,10 +285,13 @@ class DemonicBeastFarmer(IFarmer):
                     self.current_state = States.RESETTING_DB
                 return
 
+            if not self.on_ready_to_fight_before_start(screenshot):
+                return
+
         # Click on start
         find_and_click(vio.startbutton, screenshot, window_location)
 
-        if find(vio.db_loading_screen, screenshot):
+        if self.is_fight_loading_screen(screenshot):
             # The 'Start' button went through, fight starting!
             print("Starting the floor fight.")
             self.current_state = States.FIGHTING_FLOOR
@@ -322,60 +321,66 @@ class DemonicBeastFarmer(IFarmer):
             self.fight_thread.start()
             print("DemonicBeast fighter started!")
 
-        # We may have finished the fight already, let's check if we need to go back to the main screen
-        if find(vio.available_floor, screenshot, threshold=0.9):
-            # We finished the fight, let's go back to the main screen
-            print("We finished the fight but are still fighting? Get outta here!")
-            self.stop_fighter_thread()
-            self.current_state = States.READY_TO_FIGHT
+        # Keep the result even if we missed the loading screen after the fight.
+        if self.current_state == States.FIGHTING_FLOOR and find(vio.available_floor, screenshot, threshold=0.9):
+            with IFarmer._lock:
+                if self.current_state != States.FIGHTING_FLOOR:
+                    return
+                fighter, fight_thread = self.fighter, self.fight_thread
+                result_state = fighter.current_state
+                phase = IFighter.current_phase
+            print("Back at the floor menu. Finishing the fighter.")
+            fighter.stop_fighter()
+            fight_thread.join()
+
+            # The fighter may have reported its result while it was stopping.
+            if self.current_state != States.FIGHTING_FLOOR:
+                return
+            if result_state in (FightingStates.FIGHTING_COMPLETE, FightingStates.DEFEAT):
+                self.fight_complete_callback(victory=result_state == FightingStates.FIGHTING_COMPLETE, phase=phase)
+            else:
+                self.current_state = States.READY_TO_FIGHT
+
+    def _record_fight_result(self, victory, phase, beast_name=None) -> bool:
+        """Record one fight under the farmer lock and report whether its cycle finished."""
+        prefix = f"{beast_name} " if beast_name else ""
+        if victory:
+            DemonicBeastFarmer.num_victories += 1
+            print(f"{prefix}Floor {DemonicBeastFarmer.current_floor} complete!")
+            cycle_complete = DemonicBeastFarmer.current_floor == self.cycle_length
+            DemonicBeastFarmer.current_floor = 1 if cycle_complete else DemonicBeastFarmer.current_floor + 1
+            if cycle_complete:
+                DemonicBeastFarmer.num_clears += 1
+                print("[CLEAR]")
+            return cycle_complete
+
+        print(f"The {beast_name or 'Demonic Beast'} fighter told me we lost... :/")
+        DemonicBeastFarmer.num_losses += 1
+        IFarmer.dict_of_defeats[f"{prefix}Floor {DemonicBeastFarmer.current_floor} Phase {phase}"] += 1
+        if self.reset_after_defeat:
+            DemonicBeastFarmer.current_floor = 1
+        print("[LOSS]")
+        return False
 
     def fight_complete_callback(self, victory=True, phase="unknown"):
-        """Called when the fight logic completes."""
-
+        """Continue between floors and reset or stop after a completed cycle."""
         with IFarmer._lock:
-            if victory:
-                DemonicBeastFarmer.num_victories += 1
-
-                print(f"Floor {DemonicBeastFarmer.current_floor} complete!")
-
-                # Update the floor number
-                DemonicBeastFarmer.current_floor = (DemonicBeastFarmer.current_floor % 3) + 1
-
-                # Transition to another state or perform clean-up actions
-                if DemonicBeastFarmer.current_floor == 1:  # Since we updated it already beforehand!
-                    DemonicBeastFarmer.num_floor_3_victories += 1
-                    print("[CLEAR]")
-
-                    # Check if we need to exit the farmer due to reaching the max number of desired floor 3 clears
-                    if DemonicBeastFarmer.num_floor_3_victories >= self.max_floor_3_clears:
-                        print("We've reached the desired number of floor 3 clears, closing the farmer.")
-                        self.current_state = States.EXIT_FARMER
-                    else:
-                        # Just reset the team
-                        print("We defeated all 3 floors, gotta reset the DB.")
-                        self.current_state = States.RESETTING_DB
-
+            cycle_complete = self._record_fight_result(victory, phase)
+            if cycle_complete:
+                if DemonicBeastFarmer.num_clears >= self.max_clears:
+                    print("We've reached the requested clears. Stopping the farmer.")
+                    self.current_state = States.EXIT_FARMER
                 else:
-                    # Go straight to the original states
-                    print("Returning to the Demonic Beast menu.")
-                    self.current_state = States.GOING_TO_DB
-
-            else:
-                print("The Demonic Beast fighter told me we lost... :/")
-                print("[LOSS]")
-                # print("Resetting the team in case the saved team has very little health")
-                DemonicBeastFarmer.num_losses += 1
-                IFarmer.dict_of_defeats[f"Floor {DemonicBeastFarmer.current_floor} Phase {phase}"] += 1
-
-                if self.reset_after_defeat:
+                    print("Cycle complete. Resetting the Demonic Beast.")
                     self.current_state = States.RESETTING_DB
-                else:
-                    self.current_state = States.GOING_TO_DB
-
+            elif not victory and self.reset_after_defeat:
+                self.current_state = States.RESETTING_DB
+            else:
+                self.current_state = States.GOING_TO_DB
             self.exit_message()
 
     def resetting_db_state(self):
-        """If we've finished floor 3, we need to reset the Demonic Beast"""
+        """Reset the Demonic Beast after a completed cycle or a defeat."""
 
         screenshot, window_location = capture_window()
 

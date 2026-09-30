@@ -1,6 +1,5 @@
 import os
 import threading
-import time
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
@@ -10,11 +9,10 @@ import pyautogui as pyautogui
 # Import all images
 import utilities.vision_images as vio
 from utilities.app_config import get_minutes_to_wait_before_login
-from utilities.coordinates import Coordinates
 from utilities.fighting_strategies import IBattleStrategy
 from utilities.general_farmer_interface import CHECK_IN_HOUR, PACIFIC_TIMEZONE, IFarmer
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import capture_window, drag_im, find, find_and_click
+from utilities.utilities import capture_window, find, find_and_click, navigate_to_demonic_beast
 
 logger = LoggerWrapper("Floor4Logger", log_file="floor_4.log")
 
@@ -78,7 +76,6 @@ class IFloor4Farmer(IFarmer):
 
         # Placeholder for the thread that will call the fighter logic
         self.fight_thread = None
-        self._swipe_attempts = 0
 
         # For the login/dailies
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
@@ -110,40 +107,6 @@ class IFloor4Farmer(IFarmer):
 
         return str_msg
 
-    def _search_for_target_demonic_beast(self, screenshot, window_location) -> bool:
-        if not find(vio.demonic_beast_battle, screenshot):
-            self._swipe_attempts = 0
-            return True
-
-        if find(self.db_image, screenshot):
-            self._swipe_attempts = 0
-            return True
-
-        self._swipe_attempts += 1
-        if self._swipe_attempts <= 4:
-            print(f"Wrong demonic beast, attempt {self._swipe_attempts}, swiping right...")
-            drag_im(
-                Coordinates.get_coordinates("right_swipe"),
-                Coordinates.get_coordinates("left_swipe"),
-                window_location,
-            )
-            time.sleep(0.5)
-            return False
-
-        if self._swipe_attempts <= 8:
-            print(f"Wrong demonic beast, attempt {self._swipe_attempts}, swiping left...")
-            drag_im(
-                Coordinates.get_coordinates("left_swipe"),
-                Coordinates.get_coordinates("right_swipe"),
-                window_location,
-            )
-            time.sleep(0.5)
-            return False
-
-        print("Couldn't find the target demonic beast after 8 swipes. Resetting the search.")
-        self._swipe_attempts = 0
-        return False
-
     def going_to_db_state(self):
         """This should be the original state. Let's go to the DemonicBeast menu"""
         screenshot, window_location = capture_window()
@@ -163,7 +126,7 @@ class IFloor4Farmer(IFarmer):
         # If we're in the battle menu, click on Demonic Beast
         find_and_click(vio.demonic_beast, screenshot, window_location)
 
-        if not self._search_for_target_demonic_beast(screenshot, window_location):
+        if not navigate_to_demonic_beast(self.db_image, screenshot, window_location):
             return
 
         # Go into the 'db' section

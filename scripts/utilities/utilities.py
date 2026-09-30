@@ -316,6 +316,38 @@ def find_and_click(
     return False
 
 
+_unknown_beast_swipes: dict[str, int] = {}
+
+
+def navigate_to_demonic_beast(
+    target: Vision, screenshot: np.ndarray, window_location, *, ordered_beasts: tuple[Vision, ...] | None = None
+) -> bool:
+    """Swipe toward the target beast; return whether normal navigation can continue."""
+    if not find(vio.demonic_beast_battle, screenshot) or find(target, screenshot):
+        _unknown_beast_swipes.pop(target.image_name, None)
+        return True
+
+    beasts = ordered_beasts or (vio.hraesvelgr, vio.eikthyrnir, vio.skollandhati, vio.nidhoggr, vio.ratatoskr)
+    if target not in beasts:
+        beasts = (*beasts, target)
+    current = next((image for image in beasts if find(image, screenshot)), None)
+    if current is None:
+        attempts = _unknown_beast_swipes.get(target.image_name, 0)
+        direction = "right" if attempts < 4 else "left"
+        _unknown_beast_swipes[target.image_name] = (attempts + 1) % 8
+        print("Can't recognize this beast yet. Looking for it...")
+    else:
+        _unknown_beast_swipes.pop(target.image_name, None)
+        direction = "right" if beasts.index(current) < beasts.index(target) else "left"
+    print(f"Swiping {direction} toward the selected beast...")
+    start, end = Coordinates.get_coordinates("right_swipe"), Coordinates.get_coordinates("left_swipe")
+    if direction == "left":
+        start, end = end, start
+    drag_im(start, end, window_location)
+    time.sleep(0.5)
+    return False
+
+
 def find_floor_coordinates(screenshot: np.ndarray):
     """Given a screenshot of the DB screen, find the coordinates of the available floor"""
     rectangle = vio.available_floor.find(screenshot, threshold=0.8)

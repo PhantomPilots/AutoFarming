@@ -17,7 +17,7 @@ class SnakeFarmer(DemonicBeastFarmer):
         battle_strategy: IBattleStrategy,
         starting_state=States.GOING_TO_DB,
         max_stamina_pots="inf",
-        max_floor_3_clears="inf",
+        max_clears="inf",
         reset_after_defeat=False,
         password=None,
         logger=logger,
@@ -28,7 +28,7 @@ class SnakeFarmer(DemonicBeastFarmer):
         super().__init__(
             starting_state=starting_state,
             max_stamina_pots=max_stamina_pots,
-            max_floor_3_clears=max_floor_3_clears,
+            max_clears=max_clears,
             reset_after_defeat=reset_after_defeat,
             demonic_beast_image=vio.nidhoggr,
             password=password,

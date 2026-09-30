@@ -31,6 +31,7 @@ from PyQt5.QtCore import (
     QObject,
     QProcess,
     QProcessEnvironment,
+    QRegularExpression,
     Qt,
     QTimer,
     QUrl,
@@ -45,6 +46,7 @@ from PyQt5.QtGui import (
     QPainter,
     QPainterPath,
     QPixmap,
+    QRegularExpressionValidator,
     QTextBlockFormat,
     QTextCharFormat,
     QTextCursor,
@@ -940,10 +942,6 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
-        log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
-        if self.farmer["name"] in REWARD_SETS:
-            log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
-        remove_expired_logged_images(log_subdirs)
         wait_save_failed = False
         wait_config_key = self._wait_before_accept_config_key()
         if wait_config_key:
@@ -1274,24 +1272,18 @@ class FarmerController(QObject):
         return display_args
 
     def _append_output(self, text: str):
+        if self._session_start_time is not None:
+            if "[CLEAR]" in text:
+                self._on_clear_detected()
+            if "[POT]" in text:
+                self._session_pots += 1
+                self.session_progress_changed.emit()
+            if "[LOSS]" in text:
+                self._session_losses += 1
+                self.session_progress_changed.emit()
+
         _HIDDEN_MARKERS = {"[CLEAR]", "[POT]", "[LOSS]"}
-        new_lines = []
-        for line in text.splitlines(True):
-            marker = line.strip()
-            if marker.startswith(_REWARDS_MARKER):
-                if self._session_start_time is not None:
-                    self._on_rewards_detected(marker[len(_REWARDS_MARKER) :])
-            elif marker not in _HIDDEN_MARKERS:
-                new_lines.append(line)
-            elif self._session_start_time is not None:
-                if marker == "[CLEAR]":
-                    self._on_clear_detected()
-                elif marker == "[POT]":
-                    self._session_pots += 1
-                    self.session_progress_changed.emit()
-                else:
-                    self._session_losses += 1
-                    self.session_progress_changed.emit()
+        new_lines = [line for line in text.splitlines(True) if line.strip() not in _HIDDEN_MARKERS]
         self.output_lines.extend(new_lines)
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
@@ -2361,6 +2353,9 @@ class FarmerTab(QWidget):
                 else:
                     widget = QLineEdit()
                     widget.setText(arg["default"])
+                    if arg["type"] == "text" and "choices" in arg:
+                        choices_pattern = "|".join(re.escape(choice) for choice in arg["choices"])
+                        widget.setValidator(QRegularExpressionValidator(QRegularExpression(f"(?:{choices_pattern})")))
                     if arg["type"] == "secret":
                         widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget

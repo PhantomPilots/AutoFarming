@@ -3,7 +3,6 @@ from enum import Enum
 
 import utilities.vision_images as vio
 from utilities.bird_fighter import BirdFighter
-from utilities.coordinates import Coordinates
 from utilities.deer_fighter import DeerFighter
 from utilities.deer_fighting_strategies import DeerBattleStrategy
 from utilities.demonic_beast_farming_logic import DemonicBeastFarmer
@@ -13,7 +12,7 @@ from utilities.dogs_fighting_strategies import DogsBattleStrategy
 from utilities.fighting_strategies import SmarterBattleStrategy
 from utilities.general_farmer_interface import IFarmer
 from utilities.logging_utils import LoggerWrapper
-from utilities.utilities import capture_window, drag_im, find, find_and_click
+from utilities.utilities import capture_window, find, find_and_click, navigate_to_demonic_beast
 
 logger = LoggerWrapper(name="DemonicBeastRotationLogger", log_file="demonic_beast_rotation_logger.log")
 
@@ -87,7 +86,7 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
         super().__init__(
             starting_state=starting_state,
             max_stamina_pots=max_stamina_pots,
-            max_floor_3_clears="inf",
+            max_clears="inf",
             demonic_beast_image=self.current_beast_config.db_image,
             reset_after_defeat=self.current_beast_config.reset_after_defeat,
             logger=logger,
@@ -163,7 +162,6 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
 
         type(self)._active_beast_index = next_index
         DemonicBeastFarmer.current_floor = 1
-        DemonicBeastFarmer._swipe_attempts = 0
         self._apply_current_beast()
         if completed_rotation:
             print(f"Rotation complete; repeating from {self.current_beast_config.display_name}.")
@@ -175,44 +173,24 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
         """Called when the active beast fighter completes a floor."""
 
         with IFarmer._lock:
-            if victory:
-                DemonicBeastFarmer.num_victories += 1
-                completed_floor = DemonicBeastFarmer.current_floor
-                print(f"{self.current_beast_config.display_name} floor {completed_floor} complete!")
-
-                DemonicBeastFarmer.current_floor = (DemonicBeastFarmer.current_floor % 3) + 1
-                if DemonicBeastFarmer.current_floor == 1:
-                    DemonicBeastFarmer.num_floor_3_victories += 1
-                    print("[CLEAR]")
-
-                    completed_beast_key = self.active_beast_key
-                    if self._advance_to_next_beast():
-                        type(self)._switch_from_beast_key = completed_beast_key
-                        self.current_state = RotationStates.SWITCHING_BEAST
-                    else:
-                        type(self)._switch_from_beast_key = None
-                        print("Finished all selected Demonic Beasts, returning to the tavern.")
-                        self.current_state = RotationStates.RETURNING_TO_TAVERN
+            cycle_complete = self._record_fight_result(victory, phase, self.current_beast_config.display_name)
+            if cycle_complete:
+                completed_beast_key = self.active_beast_key
+                if self._advance_to_next_beast():
+                    type(self)._switch_from_beast_key = completed_beast_key
+                    self.current_state = RotationStates.SWITCHING_BEAST
                 else:
-                    print("Moving to GOING_TO_DB")
-                    self.current_state = DemonicBeastStates.GOING_TO_DB
-
+                    type(self)._switch_from_beast_key = None
+                    print("Finished all selected Demonic Beasts, returning to the tavern.")
+                    self.current_state = RotationStates.RETURNING_TO_TAVERN
+            elif not victory and self.reset_after_defeat:
+                self.current_state = DemonicBeastStates.RESETTING_DB
             else:
-                print(f"The {self.current_beast_config.display_name} fighter told me we lost... :/")
-                print("[LOSS]")
-                DemonicBeastFarmer.num_losses += 1
-                IFarmer.dict_of_defeats[
-                    f"{self.current_beast_config.display_name} Floor {DemonicBeastFarmer.current_floor} Phase {phase}"
-                ] += 1
-
-                if self.reset_after_defeat:
-                    self.current_state = DemonicBeastStates.RESETTING_DB
-                else:
-                    self.current_state = DemonicBeastStates.GOING_TO_DB
-
+                self.current_state = DemonicBeastStates.GOING_TO_DB
             self.exit_message()
 
     def switching_beast_state(self):
+        """Select the next beast through shared navigation before resuming farming."""
         screenshot, window_location = capture_window()
         completed_beast_key = type(self)._switch_from_beast_key
 
@@ -221,30 +199,20 @@ class DemonicBeastRotationFarmer(DemonicBeastFarmer):
             self.current_state = DemonicBeastStates.GOING_TO_DB
             return
 
-        completed_config = self.BEASTS[completed_beast_key]
-        target_config = self.current_beast_config
-
-        if find(target_config.db_image, screenshot):
-            print(f"Found {target_config.display_name}; resuming Demonic Beast navigation.")
+        # Resume farming only after the selected beast is visible.
+        if find(self.db_image, screenshot):
             type(self)._switch_from_beast_key = None
             self.current_state = DemonicBeastStates.GOING_TO_DB
             return
 
-        if not find(completed_config.db_image, screenshot):
-            print(f"Backing out until {completed_config.display_name} is visible.")
-            find_and_click(vio.ok_main_button, screenshot, window_location)
-            find_and_click(vio.back, screenshot, window_location)
+        # Use the same ordered search as the other farmers while staying at beast selection.
+        if find(vio.demonic_beast_battle, screenshot):
+            navigate_to_demonic_beast(self.db_image, screenshot, window_location)
             return
 
-        print(f"{completed_config.display_name} visible; swiping right toward {target_config.display_name}.")
-        drag_im(
-            Coordinates.get_coordinates("right_swipe"),
-            Coordinates.get_coordinates("left_swipe"),
-            window_location,
-        )
-        type(self)._switch_from_beast_key = None
-        DemonicBeastFarmer._swipe_attempts = 0
-        self.current_state = DemonicBeastStates.GOING_TO_DB
+        print("Returning to beast selection...")
+        find_and_click(vio.ok_main_button, screenshot, window_location)
+        find_and_click(vio.back, screenshot, window_location)
 
     def returning_to_tavern_state(self):
         screenshot, window_location = capture_window()

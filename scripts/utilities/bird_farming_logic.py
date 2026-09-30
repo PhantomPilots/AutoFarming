@@ -14,7 +14,7 @@ class BirdFarmer(DemonicBeastFarmer):
         self,
         battle_strategy: IBattleStrategy,
         starting_state=States.GOING_TO_DB,
-        num_floor_3_clears="inf",
+        max_clears="inf",
         logger=logger,
         password: str | None = None,
         do_dailies=False,
@@ -22,7 +22,7 @@ class BirdFarmer(DemonicBeastFarmer):
     ):
         super().__init__(
             starting_state=starting_state,
-            max_floor_3_clears=num_floor_3_clears,
+            max_clears=max_clears,
             demonic_beast_image=vio.hraesvelgr,
             logger=logger,
             password=password,

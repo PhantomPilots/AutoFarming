@@ -12,6 +12,8 @@ from utilities.feature_extractors import extract_color_features  # For card type
 from utilities.feature_extractors import extract_color_histograms_features  # For SVM
 from utilities.feature_extractors import (
     extract_difference_of_histograms_features,  # For LR card merges
+    extract_ground_card_features,
+    extract_spatial_color_features,
 )
 
 os.environ["LOKY_MAX_CPU_COUNT"] = "1"  # Replace '4' with the number of cores you want to use
@@ -56,10 +58,7 @@ class CardTypePredictor(IModel):
         # CardTypePredictor._load_model("card_type_predictor.knn")
         CardTypePredictor._load_model("card_type_predictor.svm")
 
-        ## KNN
-        # features = extract_color_features(card_type_image[np.newaxis, ...], type=feature_type)
-        ## SVM
-        features = extract_color_histograms_features(images=card_type_image[np.newaxis, ...], bins=(4, 4, 4))
+        features = extract_spatial_color_features(card_type_image[np.newaxis, ...])
 
         predicted_label = CardTypePredictor.model.predict(features).item()
         return CardTypes(predicted_label)
@@ -176,15 +175,6 @@ class GroundCardPredictor(IModel):
     def is_ground_card(card: np.ndarray) -> bool:
         """Predict ground card"""
 
-        # Extract the features
-        features = extract_color_histograms_features(card, bins=(8, 8, 8))
-
-        ## Current behavior: raw histogram + SVC
+        features = extract_ground_card_features(card)
         GroundCardPredictor._load_model("ground_cards_predictor.svc")
-        return int(GroundCardPredictor.model.predict(features).item())
-
-        ## Backwards compatibility: raw histogram + scaling + logistic regression
-        # GroundCardPredictor._load_feature_transform_model("scaler_ground_cards_model.scaler")
-        # GroundCardPredictor._load_model("ground_cards_predictor.lr")
-        # features_scaled = GroundCardPredictor.feature_transform_model.transform(features)
-        # return int(GroundCardPredictor.model.predict(features_scaled).item())
+        return bool(GroundCardPredictor.model.predict(features).item())
