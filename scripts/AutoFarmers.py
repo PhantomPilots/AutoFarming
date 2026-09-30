@@ -957,7 +957,10 @@ class FarmerController(QObject):
             except Exception:
                 wait_save_failed = True
 
-        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
+        log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
+        if self.farmer["name"] in REWARD_SETS:
+            log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
+        remove_expired_logged_images(log_subdirs)
         self.resize_window()
 
         args = self._build_cli_args()
@@ -1271,25 +1274,21 @@ class FarmerController(QObject):
         return display_args
 
     def _append_output(self, text: str):
-        if self._session_start_time is not None:
-            if "[CLEAR]" in text:
-                self._on_clear_detected()
-            if "[POT]" in text:
-                self._session_pots += 1
-                self.session_progress_changed.emit()
-            if "[LOSS]" in text:
-                self._session_losses += 1
-                self.session_progress_changed.emit()
-            for line in text.splitlines():
-                if line.strip().startswith(_REWARDS_MARKER):
-                    self._on_rewards_detected(line.strip()[len(_REWARDS_MARKER) :])
-
         _HIDDEN_MARKERS = {"[CLEAR]", "[POT]", "[LOSS]"}
-        new_lines = [
-            line
-            for line in text.splitlines(True)
-            if line.strip() not in _HIDDEN_MARKERS and not line.strip().startswith(_REWARDS_MARKER)
-        ]
+        new_lines = []
+        for line in text.splitlines(True):
+            marker = line.strip()
+            if marker not in _HIDDEN_MARKERS:
+                new_lines.append(line)
+            elif self._session_start_time is not None:
+                if marker == "[CLEAR]":
+                    self._on_clear_detected()
+                elif marker == "[POT]":
+                    self._session_pots += 1
+                    self.session_progress_changed.emit()
+                else:
+                    self._session_losses += 1
+                    self.session_progress_changed.emit()
         self.output_lines.extend(new_lines)
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
