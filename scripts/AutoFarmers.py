@@ -1278,7 +1278,10 @@ class FarmerController(QObject):
         new_lines = []
         for line in text.splitlines(True):
             marker = line.strip()
-            if marker not in _HIDDEN_MARKERS:
+            if marker.startswith(_REWARDS_MARKER):
+                if self._session_start_time is not None:
+                    self._on_rewards_detected(marker[len(_REWARDS_MARKER) :])
+            elif marker not in _HIDDEN_MARKERS:
                 new_lines.append(line)
             elif self._session_start_time is not None:
                 if marker == "[CLEAR]":
