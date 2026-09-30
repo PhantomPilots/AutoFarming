@@ -101,7 +101,7 @@ Saving from the GUI rewrites `config.yaml` with PyYAML; **inline comments in tha
 
 **NOTE**: If during the farming the bot starts working in weird ways, most likely it's because the 7DS window has auto-resized to the wrong size. To restore the right size, use the "Resize" button.
 
-The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Tower of Trials, etc.
+The GUI supports all available farmers including Bird, Deer, Dogs, Snake, Demon, Final Boss, Supreme Deity, Tower of Trials, etc.
 
 Happy farming!
 

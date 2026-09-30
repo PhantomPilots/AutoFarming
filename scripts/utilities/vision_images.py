@@ -389,6 +389,37 @@ legendary_boss_right_arrow = Vision("legendary_boss\\lb_right.png")
 legendary_boss_min_button = Vision("legendary_boss\\lb_min_btn.png")
 legendary_boss_final_score = Vision("legendary_boss\\lb_final_score.png")
 
+# For Supreme Deity Battle
+sd_menu_title = Vision("supreme_deity\\sd_menu_title.png")
+sd_hard = Vision("supreme_deity\\sd_hard.png")
+sd_extreme = Vision("supreme_deity\\sd_extreme.png")
+sd_hell = Vision("supreme_deity\\sd_hell.png")
+# Banners shown when a phase starts
+sd_banner_first = Vision("supreme_deity\\sd_banner_first.png")  # "First Judgment"
+sd_banner_second = Vision("supreme_deity\\sd_banner_second.png")  # "Second Judgment"
+sd_banner_third = Vision("supreme_deity\\sd_banner_third.png")  # "Third Judgment"
+sd_banner_fourth = Vision("supreme_deity\\sd_banner_fourth.png")  # "Fourth Judgment"
+sd_new_messengers = Vision("supreme_deity\\sd_new_messengers.png")  # "New Supreme Deity's Messengers have been sent."
+sd_vs = Vision("supreme_deity\\sd_vs.png")  # Before the Forces of Protection and the final boss
+sd_enemy_turn = Vision("supreme_deity\\sd_enemy_turn.png")  # "ENEMY TURN", once our cards are played
+sd_stigmata_menu_weakening = Vision("supreme_deity\\sd_stigmata_menu_weakening.png")  # Only matches when available
+sd_stigmata_menu_close = Vision("supreme_deity\\sd_stigmata_menu_close.png")
+sd_final_boss = Vision("supreme_deity\\sd_final_boss.png")  # Frame of the final boss portrait (Sariel, Ludociel...)
+sd_talent_odin = Vision("supreme_deity\\sd_talent_odin.png")  # Omnipotence
+# The team's cards: Festival Odin, Gawain, Hel, LoliMerlin
+sd_odin_st = Vision("supreme_deity\\sd_odin_st.png")  # Spear of Wrath, removes the stance
+sd_odin_aoe = Vision("supreme_deity\\sd_odin_aoe.png")  # Heavenfall
+sd_odin_ult = Vision("supreme_deity\\sd_odin_ult.png")  # Ragnarok Break
+sd_gawain_st = Vision("supreme_deity\\sd_gawain_st.png")  # Ruthless Violence
+sd_gawain_aoe = Vision("supreme_deity\\sd_gawain_aoe.png")  # Golden Cataclysm
+sd_gawain_ult = Vision("supreme_deity\\sd_gawain_ult.png")  # Sunshine Burst
+sd_hel_1 = Vision("supreme_deity\\sd_hel_1.png")  # Strict Overseer
+sd_hel_2 = Vision("supreme_deity\\sd_hel_2.png")  # Scolding Chop
+sd_hel_ult = Vision("supreme_deity\\sd_hel_ult.png")  # Soul Slaughter
+sd_merlin_st = Vision("supreme_deity\\sd_merlin_st.png")  # Mana Ballista
+sd_merlin_aoe = Vision("supreme_deity\\sd_merlin_aoe.png")  # Double Mana Fusion
+sd_merlin_ult = Vision("supreme_deity\\sd_merlin_ult.png")  # All Elemental
+
 # For demon farming
 boss_menu = Vision("demons\\demons.jpg")
 red_demon = Vision("demons\\red_demon.png")
