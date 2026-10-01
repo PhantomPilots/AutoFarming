@@ -479,6 +479,13 @@ Tune your gear so you can guarantee that.<br>
 • Team B: Skuld, Red Freyr, Red Skadi, Blue Matrona</p>
 <p><strong>Important:</strong> <em>Use Hell mode only to farm the SSR card</em></p>
     """,
+    "Supreme Deity": """
+<p><strong>Requirements:</strong><br>
+• Team: Festival Odin, LoliMerlin, Hel, Gawain (this order)<br>
+• Start from the Supreme Deity difficulty menu (or its team screen)<br>
+• The difficulty must already be unlocked with Hero Coins</p>
+<p><strong>Stigmata:</strong> <em>auto</em> uses the Stigmata of Weakening on the Third Judgment and against the final boss</p>
+    """,
     "Reroll Constellation": """
 <p><strong>Requirements:</strong><br>
 • Start from after having already rerolled the attribute you want at least once</p>
@@ -529,6 +536,7 @@ FARMER_IMAGES = {
     "Rat Farmer": "rat_farmer.jpg",
     "Final Boss": "final_boss.png",
     "Legendary Boss": "legendary_boss.png",
+    "Supreme Deity": "supreme_deity.png",
     "Accounts Farmer": "accounts_farmer.jpg",
     "Daily Quests Farmer": "daily_farmer.png",
     "Reroll Constellation": "reroll_constellation_whale.jpg",
@@ -758,6 +766,27 @@ FARMERS = [
                 "default": "hell",
             },
             {"name": "--clears", "label": "Clears", "type": "text", "default": "20"},
+        ],
+    },
+    {
+        "name": "Supreme Deity",
+        "script": "SupremeDeityFarmer.py",
+        "args": [
+            {
+                "name": "--difficulty",
+                "label": "Difficulty",
+                "type": "dropdown",
+                "choices": ["hard", "extreme", "hell"],
+                "default": "hell",
+            },
+            {"name": "--clears", "label": "Clears", "type": "text", "default": "10"},
+            {
+                "name": "--stigmata",
+                "label": "Stigmata",
+                "type": "dropdown",
+                "choices": ["auto", "never"],
+                "default": "auto",
+            },
         ],
     },
     {
@@ -1400,6 +1429,7 @@ class AboutTab(QWidget):
         ("Guild Boss Farmer", ("guildbossfarmer.py", "guild_boss")),
         ("Final Boss Farmer", ("finalbossfarmer.py", "final_boss")),
         ("Legendary Boss Farmer", ("legendarybossfarmer.py", "legendary_boss")),
+        ("Supreme Deity Farmer", ("supremedeityfarmer.py", "supreme_deity")),
         ("Boss Battle Farmer", ("bossbattlefarmer.py", "boss_battle")),
         ("SA Coin Dungeon Farmer", ("sadungeonfarmer.py", "sa_dungeon", "sa_coin")),
         ("Tower Trials", ("towertrialsfarmer.py", "tower_trials")),
@@ -1583,7 +1613,7 @@ class AboutTab(QWidget):
         farmers_label.setText("""
 <p><strong>Available Farmers:</strong><br>
 • Demon, Bird, Deer, Snake, Dogs farming<br>
-• Final Boss and boss battle farming<br>
+• Final Boss and boss battle farming, Supreme Deity<br>
 • Account management and daily quests<br>
 • Equipment farming and constellation rerolls</p>
         """)
