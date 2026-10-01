@@ -15,6 +15,8 @@
 # AutoFarmers GUI (PyQt5)
 # Dropdown + stacked pages for all farmer scripts, with argument fields, terminal output, and process control.
 
+import codecs
+import contextlib
 import ctypes
 import ctypes.wintypes
 import datetime
@@ -23,15 +25,24 @@ import json
 import math
 import os
 import re
+import shutil
 import sys
+import tempfile
 import time
 from dataclasses import dataclass
+
+_DEVTEST_RUNNER_FLAG = "--devtest-runner"
+if sys.argv[1:2] == [_DEVTEST_RUNNER_FLAG]:
+    from development import main as _devtest_main
+
+    raise SystemExit(_devtest_main(sys.argv[2:]))
 
 from PyQt5.QtCore import (
     QObject,
     QProcess,
     QProcessEnvironment,
     QRegularExpression,
+    QStringListModel,
     Qt,
     QTimer,
     QUrl,
@@ -55,6 +66,9 @@ from PyQt5.QtWidgets import (
     QApplication,
     QCheckBox,
     QComboBox,
+    QCompleter,
+    QDoubleSpinBox,
+    QFileDialog,
     QFormLayout,
     QFrame,
     QGridLayout,
@@ -229,6 +243,20 @@ BTN_PAUSE = _action_btn(C["warning"], "#fbbf24", "#d97706")
 BTN_RESIZE = _action_btn(C["blue"], "#60a5fa", "#2563eb")
 BTN_CLEAR = _action_btn(C["darker"], C["dark"], C["darker"], C["text"])
 
+_DEVTEST_BUTTON_COLORS = (
+    ("#252535", "#303044", "#1e1e2e") if _ACTIVE_THEME == "dark"
+    else ("#E5E7EB", "#D1D5DB", "#C3C7CD")
+)
+BTN_DEVTEST = (
+    f"QPushButton {{ background-color: {_DEVTEST_BUTTON_COLORS[0]}; color: {C['text']};"
+    f" padding: 7px 10px; border: 1px solid {C['border2']}; border-radius: 6px; }}"
+    f"QPushButton:hover {{ background-color: {_DEVTEST_BUTTON_COLORS[1]}; }}"
+    f"QPushButton:pressed {{ background-color: {_DEVTEST_BUTTON_COLORS[2]}; }}"
+    f"QPushButton:focus {{ border-color: {C['accent']}; }}"
+    f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['muted']};"
+    f" border-color: {C['border']}; }}"
+)
+
 _GUI_IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "gui_images")
 
 
@@ -248,7 +276,7 @@ QScrollArea, QAbstractScrollArea {{
 QScrollArea > QWidget > QWidget {{
     background-color: {C['bg']};
 }}
-QLineEdit, QSpinBox {{
+QLineEdit, QSpinBox, QDoubleSpinBox {{
     background-color: {C['bg']};
     border: 1px solid {C['border2']};
     border-radius: 5px;
@@ -257,7 +285,7 @@ QLineEdit, QSpinBox {{
     font-size: 13px;
     selection-background-color: {C['accent']};
 }}
-QLineEdit:focus, QSpinBox:focus {{
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
     border-color: {C['accent']};
 }}
 QComboBox {{
@@ -822,6 +850,7 @@ class FarmerController(QObject):
     status_snapshot_changed = pyqtSignal(object)
     arg_values_changed = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
+    devtest_busy_changed = pyqtSignal(bool)
 
     def __init__(self, farmer_def: dict, password_supplier=None, parent=None):
         super().__init__(parent)
@@ -830,6 +859,7 @@ class FarmerController(QObject):
         self.process = None
         self.output_lines: list[str] = []
         self.paused = False
+        self.devtest_busy = False
         self._session_clears = 0
         self._session_pots = 0
         self._session_losses = 0
@@ -910,6 +940,8 @@ class FarmerController(QObject):
         self.arg_values_changed.emit(self.get_arg_values())
 
     def start(self, arg_values: dict[str, object]):
+        if self._blocked_by_devtest():
+            return
         if self.process is not None:
             return
 
@@ -1054,6 +1086,9 @@ class FarmerController(QObject):
         if self.process is None or self.process.state() != QProcess.Running:
             return
 
+        if self.paused and self._blocked_by_devtest():
+            return
+
         pid = self.process.processId()
         flag_path = get_pause_flag_path(pid)
 
@@ -1097,6 +1132,8 @@ class FarmerController(QObject):
         self._append_output("\nOutput cleared.\n")
 
     def resize_window(self):
+        if self._blocked_by_devtest():
+            return
         from utilities.capture_window import capture_window, resize_7ds_window
 
         if resize_7ds_window(width=538, height=921):
@@ -1111,6 +1148,16 @@ class FarmerController(QObject):
         else:
             self._append_output("[WARNING] Failed to resize 7DS window. Continuing with current window size...\n")
         time.sleep(0.5)
+
+    def set_devtest_busy(self, busy: bool):
+        self.devtest_busy = busy
+        self.devtest_busy_changed.emit(busy)
+
+    def _blocked_by_devtest(self) -> bool:
+        if not self.devtest_busy:
+            return False
+        self._append_output("Close the DevTest image window or click Stop in DevTest first.\n")
+        return True
 
     def handle_stdout(self):
         if self.process is None:
@@ -1380,7 +1427,7 @@ class AboutTab(QWidget):
         ("Documentation", ("readme", ".md")),
     )
 
-    def __init__(self, restart_safe_supplier=None, parent=None):
+    def __init__(self, restart_safe_supplier=None, parent=None, update_allowed_supplier=None):
         super().__init__(parent)
         self.update_process = None
         self.updating = False
@@ -1388,6 +1435,7 @@ class AboutTab(QWidget):
         self.gui_file_path = os.path.abspath(__file__)
         self.requirements_file_path = os.path.join(self.repo_root, "requirements.txt")
         self._restart_safe_supplier = restart_safe_supplier or (lambda: True)
+        self._update_allowed_supplier = update_allowed_supplier or (lambda: True)
         self._pre_update_gui_hash = None
         self._pre_update_requirements_hash = None
         self._pending_gui_changed = False
@@ -1572,6 +1620,9 @@ class AboutTab(QWidget):
         """Handle update button click - run git stash then git pull"""
         if self.updating:
             return  # Already updating
+        if not self._update_allowed_supplier():
+            self.status_label.setText("Close the DevTest image window or click Stop in DevTest first.")
+            return
 
         # Start the update process
         self.updating = True
@@ -2153,6 +2204,387 @@ class SettingsTab(QWidget):
         self.status_label.setStyleSheet("color: #10b981;" if ok else "color: #ef4444;")
 
 
+class DevTestController(QObject):
+    """Own the one-shot child and its temporary image independently of page navigation."""
+
+    busy_changed = pyqtSignal(bool)
+    output_appended = pyqtSignal(str)
+    image_changed = pyqtSignal()
+    vision_names_changed = pyqtSignal(list)
+
+    def __init__(self, can_start_supplier, parent=None):
+        super().__init__(parent)
+        self._can_start_supplier = can_start_supplier
+        self.process = None
+        self.last_image = None
+        self._temporary_images = None
+        self._sequence = 0
+        self._output_path = None
+        self._stopping = False
+        self._decoder = None
+        self.vision_names = []
+        self.catalog_process = None
+        self._catalog_started = False
+        self._shutting_down = False
+
+    def _new_process(self):
+        process = QProcess(self)
+        process.setWorkingDirectory(_BASE_DIR)
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert("PYTHONUNBUFFERED", "1")
+        env.insert("PYTHONIOENCODING", "utf-8")
+        process.setProcessEnvironment(env)
+        return process
+
+    @staticmethod
+    def _launch_args(cli_args):
+        bundled = getattr(sys, "frozen", False) or os.path.basename(sys.executable).lower() == "main.exe"
+        prefix = [_DEVTEST_RUNNER_FLAG] if bundled else ["-u", os.path.join(_BASE_DIR, "development.py")]
+        return prefix + list(cli_args)
+
+    def load_vision_names(self):
+        if self._catalog_started or self._shutting_down:
+            return
+        self._catalog_started = True
+        process = self._new_process()
+        self.catalog_process = process
+        process.finished.connect(lambda code, status, p=process: self._catalog_finished(p, code, status))
+        process.errorOccurred.connect(lambda error, p=process: self._catalog_error(p, error))
+        process.start(sys.executable, self._launch_args(["list-visions"]))
+
+    def _catalog_error(self, process, error):
+        if process is self.catalog_process and error == QProcess.FailedToStart:
+            self._catalog_finished(process, -1, QProcess.CrashExit)
+
+    def _catalog_finished(self, process, code, status):
+        if process is not self.catalog_process:
+            return
+        try:
+            if status != QProcess.NormalExit or code != 0:
+                raise ValueError("Catalogue process failed")
+            payload = json.loads(bytes(process.readAllStandardOutput()).decode("utf-8"))
+            names, warnings = payload["names"], payload["warnings"]
+            if not isinstance(names, list) or not isinstance(warnings, list) or any(
+                not isinstance(name, str) or not name.isidentifier() or name.startswith("_") for name in names
+            ) or any(not isinstance(warning, str) for warning in warnings):
+                raise ValueError("Invalid vision catalogue")
+            if not self._shutting_down:
+                self.vision_names = sorted(set(names))
+                self.vision_names_changed.emit(self.vision_names)
+                for warning in warnings:
+                    self.output_appended.emit(warning + "\n")
+        except (ValueError, KeyError, TypeError, UnicodeError):
+            if not self._shutting_down:
+                self.output_appended.emit("Could not load vision suggestions. You can still enter a name.\n")
+        finally:
+            self.catalog_process = None
+            process.deleteLater()
+
+    @property
+    def is_busy(self):
+        return self.process is not None
+
+    def start(self, action, args=()):
+        if self.is_busy:
+            return
+        if not self._can_start_supplier():
+            self.output_appended.emit("Pause or stop all Farmers and finish any update before using DevTest.\n")
+            return
+        try:
+            if self._temporary_images is None:
+                self._temporary_images = tempfile.TemporaryDirectory(prefix="autofarmers_devtest_")
+            self._sequence += 1
+            self._output_path = os.path.join(self._temporary_images.name, f"preview_{self._sequence}.png")
+        except OSError as exc:
+            self.output_appended.emit(f"Could not prepare a temporary image: {exc}\n")
+            return
+        cli_args = [action, *args, "--output", self._output_path]
+        process = self._new_process()
+        process.setProcessChannelMode(QProcess.MergedChannels)
+        process.readyReadStandardOutput.connect(lambda p=process: self._read_output(p))
+        process.finished.connect(lambda code, status, p=process: self._finished(p, code, status))
+        process.errorOccurred.connect(lambda error, p=process: self._process_error(p, error))
+        self.process = process
+        self._stopping = False
+        self._decoder = codecs.getincrementaldecoder("utf-8")("replace")
+        self.output_appended.emit(f"\nStarting {action.replace('-', ' ')}...\n")
+        self.busy_changed.emit(True)
+        process.start(sys.executable, self._launch_args(cli_args))
+
+    def _read_output(self, process, *, final=False):
+        if process is not self.process:
+            return
+        output = self._decoder.decode(bytes(process.readAllStandardOutput()), final=final)
+        if output:
+            self.output_appended.emit(output)
+
+    def _finished(self, process, code, status):
+        if process is not self.process:
+            return
+        self._read_output(process, final=True)
+        if self._stopping:
+            self.output_appended.emit("Stopped.\n")
+        elif status == QProcess.NormalExit and code == 0 and os.path.isfile(self._output_path):
+            if self.last_image:
+                with contextlib.suppress(OSError):
+                    os.remove(self.last_image)
+            self.last_image = self._output_path
+            self.output_appended.emit("Image ready. Enter a folder and filename, then click Save image.\n")
+        elif status == QProcess.NormalExit and code == 2:
+            self.output_appended.emit("No new image was saved.\n")
+        else:
+            self.output_appended.emit("The tool could not finish. Check the messages above and try again.\n")
+        if self._output_path != self.last_image and os.path.isfile(self._output_path):
+            with contextlib.suppress(OSError):
+                os.remove(self._output_path)
+        self.process = None
+        process.deleteLater()
+        self.busy_changed.emit(False)
+        self.image_changed.emit()
+
+    def _process_error(self, process, error):
+        if process is self.process and error == QProcess.FailedToStart:
+            self.output_appended.emit(f"Could not start the tool: {process.errorString()}\n")
+            self._finished(process, -1, QProcess.CrashExit)
+
+    def stop(self):
+        if self.process is not None:
+            self._stopping = True
+            self.process.kill()
+
+    def shutdown(self):
+        self._shutting_down = True
+        if self.catalog_process is not None:
+            process = self.catalog_process
+            process.kill()
+            process.waitForFinished(1000)
+        if self.process is not None:
+            process = self.process
+            self.stop()
+            process.waitForFinished(1000)
+        if self._temporary_images is not None:
+            self._temporary_images.cleanup()
+            self._temporary_images = None
+        self.last_image = None
+
+
+class DevTestTab(QWidget):
+    def __init__(self, controller, parent=None):
+        super().__init__(parent)
+        self.controller = controller
+        self.setStyleSheet(BTN_DEVTEST)
+        self.run_buttons = []
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(24, 18, 24, 18)
+        layout.setSpacing(12)
+        intro = QLabel("Choose a tool below. The game resizes before each capture. Pause or stop your Farmers first.")
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+        tool_grid = QGridLayout()
+        tool_grid.setColumnStretch(0, 1)
+        tool_grid.setColumnStretch(1, 1)
+        tool_grid.setSpacing(12)
+        layout.addLayout(tool_grid)
+
+        vision_group = QGroupBox("Screenshot testing")
+        vision_form = QFormLayout(vision_group)
+        self.vision_edit = QLineEdit()
+        self.vision_edit.setPlaceholderText("Vision name, e.g. startbutton (without vio.)")
+        self.vision_model = QStringListModel(controller.vision_names, self)
+        self.vision_completer = QCompleter(self.vision_model, self)
+        self.vision_completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.vision_completer.setFilterMode(Qt.MatchStartsWith)
+        self.vision_completer.popup().setStyleSheet(
+            f"QListView {{ background: {C['panel2']}; color: {C['text']};"
+            f" border: 1px solid {C['border2']}; outline: none;"
+            f" selection-background-color: {_DEVTEST_BUTTON_COLORS[1]}; selection-color: {C['text']}; }}"
+            "QListView::item { padding: 4px 8px; }"
+        )
+        self.vision_edit.setCompleter(self.vision_completer)
+        controller.vision_names_changed.connect(self.vision_model.setStringList)
+        vision_form.addRow("Vision name:", self.vision_edit)
+        self.threshold_spin = QDoubleSpinBox()
+        self.threshold_spin.setRange(0, 1)
+        self.threshold_spin.setDecimals(2)
+        self.threshold_spin.setSingleStep(0.01)
+        self.threshold_spin.setValue(0.7)
+        vision_form.addRow("Threshold:", self.threshold_spin)
+        vision_form.addRow(self._run_button("Test screenshot", self._test_screenshot))
+        tool_grid.addWidget(vision_group, 0, 0)
+
+        hand_group = QGroupBox("Cards")
+        hand_row = QHBoxLayout(hand_group)
+        hand_row.addWidget(QLabel("Units:"))
+        self.units_combo = QComboBox()
+        self.units_combo.addItems(["3", "4"])
+        self.units_combo.setCurrentText("4")
+        hand_row.addWidget(self.units_combo)
+        hand_row.addWidget(self._run_button("Capture hand", lambda: self._capture_cards("capture-hand")))
+        hand_row.addWidget(self._run_button("Show card types", lambda: self._capture_cards("card-types")))
+        hand_row.addStretch(1)
+        tool_grid.addWidget(hand_group, 1, 0)
+
+        image_group = QGroupBox("Images and coordinates")
+        image_row = QVBoxLayout(image_group)
+        for label, action in (
+            ("Determine coordinates", "coordinates"),
+            ("Crop picker", "crop"),
+        ):
+            image_row.addWidget(self._run_button(label, lambda _checked=False, a=action: self.controller.start(a)))
+        tool_grid.addWidget(image_group, 0, 1)
+
+        save_group = QGroupBox("Save the last image")
+        save_form = QFormLayout(save_group)
+        folder_row = QHBoxLayout()
+        saved = load_full_config_dict().get("devtest_save_directory", "")
+        self._remembered_folder = saved if isinstance(saved, str) else ""
+        self.folder_edit = QLineEdit(self._remembered_folder)
+        self.folder_edit.setPlaceholderText("Choose a folder — remembered next time")
+        self.folder_edit.editingFinished.connect(self._remember_folder)
+        folder_row.addWidget(self.folder_edit, 1)
+        browse_btn = QPushButton("Browse…")
+        browse_btn.clicked.connect(self._browse_folder)
+        folder_row.addWidget(browse_btn)
+        save_form.addRow("Save folder:", folder_row)
+        self.filename_edit = QLineEdit()
+        self.filename_edit.setPlaceholderText("e.g. hand.png — filename stays only for this session")
+        save_form.addRow("Filename:", self.filename_edit)
+        self.save_btn = QPushButton("Save image")
+        self.save_btn.clicked.connect(self.save_image)
+        save_form.addRow(self.save_btn)
+        save_hint = QLabel("Close the image window to enable saving. Enter a name; .png is added if needed.")
+        save_hint.setWordWrap(True)
+        save_form.addRow(save_hint)
+        tool_grid.addWidget(save_group, 1, 1)
+
+        controls = QHBoxLayout()
+        self.stop_btn = QPushButton("Stop")
+        self.stop_btn.clicked.connect(controller.stop)
+        controls.addWidget(self.stop_btn)
+        clear_btn = QPushButton("Clear")
+        controls.addWidget(clear_btn)
+        controls.addStretch(1)
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+        controls.addWidget(self.status_label)
+        layout.addLayout(controls)
+        self.terminal = QTextEdit()
+        self.terminal.setReadOnly(True)
+        self.terminal.setMinimumHeight(160)
+        self.terminal.document().setMaximumBlockCount(5000)
+        self.terminal.setFont(QFont("Consolas", 10))
+        self.terminal.setStyleSheet(f"background: {C['term_bg']}; color: {C['term_text']};")
+        layout.addWidget(self.terminal, 1)
+        clear_btn.clicked.connect(self.terminal.clear)
+        controller.output_appended.connect(self.append_terminal)
+        controller.busy_changed.connect(self.refresh_controls)
+        controller.image_changed.connect(self.refresh_controls)
+        self.append_terminal("Ready. Image windows close with Escape or their close button.\n")
+        self.refresh_controls()
+        QTimer.singleShot(0, controller.load_vision_names)
+
+    def _run_button(self, label, callback):
+        button = QPushButton(label)
+        button.clicked.connect(callback)
+        self.run_buttons.append(button)
+        return button
+
+    def refresh_controls(self, *_args):
+        busy = self.controller.is_busy
+        allowed = not busy and self.controller._can_start_supplier()
+        for button in self.run_buttons:
+            button.setEnabled(allowed)
+        self.stop_btn.setEnabled(busy)
+        self.save_btn.setEnabled(not busy and self.controller.last_image is not None)
+        if busy:
+            self.status_label.setText("Tool running…")
+        elif allowed:
+            self.status_label.setText("Ready")
+        else:
+            self.status_label.setText("Pause or stop your Farmers and finish any update first.")
+
+    def append_terminal(self, text):
+        cursor = self.terminal.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        cursor.insertText(text)
+        self.terminal.setTextCursor(cursor)
+        self.terminal.ensureCursorVisible()
+
+    def _test_screenshot(self):
+        name = self.vision_edit.text().strip()
+        self.controller.start("screenshot-test", [f"--vision={name}", "--threshold", str(self.threshold_spin.value())])
+
+    def _capture_cards(self, action):
+        self.controller.start(action, ["--units", self.units_combo.currentText()])
+
+    def _remember_folder(self):
+        raw = self.folder_edit.text().strip()
+        folder = os.path.abspath(os.path.expandvars(os.path.expanduser(raw))) if raw else ""
+        self.folder_edit.setText(folder)
+        if folder == self._remembered_folder:
+            return folder
+        try:
+            save_config_updates({"devtest_save_directory": folder})
+            config.reload()
+            self._remembered_folder = folder
+        except Exception as exc:
+            self.append_terminal(f"Could not remember the folder. You can still save your image: {exc}\n")
+        return folder
+
+    def _browse_folder(self):
+        folder = QFileDialog.getExistingDirectory(self, "Choose a save folder", self.folder_edit.text())
+        if folder:
+            self.folder_edit.setText(folder)
+            self._remember_folder()
+
+    @staticmethod
+    def png_filename(value):
+        filename = value.strip()
+        if not filename or re.search(r'[<>:"/\\|?*\x00-\x1f]', filename) or filename.endswith((".", " ")):
+            raise ValueError("Enter a filename without folders or special characters, such as 'hand.png'.")
+        stem, extension = os.path.splitext(filename)
+        if extension and extension.lower() != ".png":
+            raise ValueError("Use a .png filename, such as 'hand.png'.")
+        reserved = {"CON", "PRN", "AUX", "NUL"}
+        reserved.update(f"{prefix}{i}" for prefix in ("COM", "LPT") for i in range(1, 10))
+        if not stem or stem.upper().split(".")[0] in reserved:
+            raise ValueError("Choose another filename, such as 'hand.png'.")
+        return filename if extension else filename + ".png"
+
+    def save_image(self):
+        if self.controller.is_busy or not self.controller.last_image:
+            return
+        temporary_path = None
+        try:
+            folder = self._remember_folder()
+            if not folder:
+                raise ValueError("Choose a save folder first.")
+            filename = self.png_filename(self.filename_edit.text())
+            destination = os.path.join(folder, filename)
+            if os.path.exists(destination):
+                answer = QMessageBox.question(
+                    self, "Replace image?", f"'{filename}' already exists. Replace it?",
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
+                )
+                if answer != QMessageBox.Yes:
+                    self.append_terminal("Image save cancelled.\n")
+                    return
+            os.makedirs(folder, exist_ok=True)
+            descriptor, temporary_path = tempfile.mkstemp(prefix=".devtest_", suffix=".png", dir=folder)
+            os.close(descriptor)
+            shutil.copyfile(self.controller.last_image, temporary_path)
+            os.replace(temporary_path, destination)
+            temporary_path = None
+            self.filename_edit.setText(filename)
+            self.append_terminal(f"Image saved: {destination}\n")
+        except (OSError, ValueError) as exc:
+            self.append_terminal(f"Could not save the image: {exc}\n")
+        finally:
+            if temporary_path is not None:
+                with contextlib.suppress(OSError):
+                    os.remove(temporary_path)
+
+
 class FarmerTab(QWidget):
     _COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
     _LINE_COLOR_RULES = [
@@ -2176,6 +2608,7 @@ class FarmerTab(QWidget):
         self.controller.output_appended.connect(self.append_terminal)
         self.controller.running_changed.connect(self._on_running_changed)
         self.controller.paused_changed.connect(self._on_paused_changed)
+        self.controller.devtest_busy_changed.connect(self._refresh_action_buttons)
         self.controller.session_progress_changed.connect(self._refresh_session_progress)
         self.controller.arg_values_changed.connect(self._sync_arg_widgets)
         self.controller.status_snapshot_changed.connect(self._on_status_snapshot_changed)
@@ -2638,14 +3071,23 @@ class FarmerTab(QWidget):
 
     def _on_running_changed(self, running: bool, pid: int):
         del pid
-        self.start_btn.setEnabled(not running and not self.farmer.get("availability_error"))
-        self.stop_btn.setEnabled(running)
-        self.pause_btn.setEnabled(running)
+        self._refresh_action_buttons()
         if not running:
             self.pause_btn.setText("PAUSE")
 
     def _on_paused_changed(self, paused: bool):
         self.pause_btn.setText("RESUME" if paused else "PAUSE")
+        self._refresh_action_buttons()
+
+    def _refresh_action_buttons(self, *_args):
+        running = self.controller.is_running
+        busy = self.controller.devtest_busy
+        self.start_btn.setEnabled(
+            not busy and self.controller.process is None and not self.farmer.get("availability_error")
+        )
+        self.stop_btn.setEnabled(running)
+        self.pause_btn.setEnabled(running and not (busy and self.controller.is_paused))
+        self.resize_btn.setEnabled(not busy)
 
     def _refresh_session_progress(self):
         snapshot = self.controller.get_status_snapshot()
@@ -3179,6 +3621,11 @@ class MainWindow(QMainWindow):
 
         self._settings_tab: SettingsTab | None = None
         self._about_tab: AboutTab | None = None
+        self._devtest_tab: DevTestTab | None = None
+        self._devtest_wrapper: QWidget | None = None
+        self._about_tabs = []
+        self._devtest_controller = DevTestController(self._can_start_devtest, parent=self)
+        self._devtest_controller.busy_changed.connect(self._on_devtest_busy_changed)
         self._settings_wrapper: QWidget | None = None
         self._about_wrapper: QWidget | None = None
         self._repo_root = os.path.dirname(os.path.dirname(__file__))
@@ -3200,6 +3647,10 @@ class MainWindow(QMainWindow):
             )
             for farmer in FARMERS
         }
+        for controller in self._controllers.values():
+            self._devtest_controller.busy_changed.connect(controller.set_devtest_busy)
+            controller.running_changed.connect(self._refresh_devtest_controls)
+            controller.paused_changed.connect(self._refresh_devtest_controls)
 
         central = QWidget()
         root = QVBoxLayout(central)
@@ -3254,6 +3705,11 @@ class MainWindow(QMainWindow):
         settings_btn.clicked.connect(lambda: self._show_page("settings"))
         top_lay.addWidget(settings_btn)
 
+        devtest_btn = QPushButton("⚗ DevTest")
+        devtest_btn.setStyleSheet(_BTN_TOP_STYLE)
+        devtest_btn.clicked.connect(lambda: self._show_page("devtest"))
+        top_lay.addWidget(devtest_btn)
+
         about_btn = QPushButton("ℹ About")
         about_btn.setStyleSheet(_BTN_TOP_STYLE)
         about_btn.clicked.connect(lambda: self._show_page("about"))
@@ -3307,9 +3763,13 @@ class MainWindow(QMainWindow):
             )
 
     def _refresh_game_version_enabled(self, *_args) -> None:
-        enabled = not any(controller.process is not None for controller in self._controllers.values())
+        enabled = not self._devtest_controller.is_busy and not any(
+            controller.process is not None for controller in self._controllers.values()
+        )
         self._game_version_combo.setEnabled(enabled)
-        if enabled:
+        if self._devtest_controller.is_busy:
+            self._game_version_combo.setToolTip("Finish DevTest before changing the game version.")
+        elif enabled:
             self._game_version_combo.setToolTip("Choose which game client the next farmer will recognize.")
         else:
             self._game_version_combo.setToolTip("Stop all running farmers before changing the game version.")
@@ -3327,10 +3787,45 @@ class MainWindow(QMainWindow):
         return self._about_tab
 
     def _make_about_tab(self) -> "AboutTab":
-        about_tab = AboutTab(restart_safe_supplier=lambda: not self._any_farmer_running())
+        about_tab = AboutTab(
+            restart_safe_supplier=lambda: not self._any_farmer_running() and not self._devtest_controller.is_busy,
+            update_allowed_supplier=lambda: not self._devtest_controller.is_busy,
+        )
         about_tab.update_started.connect(self._on_manual_update_started)
         about_tab.update_finished.connect(self._on_manual_update_finished)
+        about_tab.update_btn.setEnabled(not self._devtest_controller.is_busy)
+        self._about_tabs.append(about_tab)
         return about_tab
+
+    @property
+    def devtest_tab(self) -> "DevTestTab":
+        if self._devtest_tab is None:
+            self._devtest_tab = DevTestTab(self._devtest_controller)
+        return self._devtest_tab
+
+    @property
+    def devtest_wrapper(self) -> QWidget:
+        if self._devtest_wrapper is None:
+            self._devtest_wrapper = self._wrap_with_back_bar(self.devtest_tab, "DevTest")
+            self.stack.addWidget(self._devtest_wrapper)
+        return self._devtest_wrapper
+
+    def _can_start_devtest(self):
+        return not self._manual_update_running and all(
+            controller.process is None or (controller.is_running and controller.is_paused)
+            for controller in self._controllers.values()
+        )
+
+    def _refresh_devtest_controls(self, *_args):
+        if self._devtest_tab is not None:
+            self._devtest_tab.refresh_controls()
+
+    def _on_devtest_busy_changed(self, busy):
+        self._refresh_game_version_enabled()
+        self._theme_btn.setEnabled(not busy)
+        for about_tab in self._about_tabs:
+            about_tab.update_btn.setEnabled(not busy and not about_tab.updating)
+        self._refresh_devtest_controls()
 
     @property
     def settings_wrapper(self) -> QWidget:
@@ -3388,6 +3883,8 @@ class MainWindow(QMainWindow):
             self.stack.setCurrentWidget(self.about_wrapper)
         elif page_id == "settings":
             self.stack.setCurrentWidget(self.settings_wrapper)
+        elif page_id == "devtest":
+            self.stack.setCurrentWidget(self.devtest_wrapper)
         else:
             self._show_grid()
 
@@ -3402,10 +3899,12 @@ class MainWindow(QMainWindow):
 
     def _on_manual_update_started(self) -> None:
         self._manual_update_running = True
+        self._refresh_devtest_controls()
         self._clear_update_available_notification()
 
     def _on_manual_update_finished(self) -> None:
         self._manual_update_running = False
+        self._refresh_devtest_controls()
         self._clear_update_available_notification()
         self._check_for_update_available()
 
@@ -3488,6 +3987,9 @@ class MainWindow(QMainWindow):
         self._clear_update_available_notification()
 
     def _toggle_theme(self):
+        if self._devtest_controller.is_busy:
+            QMessageBox.information(self, "DevTest is open", "Finish or stop DevTest before changing the theme.")
+            return
         if self._any_farmer_running():
             QMessageBox.information(
                 self,
@@ -3536,6 +4038,12 @@ class MainWindow(QMainWindow):
 
     def _any_farmer_running(self) -> bool:
         return any(controller.is_running for controller in self._controllers.values())
+
+    def closeEvent(self, event):
+        if self._devtest_tab is not None:
+            self._devtest_tab._remember_folder()
+        self._devtest_controller.shutdown()
+        super().closeEvent(event)
 
 
 def _apply_dark_title_bar(hwnd: int, dark: bool) -> None:

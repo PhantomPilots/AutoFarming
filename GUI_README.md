@@ -37,6 +37,27 @@ A beautiful graphical user interface for the AutoFarmers project that provides e
 5. **Monitor Progress**: Watch the real-time output in the terminal window on the right
 6. **Stop Farming**: Click the red "STOP" button when done
 
+### DevTest
+
+Open **⚗ DevTest** between **Settings** and **About** to use the development tools. Pause or stop all Farmers first. Each tool resizes the selected game window before capturing it.
+
+- **Test screenshot**: enter a vision name without `vio.` (for example, `startbutton`) and a threshold from 0 to 1. Suggestions include public names and names from installed private Farmer builds that support DevTest. You can also type any name; the terminal explains if it cannot be found. The image shows all matches.
+- **Determine coordinates**: view the full screenshot and its dimensions, then click it to print coordinates in the DevTest terminal. You can save this full screenshot afterward.
+- **Capture hand** and **Show card types**: choose 3 or 4 units. Cards appear together, with numbered results in the terminal from left to right.
+- **Crop picker**: drag over an area, then press Enter to preview the crop and read its coordinates. Escape cancels selection.
+
+Close the image window or press Escape to finish. Farmer Start, Resume, and Resize are unavailable while a tool is open. **Stop** in DevTest ends a tool; paused Farmers stay paused.
+
+To keep an image, close its window, enter a **Save folder** and **Filename**, then click **Save image**. Browse can choose the folder. The folder is remembered across GUI restarts; the filename is kept only for this session. Images save as PNG, and replacing an existing file asks for confirmation. Nothing saves permanently until you click **Save image**.
+
+Tools can also run directly from the repository root, for example:
+
+```powershell
+python scripts/development.py screenshot-test --vision startbutton --threshold 0.70
+python scripts/development.py capture-hand --units 3
+python scripts/development.py crop
+```
+
 ### Available Farmers
 
 - **Demon Farmer**: Battle OG, Bell, Red, Gray, and Crimson demons

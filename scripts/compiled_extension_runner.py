@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import importlib
 import json
 import os
@@ -171,29 +172,53 @@ def _load_module(manifest: dict, cache_dir: Path):
     return module, contract
 
 
+@contextmanager
+def _extension_context(manifest: dict):
+    """Load a checked extension with its own assets and restore the caller's context."""
+    if manifest["availability_error"]:
+        raise ExtensionValidationError(manifest["availability_error"])
+    environment_names = ("AUTOFARMERS_ROOT", "AUTOFARMERS_EXTENSION_DIR")
+    previous_environment = {name: os.environ.get(name) for name in environment_names}
+    previous_path = sys.path[:]
+    try:
+        cache_dir = _prepare_cache(manifest)
+        os.environ["AUTOFARMERS_ROOT"] = str(Path(__file__).resolve().parents[1])
+        os.environ["AUTOFARMERS_EXTENSION_DIR"] = str(Path(manifest["bundle_dir"]))
+        yield _load_module(manifest, cache_dir)
+    finally:
+        sys.path[:] = previous_path
+        for name, value in previous_environment.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+@contextmanager
+def load_validated_extension(bundle_dir: Path):
+    """Yield (module, contract) without invoking Farmer gameplay or licensing."""
+    manifest = load_extension_manifest(bundle_dir, verify_hash=True)
+    with _extension_context(manifest) as loaded:
+        yield loaded
+
+
 def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool = False) -> int:
     manifest = load_extension_manifest(bundle_dir, verify_hash=True)
     if manifest["availability_error"]:
         raise ExtensionValidationError(manifest["availability_error"])
     _reject_secret_command_line_args(manifest, extension_args)
     secret_args = _consume_extension_secrets(manifest)
+    with _extension_context(manifest) as (module, contract):
+        if self_test:
+            print(json.dumps(contract, sort_keys=True))
+            return 0
 
-    cache_dir = _prepare_cache(manifest)
-    repo_root = Path(__file__).resolve().parents[1]
-    os.environ["AUTOFARMERS_ROOT"] = str(repo_root)
-    os.environ["AUTOFARMERS_EXTENSION_DIR"] = str(Path(manifest["bundle_dir"]))
-    module, contract = _load_module(manifest, cache_dir)
-
-    if self_test:
-        print(json.dumps(contract, sort_keys=True))
-        return 0
-
-    callable_name = manifest["artifact"]["callable"]
-    entrypoint = getattr(module, callable_name, None)
-    if not callable(entrypoint):
-        raise ExtensionValidationError(f"Compiled module does not expose callable {callable_name!r}")
-    result = entrypoint(extension_args + secret_args)
-    return 0 if result is None else int(result)
+        callable_name = manifest["artifact"]["callable"]
+        entrypoint = getattr(module, callable_name, None)
+        if not callable(entrypoint):
+            raise ExtensionValidationError(f"Compiled module does not expose callable {callable_name!r}")
+        result = entrypoint(extension_args + secret_args)
+        return 0 if result is None else int(result)
 
 
 def _parse_args(argv=None):
