@@ -1324,8 +1324,6 @@ class FarmerController(QObject):
         self.output_lines.extend(new_lines)
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
-            self.output_reset.emit()
-            return
         if new_lines:
             self.output_appended.emit("".join(new_lines))
 
@@ -2765,6 +2763,7 @@ class FarmerTab(QWidget):
 
         self.terminal = QTextEdit()
         self.terminal.setReadOnly(True)
+        self.terminal.document().setMaximumBlockCount(1001)
         _term_font = QFont("Consolas")
         _term_font.setPixelSize(15)
         self.terminal.document().setDefaultFont(_term_font)

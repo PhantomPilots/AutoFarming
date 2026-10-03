@@ -1,6 +1,9 @@
+import logging
+import os
 import sys
 import threading
 import time
+from logging.handlers import RotatingFileHandler
 
 from utilities.app_config import click_tracker, config
 from utilities.capture_window import capture_window
@@ -10,6 +13,28 @@ from utilities.utilities import re_open_7ds_window, send_push_notification
 
 _POLL_INTERVAL_SECONDS = 2.0
 _REPEATED_CLICK_THRESHOLD = 30
+_ERROR_RESTART_DELAY_SECONDS = 1.0
+
+
+def _log_recovery_error():
+    """Keep the traceback in a bounded local log without flooding the GUI."""
+    logger = logging.getLogger("FarmerRecovery")
+    logger.propagate = False
+    if not logger.handlers:
+        try:
+            os.makedirs("logs", exist_ok=True)
+            handler = RotatingFileHandler(
+                os.path.join("logs", "farmer_recovery.log"),
+                maxBytes=1_000_000,
+                backupCount=2,
+                encoding="utf-8",
+            )
+        except OSError:
+            return False
+        handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+        logger.addHandler(handler)
+    logger.error("Farmer recovery", exc_info=True)
+    return True
 
 
 class FarmingFactory:
@@ -152,6 +177,7 @@ class FarmingFactory:
         try:
             while True:
                 farmer_instance: IFarmer | None = None
+                restart_after_error = False
                 try:
                     farmer_instance = farmer(
                         battle_strategy=battle_strategy,
@@ -170,8 +196,12 @@ class FarmingFactory:
                     print(str(e) or "Farmer stopped.")
                     break
 
-                except Exception as e:
-                    print("Something went wrong. Trying to restart the game...")
+                except Exception:
+                    error_logged = _log_recovery_error()
+                    restart_after_error = True
+                    print("Something went wrong. We'll wait 1 second before trying again.")
+                    if error_logged:
+                        print("Error details are saved in logs/farmer_recovery.log.")
 
                     if farmer_instance is not None and hasattr(farmer_instance, "current_state"):
                         starting_state = farmer_instance.current_state
@@ -189,6 +219,9 @@ class FarmingFactory:
 
                     if farmer_instance is not None and hasattr(farmer_instance, "stop_fighter_thread"):
                         farmer_instance.stop_fighter_thread()
+
+                if restart_after_error:
+                    time.sleep(_ERROR_RESTART_DELAY_SECONDS)
 
         finally:
             runtime_monitor_stop_event.set()
