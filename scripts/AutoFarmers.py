@@ -29,7 +29,7 @@ import shutil
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 _DEVTEST_RUNNER_FLAG = "--devtest-runner"
 if sys.argv[1:2] == [_DEVTEST_RUNNER_FLAG]:
@@ -106,6 +106,7 @@ from utilities.image_assets import (
     normalize_game_version,
 )
 from utilities.logging_utils import remove_expired_logged_images
+from utilities.reward_reader import GUILD_BOSS_REWARDS, INDURA_REWARDS, RewardSet
 
 _COMPILED_EXTENSION_RUNNER_FLAG = "--compiled-extension-runner"
 if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
@@ -839,6 +840,17 @@ class FarmerStatusSnapshot:
     session_max_clears: int | None
     session_start_time: float | None
     last_clear_time: datetime.datetime | None
+    session_rewards: dict = field(default_factory=dict)  # item key -> total this session
+    last_rewards: dict = field(default_factory=dict)  # item key -> count of the latest run
+    reward_runs: int = 0  # runs whose rewards were read
+
+
+_REWARDS_MARKER = "[REWARDS]"
+# Farmers whose '[REWARDS]' output is shown in a rewards panel, with the rewards they can read
+REWARD_SETS: dict[str, RewardSet] = {
+    "Indura Farmer": INDURA_REWARDS,
+    "Guild Boss Farmer": GUILD_BOSS_REWARDS,
+}
 
 
 class FarmerController(QObject):
@@ -850,6 +862,7 @@ class FarmerController(QObject):
     status_snapshot_changed = pyqtSignal(object)
     arg_values_changed = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
+    rewards_changed = pyqtSignal()
     devtest_busy_changed = pyqtSignal(bool)
 
     def __init__(self, farmer_def: dict, password_supplier=None, parent=None):
@@ -867,6 +880,9 @@ class FarmerController(QObject):
         self._session_start_time = None
         self._pause_start_time = None
         self._last_clear_time = None
+        self._session_rewards: dict[str, int] = {}
+        self._last_rewards: dict[str, int] = {}
+        self._reward_runs = 0
         self._process_exit_expected = False
         self._uptime_timer = QTimer(self)
         self._uptime_timer.timeout.connect(self._update_session_progress)
@@ -916,6 +932,9 @@ class FarmerController(QObject):
             session_max_clears=self._session_max_clears,
             session_start_time=self._session_start_time,
             last_clear_time=self._last_clear_time,
+            session_rewards=dict(self._session_rewards),
+            last_rewards=dict(self._last_rewards),
+            reward_runs=self._reward_runs,
         )
 
     def get_arg_values(self) -> dict[str, object]:
@@ -955,17 +974,6 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
-        for arg in self.farmer["args"]:
-            if arg["type"] == "text" and "choices" in arg:
-                value = str(self._arg_values.get(arg["name"], ""))
-                if value not in arg["choices"]:
-                    choices = arg["choices"]
-                    options = choices[0] if len(choices) == 1 else (
-                        " or ".join(choices) if len(choices) == 2 else ", ".join(choices[:-1]) + f", or {choices[-1]}"
-                    )
-                    self._append_output(f"[ERROR] Enter {options} for {arg['label']}.\n")
-                    return
-
         wait_save_failed = False
         wait_config_key = self._wait_before_accept_config_key()
         if wait_config_key:
@@ -979,7 +987,10 @@ class FarmerController(QObject):
             except Exception:
                 wait_save_failed = True
 
-        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
+        log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
+        if self.farmer["name"] in REWARD_SETS:
+            log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
+        remove_expired_logged_images(log_subdirs)
         self.resize_window()
 
         args = self._build_cli_args()
@@ -1049,6 +1060,8 @@ class FarmerController(QObject):
         self._pause_start_time = None
         self.paused = False
         self._session_max_clears = self._read_target_clears()
+        self._session_rewards, self._last_rewards, self._reward_runs = {}, {}, 0
+        self.rewards_changed.emit()
         self._process_exit_expected = False
         self._uptime_timer.start(1000)
         self.session_progress_changed.emit()
@@ -1306,21 +1319,18 @@ class FarmerController(QObject):
         return display_args
 
     def _append_output(self, text: str):
+        if self._session_start_time is not None:
+            if "[CLEAR]" in text:
+                self._on_clear_detected()
+            if "[POT]" in text:
+                self._session_pots += 1
+                self.session_progress_changed.emit()
+            if "[LOSS]" in text:
+                self._session_losses += 1
+                self.session_progress_changed.emit()
+
         _HIDDEN_MARKERS = {"[CLEAR]", "[POT]", "[LOSS]"}
-        new_lines = []
-        for line in text.splitlines(True):
-            marker = line.strip()
-            if marker not in _HIDDEN_MARKERS:
-                new_lines.append(line)
-            elif self._session_start_time is not None:
-                if marker == "[CLEAR]":
-                    self._on_clear_detected()
-                elif marker == "[POT]":
-                    self._session_pots += 1
-                    self.session_progress_changed.emit()
-                else:
-                    self._session_losses += 1
-                    self.session_progress_changed.emit()
+        new_lines = [line for line in text.splitlines(True) if line.strip() not in _HIDDEN_MARKERS]
         self.output_lines.extend(new_lines)
         if len(self.output_lines) > 1000:
             self.output_lines = self.output_lines[-1000:]
@@ -1332,6 +1342,17 @@ class FarmerController(QObject):
         self._last_clear_time = datetime.datetime.now()
         self.session_progress_changed.emit()
         self._emit_status_snapshot()
+
+    def _on_rewards_detected(self, payload: str):
+        try:
+            rewards = {str(k): int(v) for k, v in json.loads(payload).items()}
+        except (ValueError, TypeError, AttributeError):
+            return
+        self._last_rewards = rewards
+        self._reward_runs += 1
+        for key, count in rewards.items():
+            self._session_rewards[key] = self._session_rewards.get(key, 0) + count
+        self.rewards_changed.emit()
 
     def _update_session_progress(self):
         if self._session_start_time is None:
@@ -1362,6 +1383,97 @@ class FarmerController(QObject):
 
     def _emit_status_snapshot(self):
         self.status_snapshot_changed.emit(self.get_status_snapshot())
+
+
+class RewardsPanel(QFrame):
+    """Reward totals for the current session, plus what the latest run gave."""
+
+    _ICON_SIZE = 34
+
+    def __init__(self, controller: FarmerController, reward_set: RewardSet, parent=None):
+        super().__init__(parent)
+        self._controller = controller
+        self.setObjectName("rewardsCard")
+        self.setStyleSheet(
+            f"QFrame#rewardsCard {{ background: {C['panel2']}; border-top: 1px solid {C['border2']};"
+            " border-radius: 5px; }"
+        )
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(14, 10, 14, 10)
+        lay.setSpacing(8)
+
+        head = QHBoxLayout()
+        title = QLabel(reward_set.title.upper())
+        title.setStyleSheet(
+            f"font-size: 13px; font-weight: 700; color: {C['muted']};"
+            " letter-spacing: 2px; background: transparent; border: none;"
+        )
+        head.addWidget(title)
+        head.addStretch(1)
+        self._runs_lbl = QLabel()
+        self._runs_lbl.setStyleSheet(f"color: {C['dim']}; font-size: 13px; background: transparent; border: none;")
+        head.addWidget(self._runs_lbl)
+        lay.addLayout(head)
+
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(8)
+        grid.setVerticalSpacing(8)
+        self._cells: dict[str, tuple[QLabel, QLabel]] = {}
+        for i, (key, label) in enumerate(reward_set.items):
+            cell = QFrame()
+            cell.setObjectName("rewardCell")
+            cell.setToolTip(label)
+            cell.setStyleSheet(f"QFrame#rewardCell {{ background: {C['panel3']}; border-radius: 8px; }}")
+            row = QHBoxLayout(cell)
+            row.setContentsMargins(8, 6, 10, 6)
+            row.setSpacing(10)
+
+            icon = QLabel()
+            icon.setFixedSize(self._ICON_SIZE, self._ICON_SIZE)
+            icon.setStyleSheet("background: transparent; border: none;")
+            pixmap = QPixmap(os.path.join(reward_set.rewards_dir, f"{key}.png"))
+            if not pixmap.isNull():
+                icon.setPixmap(
+                    pixmap.scaled(self._ICON_SIZE, self._ICON_SIZE, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                )
+            row.addWidget(icon)
+
+            text = QVBoxLayout()
+            text.setSpacing(0)
+            if reward_set.show_labels:
+                name = QLabel(label)
+                name.setStyleSheet(f"color: {C['muted']}; font-size: 11px; background: transparent; border: none;")
+                name.setWordWrap(True)
+                text.addWidget(name)
+            total = QLabel("0")
+            total.setStyleSheet(
+                f"color: {C['text']}; font-size: 15px; font-weight: 700; background: transparent; border: none;"
+            )
+            last = QLabel("")
+            last.setStyleSheet("color: #10b981; font-size: 11px; background: transparent; border: none;")
+            text.addWidget(total)
+            text.addWidget(last)
+            row.addLayout(text, 1)
+            grid.addWidget(cell, i // 4, i % 4)
+            self._cells[key] = (total, last)
+        for col in range(4):
+            grid.setColumnStretch(col, 1)
+        lay.addLayout(grid)
+
+        controller.rewards_changed.connect(self._refresh)
+        self._refresh()
+
+    def _refresh(self):
+        snap = self._controller.get_status_snapshot()
+        runs = snap.reward_runs
+        if runs:
+            self._runs_lbl.setText(f"{runs} run{'s' if runs > 1 else ''} counted this session")
+        else:
+            self._runs_lbl.setText("Waiting for the first clear")
+        for key, (total, last) in self._cells.items():
+            total.setText(f"{snap.session_rewards.get(key, 0):,}")
+            gained = snap.last_rewards.get(key)
+            last.setText(f"+{gained:,} last run" if gained else "")
 
 
 # Farmer scripts that accept --password / -p (must match argparse in each script).
@@ -2775,6 +2887,9 @@ class FarmerTab(QWidget):
         )
         panel.addWidget(self.terminal, 1)
         panel.addWidget(self._build_session_progress())
+        reward_set = REWARD_SETS.get(self.farmer["name"])
+        if reward_set is not None:
+            panel.addWidget(RewardsPanel(self.controller, reward_set))
         return panel
 
     def _build_session_progress(self):
