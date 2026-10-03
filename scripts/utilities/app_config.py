@@ -22,6 +22,7 @@ APP_CONFIG_KEYS = frozenset(
         "max_notifications_per_incident",
         "game_password",
         "game_version",
+        "devtest_save_directory",
         "minutes_to_wait_before_login",
         "check_in_hour",
         "demon_wait_before_accept_seconds",
@@ -36,6 +37,7 @@ APP_CONFIG_DEFAULTS = {
     "max_notifications_per_incident": 5,
     "game_password": "",
     "game_version": "global",
+    "devtest_save_directory": "",
     "minutes_to_wait_before_login": 30,
     "check_in_hour": 3,
 }
@@ -47,7 +49,7 @@ def get_config_yaml_path() -> str:
 
 def load_yaml_config(file_path: str) -> dict:
     """Load a YAML configuration file and return its contents as a dictionary."""
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="utf-8-sig") as file:
         data = yaml.safe_load(file)
     return data if isinstance(data, dict) else {}
 

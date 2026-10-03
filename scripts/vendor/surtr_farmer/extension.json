@@ -2,21 +2,21 @@
   "schema_version": 2,
   "id": "surtr_farmer",
   "display_name": "Surtr Farmer",
-  "version": "0.6.4",
+  "version": "0.7.5",
   "core_api_version": 1,
   "placement_after": "Rat Farmer",
   "accepts_game_password": true,
-  "requirements_html": "<p><strong>Recommended teams:</strong></p><ul><li>LR Meli, SheMeli, SheBan, R King</li><li>Odin, Gawain, G Tyr, G Hel</li></ul><p><strong>License key needed.</strong> Paste your key here the first time you use a private Farmer. Don't have a key yet? Ask us for a free one. Once it works, we'll remember it securely on this Windows account, so you won't need to enter it again.</p><p>You'll need an internet connection whenever you start a private Farmer. Each key can only be used on the first computer it activates.</p><p>Set your Surtr team before starting. The Farmer supports teams with or without Odin and stops after your chosen number of clears.</p>",
+  "requirements_html": "<p><strong>Recommended teams:</strong></p><ul><li>LR Meli, SheMeli, SheBan, R King</li><li>Odin, Gawain, G Tyr, Albedo</li></ul><p><strong>License key needed.</strong> Paste your key here the first time you use a private Farmer. Don't have a key yet? Ask us for a free one. Once it works, we'll remember it securely on this Windows account, so you won't need to enter it again.</p><p>You'll need an internet connection whenever you start a private Farmer. Each key can only be used on the first computer it activates.</p><p>Set your Surtr team before starting. The Farmer supports teams with or without Odin and stops after your chosen number of clears.</p>",
   "image": "assets/gui/surtr_farmer.png",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "4155a46a5b61ee6cf894fcba3f3924644c19d2f3"
+    "commit": "900cefb55d3828d24b5017c44b13ab8adf0b1d06"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_surtr_core-0.6.4-cp312-cp312-win_amd64.whl",
-    "sha256": "b432ec154e531157f0b5f9111c076a6873cd1d73381a44626a9fb2f44ba203e2",
+    "wheel": "wheels/autofarmers_surtr_core-0.7.5-cp312-cp312-win_amd64.whl",
+    "sha256": "627759b60d019fe404df86c71bccfe3052bd74d801ac07348c13c68c448a0a5e",
     "module": "autofarmers_surtr_core",
     "callable": "main"
   },
