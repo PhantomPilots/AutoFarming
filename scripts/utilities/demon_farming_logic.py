@@ -10,6 +10,8 @@ from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
+from utilities.reward_reader import INDURA_REWARDS, RewardSet
+from utilities.reward_tracker import RewardTracker
 from utilities.utilities import (
     capture_window,
     find,
@@ -50,6 +52,9 @@ class IDemonFarmer(IFarmer):
 
     # To control the sleeping time
     sleeper = threading.Event()
+
+    # Reads the reward tiles of the result screens, the GUI sums the '[REWARDS]' lines
+    _rewards: RewardTracker | None = None
 
     def __init__(
         self,
@@ -121,9 +126,22 @@ class IDemonFarmer(IFarmer):
         """Return an optional label inserted before the word 'demons'."""
         return ""
 
+    def reward_set(self) -> RewardSet | None:
+        """Return the rewards to read on the result screen, or None to not track them."""
+        return INDURA_REWARDS if "indura" in self.result_demon_label().lower() else None
+
+    @property
+    def rewards(self) -> RewardTracker | None:
+        """Reward tracker of the demon being farmed, created on first use."""
+        if self._rewards is None and (reward_set := self.reward_set()) is not None:
+            self._rewards = RewardTracker(reward_set, logger)
+        return self._rewards
+
     def going_to_demons_state(self):
         """Go to the demons page"""
         screenshot, window_location = capture_window()
+        if self.rewards is not None:
+            self.rewards.tick(screenshot)
 
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
@@ -266,6 +284,12 @@ class IDemonFarmer(IFarmer):
 
         self.ensure_fight_started(screenshot, window_location)
 
+        # The result screen shows the reward row: remember what it says before clicking through it
+        if self.rewards is not None and (
+            find(vio.victory, screenshot, threshold=0.6) or find(vio.demons_destroyed, screenshot, threshold=0.5)
+        ):
+            self.rewards.collect(screenshot)
+
         # If we see a skip
         find_and_click(vio.skip, screenshot, window_location)
 
@@ -283,6 +307,12 @@ class IDemonFarmer(IFarmer):
             else:
                 print("Couldn't defeat this demon :(")
                 print("[LOSS]")
+
+            if self.rewards is not None:
+                if victory:
+                    self.rewards.run_finished()
+                else:
+                    self.rewards.give_up()
 
             self.on_fight_finished(victory)
 
