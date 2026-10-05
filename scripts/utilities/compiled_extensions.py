@@ -1,4 +1,4 @@
-"""Discovery and validation for separately licensed compiled extensions."""
+"""Discovery and validation for compiled extensions with optional licensing."""
 
 from __future__ import annotations
 
@@ -118,7 +118,9 @@ def _validate_arg(arg: object, index: int) -> dict:
     return normalized
 
 
-def _validate_license(manifest: dict, normalized_args: list[dict]) -> dict:
+def _validate_license(manifest: dict, normalized_args: list[dict]) -> dict | None:
+    if "license" not in manifest:
+        return None
     license_declaration = _required(manifest, "license", dict, "manifest")
     scope = _required_string(license_declaration, "scope", "license")
     key_argument = _required_string(license_declaration, "key_argument", "license")
