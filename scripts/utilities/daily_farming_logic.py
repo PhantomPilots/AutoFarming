@@ -500,16 +500,16 @@ class DailyFarmer:
 
         find_and_click(vio.reward, screenshot, window_location)
         find_and_click(vio.patrol_reward_obtained, screenshot, window_location)
+
+        find_and_click(vio.patrol_autoset, screenshot, window_location, sleep_time=1)
         find_and_click(vio.patrol_setting_complete, screenshot, window_location)
 
-        patrol_rectangle = vio.hp_patrol.find(screenshot, threshold=0.7)
-        if len(patrol_rectangle):
-            patrol_image = crop_image(screenshot, patrol_rectangle[:2], patrol_rectangle[:2] + patrol_rectangle[2:])
-            find_and_click(
-                vio.dispatch,
-                patrol_image,
-                window_location=(window_location[0] + patrol_rectangle[0], window_location[1] + patrol_rectangle[1]),
-            )
+        find_and_click(
+            vio.dispatch,
+            screenshot,
+            window_location=window_location,
+            point_coordinates=(423, 707),
+        )
 
         # find_and_click(vio.claim_reward, screenshot, window_location, sleep_time=1)
         # find_and_click(vio.patrol_all, screenshot, window_location)
