@@ -9,6 +9,9 @@ def main():
     # Extract the password if given
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", "-p", type=str, default=None, help="Account password")
+    parser.add_argument(
+        "--max-pots", type=str, default="inf", help="Max number of stamina pots to use before stopping, or 'inf'"
+    )
     parser.add_argument("--do-dailies", action="store_true", default=False, help="Do dailies (default: False)")
     parser.add_argument(
         "--daily-pvp",
@@ -24,6 +27,7 @@ def main():
         do_dailies=args.do_dailies,
         do_daily_pvp=args.daily_pvp,
         password=args.password,
+        max_stamina_pots=args.max_pots,
     )
 
 
