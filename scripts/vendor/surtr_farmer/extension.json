@@ -2,21 +2,21 @@
   "schema_version": 2,
   "id": "surtr_farmer",
   "display_name": "Surtr Farmer",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "core_api_version": 1,
   "placement_after": "Rat Farmer",
   "accepts_game_password": true,
-  "requirements_html": "<p><strong>Recommended teams:</strong></p><ul><li>LR Meli, SheMeli, SheBan, R King</li><li>Odin, Gawain, G Tyr, Hel/Albedo</li></ul><p>Set your Surtr team before starting. The Farmer supports teams with or without Odin and stops after your chosen number of clears.</p>",
+  "requirements_html": "<p><strong>Recommended teams:</strong></p><ul><li>LR Meli, SheMeli, SheBan, R King</li><li>Odin, Gawain, G Tyr, Albedo/Hel/Freyr</li></ul><p>Set your Surtr team before starting. The Farmer supports teams with or without Odin and stops after your chosen number of clears.</p>",
   "image": "assets/gui/surtr_farmer.png",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "835bd06378ac90e5ac7d3a7f19003285943636ed"
+    "commit": "a8542dce59bb5edabd853811023fcfeb32fedccf"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_surtr_core-0.8.0-cp312-cp312-win_amd64.whl",
-    "sha256": "b82a0245edd15d5e6bc4ce77dd474266422d0b3ffebd92ba19b799c9ef7749dc",
+    "wheel": "wheels/autofarmers_surtr_core-0.8.1-cp312-cp312-win_amd64.whl",
+    "sha256": "4374c7e3e0c745bb1e57ef34c77b6d55bd3cd1fb03ea2b9317204b8207806a68",
     "module": "autofarmers_surtr_core",
     "callable": "main"
   },
