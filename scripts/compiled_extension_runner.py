@@ -202,6 +202,16 @@ def load_validated_extension(bundle_dir: Path):
         yield loaded
 
 
+def _enable_reward_tracking(extension_id: str):
+    """Let the core demon farmer read the reward rows of the extension's result screens."""
+    if extension_id != "indura_farmer":
+        return
+    from utilities.demon_farming_logic import IDemonFarmer
+    from utilities.reward_sets import INDURA_REWARDS
+
+    IDemonFarmer.reward_set = INDURA_REWARDS
+
+
 def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool = False) -> int:
     manifest = load_extension_manifest(bundle_dir, verify_hash=True)
     if manifest["availability_error"]:
@@ -217,6 +227,7 @@ def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool =
         entrypoint = getattr(module, callable_name, None)
         if not callable(entrypoint):
             raise ExtensionValidationError(f"Compiled module does not expose callable {callable_name!r}")
+        _enable_reward_tracking(manifest["id"])
         result = entrypoint(extension_args + secret_args)
         return 0 if result is None else int(result)
 
