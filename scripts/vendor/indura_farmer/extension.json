@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "indura_farmer",
   "display_name": "Indura Farmer",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "core_api_version": 1,
   "placement_after": "Demon Farmer",
   "accepts_game_password": true,
@@ -10,13 +10,13 @@
   "image": "assets/gui/indura_farmer.jpg",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "dc3a5a2ce4ce90fab39075558eb824b5687c65ce"
+    "commit": "ff358efa015c478e520ae9fe9a66a2bcc6c8d2c8"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_indura_core-1.4.7-cp312-cp312-win_amd64.whl",
-    "sha256": "e8a09704f6ec7afc11555803e4df350f3c558be518f8adbdcbb1d318263144c3",
+    "wheel": "wheels/autofarmers_indura_core-1.5.0-cp312-cp312-win_amd64.whl",
+    "sha256": "81f2c0c625285541b74bddd6a80f4b57726a464d962788a9ffcff1a245d1f5e2",
     "module": "autofarmers_indura_core",
     "callable": "main"
   },
