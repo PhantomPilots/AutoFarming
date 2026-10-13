@@ -8,6 +8,9 @@ from utilities.reward_reader import RewardReader
 from utilities.reward_sets import RewardSet
 from utilities.logging_utils import LoggerWrapper
 
+# Save a crop of every reward row read, to check and calibrate the reading. Off to spare the users' disk.
+SAVE_REWARD_ROWS = False
+
 
 class RewardTracker:
     """Keep the most complete read of the current run, then report it once the run is counted.
@@ -26,6 +29,7 @@ class RewardTracker:
         self._tiles_screenshot = None
         self._last_screenshot = None
         self._watch_until = 0.0
+        self._error_saved = False  # One error screenshot per run is enough
 
     def collect(self, screenshot: np.ndarray):
         """Read the reward tiles on this screenshot, keeping the read with the most tiles."""
@@ -36,6 +40,10 @@ class RewardTracker:
             tiles = self._reader.find_tiles(screenshot)
         except Exception as exc:  # A vision hiccup must never stop the farmer
             self._logger.warning(f"Couldn't read the rewards: {exc}")
+            if not self._error_saved:
+                self._error_saved = True
+                path = self._logger.save_image(screenshot, subdir=self._log_subdir)
+                print(f"[WARNING] Result screen saved to {path}")
             return
         if len(tiles) > len(self._tiles):
             self._tiles = tiles
@@ -59,6 +67,7 @@ class RewardTracker:
     def give_up(self):
         """A new run starts: drop what wasn't reported, and keep the last result screen if we were watching."""
         self._tiles, self._tiles_screenshot = [], None
+        self._error_saved = False
         if not self._watch_until:
             return
         self._watch_until = 0.0
@@ -74,6 +83,7 @@ class RewardTracker:
             return False
         self._watch_until = 0.0
         self._last_screenshot = None
+        self._error_saved = False
 
         totals: dict[str, int] = {}
         for tile in tiles:
@@ -81,7 +91,8 @@ class RewardTracker:
         labels = self._set.labels
         print("Rewards of this run: " + ", ".join(f"{labels.get(k, k)} x{v}" for k, v in totals.items()))
         print(f"[REWARDS] {json.dumps(totals)}")
-        self._save_reward_row(screenshot, tiles)
+        if SAVE_REWARD_ROWS:
+            self._save_reward_row(screenshot, tiles)
         return True
 
     def _save_reward_row(self, screenshot: np.ndarray | None, tiles: list):
