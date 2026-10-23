@@ -335,7 +335,8 @@ class DailyFarmer:
 
         # Click on the battle
         find_and_click(vio.event_special_fs_battle, screenshot, window_location)
-        find_and_click(vio.event_special_fs_dungeon, screenshot, window_location)
+        if find_and_click(vio.event_special_fs_dungeon, screenshot, window_location):
+            return
 
         # Fight...
         find_and_click(
@@ -354,7 +355,6 @@ class DailyFarmer:
 
         # Exit this state
         if find(vio.ok_main_button, screenshot) and not find(vio.ad_wheel_play, screenshot, threshold=0.6):
-            print("Finished special FS event...")
             DailyFarmer.event_special_dungeon_complete = True
             DailyFarmer.current_state = States.FINISHED_SPECIAL_EVENT_FS
 
@@ -428,7 +428,8 @@ class DailyFarmer:
         find_and_click(vio.fort_solgress_special, screenshot, window_location)
 
         # Click on the 6th floor
-        find_and_click(vio.fs_special_6th_floor, screenshot, window_location)
+        if find_and_click(vio.fs_special_6th_floor, screenshot, window_location):
+            return
 
         # Click on the event dungeon
         find_and_click(vio.fs_event_dungeon, screenshot, window_location)
