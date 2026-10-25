@@ -363,7 +363,7 @@ class DailyFarmer:
         screenshot, window_location = capture_window()
 
         # If we have a monthly...
-        if in_ad_wheel := self.check_ad_wheel(screenshot, window_location):
+        if self.check_ad_wheel(screenshot, window_location):
             # We don't want to do anything else until the ad wheel is complete
             return
 
@@ -372,9 +372,13 @@ class DailyFarmer:
             DailyFarmer.current_state = States.FORT_SOLGRESS_STATE
             return
 
-        find_and_click(vio.ok_main_button, screenshot, window_location)
-        find_and_click(vio.daily_result, screenshot, window_location)
-        find_and_click(vio.back, screenshot, window_location)
+        for target in (
+            vio.daily_result,
+            vio.back,
+            vio.ok_main_button,
+        ):
+            if find_and_click(target, screenshot, window_location):
+                break
 
     def check_ad_wheel(self, screenshot, window_location, threshold=0.7) -> bool:
         """For when we have a monthly"""
