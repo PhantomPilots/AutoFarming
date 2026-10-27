@@ -956,6 +956,15 @@ class FarmerController(QObject):
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
 
+        if "--max-pots" in self._arg_values:
+            try:
+                limit = str(self._arg_values["--max-pots"]).strip().lower()
+                if limit != "inf" and int(limit) < 0:
+                    raise ValueError
+            except ValueError:
+                self._append_output("[ERROR] Enter a whole number of 0 or more, or inf for no limit.\n")
+                return
+
         for arg in self.farmer["args"]:
             if arg["type"] == "text" and "choices" in arg:
                 value = str(self._arg_values.get(arg["name"], ""))
@@ -3134,13 +3143,14 @@ class FarmerTab(QWidget):
         # Stamina Pots
         pots = snapshot.session_pots
         self._sp_pots_lbl.setText(str(pots))
-        arg_values = self.controller.get_arg_values()
-        max_pots_raw = arg_values.get("--max-pots", arg_values.get("max_stamina_pots"))
+        max_pots_raw = self.controller.get_arg_values().get("--max-pots")
         try:
-            max_pots = int(float(str(max_pots_raw)))
-            self._sp_pots_bar.setMaximum(max_pots)
+            max_pots = int(str(max_pots_raw).strip())
+            if max_pots < 0:
+                raise ValueError
+            self._sp_pots_bar.setMaximum(max(max_pots, 1))
             self._sp_pots_bar.setValue(min(pots, max_pots))
-        except (TypeError, ValueError, OverflowError):
+        except (ValueError, OverflowError):
             self._sp_pots_bar.setMaximum(max(pots, 1))
             self._sp_pots_bar.setValue(pots)
 

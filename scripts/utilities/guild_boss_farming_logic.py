@@ -3,12 +3,11 @@ from enum import Enum, auto
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
-from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -17,7 +16,6 @@ from utilities.utilities import (
     is_game_window_focused,
     press_key,
 )
-from utilities.vision import Vision
 
 logger = LoggerWrapper(name="GuildBossLogger", log_to_file=False)
 
@@ -26,7 +24,6 @@ class States(Enum):
     GOING_TO_GB = auto()
     FINDING_BOSS = auto()
     FIGHTING = auto()
-    EXIT_FARMER = auto()
 
 
 class GuildBossFarmer(IFarmer):
@@ -40,7 +37,7 @@ class GuildBossFarmer(IFarmer):
         do_dailies=False,  # Do we halt demon farming to do dailies?
         do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
-        max_stamina_pots="inf",  # Stop farming once we've used this many stamina pots
+        max_stamina_pots: int | float = float("inf"),  # Stop farming once we've used this many stamina pots
     ):
         # To initialize the Daily Farmer thread
         super().__init__(do_daily_pvp=do_daily_pvp)
@@ -54,9 +51,9 @@ class GuildBossFarmer(IFarmer):
         self.current_state = starting_state
 
         # Once we've used this many pots and run out of stamina again, we stop the farmer
-        self.max_stamina_pots = float(max_stamina_pots)
+        self.max_stamina_pots = max_stamina_pots
         if self.max_stamina_pots < float("inf"):
-            print(f"We're gonna use at most {int(self.max_stamina_pots)} stamina pots, then stop farming.")
+            print(f"We'll use up to {self.max_stamina_pots} stamina pots.")
 
         # Set specific properties of our DailyFarmer
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
@@ -126,9 +123,7 @@ class GuildBossFarmer(IFarmer):
         # We may need to restore stamina
         if find(vio.stamina_pot, screenshot) and find(vio.restore_stamina, screenshot):
             if IFarmer.stamina_pots >= self.max_stamina_pots:
-                print(f"We reached the max number of {int(self.max_stamina_pots)} stamina pots. Stopping the farmer.")
-                self.current_state = States.EXIT_FARMER
-                return
+                self.exit_farmer_state("Potion limit reached. Farming stopped.")
             if find_and_click(vio.restore_stamina, screenshot, window_location):
                 IFarmer.stamina_pots += 1
                 logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
@@ -167,7 +162,6 @@ class GuildBossFarmer(IFarmer):
                 States.GOING_TO_GB: self.going_to_gb_state,
                 States.FINDING_BOSS: self.finding_boss_state,
                 States.FIGHTING: self.fighting_state,
-                States.EXIT_FARMER: self.exit_farmer_state,
             },
             login_return_state=States.GOING_TO_GB,
             sleep_seconds=0.7,
