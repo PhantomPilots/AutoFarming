@@ -8,6 +8,8 @@ from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
+from utilities.reward_sets import GUILD_BOSS_REWARDS
+from utilities.reward_tracker import RewardTracker
 from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
@@ -50,6 +52,9 @@ class GuildBossFarmer(IFarmer):
             print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         self.current_state = starting_state
+
+        # Reads the reward tiles of the result screens, the GUI sums the '[REWARDS]' lines
+        self.rewards = RewardTracker(GUILD_BOSS_REWARDS, logger)
 
         # Set specific properties of our DailyFarmer
         IFarmer.daily_farmer.add_complete_callback(self.dailies_complete_callback)
@@ -94,6 +99,7 @@ class GuildBossFarmer(IFarmer):
 
     def fighting_state(self):
         screenshot, window_location = capture_window()
+        self.rewards.tick(screenshot)
 
         # First, check if we should go back to the initial state
         if find(vio.belgius_hel, screenshot, threshold=0.8):
@@ -102,6 +108,14 @@ class GuildBossFarmer(IFarmer):
             return
 
         clicked_image = False
+
+        # The end-of-fight screens show what the boss dropped: remember it before clicking through
+        if (
+            find(vio.boss_destroyed, screenshot, threshold=0.6)
+            or find(vio.boss_results, screenshot)
+            or find(vio.boss_mission, screenshot)
+        ):
+            self.rewards.collect(screenshot)
 
         # If we've ended the fight...
         clicked_image |= find_and_click(vio.boss_destroyed, screenshot, window_location, threshold=0.6)
@@ -113,6 +127,7 @@ class GuildBossFarmer(IFarmer):
             GuildBossFarmer.num_fights += 1
             logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
             print("[CLEAR]")
+            self.rewards.run_finished()
             return
         clicked_image |= find_and_click(vio.boss_results, screenshot, window_location)
 
@@ -141,6 +156,7 @@ class GuildBossFarmer(IFarmer):
             self.maybe_reset_daily_checkin_flag()
 
             # If we're not checking in, let's keep fighting
+            self.rewards.give_up()  # A new fight starts, the previous result screens are gone
             clicked_image |= find_and_click(vio.again, screenshot, window_location)
 
         elif find(vio.failed, screenshot):

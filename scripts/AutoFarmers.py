@@ -24,12 +24,13 @@ import hashlib
 import json
 import math
 import os
+import random
 import re
 import shutil
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 _DEVTEST_RUNNER_FLAG = "--devtest-runner"
 if sys.argv[1:2] == [_DEVTEST_RUNNER_FLAG]:
@@ -44,14 +45,19 @@ from PyQt5.QtCore import (
     QRegularExpression,
     QStringListModel,
     Qt,
+    QEasingCurve,
+    QPropertyAnimation,
     QTimer,
+    QByteArray,
     QUrl,
     pyqtSignal,
 )
 from PyQt5.QtGui import (
     QColor,
+    QCursor,
     QDesktopServices,
     QFont,
+    QFontDatabase,
     QIcon,
     QImage,
     QPainter,
@@ -71,6 +77,7 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QFormLayout,
     QFrame,
+    QGraphicsOpacityEffect,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -90,6 +97,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from PyQt5.QtSvg import QSvgRenderer
+
 from utilities.app_config import (
     APP_CONFIG_DEFAULTS,
     config,
@@ -106,6 +115,7 @@ from utilities.image_assets import (
     normalize_game_version,
 )
 from utilities.logging_utils import remove_expired_logged_images
+from utilities.reward_sets import GUILD_BOSS_REWARDS, INDURA_REWARDS, RewardSet
 
 _COMPILED_EXTENSION_RUNNER_FLAG = "--compiled-extension-runner"
 if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
@@ -115,7 +125,7 @@ if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
 
 # Free software message to display in GUI
 FREE_SOFTWARE_MESSAGE = """=====================================================================
-                           🆓 FREE SOFTWARE 🆓
+                              FREE SOFTWARE
 
   The AutoFarmers core is FREE and open source. Optional compiled
   extensions may be distributed under separate license terms.
@@ -128,59 +138,240 @@ FREE_SOFTWARE_MESSAGE = """=====================================================
 
 """
 
-# Tokyo Night (dark) palette
+_HALLOWEEN_PUMPKIN = r"""
+          __
+        _/  \_
+   .-'``  ||  ``'-.
+  /    /\    /\    \
+ |    /__\  /__\    |
+ |        /\        |
+ |  \^^^^^^^^^^^^/  |
+  \  `\/\/\/\/\/`  /
+   '-.__________.-'
+""".strip("\n").split("\n")
+
+INK_CYAN = "#0093D6"
+INK_MAGENTA = "#D6006F"
+INK_YELLOW = "#F5C400"
+INK_VIOLET = "#5B4EA2"
+INK_ORANGE = "#F08300"
+INK_SLATE = "#6E6C66"
+
 C_DARK = {
     "bg": "#0f0f17",
+    "rail": "#171724",
     "panel": "#171724",
     "panel2": "#1e1e2e",
     "panel3": "#1a1a2e",
+    "field": "#0f0f17",
     "border": "#252535",
     "border2": "#2e2e45",
-    "accent": "#8b5cf6",
-    "accent_light": "#c4b5fd",
-    "running": "#10b981",
-    "warning": "#f59e0b",
-    "error": "#ef4444",
-    "blue": "#3b82f6",
-    "text": "#e2e8f0",
-    "dim": "#9ca3af",
-    "muted": "#6b7280",
-    "dark": "#4b5563",
-    "darker": "#374151",
+    "accent": "#2DB0F0",
+    "accent_light": "#6CCBF7",
+    "running": "#21B874",
+    "running_hover": "#2FCB85",
+    "running_pressed": "#17945C",
+    "warning": "#E8B21E",
+    "error": "#F0554A",
+    "blue": "#2DB0F0",
+    "text": "#EEEDE6",
+    "dim": "#C4C2BA",
+    "muted": "#96948C",
+    "dark": "#64625C",
+    "darker": "#252535",
     "term_bg": "#16161e",
-    "term_text": "#c0caf5",
+    "term_text": "#E4E2DA",
+    "term_rule": "#5E5C57",
     "tile_bg": "#171724",
     "tile_hover": "#1e1e2e",
     "btn_sec_bg": "transparent",
-    "btn_sec_text": "#6b7280",
+    "btn_sec_text": "#EEEDE6",
+    "home_ink": "#EEEDE6",
+    "on_home": "#0f0f17",
 }
 
-# Light palette
 C_LIGHT = {
-    "bg": "#F4F7FB",
-    "panel": "#E9F1FF",
-    "panel2": "#eef4ff",
-    "panel3": "#e2ecff",
-    "border": "#D6E4FF",
-    "border2": "#c5d8ff",
-    "accent": "#3B82F6",
-    "accent_light": "#1d4ed8",
-    "running": "#16a34a",
-    "warning": "#d97706",
-    "error": "#dc2626",
-    "blue": "#2563eb",
-    "text": "#1A2A44",
-    "dim": "#2d4a6e",
-    "muted": "#5a7a9f",
-    "dark": "#8aaac8",
-    "darker": "#dbe8f8",
-    "term_bg": "#1e1e2e",
-    "term_text": "#c0caf5",
-    "tile_bg": "#FFFFFF",
-    "tile_hover": "#EEF4FF",
-    "btn_sec_bg": "#E5EDFF",
-    "btn_sec_text": "#3B82F6",
+    "bg": "#F4F3EE",
+    "rail": "#E8E6DE",
+    "panel": "#FBFAF7",
+    "panel2": "#ECEAE3",
+    "panel3": "#EFEDE7",
+    "field": "#FFFFFF",
+    "border": "#D9D6CB",
+    "border2": "#C2BEB1",
+    "accent": "#0093D6",
+    "accent_light": "#006A9C",
+    "running": "#00995A",
+    "running_hover": "#00AD66",
+    "running_pressed": "#007D4A",
+    "warning": "#B07800",
+    "error": "#D8352A",
+    "blue": "#0093D6",
+    "text": "#16161A",
+    "dim": "#3F3F46",
+    "muted": "#66645E",
+    "dark": "#9A978E",
+    "darker": "#E2DFD6",
+    "term_bg": "#16161e",
+    "term_text": "#E4E2DA",
+    "term_rule": "#6E6C66",
+    "tile_bg": "#FBFAF7",
+    "tile_hover": "#FFFFFF",
+    "btn_sec_bg": "transparent",
+    "btn_sec_text": "#16161A",
+    "home_ink": "#1e1e2e",
+    "on_home": "#F4F3EE",
 }
+
+_WORDMARK_ACCENT_DARK = "#8b5cf6"
+_WORDMARK_ACCENT_LIGHT = "#3B82F6"
+_WORDMARK_TEXT_DARK = "#e2e8f0"
+_WORDMARK_TEXT_LIGHT = "#1A2A44"
+
+C_HALLOWEEN = {
+    "bg": "#120C18",
+    "rail": "#1A1123",
+    "panel": "#1F1529",
+    "panel2": "#2A1C38",
+    "panel3": "#24182F",
+    "field": "#120C18",
+    "border": "#33233F",
+    "border2": "#45305A",
+    "accent": "#FF7A1A",
+    "accent_light": "#FFA559",
+    "running": "#7ED957",
+    "running_hover": "#95E472",
+    "running_pressed": "#5FB83C",
+    "warning": "#FFB627",
+    "error": "#E5384F",
+    "blue": "#9B5DE5",
+    "text": "#F3E9DC",
+    "dim": "#D2C3B4",
+    "muted": "#A493AC",
+    "dark": "#6B5878",
+    "darker": "#33233F",
+    "term_bg": "#0B0710",
+    "term_text": "#EADFCD",
+    "term_rule": "#6B5878",
+    "tile_bg": "#1F1529",
+    "tile_hover": "#2A1C38",
+    "btn_sec_bg": "transparent",
+    "btn_sec_text": "#F3E9DC",
+    "home_ink": "#FF7A1A",
+    "on_home": "#120C18",
+}
+_HALLOWEEN_INKS = {
+    "INK_CYAN": "#3DDC97",
+    "INK_MAGENTA": "#9B5DE5",
+    "INK_YELLOW": "#FFB627",
+    "INK_VIOLET": "#E5384F",
+    "INK_ORANGE": "#FF9F43",
+    "INK_SLATE": "#6B5878",
+}
+
+UI_FONT_FAMILY = "Consolas"
+UI_FONT = f"{UI_FONT_FAMILY}, 'Cascadia Mono', monospace"
+MONO_FONT = "Consolas, 'Cascadia Mono', monospace"
+
+_ICON_PATHS = {
+    "home": '<path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9v12h13V9"/><path d="M10 21v-6h4v6"/>',
+    "back": '<path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>',
+    "chevron": '<path d="M9 6l6 6-6 6"/>',
+    "play": '<path d="M7 4.5v15l12-7.5z" fill="{c}" stroke="none"/>',
+    "resize": '<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/>',
+    "clear": '<path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M6 7l1 13h10l1-13"/>'
+    '<path d="M9 7V4h6v3"/>',
+    "settings": '<path d="M4 6h9"/><path d="M19 6h1"/><path d="M4 12h3"/><path d="M13 12h7"/><path d="M4 18h11"/>'
+    '<circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/>',
+    "flask": '<path d="M9 3h6"/><path d="M10 3v6.5L4.6 18.8A1.5 1.5 0 0 0 5.9 21h12.2a1.5 1.5 0 0 0 1.3-2.2L14 9.5V3"/>'
+    '<path d="M7.5 15h9"/>',
+    "info": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.6v.2"/>',
+    "moon": '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.6 6.6 0 0 0 10.5 10.5z"/>',
+    "paw": '<circle cx="6.5" cy="10" r="1.8"/><circle cx="10" cy="5.8" r="1.8"/><circle cx="14" cy="5.8" r="1.8"/>'
+    '<circle cx="17.5" cy="10" r="1.8"/><path d="M8 17.2c0-2.8 1.8-5 4-5s4 2.2 4 5c0 1.5-1.1 2.6-2.5 2.6-.7 0-1-.4-1.5-.4'
+    's-.8.4-1.5.4C9.1 19.8 8 18.7 8 17.2z"/>',
+    "horns": '<path d="M5 3c0 3.6 1.6 5.8 4 6.8"/><path d="M19 3c0 3.6-1.6 5.8-4 6.8"/><circle cx="12" cy="14.5" r="6"/>'
+    '<path d="M9.8 13.6h.01"/><path d="M14.2 13.6h.01"/><path d="M10 17.2c1.2.8 2.8.8 4 0"/>',
+    "crown": '<path d="M3.5 8.5l4.2 3.8L12 5l4.3 7.3 4.2-3.8-1.8 10H5.3z"/><path d="M5.5 21h13"/>',
+    "calendar": '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/>'
+    '<path d="M3.5 10h17"/><path d="M9 15.2l2 2 4-4"/>',
+    "key": '<circle cx="8" cy="15.5" r="4"/><path d="M10.9 12.6L19 4.5"/><path d="M16 7.5l2.2 2.2"/>'
+    '<path d="M13.6 9.9l2 2"/>',
+    "grid": '<rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/>'
+    '<rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/>',
+    "star": '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.2 1 5.8L12 16.9l-5.2 2.8 1-5.8-4.3-4.2 5.9-.8z"/>',
+    "star_fill": '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.2 1 5.8L12 16.9l-5.2 2.8 1-5.8-4.3-4.2 5.9-.8z" fill="{c}"/>',
+    "gift": '<rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8.5h14V12"/><path d="M12 8v12.5"/>'
+    '<path d="M12 8C10.6 4.6 7 4.4 7 6.5 7 7.6 9 8 12 8z"/><path d="M12 8c1.4-3.4 5-3.6 5-1.5 0 1.1-2 1.5-5 1.5z"/>',
+    "pumpkin": '<path d="M12 7c-.6-2.2.6-3.8 2.6-4.3"/><ellipse cx="12" cy="14" rx="8.5" ry="6.5"/>'
+    '<path d="M12 7.5c-2.2 0-3.6 2.9-3.6 6.5s1.4 6.5 3.6 6.5 3.6-2.9 3.6-6.5-1.4-6.5-3.6-6.5z"/>',
+    "sun": '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2"/><path d="M12 19.5v2"/><path d="M2.5 12h2"/>'
+    '<path d="M19.5 12h2"/><path d="M5.3 5.3l1.4 1.4"/><path d="M17.3 17.3l1.4 1.4"/><path d="M5.3 18.7l1.4-1.4"/>'
+    '<path d="M17.3 6.7l1.4-1.4"/>',
+}
+
+
+def _cobweb_pixmap(size: int, color: str) -> QPixmap:
+    spokes = "".join(f'<path d="M64 0L{x} {y}"/>' for x, y in ((0, 0), (8, 30), (22, 50), (40, 62), (64, 64)))
+    rings = (
+        '<path d="M52 0Q54 6 59 8Q60 12 64 12"/>'
+        '<path d="M38 0Q41 11 49 15Q51 22 57 24Q60 27 64 27"/>'
+        '<path d="M22 0Q27 16 38 22Q41 33 50 37Q55 42 64 43"/>'
+    )
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="{color}"'
+        f' stroke-width="1" stroke-linecap="round">{spokes}{rings}</svg>'
+    )
+    renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
+    pixmap = QPixmap(size * 2, size * 2)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter)
+    painter.end()
+    pixmap.setDevicePixelRatio(2)
+    return pixmap
+
+
+def svg_icon(name: str, color: str, size: int = 16) -> QIcon:
+    body = _ICON_PATHS[name].replace("{c}", color)
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="{color}"'
+        f' stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{body}</svg>'
+    )
+    renderer = QSvgRenderer(QByteArray(svg.encode("utf-8")))
+    scale = 2
+    pixmap = QPixmap(size * scale, size * scale)
+    pixmap.fill(Qt.transparent)
+    painter = QPainter(pixmap)
+    painter.setRenderHint(QPainter.Antialiasing)
+    renderer.render(painter)
+    painter.end()
+    pixmap.setDevicePixelRatio(scale)
+    return QIcon(pixmap)
+
+
+def _relative_luminance(hex_color: str) -> float:
+    color = QColor(hex_color)
+
+    def channel(value: float) -> float:
+        return value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4
+
+    return 0.2126 * channel(color.redF()) + 0.7152 * channel(color.greenF()) + 0.0722 * channel(color.blueF())
+
+
+def _on_ink(hex_color: str) -> str:
+    lum = _relative_luminance(hex_color)
+    ink_lum = _relative_luminance("#16161A")
+    contrast_white = 1.05 / (lum + 0.05)
+    contrast_ink = (lum + 0.05) / (ink_lum + 0.05)
+    return "#16161A" if contrast_ink >= contrast_white else "#FFFFFF"
+
+
+def _tint(hex_color: str, alpha: float) -> str:
+    color = QColor(hex_color)
+    return f"rgba({color.red()},{color.green()},{color.blue()},{alpha})"
+
 
 # Theme persistence
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -220,40 +411,62 @@ def _restart_application() -> bool:
 
 
 _ACTIVE_THEME = _load_theme()
-C = C_LIGHT if _ACTIVE_THEME == "light" else C_DARK
+_HALLOWEEN = _ACTIVE_THEME == "halloween"
+C = C_HALLOWEEN if _HALLOWEEN else C_LIGHT if _ACTIVE_THEME == "light" else C_DARK
+_WORDMARK_ACCENT = _WORDMARK_ACCENT_LIGHT if _ACTIVE_THEME == "light" else _WORDMARK_ACCENT_DARK
+_WORDMARK_TEXT = _WORDMARK_TEXT_LIGHT if _ACTIVE_THEME == "light" else _WORDMARK_TEXT_DARK
+if _HALLOWEEN:
+    globals().update(_HALLOWEEN_INKS)
+    _WORDMARK_ACCENT = C_HALLOWEEN["accent"]
+    _WORDMARK_TEXT = C_HALLOWEEN["text"]
 
 
 # Action Button Styles
 def _action_btn(base: str, hover: str, pressed: str, color: str = "white") -> str:
     return (
-        f"QPushButton {{ background-color: {base}; color: {color};"
-        f" font-weight: bold; padding: 7px 4px; border: none; border-radius: 6px; }}"
+        f"QPushButton {{ background-color: {base}; color: {color}; font-family: {UI_FONT};"
+        f" font-size: 13px; font-weight: 700; padding: 9px 10px; border: none; border-radius: 8px; }}"
         f"QPushButton:hover {{ background-color: {hover}; }}"
         f"QPushButton:pressed {{ background-color: {pressed}; }}"
-        f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['muted']}; }}"
+        f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['dark']}; }}"
     )
 
 
-_START_HOVER = "#34d399" if _ACTIVE_THEME == "dark" else "#22c55e"
-_START_PRESSED = "#059669" if _ACTIVE_THEME == "dark" else "#15803d"
+def _outline_btn(color: str) -> str:
+    return (
+        f"QPushButton {{ background: transparent; color: {color}; font-family: {UI_FONT};"
+        f" font-size: 13px; font-weight: 700; padding: 8px 10px; border: 2px solid {color}; border-radius: 8px; }}"
+        f"QPushButton:hover {{ background: {color}; color: {C['bg']}; }}"
+        f"QPushButton:pressed {{ background: {color}; color: {C['bg']}; }}"
+        f"QPushButton:disabled {{ color: {C['dark']}; border-color: {C['border']}; background: transparent; }}"
+    )
 
-BTN_START = _action_btn(C["running"], _START_HOVER, _START_PRESSED)
-BTN_STOP = _action_btn(C["error"], "#f87171", "#dc2626")
-BTN_PAUSE = _action_btn(C["warning"], "#fbbf24", "#d97706")
-BTN_RESIZE = _action_btn(C["blue"], "#60a5fa", "#2563eb")
-BTN_CLEAR = _action_btn(C["darker"], C["dark"], C["darker"], C["text"])
 
-_DEVTEST_BUTTON_COLORS = (
-    ("#252535", "#303044", "#1e1e2e") if _ACTIVE_THEME == "dark"
-    else ("#E5E7EB", "#D1D5DB", "#C3C7CD")
-)
+def _quiet_btn() -> str:
+    return (
+        f"QPushButton {{ background: transparent; color: {C['dim']}; font-family: {UI_FONT};"
+        f" font-size: 13px; font-weight: 700; padding: 6px 10px; border: 1px solid transparent; border-radius: 8px; }}"
+        f"QPushButton:hover {{ border-color: {C['border2']}; color: {C['text']}; background: {C['panel']}; }}"
+        f"QPushButton:pressed {{ background: {C['panel2']}; }}"
+        f"QPushButton:disabled {{ color: {C['dark']}; }}"
+    )
+
+
+BTN_START = _action_btn(C["running"], C["running_hover"], C["running_pressed"])
+BTN_STOP = _outline_btn(C["error"])
+BTN_PAUSE = _outline_btn(C["warning"])
+BTN_RESIZE = _quiet_btn()
+BTN_CLEAR = _quiet_btn()
+
+_DEVTEST_BUTTON_COLORS = (C["panel"], C["panel2"], C["darker"])
 BTN_DEVTEST = (
     f"QPushButton {{ background-color: {_DEVTEST_BUTTON_COLORS[0]}; color: {C['text']};"
-    f" padding: 7px 10px; border: 1px solid {C['border2']}; border-radius: 6px; }}"
-    f"QPushButton:hover {{ background-color: {_DEVTEST_BUTTON_COLORS[1]}; }}"
+    f" font-family: {UI_FONT}; font-weight: 700;"
+    f" padding: 7px 12px; border: 1px solid {C['border2']}; border-radius: 8px; }}"
+    f"QPushButton:hover {{ background-color: {_DEVTEST_BUTTON_COLORS[1]}; border-color: {C['text']}; }}"
     f"QPushButton:pressed {{ background-color: {_DEVTEST_BUTTON_COLORS[2]}; }}"
     f"QPushButton:focus {{ border-color: {C['accent']}; }}"
-    f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['muted']};"
+    f"QPushButton:disabled {{ background-color: {C['panel2']}; color: {C['dark']};"
     f" border-color: {C['border']}; }}"
 )
 
@@ -266,8 +479,18 @@ def _make_stylesheet() -> str:
 QWidget {{
     background-color: {C['bg']};
     color: {C['text']};
-    font-family: Consolas, monospace;
+    font-family: {UI_FONT};
     font-size: 13px;
+    selection-background-color: {INK_CYAN};
+    selection-color: #16161A;
+}}
+QToolTip {{
+    background: {C['text']};
+    color: {C['bg']};
+    border: none;
+    padding: 6px 8px;
+    font-family: {UI_FONT};
+    font-size: 12px;
 }}
 QScrollArea, QAbstractScrollArea {{
     background-color: {C['bg']};
@@ -277,77 +500,83 @@ QScrollArea > QWidget > QWidget {{
     background-color: {C['bg']};
 }}
 QLineEdit, QSpinBox, QDoubleSpinBox {{
-    background-color: {C['bg']};
+    background-color: {C['field']};
     border: 1px solid {C['border2']};
-    border-radius: 5px;
-    color: {C['dim']};
-    padding: 5px 8px;
+    border-radius: 8px;
+    color: {C['text']};
+    padding: 6px 9px;
     font-size: 13px;
-    selection-background-color: {C['accent']};
 }}
+QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover {{ border-color: {C['dark']}; }}
 QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {{
-    border-color: {C['accent']};
-}}
-QComboBox {{
-    background-color: {C['bg']};
-    border: 1px solid {C['border2']};
-    border-radius: 5px;
-    color: {C['dim']};
+    border: 2px solid {C['accent']};
     padding: 5px 8px;
-    font-size: 13px;
-    selection-background-color: {C['accent']};
 }}
-QComboBox:focus {{ border-color: {C['accent']}; }}
-QComboBox::drop-down {{ border: none; background: transparent; width: 18px; }}
-QComboBox QAbstractItemView {{
-    background: {C['panel2']};
+QLineEdit:disabled {{ color: {C['dark']}; background: {C['panel2']}; }}
+QComboBox {{
+    background-color: {C['field']};
     border: 1px solid {C['border2']};
-    color: {C['dim']};
-    selection-background-color: {C['accent']};
+    border-radius: 8px;
+    color: {C['text']};
+    padding: 6px 9px;
+    font-size: 13px;
+}}
+QComboBox:hover {{ border-color: {C['dark']}; }}
+QComboBox:focus {{ border-color: {C['accent']}; }}
+QComboBox:disabled {{ color: {C['dark']}; background: {C['panel2']}; }}
+QComboBox::drop-down {{ border: none; background: transparent; width: 20px; }}
+QComboBox QAbstractItemView {{
+    background: {C['field']};
+    border: 1px solid {C['border2']};
+    color: {C['text']};
+    selection-background-color: {INK_CYAN};
+    selection-color: #16161A;
     outline: none;
+    padding: 2px;
 }}
 QCheckBox {{
-    color: {C['muted']};
+    color: {C['text']};
     font-size: 13px;
-    spacing: 6px;
+    spacing: 8px;
 }}
+QCheckBox:disabled {{ color: {C['dark']}; }}
 QCheckBox::indicator {{
-    width: 13px; height: 13px;
-    border: 1px solid {C['border2']};
-    border-radius: 3px;
-    background: {C['bg']};
+    width: 15px; height: 15px;
+    border: 2px solid {C['dark']};
+    border-radius: 4px;
+    background: {C['field']};
 }}
+QCheckBox::indicator:hover {{ border-color: {C['text']}; }}
 QCheckBox::indicator:checked {{
-    background: {C['accent']};
-    border-color: {C['accent']};
+    background: {INK_CYAN};
+    border-color: {INK_CYAN};
     image: url({check_icon});
 }}
 QListWidget {{
-    background: {C['bg']};
+    background: {C['field']};
     border: 1px solid {C['border2']};
-    border-radius: 5px;
-    color: {C['dim']};
+    border-radius: 8px;
+    color: {C['text']};
     font-size: 13px;
 }}
 QListWidget::item:selected {{
-    background: {C['accent']};
-    color: white;
-    border-radius: 3px;
+    background: {INK_CYAN};
+    color: #16161A;
 }}
 QListWidget::item:hover {{ background: {C['panel2']}; }}
 QGroupBox {{
     border: 1px solid {C['border']};
     border-radius: 8px;
-    margin-top: 14px;
+    margin-top: 16px;
     font-size: 13px;
-    font-weight: bold;
+    font-weight: 700;
     color: {C['text']};
-    padding: 8px;
+    padding: 10px 8px 8px 8px;
 }}
 QGroupBox::title {{
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    left: 12px;
+    left: 10px;
     top: -1px;
     padding: 0 6px;
     color: {C['text']};
@@ -356,27 +585,29 @@ QGroupBox::title {{
 QLabel {{ color: {C['text']}; background: transparent; }}
 QPushButton {{
     border: 1px solid {C['border2']};
-    border-radius: 5px;
-    padding: 6px 12px;
-    color: {C['muted']};
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: {C['text']};
     background: transparent;
     font-size: 13px;
+    font-weight: 700;
 }}
-QPushButton:hover {{ border-color: {C['accent']}; color: {C['accent_light']}; }}
-QPushButton:pressed {{ background: transparent; border-color: {C['accent']}; }}
-QPushButton:disabled {{ color: {C['darker']}; border-color: {C['panel2']}; }}
+QPushButton:hover {{ border-color: {C['text']}; background: {C['panel']}; }}
+QPushButton:pressed {{ background: {C['panel2']}; }}
+QPushButton:focus {{ border-color: {C['accent']}; }}
+QPushButton:disabled {{ color: {C['dark']}; border-color: {C['border']}; }}
+QProgressBar {{ background: {C['border']}; border: none; border-radius: 0; }}
 QScrollBar:vertical {{
-    background: {C['panel2']};
-    width: 6px;
-    margin: 0;
-    border-radius: 3px;
+    background: transparent;
+    width: 10px;
+    margin: 2px;
 }}
 QScrollBar::handle:vertical {{
     background: {C['border2']};
     border-radius: 3px;
-    min-height: 20px;
+    min-height: 28px;
 }}
-QScrollBar::handle:vertical:hover {{ background: {C['accent']}; }}
+QScrollBar::handle:vertical:hover {{ background: {C['dark']}; }}
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{
     height: 0; background: none;
@@ -386,10 +617,12 @@ QTextEdit {{
     background: {C['term_bg']};
     color: {C['term_text']};
     border: none;
-    font-family: Consolas, monospace;
+    font-family: {MONO_FONT};
     font-size: 13px;
-    selection-background-color: {C['accent']};
+    selection-background-color: {INK_CYAN};
+    selection-color: #16161A;
 }}
+QMessageBox QLabel {{ font-size: 13px; }}
 """
 
 
@@ -839,6 +1072,17 @@ class FarmerStatusSnapshot:
     session_max_clears: int | None
     session_start_time: float | None
     last_clear_time: datetime.datetime | None
+    session_rewards: dict = field(default_factory=dict)  # item key -> total this session
+    last_rewards: dict = field(default_factory=dict)  # item key -> count of the latest run
+    reward_runs: int = 0  # runs whose rewards were read
+
+
+_REWARDS_MARKER = "[REWARDS]"
+# Farmers whose '[REWARDS]' output is shown in a rewards panel, with the rewards they can read
+REWARD_SETS: dict[str, RewardSet] = {
+    "Indura Farmer": INDURA_REWARDS,
+    "Guild Boss Farmer": GUILD_BOSS_REWARDS,
+}
 
 
 class FarmerController(QObject):
@@ -851,6 +1095,7 @@ class FarmerController(QObject):
     arg_values_changed = pyqtSignal(dict)
     error_occurred = pyqtSignal(str)
     devtest_busy_changed = pyqtSignal(bool)
+    rewards_changed = pyqtSignal()
 
     def __init__(self, farmer_def: dict, password_supplier=None, parent=None):
         super().__init__(parent)
@@ -867,7 +1112,11 @@ class FarmerController(QObject):
         self._session_start_time = None
         self._pause_start_time = None
         self._last_clear_time = None
+        self._session_rewards: dict[str, int] = {}
+        self._last_rewards: dict[str, int] = {}
+        self._reward_runs = 0
         self._process_exit_expected = False
+        self.ended_on_its_own = False
         self._uptime_timer = QTimer(self)
         self._uptime_timer.timeout.connect(self._update_session_progress)
         self._output_timer = QTimer(self)
@@ -916,6 +1165,9 @@ class FarmerController(QObject):
             session_max_clears=self._session_max_clears,
             session_start_time=self._session_start_time,
             last_clear_time=self._last_clear_time,
+            session_rewards=dict(self._session_rewards),
+            last_rewards=dict(self._last_rewards),
+            reward_runs=self._reward_runs,
         )
 
     def get_arg_values(self) -> dict[str, object]:
@@ -979,7 +1231,10 @@ class FarmerController(QObject):
             except Exception:
                 wait_save_failed = True
 
-        remove_expired_logged_images(self.farmer.get("image_log_subdirs", ()))
+        log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
+        if self.farmer["name"] in REWARD_SETS:
+            log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
+        remove_expired_logged_images(log_subdirs)
         self.resize_window()
 
         args = self._build_cli_args()
@@ -1052,6 +1307,7 @@ class FarmerController(QObject):
         self._process_exit_expected = False
         self._uptime_timer.start(1000)
         self.session_progress_changed.emit()
+        self.rewards_changed.emit()
 
         self.process.start(sys.executable, process_args)
         self._clear_secret_args()
@@ -1066,6 +1322,7 @@ class FarmerController(QObject):
         self._emit_status_snapshot()
 
     def stop(self):
+        self.ended_on_its_own = False
         if self.process is not None:
             self._process_exit_expected = True
             self._cleanup_pause_flag()
@@ -1179,6 +1436,7 @@ class FarmerController(QObject):
         self.process = None
         self._after_stop()
         if not expected_stop:
+            self.ended_on_its_own = True
             self._append_output("\nFarmer stopped.\n")
             self.running_changed.emit(False, 0)
         self._emit_status_snapshot()
@@ -1310,7 +1568,10 @@ class FarmerController(QObject):
         new_lines = []
         for line in text.splitlines(True):
             marker = line.strip()
-            if marker not in _HIDDEN_MARKERS:
+            if marker.startswith(_REWARDS_MARKER):
+                if self._session_start_time is not None:
+                    self._on_rewards_detected(marker[len(_REWARDS_MARKER) :])
+            elif marker not in _HIDDEN_MARKERS:
                 new_lines.append(line)
             elif self._session_start_time is not None:
                 if marker == "[CLEAR]":
@@ -1332,6 +1593,17 @@ class FarmerController(QObject):
         self._last_clear_time = datetime.datetime.now()
         self.session_progress_changed.emit()
         self._emit_status_snapshot()
+
+    def _on_rewards_detected(self, payload: str):
+        try:
+            rewards = {str(k): int(v) for k, v in json.loads(payload).items()}
+        except (ValueError, TypeError, AttributeError):
+            return
+        self._last_rewards = rewards
+        self._reward_runs += 1
+        for key, count in rewards.items():
+            self._session_rewards[key] = self._session_rewards.get(key, 0) + count
+        self.rewards_changed.emit()
 
     def _update_session_progress(self):
         if self._session_start_time is None:
@@ -1459,7 +1731,7 @@ class AboutTab(QWidget):
         title_layout.setSpacing(5)
 
         # Main title
-        title = QLabel("🚀 AutoFarmers — 7DS Grand Cross")
+        title = QLabel("AutoFarmers — 7DS Grand Cross")
         title.setFont(QFont("Consolas", 18, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         title_layout.addWidget(title)
@@ -1485,7 +1757,7 @@ class AboutTab(QWidget):
         # Status line
         self.status_label = QLabel("")
         self.status_label.setAlignment(Qt.AlignCenter)
-        self.status_label.setStyleSheet(f"color: {C['muted']}; font-size: 15px;")
+        self.status_label.setStyleSheet(f"color: {C['muted']}; font-size: 14px;")
         layout.addWidget(self.status_label)
 
         layout.addStretch(1)
@@ -1514,10 +1786,10 @@ class AboutTab(QWidget):
                     break
 
         if not image_loaded:
-            img_label.setText("🖼️ AutoFarmers GUI\n(Image not found)")
+            img_label.setText("AutoFarmers GUI\n(Image not found)")
             img_label.setFixedSize(640, 360)
             img_label.setStyleSheet(
-                f"border: 1px solid {C['border']}; background: {C['panel2']}; color: {C['dark']}; border-radius: 8px; font-size: 14px;"
+                f"border: 1px solid {C['border']}; background: {C['panel2']}; color: {C['dark']}; border-radius: 8px; font-size: 13px;"
             )
 
         # Center the image
@@ -1536,22 +1808,22 @@ class AboutTab(QWidget):
         btn_layout.addStretch(1)
 
         # Update button (primary)
-        self.update_btn = QPushButton("🔄 UPDATE")
+        self.update_btn = QPushButton("UPDATE")
         self.update_btn.setStyleSheet(
-            f"background-color: {C['accent']}; color: white; font-weight: bold; padding: 8px 16px;"
+            BTN_START.replace(C["running"], C["text"]).replace("color: white", f"color: {C['bg']}")
         )
         self.update_btn.clicked.connect(self.on_update_clicked)
         btn_layout.addWidget(self.update_btn)
 
         # GitHub button
-        github_btn = QPushButton("🐙 GitHub")
-        github_btn.setStyleSheet(f"background-color: {C['dark']}; color: white; font-weight: bold; padding: 8px 16px;")
+        github_btn = QPushButton("GitHub")
+        github_btn.setStyleSheet(BTN_DEVTEST)
         github_btn.clicked.connect(lambda: self.open_url("https://github.com/PhantomPilots/AutoFarming"))
         btn_layout.addWidget(github_btn)
 
         # Discord button
-        discord_btn = QPushButton("💬 Discord")
-        discord_btn.setStyleSheet("background-color: #7289DA; color: white; font-weight: bold; padding: 8px 16px;")
+        discord_btn = QPushButton("Discord")
+        discord_btn.setStyleSheet(BTN_DEVTEST)
         discord_btn.clicked.connect(lambda: self.open_url("https://discord.gg/En2Wm6a5RV"))
         btn_layout.addWidget(discord_btn)
 
@@ -1565,7 +1837,7 @@ class AboutTab(QWidget):
         desc_label.setWordWrap(True)
         desc_label.setAlignment(Qt.AlignLeft)
         desc_label.setText("""
-<h3>🎮 AutoFarmers for 7DS Grand Cross</h3>
+<h3>AutoFarmers for 7DS Grand Cross</h3>
 <p>Automate your farming in Seven Deadly Sins: Grand Cross with this collection of specialized bots.</p>
         """)
         desc_label.setStyleSheet(f"font-size: 13px; color: {C['dim']}; line-height: 1.4;")
@@ -1593,7 +1865,7 @@ class AboutTab(QWidget):
         req_label.setWordWrap(True)
         req_label.setAlignment(Qt.AlignTop)
         req_label.setText("""
-<p><strong>⚙️ Requirements:</strong><br>
+<p><strong>Requirements:</strong><br>
 • Official 7DS PC Beta Client<br>
 • Portrait mode (disable landscape)<br>
 • Game set to English<br>
@@ -1627,7 +1899,7 @@ class AboutTab(QWidget):
         self.update_btn.setEnabled(False)
         self.update_started.emit()
         self._reset_update_summary()
-        self.status_label.setText("🔄 Checking which version you have...")
+        self.status_label.setText("Checking which version you have...")
 
         self.run_process("git", ["rev-parse", "HEAD"], self.after_pre_update_head, capture_output=True)
 
@@ -1636,23 +1908,23 @@ class AboutTab(QWidget):
         try:
             QDesktopServices.openUrl(QUrl(url))
             if "github" in url.lower():
-                self.status_label.setText("🐙 Opening GitHub repository...")
+                self.status_label.setText("Opening GitHub repository...")
             elif "discord" in url.lower():
-                self.status_label.setText("💬 Opening Discord invite...")
+                self.status_label.setText("Opening Discord invite...")
             else:
                 self.status_label.setText(f"🌐 Opening {url}...")
 
             # Clear status after 2 seconds
             QTimer.singleShot(2000, lambda: self.status_label.setText(""))
         except Exception as e:
-            self.status_label.setText("❌ Couldn't open the link. Please try again.")
+            self.status_label.setText("Couldn't open the link. Please try again.")
 
     def after_pre_update_head(self, exit_code):
         """Capture the current revision before applying updates."""
         if exit_code == 0:
             self._pre_update_head = self._last_process_output.strip()
 
-        self.status_label.setText("🔄 Preparing your update...")
+        self.status_label.setText("Preparing your update...")
         self.run_process("git", ["stash"], self.after_stash)
 
     def after_stash(self, exit_code):
@@ -1664,7 +1936,7 @@ class AboutTab(QWidget):
         # Stash successful, now run git pull
         self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
         self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
-        self.status_label.setText("🔄 Downloading the update...")
+        self.status_label.setText("Downloading the update...")
         self.run_process("git", ["pull"], self.after_pull)
 
     def after_pull(self, exit_code):
@@ -1681,7 +1953,7 @@ class AboutTab(QWidget):
             self._pre_update_gui_hash = self._compute_file_hash(self.gui_file_path)
             self._pre_update_requirements_hash = self._compute_file_hash(self.requirements_file_path)
 
-        self.status_label.setText("🔄 The update didn't finish. Trying again...")
+        self.status_label.setText("The update didn't finish. Trying again...")
         self.run_process("git", ["fetch", "--prune"], self.after_recovery_fetch)
 
     def after_recovery_fetch(self, exit_code):
@@ -1722,7 +1994,7 @@ class AboutTab(QWidget):
         if not re.fullmatch(r"[0-9a-fA-F]{40,64}", commit):
             return False
 
-        self.status_label.setText("🔄 The update didn't finish. Trying again...")
+        self.status_label.setText("The update didn't finish. Trying again...")
         self.run_process("git", ["reset", "--hard", commit], self.after_recovery_reset)
         return True
 
@@ -1738,12 +2010,12 @@ class AboutTab(QWidget):
 
     def _fail_update_recovery(self, message):
         """Finish a failed recovery while keeping its actionable status visible."""
-        self.status_label.setText(f"❌ {message}")
+        self.status_label.setText(f"{message}")
         self._finish_update(clear_status=False)
 
     def _start_post_update_summary(self):
         """Enter the shared post-pull/reset summary workflow."""
-        self.status_label.setText("🔄 Checking what changed...")
+        self.status_label.setText("Checking what changed...")
         self.run_process("git", ["rev-parse", "HEAD"], self.after_post_update_head, capture_output=True)
 
     def after_post_update_head(self, exit_code):
@@ -1815,7 +2087,7 @@ class AboutTab(QWidget):
         """Handle completion of the requirements install step."""
         if exit_code != 0:
             self.status_label.setText(
-                "❌ Couldn't install the update. Please try again."
+                "Couldn't install the update. Please try again."
             )
             self._finish_update(clear_status=False)
             return
@@ -1844,7 +2116,7 @@ class AboutTab(QWidget):
         self.update_process.start(program, args)
 
         if not self.update_process.waitForStarted(3000):
-            self.status_label.setText(f"❌ Failed to start {program}")
+            self.status_label.setText(f"Failed to start {program}")
             self.update_process = None
             self._capture_process_output = False
             self._process_output = bytearray()
@@ -1953,7 +2225,7 @@ class AboutTab(QWidget):
         )
 
         if requirements_changed:
-            self.status_label.setText("🔄 Installing the update...")
+            self.status_label.setText("Installing the update...")
             self.run_process(
                 sys.executable,
                 ["-m", "pip", "install", "-r", self.requirements_file_path],
@@ -1969,19 +2241,19 @@ class AboutTab(QWidget):
 
         restart_required = self._pending_gui_changed or self._pending_extension_changed
         if not restart_required:
-            self.status_label.setText("✅ Update complete")
+            self.status_label.setText("Update complete")
             self._finish_update()
             return
 
         if not self._restart_safe_supplier():
-            self.status_label.setText("✅ Update ready. Restart AutoFarmers to use it.")
+            self.status_label.setText("Update ready. Restart AutoFarmers to use it.")
             self._finish_update(clear_status=False)
             return
 
-        self.status_label.setText("✅ Update complete. Restarting AutoFarmers...")
+        self.status_label.setText("Update complete. Restarting AutoFarmers...")
         self._finish_update(clear_status=False)
         if not _restart_application():
-            self.status_label.setText("✅ Update complete. Please reopen AutoFarmers.")
+            self.status_label.setText("Update complete. Please reopen AutoFarmers.")
             return
         QApplication.instance().quit()
 
@@ -2141,7 +2413,7 @@ class SettingsTab(QWidget):
 
         footnote = QLabel("Already running a farmer? Stop it and press Start again so it picks up new settings.")
         footnote.setWordWrap(True)
-        footnote.setStyleSheet(f"color: {C['dark']}; font-size: 13px;")
+        footnote.setStyleSheet(f"color: {C['muted']}; font-size: 13px;")
         layout.addWidget(footnote)
         layout.addStretch(1)
 
@@ -2189,17 +2461,17 @@ class SettingsTab(QWidget):
             )
             config.reload()
             self.status_label.setText("Saved.")
-            self.status_label.setStyleSheet("color: #10b981;")
+            self.status_label.setStyleSheet(f"color: {C['running']};")
             QTimer.singleShot(5000, lambda: self.status_label.setText(""))
         except Exception as e:
             self.status_label.setText(f"Save failed: {e}")
-            self.status_label.setStyleSheet("color: #ef4444;")
+            self.status_label.setStyleSheet(f"color: {C['error']};")
 
     def on_test_notification(self):
         config.reload()
         ok, msg = test_ntfy_connection()
         self.status_label.setText(msg)
-        self.status_label.setStyleSheet("color: #10b981;" if ok else "color: #ef4444;")
+        self.status_label.setStyleSheet(f"color: {C['running'] if ok else C['error']};")
 
 
 class DevTestController(QObject):
@@ -2354,6 +2626,10 @@ class DevTestController(QObject):
         self._shutting_down = True
         if self.catalog_process is not None:
             process = self.catalog_process
+            self.catalog_process = None
+            with contextlib.suppress(TypeError, RuntimeError):
+                process.finished.disconnect()
+                process.errorOccurred.disconnect()
             process.kill()
             process.waitForFinished(1000)
         if self.process is not None:
@@ -2586,21 +2862,24 @@ class DevTestTab(QWidget):
 class FarmerTab(QWidget):
     _COLOR_TAG_RE = re.compile(r"<color=([^>]+)>(.*?)</color>", re.IGNORECASE | re.DOTALL)
     _LINE_COLOR_RULES = [
-        (re.compile(r"error|failed|exception|traceback|critical", re.I), "#ef4444"),
-        (re.compile(r"\bwarn(ing)?\b", re.I), "#f59e0b"),
-        (re.compile(r"success|complet|finished|victory|cleared|✓|✅", re.I), "#10b981"),
-        (re.compile(r"\b(info|start|launch|connect|running)\b", re.I), "#3b82f6"),
-        (re.compile(r"^\s*[>=\-#]{3,}"), "#4b5563"),
+        (re.compile(r"error|failed|exception|traceback|critical", re.I), "#F0554A"),
+        (re.compile(r"\bwarn(ing)?\b", re.I), "#E8B21E"),
+        (re.compile(r"success|complet|finished|victory|cleared|✓|✅", re.I), "#21B874"),
+        (re.compile(r"\b(info|start|launch|connect|running)\b", re.I), "#4DBDF2"),
+        (re.compile(r"^\s*[>=\-#]{3,}"), "#6E6C66"),
     ]
+    _LEFT_W = 380
+    _IMAGE_W = 340
 
-    def __init__(self, farmer, controller, parent=None):
+    def __init__(self, farmer, controller, parent=None, accent=None):
         super().__init__(parent)
         self.farmer = farmer
         self.controller = controller
+        self.accent = accent or INK_CYAN
         self._syncing_arg_widgets = False
         self.sa_chest_warning_label = None
         self._default_fmt = QTextCharFormat()
-        self._default_fmt.setForeground(QColor("#c0caf5"))
+        self._default_fmt.setForeground(QColor(C["term_text"]))
         self.init_ui()
         self.controller.output_reset.connect(self._on_output_reset)
         self.controller.output_appended.connect(self.append_terminal)
@@ -2614,35 +2893,120 @@ class FarmerTab(QWidget):
 
     def init_ui(self):
         layout = QHBoxLayout(self)
-        layout.addLayout(self._build_left_panel(), 1)
-        layout.addLayout(self._build_right_panel(), 2)
-        self.setLayout(layout)
-        self._append_terminal_centered(FREE_SOFTWARE_MESSAGE)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        left = QWidget()
+        left.setFixedWidth(self._LEFT_W)
+        left_lay = QVBoxLayout(left)
+        left_lay.setContentsMargins(0, 0, 0, 0)
+        left_lay.setSpacing(0)
+        left_scroll = QScrollArea()
+        left_scroll.setWidgetResizable(True)
+        left_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        left_scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {C['bg']}; }}")
+        left_body = QWidget()
+        left_body.setLayout(self._build_left_panel())
+        left_scroll.setWidget(left_body)
+        left_lay.addWidget(left_scroll, 1)
+        left_lay.addWidget(self._build_run_controls())
+        layout.addWidget(left)
+
+        rule = QFrame()
+        rule.setFixedWidth(1)
+        rule.setStyleSheet(f"background: {C['border']}; border: none;")
+        layout.addWidget(rule)
+
+        right = QWidget()
+        right.setLayout(self._build_right_panel())
+        layout.addWidget(right, 1)
+        self._append_welcome()
+
+    def _fit_requirements(self):
+        if self.req_label is None or self._req_scroll is None:
+            return
+        width = self._LEFT_W - 40 - 2
+        needed = self.req_label.heightForWidth(width)
+        self._req_scroll.setFixedHeight(max(40, min(200, needed + 4)))
+
+    def _section_heading(self, text):
+        lbl = QLabel(text)
+        lbl.setStyleSheet(f"font-size: 14px; font-weight: 700; color: {C['text']};")
+        return lbl
 
     def _build_left_panel(self):
         panel = QVBoxLayout()
+        panel.setContentsMargins(20, 20, 20, 20)
+        panel.setSpacing(0)
 
-        # Image
-        self.image_size = (400, 250)
-        self.image_label = QLabel(f"[Image Placeholder]\n{self.image_size[0]}x{self.image_size[1]}")
+        self.image_size = (self._IMAGE_W, self._IMAGE_W * 9 // 18)
+        self.image_label = QLabel("No image for this Farmer")
         self.image_label.setAlignment(Qt.AlignCenter)
         self.image_label.setStyleSheet(
-            f"border: 1px solid {C['border']}; background: {C['panel2']};" f" color: {C['dark']}; border-radius: 5px;"
+            f"border: 1px solid {C['border']}; background: {C['panel2']}; color: {C['muted']}; border-radius: 8px;"
         )
         self.image_label.setFixedSize(*self.image_size)
         self.load_farmer_image()
-        panel.addWidget(self.image_label, 0, Qt.AlignHCenter)
+        panel.addWidget(self.image_label, 0, Qt.AlignLeft)
+        panel.addSpacing(18)
 
-        # Arguments
-        if self.farmer["args"]:
-            args_group = QGroupBox("Arguments")
-            args_group.setStyleSheet(
-                f"QGroupBox {{ margin-top: 21px; border: 1px solid {C['border']}; border-radius: 8px;"
-                f" font-size: 14px; font-weight: bold; color: {C['dim']}; padding: 8px; }}"
-                f"QGroupBox::title {{ subcontrol-origin: margin; subcontrol-position: top left;"
-                f" padding: 0 6px; left: 12px; }}"
+        self.req_label = None
+        self._req_scroll = None
+        extension_requirements = self.farmer.get("requirements_html", "")
+        availability_error = self.farmer.get("availability_error")
+        if availability_error:
+            extension_requirements = (
+                f"<p><strong>Unavailable:</strong> {availability_error}</p>" + extension_requirements
             )
+        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG or extension_requirements:
+            box = QFrame()
+            box.setObjectName("teamBox")
+            box.setStyleSheet(
+                f"QFrame#teamBox {{ border: 1px solid {C['border2']}; border-radius: 8px; background: {C['panel']}; }}"
+            )
+            box_lay = QVBoxLayout(box)
+            box_lay.setContentsMargins(0, 0, 0, 0)
+            box_lay.setSpacing(0)
+            box_title = QLabel("Team & requirements")
+            box_title.setStyleSheet(
+                f"background: {self.accent}; color: {_on_ink(self.accent)}; font-size: 12px; font-weight: 700;"
+                " padding: 5px 12px; border: none; border-top-left-radius: 7px; border-top-right-radius: 7px;"
+            )
+            box_lay.addWidget(box_title)
+
+            self.req_label = QLabel()
+            self.req_label.setWordWrap(True)
+            self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+            self.req_label.setTextFormat(Qt.RichText)
+            self.req_label.setText(extension_requirements or REQUIREMENTS.get(self.farmer["name"], ""))
+            self.req_label.setStyleSheet(
+                f"font-size: 13px; color: {C['text']}; background: transparent; padding: 8px 12px 10px 12px;"
+                " border: none;"
+            )
+            req_scroll = QScrollArea()
+            req_scroll.setWidget(self.req_label)
+            req_scroll.setWidgetResizable(True)
+            req_scroll.setMaximumHeight(200)
+            req_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            req_scroll.setStyleSheet(
+                f"QScrollArea {{ background: {C['panel']}; border: none; }}"
+                f"QScrollArea > QWidget > QWidget {{ background: {C['panel']}; }}"
+            )
+            box_lay.addWidget(req_scroll)
+            self._req_scroll = req_scroll
+            self._fit_requirements()
+            panel.addWidget(box)
+            panel.addSpacing(22)
+
+        if self.farmer["args"]:
+            panel.addWidget(self._section_heading("Settings"))
+            panel.addSpacing(10)
             args_layout = QFormLayout()
+            args_layout.setContentsMargins(0, 0, 0, 0)
+            args_layout.setHorizontalSpacing(14)
+            args_layout.setVerticalSpacing(10)
+            args_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            args_layout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
             self.arg_widgets = {}
             for arg in self.farmer["args"]:
                 if arg["type"] == "dropdown":
@@ -2654,17 +3018,20 @@ class FarmerTab(QWidget):
                     widget.setChecked(arg.get("default", False))
                 elif arg["type"] == "multiselect":
                     widget = QFrame()
+                    widget.setObjectName("multiSelect")
                     widget.setStyleSheet(
-                        f"QFrame {{ border: 1px solid {C['border2']}; border-radius: 5px; background: {C['bg']}; }}"
+                        f"QFrame#multiSelect {{ border: 1px solid {C['border2']}; border-radius: 8px;"
+                        f" background: {C['field']}; }}"
                     )
                     _vbox = QVBoxLayout(widget)
-                    _vbox.setContentsMargins(8, 6, 8, 6)
-                    _vbox.setSpacing(4)
+                    _vbox.setContentsMargins(10, 8, 10, 8)
+                    _vbox.setSpacing(6)
                     widget._checkboxes = []
                     _labels = arg.get("labels") or []
                     for idx, choice in enumerate(arg["choices"]):
                         label = _labels[idx] if idx < len(_labels) else choice
                         cb = QCheckBox(label)
+                        cb.setStyleSheet("background: transparent;")
                         cb.setProperty("value", choice)
                         cb.setChecked(choice in arg.get("default", []))
                         _vbox.addWidget(cb)
@@ -2678,100 +3045,113 @@ class FarmerTab(QWidget):
                     if arg["type"] == "secret":
                         widget.setEchoMode(QLineEdit.Password)
                 self.arg_widgets[arg["name"]] = widget
-                args_layout.addRow(arg["label"] + ":", widget)
+                row_label = QLabel(arg["label"])
+                row_label.setWordWrap(True)
+                row_label.setFixedWidth(118)
+                row_label.setStyleSheet(f"color: {C['dim']}; font-size: 13px;")
+                args_layout.addRow(row_label, widget)
                 self._bind_arg_widget(arg, widget)
 
                 if self.farmer["name"] == "SA Coin Dungeon Farmer" and arg["name"] == "--min-chest-type":
                     widget.currentTextChanged.connect(self.update_sa_chest_warning)
                 if arg["name"] == "--whale":
                     widget.stateChanged.connect(self._refresh_whale_mode)
-            args_group.setLayout(args_layout)
-            panel.addWidget(args_group)
+            panel.addLayout(args_layout)
 
             if self.farmer["name"] == "SA Coin Dungeon Farmer":
                 self.sa_chest_warning_label = QLabel()
                 self.sa_chest_warning_label.setWordWrap(True)
                 self.sa_chest_warning_label.setStyleSheet(
-                    f"font-size: 13px; color: {C['error']}; border: 1px solid {C['error']};"
-                    f" border-radius: 5px; padding: 6px; background: rgba(239,68,68,0.1);"
+                    f"font-size: 13px; color: {C['text']}; border: 1px solid {C['error']};"
+                    f" border-radius: 8px; padding: 8px 10px; background: {_tint(C['error'], 0.10)};"
                 )
                 self.sa_chest_warning_label.hide()
+                panel.addSpacing(10)
                 panel.addWidget(self.sa_chest_warning_label)
                 self.update_sa_chest_warning(self.arg_widgets["--min-chest-type"].currentText())
+            panel.addSpacing(22)
         else:
             self.arg_widgets = {}
 
-        # Requirements text (dynamically updated for whale-capable farmers)
-        self.req_label = None
-        extension_requirements = self.farmer.get("requirements_html", "")
-        availability_error = self.farmer.get("availability_error")
-        if availability_error:
-            extension_requirements = (
-                f"<p><strong>Unavailable:</strong> {availability_error}</p>" + extension_requirements
-            )
-        if self.farmer["name"] in REQUIREMENTS or self.farmer["name"] in WHALE_MODE_CONFIG or extension_requirements:
-            self.req_label = QLabel()
-            self.req_label.setWordWrap(True)
-            self.req_label.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-            self.req_label.setText(extension_requirements or REQUIREMENTS.get(self.farmer["name"], ""))
-            self.req_label.setStyleSheet(
-                f"font-size: 13px; color: {C['dim']}; line-height: 1.4; background: {C['panel3']};"
-                f" border-left: 3px solid {C['accent']}; padding: 9px 12px; border-radius: 0 5px 5px 0;"
-            )
-            req_scroll = QScrollArea()
-            req_scroll.setWidget(self.req_label)
-            req_scroll.setWidgetResizable(True)
-            req_scroll.setMaximumHeight(180)
-            req_scroll.setStyleSheet(
-                f"QScrollArea {{ background: {C['panel3']}; border-left: 3px solid {C['accent']};"
-                f" border-radius: 0 5px 5px 0; border-top: none; border-right: none; border-bottom: none; }}"
-            )
-            panel.addWidget(req_scroll)
-            panel.addSpacing(4)
+        panel.addStretch(1)
+        return panel
 
-        # Action buttons
-        btn_layout = QHBoxLayout()
-        self.start_btn = QPushButton("START")
+    def _build_run_controls(self):
+        footer = QFrame()
+        footer.setObjectName("runFooter")
+        footer.setStyleSheet(
+            f"QFrame#runFooter {{ background: {C['bg']}; border: none; border-top: 1px solid {C['border']}; }}"
+        )
+        lay = QVBoxLayout(footer)
+        lay.setContentsMargins(20, 14, 20, 12)
+        lay.setSpacing(0)
+        availability_error = self.farmer.get("availability_error")
+        self.start_btn = QPushButton("  START")
+        self.start_btn.setIcon(svg_icon("play", "#FFFFFF", 14))
+        self.start_btn.setMinimumHeight(46)
+        self.start_btn.setCursor(Qt.PointingHandCursor)
         self.start_btn.setStyleSheet(BTN_START)
         self.start_btn.clicked.connect(self._on_start_clicked)
         if availability_error:
             self.start_btn.setEnabled(False)
             self.start_btn.setToolTip(availability_error)
-        self.stop_btn = QPushButton("STOP")
-        self.stop_btn.setStyleSheet(BTN_STOP)
-        self.stop_btn.setEnabled(False)
-        self.stop_btn.clicked.connect(self._on_stop_clicked)
+        lay.addWidget(self.start_btn)
+        lay.addSpacing(8)
+
+        run_row = QHBoxLayout()
+        run_row.setSpacing(8)
         self.pause_btn = QPushButton("PAUSE")
         self.pause_btn.setStyleSheet(BTN_PAUSE)
+        self.pause_btn.setMinimumHeight(38)
         self.pause_btn.setEnabled(False)
         self.pause_btn.clicked.connect(self._on_pause_clicked)
-        self.resize_btn = QPushButton("RESIZE")
-        self.resize_btn.setStyleSheet(BTN_RESIZE)
-        self.resize_btn.clicked.connect(self._on_resize_clicked)
-        self.clear_btn = QPushButton("CLEAR")
-        self.clear_btn.setStyleSheet(BTN_CLEAR)
-        self.clear_btn.clicked.connect(self._on_clear_clicked)
-        for btn in (self.start_btn, self.stop_btn, self.pause_btn, self.resize_btn, self.clear_btn):
-            btn_layout.addWidget(btn)
+        self.stop_btn = QPushButton("STOP")
+        self.stop_btn.setStyleSheet(BTN_STOP)
+        self.stop_btn.setMinimumHeight(38)
+        self.stop_btn.setEnabled(False)
+        self.stop_btn.clicked.connect(self._on_stop_clicked)
+        run_row.addWidget(self.pause_btn)
+        run_row.addWidget(self.stop_btn)
+        lay.addLayout(run_row)
+        lay.addSpacing(6)
 
-        panel.addLayout(btn_layout)
-        panel.addStretch(1)
-        return panel
+        self.resize_btn = QPushButton("  Resize game window")
+        self.resize_btn.setIcon(svg_icon("resize", C["dim"], 14))
+        self.resize_btn.setStyleSheet(BTN_RESIZE)
+        self.resize_btn.setToolTip("Resize the 7DS window to 538×921 so the Farmer can see it.")
+        self.resize_btn.clicked.connect(self._on_resize_clicked)
+        self.clear_btn = QPushButton("  Clear output")
+        self.clear_btn.setIcon(svg_icon("clear", C["dim"], 14))
+        self.clear_btn.setStyleSheet(BTN_CLEAR)
+        self.clear_btn.setToolTip("Clear the terminal. The Farmer keeps running.")
+        self.clear_btn.clicked.connect(self._on_clear_clicked)
+        utility_row = QHBoxLayout()
+        utility_row.setSpacing(4)
+        utility_row.addWidget(self.resize_btn)
+        utility_row.addStretch(1)
+        utility_row.addWidget(self.clear_btn)
+        lay.addLayout(utility_row)
+
+        return footer
 
     def _build_right_panel(self):
         panel = QVBoxLayout()
+        panel.setContentsMargins(0, 0, 0, 0)
+        panel.setSpacing(0)
+
 
         self.terminal = QTextEdit()
         self.terminal.setReadOnly(True)
         self.terminal.document().setMaximumBlockCount(1001)
         _term_font = QFont("Consolas")
-        _term_font.setPixelSize(15)
+        _term_font.setPixelSize(14)
         self.terminal.document().setDefaultFont(_term_font)
         self._default_fmt.setFont(_term_font)
         self.terminal.setStyleSheet(
-            f"background: {C['term_bg']}; color: {C['term_text']}; border: none; border-radius: 5px;"
-            " padding: 10px 14px; font-family: Consolas, monospace;"
-            " font-size: 15px; line-height: 1.6;"
+            f"QTextEdit {{ background: {C['term_bg']}; color: {C['term_text']}; border: none;"
+            f" padding: 14px 18px 12px 18px; font-family: {MONO_FONT}; font-size: 13px; }}"
+            "QScrollBar::handle:vertical { background: #34343B; }"
+            "QScrollBar::handle:vertical:hover { background: #4A4A52; }"
         )
         panel.addWidget(self.terminal, 1)
         panel.addWidget(self._build_session_progress())
@@ -2836,7 +3216,7 @@ class FarmerTab(QWidget):
             left_lay, "Clears", "0", bar_max=100, bar_color=C["accent"]
         )
         left_lay.addStretch()
-        self._sp_pots_lbl, self._sp_pots_bar = make_bar_metric(left_lay, "Stamina Pots", "0", bar_color="#f59e0b")
+        self._sp_pots_lbl, self._sp_pots_bar = make_bar_metric(left_lay, "Stamina Pots", "0", bar_color=C["warning"])
         left_lay.addStretch()
         self._sp_uptime_lbl, self._sp_uptime_bar = make_bar_metric(
             left_lay, "Uptime", "00:00:00", bar_max=_UPTIME_CYCLE_SECS, bar_color=C["blue"]
@@ -2860,15 +3240,15 @@ class FarmerTab(QWidget):
         right_lay.addSpacing(4)
         self._sp_wins_lbl = make_row(right_lay, "Wins", "0")
         self._sp_wins_lbl.setStyleSheet(
-            "color: #10b981; font-size: 13px; font-weight: 600; background: transparent; border: none;"
+            f"color: {C['running']}; font-size: 13px; font-weight: 600; background: transparent; border: none;"
         )
         self._sp_loss_lbl = make_row(right_lay, "Loss", "0")
         self._sp_loss_lbl.setStyleSheet(
-            "color: #ef4444; font-size: 13px; font-weight: 600; background: transparent; border: none;"
+            f"color: {C['error']}; font-size: 13px; font-weight: 600; background: transparent; border: none;"
         )
         self._sp_total_lbl = make_row(right_lay, "Total Runs", "0")
         self._sp_winrate_lbl, self._sp_winrate_bar = make_bar_metric(
-            right_lay, "Win Rate", "0%", bar_max=100, bar_color="#10b981"
+            right_lay, "Win Rate", "0%", bar_max=100, bar_color=C["running"]
         )
         right_lay.addStretch()
 
@@ -2919,6 +3299,8 @@ class FarmerTab(QWidget):
 
     def _on_start_clicked(self):
         self.controller.start(self.get_arg_values())
+        if _HALLOWEEN and self.controller.process is not None:
+            self._append_pumpkin()
 
     def _on_stop_clicked(self):
         self.controller.stop()
@@ -2980,6 +3362,38 @@ class FarmerTab(QWidget):
         if self.farmer["name"] == "SA Coin Dungeon Farmer" and "--min-chest-type" in self.arg_widgets:
             self.update_sa_chest_warning(self.arg_widgets["--min-chest-type"].currentText())
         self._refresh_whale_mode()
+
+    def _append_welcome(self):
+        self._append_terminal_centered(FREE_SOFTWARE_MESSAGE)
+
+    def _append_pumpkin(self):
+        width = max(len(line) for line in _HALLOWEEN_PUMPKIN)
+        cursor = self.terminal.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        center = QTextBlockFormat()
+        center.setAlignment(Qt.AlignCenter)
+        if self.terminal.document().isEmpty():
+            cursor.setBlockFormat(center)
+        else:
+            cursor.insertBlock(center)
+        for i, line in enumerate(_HALLOWEEN_PUMPKIN):
+            fmt = QTextCharFormat(self._default_fmt)
+            fmt.setForeground(QColor(C["running"] if i < 2 else C["accent"]))
+            if i:
+                cursor.insertBlock(center)
+            cursor.insertText(line.ljust(width).replace(" ", "\u00a0"), fmt)
+        greet = QTextCharFormat(self._default_fmt)
+        greet.setForeground(QColor(C["accent"]))
+        greet.setFontWeight(QFont.Bold)
+        cursor.insertBlock(center)
+        cursor.insertBlock(center)
+        cursor.insertText("Happy Farming!", greet)
+        left = QTextBlockFormat()
+        left.setBottomMargin(1)
+        cursor.insertBlock(left)
+        cursor.insertBlock(left)
+        self.terminal.setTextCursor(cursor)
+        self.terminal.ensureCursorVisible()
 
     def _append_terminal_centered(self, text):
         """Insert text centered in the terminal (used for the initial welcome message)."""
@@ -3150,25 +3564,23 @@ class FarmerTab(QWidget):
         self._sync_arg_widgets(self.controller.get_arg_values())
         self._on_output_reset()
         if not self.controller.output_lines and self.controller.process is None:
-            self._append_terminal_centered(FREE_SOFTWARE_MESSAGE)
+            self._append_welcome()
         self._on_running_changed(self.controller.is_running, self.controller.process_id)
         self._on_paused_changed(self.controller.is_paused)
         self._refresh_session_progress()
 
     def load_farmer_image(self, image_filename=None):
-        """Load and display a farmer image into self.image_label."""
         image_path = get_farmer_image_path(self.farmer, image_filename)
         if image_path is None:
             return
 
         if os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                scaled = pixmap.scaled(*self.image_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                self.image_label.setPixmap(scaled)
-                self.image_label.setStyleSheet("border: 1px solid #252535; border-radius: 5px;")
+            pixmap = _cover_pixmap(image_path, *self.image_size)
+            if pixmap is not None:
+                self.image_label.setPixmap(_round_all(pixmap, 8))
+                self.image_label.setStyleSheet(f"border: none; border-radius: 8px; background: {C['panel2']};")
             else:
-                self.image_label.setText(f"Failed to load image:\n{os.path.basename(image_path)}")
+                self.image_label.setText(f"Couldn't load image:\n{os.path.basename(image_path)}")
         else:
             self.image_label.setText(f"Image not found:\n{os.path.basename(image_path)}")
 
@@ -3184,439 +3596,1427 @@ class FarmerTab(QWidget):
         if self.req_label is not None:
             self.req_label.setText(REQUIREMENTS.get(requirements_key, ""))
             self.req_label.adjustSize()
+            self._fit_requirements()
 
         self.load_farmer_image(image_filename)
 
 
-# Tile Widget
-def _rounded_pixmap(pixmap: QPixmap, radius: int) -> QPixmap:
-    """Return a copy of pixmap with only the top corners rounded."""
-    w, h = pixmap.width(), pixmap.height()
-    image = QImage(w, h, QImage.Format_ARGB32_Premultiplied)
+CHAPTERS = [
+    {
+        "id": "beasts",
+        "icon": "paw",
+        "title": "Demonic Beasts",
+        "color": INK_CYAN,
+        "blurb": "Bird, Deer, Dogs, Snake and Rat fights, floors 1 to 4, plus the beast rotation.",
+        "farmers": (
+            "Bird Farmer",
+            "Bird Floor 4",
+            "Deer Farmer",
+            "Deer Floor 4",
+            "Dogs Farmer",
+            "Dogs Floor 4",
+            "Snake Farmer",
+            "Rat Farmer",
+            "Demonic Beast Rotation",
+        ),
+    },
+    {
+        "id": "demons",
+        "icon": "horns",
+        "title": "Demons & Raids",
+        "color": INK_MAGENTA,
+        "blurb": "Real-time demon invites, the Demon King and Guild Boss.",
+        "farmers": ("Demon Farmer", "Demon King Farmer", "Guild Boss Farmer"),
+    },
+    {
+        "id": "bosses",
+        "icon": "crown",
+        "title": "Bosses & Events",
+        "color": INK_YELLOW,
+        "blurb": "Final Boss, Legendary Boss, Boss Battle and SA Coin Dungeon.",
+        "farmers": ("Final Boss", "Legendary Boss", "Boss Battle Farmer", "SA Coin Dungeon Farmer"),
+    },
+    {
+        "id": "daily",
+        "icon": "calendar",
+        "title": "Dailies & Account",
+        "color": INK_VIOLET,
+        "blurb": "Daily quests, gold, account chores, auto clears and constellation rerolls.",
+        "farmers": (
+            "Daily Quests Farmer",
+            "Gold Farmer",
+            "Accounts Farmer",
+            "Auto Clear Farmer",
+            "Reroll Constellation",
+        ),
+    },
+    {
+        "id": "private",
+        "icon": "key",
+        "title": "Private Farmers",
+        "color": INK_ORANGE,
+        "blurb": "Free compiled Farmers. Some need a free license key the first time you use them.",
+        "farmers": (),
+    },
+    {
+        "id": "other",
+        "icon": "grid",
+        "title": "More Farmers",
+        "color": INK_SLATE,
+        "blurb": "Farmers that don't belong to another group yet.",
+        "farmers": (),
+    },
+]
+
+_STARTER_FARMERS = ("Bird Farmer", "Deer Farmer")
+_RECENT_FILE = os.path.join(_CONFIG_DIR, ".recent_farmers.json")
+_RECENT_LIMIT = 4
+
+
+def build_chapters(farmers: list[dict]) -> list[dict]:
+    by_name = {f["name"]: f for f in farmers}
+    placed: set[str] = set()
+    chapters = []
+    for spec in CHAPTERS:
+        members = []
+        if spec["id"] == "private":
+            members = [f for f in farmers if f.get("compiled_extension") and f["name"] not in placed]
+        elif spec["id"] == "other":
+            members = [f for f in farmers if f["name"] not in placed]
+        else:
+            members = [by_name[n] for n in spec["farmers"] if n in by_name and n not in placed]
+        if not members:
+            continue
+        placed.update(f["name"] for f in members)
+        chapters.append({**spec, "members": members})
+    return chapters
+
+
+def _farmer_summary(farmer: dict) -> str:
+    labels = []
+    for arg in farmer.get("args", []):
+        if arg.get("type") == "secret":
+            continue
+        label = re.sub(r"\s*\(.*?\)", "", arg["label"]).strip()
+        if label and label not in labels:
+            labels.append(label)
+    if not labels:
+        return "No settings needed. Press START."
+    return " · ".join(labels[:4]) + (" · and more" if len(labels) > 4 else "")
+
+
+class RecentStore(QObject):
+    favorites_changed = pyqtSignal()
+
+    def __init__(self, path: str = _RECENT_FILE):
+        super().__init__()
+        self._path = path
+        self.recent: list[str] = []
+        self.favorites: list[str] = []
+        self.last_runs: dict[str, dict] = {}
+        try:
+            with open(self._path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            self.recent = [n for n in data.get("recent", []) if isinstance(n, str)][:_RECENT_LIMIT]
+            self.favorites = [n for n in data.get("favorites", []) if isinstance(n, str)]
+            runs = data.get("last_runs", {})
+            if isinstance(runs, dict):
+                self.last_runs = {k: v for k, v in runs.items() if isinstance(v, dict)}
+        except (OSError, ValueError):
+            pass
+
+    def _save(self):
+        try:
+            with open(self._path, "w", encoding="utf-8") as fh:
+                json.dump(
+                    {"recent": self.recent, "favorites": self.favorites, "last_runs": self.last_runs}, fh, indent=2
+                )
+        except OSError:
+            pass
+
+    def is_favorite(self, name: str) -> bool:
+        return name in self.favorites
+
+    def toggle_favorite(self, name: str):
+        if name in self.favorites:
+            self.favorites.remove(name)
+        else:
+            self.favorites.append(name)
+        self._save()
+        self.favorites_changed.emit()
+
+    def touch(self, name: str):
+        self.recent = [name] + [n for n in self.recent if n != name]
+        self.recent = self.recent[:_RECENT_LIMIT]
+        self._save()
+
+    def record_run(self, name: str, clears: int, ended_on_its_own: bool):
+        self.last_runs[name] = {
+            "time": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "clears": int(clears),
+            "how": "ended" if ended_on_its_own else "stopped",
+        }
+        self._save()
+
+    def stamp(self, name: str) -> str:
+        run = self.last_runs.get(name)
+        if not run:
+            return "Not run yet"
+        when = run.get("time", "")
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        when = when.split(" ", 1)[1] if when.startswith(today) and " " in when else when
+        verb = "Ended" if run.get("how") == "ended" else "Stopped"
+        clears = run.get("clears", 0)
+        return f"{verb} {when} · {clears} clear{'s' if clears != 1 else ''}"
+
+
+def _cover_pixmap(path: str | None, width: int, height: int) -> QPixmap | None:
+    if not path or not os.path.exists(path):
+        return None
+    pixmap = QPixmap(path)
+    if pixmap.isNull():
+        return None
+    scaled = pixmap.scaled(width, height, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+    x = max(0, (scaled.width() - width) // 2)
+    y = max(0, (scaled.height() - height) // 2)
+    return scaled.copy(x, y, width, height)
+
+
+def _round_all(pixmap: QPixmap, radius: int, top_only: bool = False) -> QPixmap:
+    image = QImage(pixmap.width(), pixmap.height(), QImage.Format_ARGB32_Premultiplied)
     image.fill(Qt.transparent)
     painter = QPainter(image)
     painter.setRenderHint(QPainter.Antialiasing)
     path = QPainterPath()
-    path.moveTo(radius, 0)
-    path.lineTo(w - radius, 0)
-    path.quadTo(w, 0, w, radius)  # top-right
-    path.lineTo(w, h)
-    path.lineTo(0, h)
-    path.lineTo(0, radius)
-    path.quadTo(0, 0, radius, 0)  # top-left
-    path.closeSubpath()
+    path.addRoundedRect(0, 0, pixmap.width(), pixmap.height(), radius, radius)
+    if top_only:
+        square_bottom = QPainterPath()
+        square_bottom.addRect(0, pixmap.height() / 2, pixmap.width(), pixmap.height() / 2)
+        path = path.united(square_bottom)
     painter.setClipPath(path)
     painter.drawPixmap(0, 0, pixmap)
     painter.end()
     return QPixmap.fromImage(image)
 
 
-class FarmerTile(QFrame):
-    clicked = pyqtSignal(str)
+def _art_label(farmer: dict, width: int, height: int, top_only: bool = False) -> QLabel:
+    label = QLabel()
+    label.setFixedSize(width, height)
+    label.setAlignment(Qt.AlignCenter)
+    pixmap = _cover_pixmap(get_farmer_image_path(farmer), width, height)
+    if pixmap is not None:
+        label.setPixmap(_round_all(pixmap, 7 if top_only else 6, top_only))
+        label.setStyleSheet("background: transparent; border: none;")
+    else:
+        label.setText(farmer["name"][:1])
+        label.setStyleSheet(
+            f"background: {C['panel2']}; color: {C['muted']}; font-size: 18px; font-weight: 700; border: none;"
+        )
+    return label
 
-    _TILE_W = 200
-    _IMG_H = 112  # 16:9
 
-    def __init__(self, farmer, parent=None):
+class HangingSpider(QWidget):
+    _W = 34
+
+    def __init__(self, min_len: int, max_len: int, period: float, phase: float, parent=None):
         super().__init__(parent)
-        self.farmer = farmer
-        self.farmer_name = farmer["name"]
-        self.setFixedWidth(self._TILE_W)
+        self._min_len = min_len
+        self._max_len = max_len
+        self._period = period
+        self._phase = phase
+        self._t = 0.0
+        self.setFixedSize(self._W, max_len + 26)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WA_NoSystemBackground, True)
+        self.setStyleSheet("background: transparent;")
+
+    def advance(self, t: float):
+        self._t = t
+        self.update()
+
+    def paintEvent(self, event):
+        del event
+        t = self._t
+        wave = 0.5 + 0.5 * math.sin(2 * math.pi * t / self._period + self._phase)
+        length = self._min_len + (self._max_len - self._min_len) * wave
+        cx = self._W / 2 + 2.0 * math.sin(t * 1.3 + self._phase)
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        thread = QColor(C["dim"])
+        thread.setAlpha(110)
+        painter.setPen(thread)
+        painter.drawLine(int(self._W / 2), 0, int(cx), int(length))
+        leg = QColor(C["text"])
+        leg.setAlpha(170)
+        pen = painter.pen()
+        pen.setColor(leg)
+        pen.setWidthF(1.3)
+        painter.setPen(pen)
+        wiggle = math.sin(t * 7 + self._phase) * 1.5
+        for i, (dx, dy) in enumerate(((9, -5), (11, -1), (11, 3), (9, 7))):
+            w = wiggle if i % 2 == 0 else -wiggle
+            by = length + 6 + (i - 1.5) * 2.2
+            for side in (-1, 1):
+                knee_x = cx + side * (dx * 0.6)
+                knee_y = by + dy * 0.5 - 3 + w * 0.5
+                painter.drawLine(int(cx), int(by), int(knee_x), int(knee_y))
+                painter.drawLine(int(knee_x), int(knee_y), int(cx + side * dx), int(by + dy + w))
+        painter.setPen(QColor(C["dark"]))
+        painter.setBrush(QColor("#05030A"))
+        painter.drawEllipse(int(cx - 6), int(length + 3), 12, 12)
+        painter.drawEllipse(int(cx - 4), int(length - 3), 8, 7)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(C["accent"]))
+        painter.drawEllipse(int(cx - 3), int(length - 1), 2, 2)
+        painter.drawEllipse(int(cx + 1), int(length - 1), 2, 2)
+        painter.end()
+
+
+class CrawlingSpider(QWidget):
+    SIZE = 60
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(self.SIZE, self.SIZE)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WA_NoSystemBackground, True)
+        self.setStyleSheet("background: transparent;")
+        self._angle = 0.0
+        self._gait = 0.0
+        self.hide()
+
+    def pose(self, angle_deg: float, gait: float):
+        self._angle = angle_deg
+        self._gait = gait
+        self.update()
+
+    def paintEvent(self, event):
+        del event
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.translate(self.SIZE / 2, self.SIZE / 2)
+        painter.rotate(self._angle)
+        painter.scale(1.4, 1.4)
+        leg = QColor(C["text"])
+        leg.setAlpha(190)
+        pen = painter.pen()
+        pen.setColor(leg)
+        pen.setWidthF(1.4)
+        painter.setPen(pen)
+        for i, base in enumerate((-6.0, -2.0, 2.0, 6.0)):
+            swing = math.sin(self._gait + (math.pi if i % 2 else 0.0)) * 3.5
+            for side in (-1, 1):
+                knee = (base * 0.8 + swing * 0.5, side * 9.0)
+                foot = (base * 1.6 + swing, side * 16.0)
+                painter.drawLine(int(base * 0.5), 0, int(knee[0]), int(knee[1]))
+                painter.drawLine(int(knee[0]), int(knee[1]), int(foot[0]), int(foot[1]))
+        painter.setPen(QColor(C["dark"]))
+        painter.setBrush(QColor("#05030A"))
+        painter.drawEllipse(-11, -6, 13, 12)
+        painter.drawEllipse(1, -4, 9, 8)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(C["accent"]))
+        painter.drawEllipse(7, -3, 2, 2)
+        painter.drawEllipse(7, 1, 2, 2)
+        painter.end()
+
+
+class HalloweenOverlay(QObject):
+    def __init__(self, host: QWidget):
+        super().__init__(host)
+        self._host = host
+        self._t0 = time.monotonic()
+        self._spiders = [
+            (0.42, HangingSpider(18, 70, 7.0, 0.0, host)),
+            (0.71, HangingSpider(30, 120, 9.5, 2.1, host)),
+            (0.56, HangingSpider(14, 52, 6.0, 4.0, host)),
+        ]
+        self._web = QLabel(host)
+        self._web.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._web.setStyleSheet("background: transparent;")
+        self._web.setPixmap(_cobweb_pixmap(64, C["dark"]))
+        self._web.resize(64, 64)
+        self._crawler = CrawlingSpider(host)
+        self._crawl = None
+        self._next_crawl = time.monotonic() + 20.0
+        host.installEventFilter(self)
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self._tick)
+        self._timer.start(40)
+        self.place()
+
+    def place(self):
+        width = self._host.width()
+        rail = IndexRail._W
+        page = max(1, width - rail)
+        for frac, spider in self._spiders:
+            spider.move(int(rail + page * frac - spider.width() / 2), 0)
+            spider.raise_()
+        self._web.move(width - self._web.width(), 0)
+        self._web.raise_()
+
+    def eventFilter(self, obj, event):
+        if obj is self._host and event.type() == event.Resize:
+            self.place()
+        return False
+
+    def start_crawl(self):
+        width, height = self._host.width(), self._host.height()
+        size = CrawlingSpider.SIZE
+        direction = random.choice((1, -1))
+        x0, x1 = (-size, width) if direction == 1 else (width, -size)
+        y0 = random.uniform(140, max(160, height - 120))
+        duration = width / random.uniform(150.0, 210.0)
+        self._crawl = (time.monotonic(), duration, x0, x1, y0, random.uniform(18, 40), direction)
+        self._crawler.show()
+        self._crawler.raise_()
+
+    def _update_crawl(self, now: float):
+        if self._crawl is None:
+            if now >= self._next_crawl:
+                self.start_crawl()
+            return
+        t0, duration, x0, x1, y0, amp, direction = self._crawl
+        progress = (now - t0) / duration
+        if progress >= 1.0:
+            self._crawl = None
+            self._crawler.hide()
+            self._next_crawl = now + random.uniform(45.0, 120.0)
+            return
+        x = x0 + (x1 - x0) * progress
+        wobble = 2 * math.pi * progress * 2
+        y = y0 + amp * math.sin(wobble)
+        dy = amp * math.cos(wobble) * 2 * math.pi * 2 / max(1.0, abs(x1 - x0))
+        angle = math.degrees(math.atan2(dy * direction, 1.0)) + (0 if direction == 1 else 180)
+        self._crawler.move(int(x), int(y))
+        self._crawler.pose(angle, (now - t0) * 18.0)
+
+    def _tick(self):
+        if not self._host.isVisible() or self._host.window().isMinimized():
+            return
+        now = time.monotonic()
+        t = now - self._t0
+        for _frac, spider in self._spiders:
+            spider.advance(t)
+        self._update_crawl(now)
+
+
+class StateBadge(QWidget):
+    def __init__(self, large: bool = False, parent=None):
+        super().__init__(parent)
+        self._large = large
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(8 if large else 6)
+        dot_size = 10 if large else 7
+        self._dot = QLabel()
+        self._dot.setFixedSize(dot_size, dot_size)
+        self._dot_size = dot_size
+        lay.addWidget(self._dot, 0, Qt.AlignVCenter)
+        self._label = QLabel()
+        lay.addWidget(self._label, 0, Qt.AlignVCenter)
+        self._fade = QGraphicsOpacityEffect(self._dot)
+        self._dot.setGraphicsEffect(self._fade)
+        self._pulse = QPropertyAnimation(self._fade, b"opacity", self)
+        self._pulse.setDuration(1400)
+        self._pulse.setKeyValueAt(0.0, 1.0)
+        self._pulse.setKeyValueAt(0.5, 0.15)
+        self._pulse.setKeyValueAt(1.0, 1.0)
+        self._pulse.setEasingCurve(QEasingCurve.InOutSine)
+        self._pulse.setLoopCount(-1)
+        self.hide()
+
+    def set_state(self, state: str):
+        styles = {
+            "running": ("Running", C["running"]),
+            "paused": ("Paused", C["warning"]),
+            "unavailable": ("Unavailable", C["muted"]),
+        }
+        if state not in styles:
+            self._pulse.stop()
+            self.hide()
+            return
+        text, color = styles[state]
+        size = 15 if self._large else 12
+        self._label.setText(text)
+        self._label.setStyleSheet(f"background: transparent; color: {color}; font-size: {size}px; font-weight: 700;")
+        self._dot.setStyleSheet(f"background: {color}; border-radius: {self._dot_size // 2}px;")
+        self._dot.setVisible(state in ("running", "paused"))
+        if state == "running":
+            if self._pulse.state() != QPropertyAnimation.Running:
+                self._pulse.start()
+        else:
+            self._pulse.stop()
+            self._fade.setOpacity(1.0)
+        self.show()
+
+
+def _state_badge(large: bool = False) -> StateBadge:
+    return StateBadge(large)
+
+
+def _set_badge(badge: StateBadge, state: str):
+    badge.set_state(state)
+
+
+def _controller_state(farmer: dict, controller) -> str:
+    if controller.is_running:
+        return "paused" if controller.is_paused else "running"
+    if farmer.get("availability_error"):
+        return "unavailable"
+    return ""
+
+
+def _page_title(text: str, size: int = 20, color: str | None = None) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setStyleSheet(f"font-size: {size}px; font-weight: 700; color: {color or C['text']}; background: transparent;")
+    return lbl
+
+
+def _section_title(text: str) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setStyleSheet(f"font-size: 14px; font-weight: 700; color: {C['text']};")
+    return lbl
+
+
+def _muted(text: str, size: int = 13) -> QLabel:
+    lbl = QLabel(text)
+    lbl.setWordWrap(True)
+    lbl.setStyleSheet(f"font-size: {size}px; color: {C['muted']}; background: transparent;")
+    return lbl
+
+
+class _Clickable(QFrame):
+    clicked = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.setCursor(Qt.PointingHandCursor)
-        self._set_style(running=False)
-        self._init_ui(farmer)
+        self.setFocusPolicy(Qt.TabFocus)
 
-    def _set_style(self, running: bool):
-        border = "#10b981" if running else C["border"]
-        hover_border = "#10b981" if running else C["accent"]
-        self.setStyleSheet(f"""
-            FarmerTile {{
-                background: {C['tile_bg']};
-                border: 2px solid {border};
-                border-radius: 8px;
-            }}
-            FarmerTile:hover {{
-                border-color: {hover_border};
-                background: {C['tile_hover']};
-            }}
-        """)
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton and self.rect().contains(event.pos()):
+            self.clicked.emit()
+        super().mouseReleaseEvent(event)
 
-    def _init_ui(self, farmer):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Space):
+            self.clicked.emit()
+            return
+        super().keyPressEvent(event)
 
-        # Image wrapper
-        img_wrapper = QWidget()
-        img_wrapper.setFixedHeight(self._IMG_H)
-        img_wrapper.setStyleSheet(f"background: {C['panel2']}; border-radius: 8px 8px 0 0;")
-        img_wr_lay = QVBoxLayout(img_wrapper)
-        img_wr_lay.setContentsMargins(0, 0, 0, 0)
 
-        _img_w = self._TILE_W - 4  # tile border is 2px on each side
-        self.img_label = QLabel()
-        self.img_label.setAlignment(Qt.AlignCenter)
-        self.img_label.setFixedSize(_img_w, self._IMG_H)
-        self.img_label.setStyleSheet("background: transparent;")
-        img_wr_lay.addWidget(self.img_label, 0, Qt.AlignCenter)
-        layout.addWidget(img_wrapper)
+class VersionSwitch(QWidget):
+    currentIndexChanged = pyqtSignal(int)
 
-        # Load image
-        image_path = get_farmer_image_path(farmer)
-        if image_path and os.path.exists(image_path):
-            pixmap = QPixmap(image_path)
-            if not pixmap.isNull():
-                scaled = pixmap.scaled(_img_w, self._IMG_H, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
-                x = max(0, (scaled.width() - _img_w) // 2)
-                y = max(0, (scaled.height() - self._IMG_H) // 2)
-                cropped = scaled.copy(x, y, _img_w, self._IMG_H)
-                self.img_label.setPixmap(_rounded_pixmap(cropped, 9))
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._items: list[tuple[str, object]] = []
+        self._index = -1
+        self._buttons: list[QPushButton] = []
+        self._lay = QHBoxLayout(self)
+        self._lay.setContentsMargins(0, 0, 0, 0)
+        self._lay.setSpacing(0)
 
-        # Body
-        body = QWidget()
-        body.setStyleSheet("background: transparent;")
-        body_lay = QVBoxLayout(body)
-        body_lay.setContentsMargins(8, 20, 8, 8)
-        body_lay.setSpacing(2)
+    def addItem(self, text, data=None):
+        short = text.split(" (")[0]
+        button = QPushButton(short)
+        button.setCheckable(True)
+        button.setCursor(Qt.PointingHandCursor)
+        button.setToolTip(text)
+        idx = len(self._items)
+        button.clicked.connect(lambda _=False, i=idx: self._on_clicked(i))
+        self._items.append((text, data))
+        self._buttons.append(button)
+        self._lay.addWidget(button, 1)
+        self._restyle()
 
-        name_label = QLabel(farmer["name"])
-        name_label.setStyleSheet(f"font-size: 15px; font-weight: 600; color: {C['text']};")
-        name_label.setWordWrap(True)
-        name_label.setAlignment(Qt.AlignCenter)
-        body_lay.addWidget(name_label)
+    def _on_clicked(self, index):
+        if index == self._index:
+            self._restyle()
+            return
+        self.setCurrentIndex(index)
 
-        status_row = QHBoxLayout()
-        status_row.setSpacing(4)
-        status_row.setContentsMargins(0, 0, 0, 0)
-        self.status_dot = QLabel("●")
-        self.status_dot.setStyleSheet("color: #252535; font-size: 8px;")
-        self.status_dot.hide()
-        self.status_text = QLabel("")
-        self.status_text.setStyleSheet("font-size: 10px; color: #3f3f5a;")
-        if farmer.get("availability_error"):
-            self.status_dot.setStyleSheet(f"color: {C['warning']}; font-size: 8px;")
-            self.status_dot.show()
-            self.status_text.setStyleSheet(f"font-size: 10px; color: {C['warning']};")
-            self.status_text.setText("Unavailable")
-            self.setToolTip(farmer["availability_error"])
-        status_row.addStretch(1)
-        status_row.addWidget(self.status_dot)
-        status_row.addWidget(self.status_text)
-        status_row.addStretch(1)
-        body_lay.addLayout(status_row)
+    def findData(self, data):
+        for i, (_text, item_data) in enumerate(self._items):
+            if item_data == data:
+                return i
+        return -1
 
-        layout.addWidget(body)
+    def currentData(self):
+        return self._items[self._index][1] if 0 <= self._index < len(self._items) else None
+
+    def currentIndex(self):
+        return self._index
+
+    def setCurrentIndex(self, index):
+        if index == self._index or not 0 <= index < len(self._items):
+            self._restyle()
+            return
+        self._index = index
+        self._restyle()
+        self.currentIndexChanged.emit(index)
+
+    def setMinimumWidth(self, width):
+        super().setMinimumWidth(width)
+
+    def changeEvent(self, event):
+        if not self.isEnabled():
+            for button in self._buttons:
+                if button.hasFocus():
+                    button.clearFocus()
+        super().changeEvent(event)
+        self._restyle()
+
+    def _restyle(self):
+        enabled = self.isEnabled()
+        last = len(self._buttons) - 1
+        for i, button in enumerate(self._buttons):
+            on = i == self._index
+            button.setChecked(on)
+            left = "8px" if i == 0 else "0"
+            right = "8px" if i == last else "0"
+            bg = C["home_ink"] if on else C["field"]
+            fg = C["on_home"] if on else C["text"]
+            if not enabled:
+                bg = C["dark"] if on else C["panel2"]
+                fg = C["bg"] if on else C["dark"]
+            button.setStyleSheet(
+                f"QPushButton {{ background: {bg}; color: {fg}; border: 1px solid {C['home_ink'] if enabled else C['border2']};"
+                f" border-top-left-radius: {left}; border-bottom-left-radius: {left};"
+                f" border-top-right-radius: {right}; border-bottom-right-radius: {right};"
+                f" {'border-left: none;' if i > 0 else ''} padding: 6px 0; font-size: 13px; font-weight: 700; }}"
+                f"QPushButton:hover {{ background: {bg if on else C['panel2']}; }}"
+                f"QPushButton:focus {{ border-color: {C['accent']}; }}"
+            )
+
+    def setToolTip(self, text):
+        super().setToolTip(text)
+        for button in self._buttons:
+            button.setToolTip(text)
+
+
+class IndexRow(_Clickable):
+    def __init__(self, key, title, color, count=None, icon=None, parent=None):
+        super().__init__(parent)
+        self.key = key
+        self.color = color
+        self._icon_name = icon
+        self._active = False
+        self._running = False
+        self.setFixedHeight(40)
+        self.setObjectName("indexRow")
+
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(18, 0, 16, 0)
+        lay.setSpacing(10)
+        self._mark = QLabel()
+        self._mark.setFixedSize(16, 16)
+        lay.addWidget(self._mark)
+        self._title = QLabel(title)
+        lay.addWidget(self._title, 1)
+        self._dot = QLabel()
+        self._dot.setFixedSize(8, 8)
+        self._dot.setToolTip("A Farmer here is running")
+        lay.addWidget(self._dot)
+        self._count = QLabel("" if count is None else str(count))
+        lay.addWidget(self._count)
+        self._restyle()
+
+    def set_active(self, active: bool):
+        if self._active != active:
+            self._active = active
+            self._restyle()
 
     def set_running(self, running: bool):
-        self._set_style(running)
-        if running:
-            self.status_dot.setStyleSheet("color: #10b981; font-size: 8px;")
-            self.status_dot.show()
-            self.status_text.setStyleSheet("font-size: 10px; color: #10b981;")
-            self.status_text.setText("Running")
+        if self._running != running:
+            self._running = running
+            self._restyle()
+
+    def _restyle(self):
+        on = _on_ink(self.color) if self._active else C["text"]
+        bg = self.color if self._active else "transparent"
+        hover = "" if self._active else f"QFrame#indexRow:hover {{ background: {C['panel2']}; }}"
+        self.setStyleSheet(
+            f"QFrame#indexRow {{ background: {bg}; border: none; border-radius: 8px; margin: 1px 8px; }}{hover}"
+            f"QFrame#indexRow:focus {{ border: 1px solid {C['accent']}; }}"
+        )
+        weight = 700
+        self._title.setStyleSheet(f"color: {on}; font-size: 13px; font-weight: {weight}; background: transparent;")
+        self._count.setStyleSheet(
+            f"color: {on if self._active else C['muted']}; font-size: 12px; font-weight: 700; background: transparent;"
+        )
+        icon_color = C["running"] if self._running and not self._active else on
+        if self._icon_name:
+            self._mark.setPixmap(svg_icon(self._icon_name, icon_color, 16).pixmap(16, 16))
+        self._mark.setStyleSheet("background: transparent;")
+        self._mark.setToolTip("A Farmer here is running" if self._running else "")
+        if self._running and self._active:
+            self._dot.setStyleSheet(f"background: {C['running']}; border-radius: 4px; border: 1.5px solid {on};")
+            self._dot.show()
         else:
-            if self.farmer.get("availability_error"):
-                self.status_dot.setStyleSheet(f"color: {C['warning']}; font-size: 8px;")
-                self.status_dot.show()
-                self.status_text.setStyleSheet(f"font-size: 10px; color: {C['warning']};")
-                self.status_text.setText("Unavailable")
-            else:
-                self.status_dot.hide()
-                self.status_text.setText("")
+            self._dot.hide()
 
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.clicked.emit(self.farmer_name)
-        super().mousePressEvent(event)
+    def set_count(self, count):
+        self._count.setText("" if count is None else str(count))
 
 
-# Grid View
+class IndexRail(QWidget):
+    navigate = pyqtSignal(str)
+    theme_toggled = pyqtSignal()
+    halloween_toggled = pyqtSignal()
+
+    _W = 220
+
+    def __init__(self, chapters, game_version_combo: QWidget, favorites_count: int = 0, parent=None):
+        super().__init__(parent)
+        self.setFixedWidth(self._W)
+        self.setObjectName("indexRail")
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setStyleSheet(f"QWidget#indexRail {{ background: {C['rail']}; border-right: 1px solid {C['border']}; }}")
+        self._rows: dict[str, IndexRow] = {}
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+
+        head = QWidget()
+        head.setObjectName("railHead")
+        head.setAttribute(Qt.WA_StyledBackground, True)
+        head.setStyleSheet("QWidget#railHead { background: transparent; }")
+        head_lay = QVBoxLayout(head)
+        head_lay.setContentsMargins(18, 20, 16, 16)
+        head_lay.setSpacing(2)
+        mark = QLabel()
+        mark.setTextFormat(Qt.RichText)
+        mark.setText(
+            f'<span style="font-size:19px;font-weight:800;color:{_WORDMARK_TEXT};">Auto</span>'
+            f'<span style="font-size:19px;font-weight:800;color:{_WORDMARK_ACCENT};">Farmers</span>'
+        )
+        head_lay.addWidget(mark)
+        head_lay.addWidget(_muted("7DS Grand Cross", 12))
+        if _HALLOWEEN:
+            boo = QLabel("Happy Halloween")
+            boo.setStyleSheet(f"color: {C['accent']}; font-size: 12px; font-weight: 700; background: transparent;")
+            head_lay.addWidget(boo)
+            web = QLabel(head)
+            web.setPixmap(_cobweb_pixmap(56, C["dark"]))
+            web.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            web.setStyleSheet("background: transparent;")
+            web.setGeometry(self._W - 57, 0, 56, 56)
+        head_lay.addSpacing(14)
+        version_lbl = QLabel("Game version")
+        version_lbl.setStyleSheet(f"color: {C['dim']}; font-size: 12px; font-weight: 700;")
+        head_lay.addWidget(version_lbl)
+        head_lay.addSpacing(4)
+        head_lay.addWidget(game_version_combo)
+        lay.addWidget(head)
+
+        self._add_row(lay, IndexRow("home", "Home", C["home_ink"], icon="home"))
+        self._add_row(lay, IndexRow("favorites", "Favorites", C["home_ink"], count=favorites_count or None,
+                                    icon="star"))
+        self._add_row(lay, IndexRow("rewards", "Rewards summary", C["home_ink"], icon="gift"))
+        for ch in chapters:
+            self._add_row(lay, IndexRow(ch["id"], ch["title"], ch["color"], count=None,
+                                        icon=ch.get("icon", "grid")))
+
+        filler = QWidget()
+        filler.setObjectName("railFiller")
+        filler.setAttribute(Qt.WA_StyledBackground, True)
+        filler.setStyleSheet("QWidget#railFiller { background: transparent; }")
+        lay.addWidget(filler, 1)
+
+        foot_rule = QFrame()
+        foot_rule.setFixedHeight(1)
+        foot_rule.setStyleSheet(f"background: {C['border']}; border: none;")
+        lay.addWidget(foot_rule)
+        self._add_row(lay, IndexRow("settings", "Settings", C["home_ink"], icon="settings"))
+        self._add_row(lay, IndexRow("devtest", "DevTest", C["home_ink"], icon="flask"))
+        self._add_row(lay, IndexRow("about", "About & updates", C["home_ink"], icon="info"))
+
+        dark = _ACTIVE_THEME != "light"
+        self.theme_btn = IndexRow("theme", "Light theme" if dark else "Dark theme", C["home_ink"],
+                                  icon="sun" if dark else "moon")
+        self.theme_btn.setToolTip("Switches the look and reopens the window. Stop running Farmers first.")
+        self.theme_btn.clicked.connect(self.theme_toggled)
+        lay.addWidget(self.theme_btn)
+        self.halloween_btn = IndexRow(
+            "halloween", "Exit Halloween" if _HALLOWEEN else "Halloween theme", C["home_ink"], icon="pumpkin"
+        )
+        self.halloween_btn.setToolTip(
+            "Back to the dark theme. Reopens the window." if _HALLOWEEN
+            else "Spooky colours for the season. Reopens the window. Stop running Farmers first."
+        )
+        self.halloween_btn.clicked.connect(self.halloween_toggled)
+        lay.addWidget(self.halloween_btn)
+        lay.addSpacing(8)
+
+    def _add_row(self, lay, row: IndexRow):
+        row.clicked.connect(lambda key=row.key: self.navigate.emit(key))
+        self._rows[row.key] = row
+        lay.addWidget(row)
+
+    def set_active(self, key: str):
+        for row_key, row in self._rows.items():
+            row.set_active(row_key == key)
+
+    def set_favorites_count(self, count: int):
+        self._rows["favorites"].set_count(count or None)
+
+    def set_running_chapters(self, chapter_ids: set):
+        for row_key, row in self._rows.items():
+            row.set_running(row_key in chapter_ids)
 
 
-class GridView(QWidget):
+class _PageHeader(QWidget):
+    def __init__(self, title: str, subtitle: str = "", back_text: str = "", back_callback=None,
+                 height: int = 92, parent=None):
+        super().__init__(parent)
+        self._back_callback = back_callback
+        self.setObjectName("pageHeader")
+        self.setAttribute(Qt.WA_StyledBackground, True)
+        self.setFixedHeight(height)
+        on = C["text"]
+        self.setStyleSheet(f"QWidget#pageHeader {{ background: {C['bg']}; border-bottom: 1px solid {C['border']}; }}")
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(28, 0, 24, 0)
+        lay.setSpacing(16)
+        text_col = QVBoxLayout()
+        text_col.setSpacing(2)
+        text_col.addStretch(1)
+        if back_callback is not None:
+            back = QPushButton("  " + back_text.replace("&", "&&"))
+            back.setIcon(svg_icon("back", on, 14))
+            back.setCursor(Qt.PointingHandCursor)
+            back.setStyleSheet(
+                f"QPushButton {{ background: transparent; color: {on}; border: none; padding: 0;"
+                " font-size: 12px; font-weight: 700; text-align: left; }"
+                "QPushButton:hover { text-decoration: underline; }"
+            )
+            self._back_callback = back_callback
+            back.clicked.connect(lambda _checked=False: self._back_callback())
+            text_col.addWidget(back, 0, Qt.AlignLeft)
+        self.back_btn = back if back_callback is not None else None
+        self.title_label = _page_title(title, 24, on)
+        text_col.addWidget(self.title_label)
+        if subtitle:
+            sub = QLabel(subtitle)
+            sub.setStyleSheet(f"color: {C['muted']}; font-size: 13px; background: transparent;")
+            text_col.addWidget(sub)
+        text_col.addStretch(1)
+        lay.addLayout(text_col, 1)
+        self.right = QHBoxLayout()
+        self.right.setSpacing(10)
+        lay.addLayout(self.right)
+
+    def set_back(self, text: str, callback):
+        if self.back_btn is None:
+            return
+        self.back_btn.setText("  " + text.replace("&", "&&"))
+        self._back_callback = callback
+
+
+class FavoriteButton(QPushButton):
+    def __init__(self, name: str, recent: "RecentStore", on_color: str | None = None, with_text: bool = False,
+                 parent=None):
+        super().__init__(parent)
+        self._name = name
+        self._recent = recent
+        self._on_color = on_color
+        self._with_text = with_text
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFocusPolicy(Qt.TabFocus)
+        self.clicked.connect(lambda _checked=False: self._recent.toggle_favorite(self._name))
+        recent.favorites_changed.connect(self.refresh)
+        self.refresh()
+
+    def refresh(self):
+        fav = self._recent.is_favorite(self._name)
+        base = self._on_color or C["muted"]
+        star_color = INK_YELLOW if fav and self._on_color is None else base
+        self.setIcon(svg_icon("star_fill" if fav else "star", star_color, 18))
+        self.setToolTip("Remove from Favorites" if fav else "Add to Favorites")
+        if self._with_text:
+            self.setText("  Favorite" if fav else "  Add to favorites")
+        border = f"1.5px solid {base}" if self._with_text else "none"
+        self.setStyleSheet(
+            f"QPushButton {{ background: transparent; color: {base}; border: {border}; border-radius: 8px;"
+            f" padding: {'6px 12px' if self._with_text else '6px'}; font-size: 12px; font-weight: 700; }}"
+            f"QPushButton:hover {{ background: {_tint(base, 0.14)}; }}"
+            f"QPushButton:focus {{ border: 1px solid {C['accent']}; }}"
+        )
+
+
+class FarmerRow(_Clickable):
+    def __init__(self, farmer, controller, recent: RecentStore, parent=None):
+        super().__init__(parent)
+        self.farmer = farmer
+        self.controller = controller
+        self._recent = recent
+        self.setObjectName("farmerRow")
+        self.setStyleSheet(
+            f"QFrame#farmerRow {{ background: transparent; border: none; border-bottom: 1px solid {C['border']}; }}"
+            f"QFrame#farmerRow:hover {{ background: {C['tile_hover']}; }}"
+            f"QFrame#farmerRow:focus {{ background: {C['tile_hover']}; }}"
+        )
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(28, 12, 24, 12)
+        lay.setSpacing(18)
+        lay.addWidget(_art_label(farmer, 144, 81))
+        col = QVBoxLayout()
+        col.setSpacing(4)
+        col.addStretch(1)
+        name = QLabel(farmer["name"])
+        name.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {C['text']}; background: transparent;")
+        col.addWidget(name)
+        col.addWidget(_muted(_farmer_summary(farmer)))
+        col.addStretch(1)
+        lay.addLayout(col, 1)
+        right = QVBoxLayout()
+        right.setSpacing(6)
+        right.addStretch(1)
+        self.badge = _state_badge()
+        right.addWidget(self.badge, 0, Qt.AlignRight)
+        right.addStretch(1)
+        lay.addLayout(right)
+        lay.addWidget(FavoriteButton(farmer["name"], recent))
+        chevron = QLabel()
+        chevron.setPixmap(svg_icon("chevron", C["dark"], 16).pixmap(16, 16))
+        chevron.setStyleSheet("background: transparent;")
+        lay.addWidget(chevron)
+        if farmer.get("availability_error"):
+            self.setToolTip(farmer["availability_error"])
+        self.refresh()
+
+    def refresh(self, *_args):
+        state = _controller_state(self.farmer, self.controller)
+        _set_badge(self.badge, state)
+
+
+class ChapterPage(QWidget):
     farmer_selected = pyqtSignal(str)
 
-    _COLS = 5
-
-    def __init__(self, farmers, parent=None):
+    def __init__(self, chapter, controllers, recent: RecentStore, parent=None):
         super().__init__(parent)
-        self._tiles: dict = {}
-        self._init_ui(farmers)
+        self.chapter = chapter
+        self._rows: list[FarmerRow] = []
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        count = len(chapter["members"])
+        header = _PageHeader(chapter["title"], chapter["blurb"], height=80)
+        numeral = QLabel(f"{count}<span style='font-size:13px;'> Farmer{'s' if count != 1 else ''}</span>")
+        numeral.setTextFormat(Qt.RichText)
+        numeral.setStyleSheet(
+            f"color: {C['text']}; font-size: 30px; font-weight: 700; background: transparent;"
+        )
+        lay.addWidget(header)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        body = QWidget()
+        body_lay = QVBoxLayout(body)
+        body_lay.setContentsMargins(0, 8, 0, 24)
+        body_lay.setSpacing(0)
+        for farmer in chapter["members"]:
+            controller = controllers[farmer["name"]]
+            row = FarmerRow(farmer, controller, recent)
+            row.clicked.connect(lambda n=farmer["name"]: self.farmer_selected.emit(n))
+            controller.running_changed.connect(row.refresh)
+            controller.paused_changed.connect(row.refresh)
+            self._rows.append(row)
+            body_lay.addWidget(row)
+        body_lay.addStretch(1)
+        scroll.setWidget(body)
+        lay.addWidget(scroll, 1)
 
-    def _init_ui(self, farmers):
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        outer.setSpacing(0)
+    def refresh(self):
+        for row in self._rows:
+            row.refresh()
+
+
+class FavoritesPage(QWidget):
+    farmer_selected = pyqtSignal(str)
+
+    def __init__(self, farmers_by_name, controllers, recent: RecentStore, parent=None):
+        super().__init__(parent)
+        self._farmers = farmers_by_name
+        self._controllers = controllers
+        self._recent = recent
+        self._rows: list[FarmerRow] = []
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        lay.addWidget(_PageHeader("Favorites", "Your saved Farmers, ready to start.",
+                                  height=80))
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        body = QWidget()
+        self._body = QVBoxLayout(body)
+        self._body.setContentsMargins(0, 8, 0, 24)
+        self._body.setSpacing(0)
+        scroll.setWidget(body)
+        lay.addWidget(scroll, 1)
+        recent.favorites_changed.connect(self.rebuild)
+        self.rebuild()
+
+    def rebuild(self):
+        while self._body.count():
+            item = self._body.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+        self._rows = []
+        names = [n for n in self._recent.favorites if n in self._farmers]
+        if not names:
+            empty = QWidget()
+            empty_lay = QVBoxLayout(empty)
+            empty_lay.setContentsMargins(28, 28, 28, 0)
+            empty_lay.setSpacing(6)
+            star = QLabel()
+            star.setPixmap(svg_icon("star", C["dark"], 32).pixmap(32, 32))
+            empty_lay.addWidget(star)
+            empty_lay.addWidget(_section_title("No favorites yet"))
+            empty_lay.addWidget(_muted("Press the star next to any Farmer, or on its page, to keep it here."))
+            self._body.addWidget(empty)
+        for name in names:
+            controller = self._controllers[name]
+            row = FarmerRow(self._farmers[name], controller, self._recent)
+            row.clicked.connect(lambda n=name: self.farmer_selected.emit(n))
+            controller.running_changed.connect(row.refresh)
+            controller.paused_changed.connect(row.refresh)
+            self._rows.append(row)
+            self._body.addWidget(row)
+        self._body.addStretch(1)
+
+    def refresh(self):
+        for row in self._rows:
+            row.refresh()
+
+
+class RewardTile(QFrame):
+    def __init__(self, label: str, icon_path: str, parent=None):
+        super().__init__(parent)
+        self.setObjectName("rewardTile")
+        self.setStyleSheet(
+            f"QFrame#rewardTile {{ background: {C['panel2']}; border: 1px solid {C['border']}; border-radius: 8px; }}"
+        )
+        self.setMinimumHeight(72)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(10, 10, 10, 10)
+        lay.setSpacing(12)
+        icon = QLabel()
+        icon.setFixedSize(42, 42)
+        icon.setAlignment(Qt.AlignCenter)
+        icon.setStyleSheet("background: transparent; border: none;")
+        pixmap = QPixmap(icon_path)
+        if not pixmap.isNull():
+            icon.setPixmap(pixmap.scaled(42, 42, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        else:
+            icon.setPixmap(svg_icon("gift", C["muted"], 24).pixmap(24, 24))
+        lay.addWidget(icon, 0, Qt.AlignTop)
+        col = QVBoxLayout()
+        col.setSpacing(2)
+        name = QLabel(label)
+        name.setWordWrap(True)
+        name.setStyleSheet(f"color: {C['dim']}; font-size: 12px; background: transparent; border: none;")
+        col.addWidget(name)
+        self.total = QLabel("0")
+        self.total.setStyleSheet(f"color: {C['text']}; font-size: 15px; font-weight: 700; background: transparent; border: none;")
+        col.addWidget(self.total)
+        self.last = QLabel("")
+        self.last.setStyleSheet(f"color: {C['running']}; font-size: 11px; background: transparent; border: none;")
+        col.addWidget(self.last)
+        col.addStretch(1)
+        lay.addLayout(col, 1)
+
+    def set_counts(self, total: int, gained: int | None):
+        self.total.setText(f"{total:,}")
+        self.last.setText(f"+{gained:,} last run" if gained else "")
+
+
+class RewardSection(QFrame):
+    _COLS = 4
+
+    def __init__(self, reward_set: RewardSet, controller: FarmerController, color: str, parent=None):
+        super().__init__(parent)
+        self._controller = controller
+        self.setObjectName("rewardSection")
+        self.setStyleSheet(
+            f"QFrame#rewardSection {{ background: {C['panel']}; border: 1px solid {C['border']}; border-radius: 8px; }}"
+        )
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 16)
+        lay.setSpacing(0)
+        head = QHBoxLayout()
+        head.setContentsMargins(16, 14, 16, 12)
+        head.setSpacing(8)
+        mark = QLabel()
+        mark.setPixmap(svg_icon("gift", color, 16).pixmap(16, 16))
+        mark.setStyleSheet("background: transparent; border: none;")
+        head.addWidget(mark)
+        title = QLabel(reward_set.title)
+        title.setStyleSheet(f"color: {C['text']}; font-size: 14px; font-weight: 700; background: transparent; border: none;")
+        head.addWidget(title)
+        head.addStretch(1)
+        self._status = QLabel()
+        self._status.setStyleSheet(f"color: {C['muted']}; font-size: 12px; background: transparent; border: none;")
+        head.addWidget(self._status)
+        lay.addLayout(head)
+        grid = QGridLayout()
+        grid.setContentsMargins(16, 0, 16, 0)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(10)
+        self._tiles: dict[str, RewardTile] = {}
+        for i, (key, label) in enumerate(reward_set.items):
+            tile = RewardTile(label, os.path.join(reward_set.rewards_dir, f"{key}.png"))
+            grid.addWidget(tile, i // self._COLS, i % self._COLS)
+            self._tiles[key] = tile
+        for c in range(self._COLS):
+            grid.setColumnStretch(c, 1)
+        lay.addLayout(grid)
+        controller.rewards_changed.connect(self.refresh)
+        self.refresh()
+
+    def refresh(self):
+        snapshot = self._controller.get_status_snapshot()
+        runs = snapshot.reward_runs
+        self._status.setText(
+            f"{runs} run{'s' if runs != 1 else ''} read this session" if runs else "Waiting for the first clear"
+        )
+        for key, tile in self._tiles.items():
+            tile.set_counts(snapshot.session_rewards.get(key, 0), snapshot.last_rewards.get(key))
+
+
+class RewardsPage(QWidget):
+    def __init__(self, controllers: dict, chapter_of: dict, parent=None):
+        super().__init__(parent)
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        lay.addWidget(_PageHeader("Rewards summary",
+                                  "What your Farmers collected this session.", height=80))
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        body = QWidget()
+        body_lay = QVBoxLayout(body)
+        body_lay.setContentsMargins(28, 20, 28, 32)
+        body_lay.setSpacing(18)
+        for name, reward_set in REWARD_SETS.items():
+            controller = controllers.get(name)
+            if controller is None:
+                continue
+            color = chapter_of[name]["color"] if name in chapter_of else C["accent"]
+            body_lay.addWidget(RewardSection(reward_set, controller, color))
+        body_lay.addStretch(1)
+        scroll.setWidget(body)
+        lay.addWidget(scroll, 1)
+
+
+class RecentCard(_Clickable):
+    def __init__(self, farmer, chapter, controller, recent: RecentStore, parent=None):
+        super().__init__(parent)
+        self.farmer = farmer
+        self.controller = controller
+        self._recent = recent
+        self.setObjectName("recentCard")
+        self.setFixedWidth(224)
+        self.setStyleSheet(
+            f"QFrame#recentCard {{ background: {C['tile_bg']}; border: 1px solid {C['border']}; border-radius: 8px; }}"
+            f"QFrame#recentCard:hover {{ border-color: {C['text']}; background: {C['tile_hover']}; }}"
+            f"QFrame#recentCard:focus {{ border: 2px solid {C['accent']}; }}"
+        )
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        lay.addWidget(_art_label(farmer, 222, 125, top_only=True), 0, Qt.AlignHCenter)
+        ink = QFrame()
+        ink.setFixedHeight(3)
+        ink.setStyleSheet(f"background: {chapter['color']}; border: none; border-radius: 0;")
+        lay.addWidget(ink)
+        body = QVBoxLayout()
+        body.setContentsMargins(12, 10, 12, 12)
+        body.setSpacing(4)
+        top = QHBoxLayout()
+        top.setSpacing(6)
+        name = QLabel(farmer["name"])
+        name.setStyleSheet(f"font-size: 14px; font-weight: 700; color: {C['text']}; background: transparent;")
+        top.addWidget(name, 1)
+        self.badge = _state_badge()
+        top.addWidget(self.badge)
+        body.addLayout(top)
+        lay.addLayout(body)
+        self.refresh()
+
+    def refresh(self, *_args):
+        state = _controller_state(self.farmer, self.controller)
+        _set_badge(self.badge, state)
+
+
+class ChapterIndexRow(_Clickable):
+    def __init__(self, chapter, parent=None):
+        super().__init__(parent)
+        self.setObjectName("chapterIndexRow")
+        self.setStyleSheet(
+            f"QFrame#chapterIndexRow {{ background: transparent; border: none; border-bottom: 1px solid {C['border']}; }}"
+            f"QFrame#chapterIndexRow:hover {{ background: {C['tile_hover']}; }}"
+            f"QFrame#chapterIndexRow:focus {{ background: {C['tile_hover']}; }}"
+        )
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(4, 7, 8, 7)
+        lay.setSpacing(16)
+        tab = QLabel()
+        tab.setFixedSize(64, 70)
+        tab.setAlignment(Qt.AlignCenter)
+        tab.setPixmap(svg_icon(chapter.get("icon", "grid"), _on_ink(chapter["color"]), 26).pixmap(26, 26))
+        tab.setFixedSize(56, 56)
+        tab.setStyleSheet(f"background: {chapter['color']}; border: none; border-radius: 10px;")
+        lay.addWidget(tab)
+        col = QVBoxLayout()
+        col.setSpacing(2)
+        col.addStretch(1)
+        title = QLabel(chapter["title"])
+        title.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {C['text']}; background: transparent;")
+        col.addWidget(title)
+        col.addWidget(_muted(chapter["blurb"]))
+        col.addStretch(1)
+        lay.addLayout(col, 1)
+        count = len(chapter["members"])
+        count_lbl = QLabel(f"{count} Farmer{'s' if count != 1 else ''}")
+        count_lbl.setStyleSheet(f"color: {C['muted']}; font-size: 12px; font-weight: 700; background: transparent;")
+        chevron = QLabel()
+        chevron.setPixmap(svg_icon("chevron", C["dark"], 16).pixmap(16, 16))
+        chevron.setStyleSheet("background: transparent;")
+        lay.addWidget(chevron)
+
+
+class HomePage(QWidget):
+    farmer_selected = pyqtSignal(str)
+    chapter_selected = pyqtSignal(str)
+
+    def __init__(self, chapters, farmers_by_name, controllers, recent: RecentStore, parent=None):
+        super().__init__(parent)
+        self._chapters = chapters
+        self._chapter_of = {f["name"]: ch for ch in chapters for f in ch["members"]}
+        self._farmers = farmers_by_name
+        self._controllers = controllers
+        self._recent = recent
+        self._cards: list[RecentCard] = []
+
+        lay = QVBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        self._header = _PageHeader("Home", "Pick up where you left off, or choose what to farm.", height=80)
+        lay.addWidget(self._header)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {C['bg']}; }}")
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        body = QWidget()
+        self._body = QVBoxLayout(body)
+        self._body.setContentsMargins(28, 24, 28, 32)
+        self._body.setSpacing(0)
 
-        # Build rows of tiles, each row centered with stretches
-        container = QWidget()
-        container.setStyleSheet(f"background: {C['bg']};")
-        v_lay = QVBoxLayout(container)
-        v_lay.setContentsMargins(0, 24, 0, 24)
-        v_lay.setSpacing(9)
+        self._running_slot = QVBoxLayout()
+        self._running_slot.setSpacing(0)
+        self._body.addLayout(self._running_slot)
 
-        rows = [farmers[i : i + self._COLS] for i in range(0, len(farmers), self._COLS)]
-        for row_farmers in rows:
-            row = QHBoxLayout()
-            row.setSpacing(9)
-            row.addStretch(1)
-            for farmer in row_farmers:
-                tile = FarmerTile(farmer)
-                tile.clicked.connect(self.farmer_selected)
-                self._tiles[farmer["name"]] = tile
-                row.addWidget(tile)
-            row.addStretch(1)
-            v_lay.addLayout(row)
+        self._recent_title = _section_title("Recent")
+        self._body.addWidget(self._recent_title)
+        self._recent_hint = _muted("")
+        self._body.addSpacing(4)
+        self._body.addWidget(self._recent_hint)
+        self._body.addSpacing(12)
+        self._recent_row = QHBoxLayout()
+        self._recent_row.setSpacing(14)
+        self._body.addLayout(self._recent_row)
+        self._body.addSpacing(32)
 
-        v_lay.addStretch(1)
+        self._body.addWidget(_section_title("Farming"))
+        self._body.addSpacing(10)
+        for ch in chapters:
+            row = ChapterIndexRow(ch)
+            row.clicked.connect(lambda cid=ch["id"]: self.chapter_selected.emit(cid))
+            self._body.addWidget(row)
+        self._body.addStretch(1)
+        scroll.setWidget(body)
+        lay.addWidget(scroll, 1)
 
-        scroll.setWidget(container)
-        outer.addWidget(scroll)
+        for controller in controllers.values():
+            controller.running_changed.connect(self._on_state_changed)
+            controller.paused_changed.connect(self._on_state_changed)
+        self._tick = QTimer(self)
+        self._tick.timeout.connect(self._refresh_status)
+        self._tick.start(1000)
+        self.rebuild()
 
-    def filter(self, text: str):
-        lower = text.strip().lower()
-        for name, tile in self._tiles.items():
-            tile.setVisible(not lower or lower in name.lower())
+    def _running(self):
+        return [name for name, c in self._controllers.items() if c.is_running]
 
-    def set_running(self, farmer_name: str, running: bool):
-        if farmer_name in self._tiles:
-            self._tiles[farmer_name].set_running(running)
+    def _on_state_changed(self, *_args):
+        self.rebuild()
+
+    def rebuild(self):
+        while self._running_slot.count():
+            item = self._running_slot.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+        running = self._running()
+        for name in running[:2]:
+            self._running_slot.addWidget(self._now_running_plate(name))
+            self._running_slot.addSpacing(16)
+        if running:
+            self._running_slot.addSpacing(16)
+
+        while self._recent_row.count():
+            item = self._recent_row.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.hide()
+                widget.setParent(None)
+                widget.deleteLater()
+        self._cards = []
+        names = [n for n in self._recent.recent if n in self._farmers]
+        if names:
+            self._recent_title.setText("Recent")
+            self._recent_hint.setText("The Farmers you opened last.")
+        else:
+            names = [n for n in _STARTER_FARMERS if n in self._farmers]
+            self._recent_title.setText("Good first Farmers")
+            self._recent_hint.setText("New here? These two are the simplest to set up. Your recent Farmers will show here.")
+        for name in names:
+            card = RecentCard(self._farmers[name], self._chapter_of[name], self._controllers[name], self._recent)
+            card.clicked.connect(lambda n=name: self.farmer_selected.emit(n))
+            self._cards.append(card)
+            self._recent_row.addWidget(card)
+        self._recent_row.addStretch(1)
+        self._refresh_status()
+
+    def _now_running_plate(self, name):
+        farmer = self._farmers[name]
+        chapter = self._chapter_of[name]
+        controller = self._controllers[name]
+        plate = _Clickable()
+        plate.setObjectName("runPlate")
+        plate.setStyleSheet(
+            f"QFrame#runPlate {{ background: {C['tile_bg']}; border: 2px solid {C['running']}; border-radius: 8px; }}"
+            f"QFrame#runPlate:focus {{ border-color: {C['accent']}; }}"
+            f"QFrame#runPlate:hover {{ background: {C['tile_hover']}; }}"
+        )
+        plate.clicked.connect(lambda n=name: self.farmer_selected.emit(n))
+        lay = QHBoxLayout(plate)
+        lay.setContentsMargins(8, 8, 18, 8)
+        lay.setSpacing(20)
+        lay.addWidget(_art_label(farmer, 208, 117))
+        col = QVBoxLayout()
+        col.setSpacing(4)
+        col.addStretch(1)
+        top = QHBoxLayout()
+        top.setSpacing(10)
+        top.addWidget(_page_title(name, 20))
+        badge = _state_badge()
+        _set_badge(badge, _controller_state(farmer, controller))
+        top.addWidget(badge, 0, Qt.AlignVCenter)
+        top.addStretch(1)
+        col.addLayout(top)
+        stats = QLabel()
+        stats.setObjectName("runStats")
+        stats.setProperty("farmer", name)
+        stats.setProperty("chapter", chapter["title"])
+        stats.setStyleSheet(f"color: {C['dim']}; font-size: 13px; font-weight: 700; background: transparent;")
+        col.addWidget(stats)
+        col.addStretch(1)
+        lay.addLayout(col, 1)
+        open_btn = QPushButton("Open live output")
+        open_btn.setCursor(Qt.PointingHandCursor)
+        open_btn.clicked.connect(lambda _=False, n=name: self.farmer_selected.emit(n))
+        lay.addWidget(open_btn)
+        stop_btn = QPushButton("STOP")
+        stop_btn.setStyleSheet(BTN_STOP)
+        stop_btn.setCursor(Qt.PointingHandCursor)
+        stop_btn.clicked.connect(controller.stop)
+        lay.addWidget(stop_btn)
+        return plate
+
+    def _refresh_status(self):
+        for stats in self.findChildren(QLabel, "runStats"):
+            name = stats.property("farmer")
+            controller = self._controllers.get(name)
+            if controller is None:
+                continue
+            snap = controller.get_status_snapshot()
+            if snap.session_start_time is None:
+                uptime = "00:00:00"
+            else:
+                elapsed = int(time.monotonic() - snap.session_start_time)
+                h, rem = divmod(elapsed, 3600)
+                m, s = divmod(rem, 60)
+                uptime = f"{h:02d}:{m:02d}:{s:02d}"
+            target = f" of {snap.session_max_clears}" if snap.session_max_clears else ""
+            stats.setText(
+                f"{uptime} running  ·  {snap.session_clears}{target} clears  ·  {snap.session_losses} losses"
+                f"  ·  {stats.property('chapter')}"
+            )
+
+    def refresh_cards(self):
+        for card in self._cards:
+            card.refresh()
 
 
-# Detail View
-
-
-class DetailView(QWidget):
-    """Wraps a FarmerTab with the detail bar (← Back + name + running status)."""
-
-    def __init__(self, farmer, controller, back_callback, parent=None):
+class FarmerPage(QWidget):
+    def __init__(self, farmer, chapter, controller, back_callback, recent: RecentStore, parent=None):
         super().__init__(parent)
         self.controller = controller
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
-        # ── Detail bar ──
-        detail_bar = QWidget()
-        detail_bar.setFixedHeight(40)
-        detail_bar.setStyleSheet(f"background: {C['panel']}; border-bottom: 1px solid {C['border']};")
-        bar_lay = QHBoxLayout(detail_bar)
-        bar_lay.setContentsMargins(18, 0, 18, 0)
-        bar_lay.setSpacing(12)
-
-        back_btn = QPushButton("← Back")
-        back_btn.setStyleSheet(_BTN_BACK_STYLE)
-        back_btn.clicked.connect(back_callback)
-        bar_lay.addWidget(back_btn)
-
-        name_lbl = QLabel(farmer["name"])
-        name_lbl.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {C['text']};")
-        bar_lay.addWidget(name_lbl)
-
-        bar_lay.addStretch(1)
-
-        self.running_lbl = QLabel("")
-        self.running_lbl.setStyleSheet("font-size: 13px; color: #10b981;")
-        bar_lay.addWidget(self.running_lbl)
-
-        layout.addWidget(detail_bar)
-
-        # ── FarmerTab ──
-        self.farmer_tab = FarmerTab(farmer, controller)
-        layout.addWidget(self.farmer_tab, 1)
-        self.controller.running_changed.connect(self._on_running_changed)
-        self._on_running_changed(self.controller.is_running, self.controller.process_id)
-
-    def _on_running_changed(self, running: bool, pid: int):
-        del pid
-        if running:
-            self.running_lbl.setText("● Running")
-        else:
-            self.running_lbl.setText("")
-
-
-# List View
-
-
-class ListView(QWidget):
-    """Sidebar list + right content panel (alternative to grid)."""
-
-    def __init__(self, farmers, controllers, about_tab_factory=None, parent=None):
-        super().__init__(parent)
-        self._farmers = farmers
-        self._controllers = controllers
-        self._about_tab_factory = about_tab_factory or AboutTab
-        self._farmer_tabs: dict = {}
-        self._list_rows: dict = {}  # farmer_name → row index in QListWidget
-        self._slot_built: list[bool] = []  # parallel to self._stack indices; False = placeholder
-        self._row_to_farmer: dict = {}  # stack/row index → farmer name (rows 1+ only)
-        self._about_tab: AboutTab | None = None
-        self._init_ui()
-
-    def _init_ui(self):
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-
-        # ── Left sidebar ──
-        sidebar = QWidget()
-        sidebar.setFixedWidth(230)
-        sidebar.setStyleSheet(f"background: {C['panel']}; border-right: 1px solid {C['border']};")
-        sidebar_lay = QVBoxLayout(sidebar)
-        sidebar_lay.setContentsMargins(0, 8, 0, 8)
-        sidebar_lay.setSpacing(0)
-
-        self._list = QListWidget()
-        self._list.setStyleSheet(
-            "QListWidget { background: transparent; border: none; outline: none; font-size: 13px; }"
-            f"QListWidget::item {{ color: {C['dim']}; padding: 9px 16px; }}"
-            f"QListWidget::item:selected {{ background: {C['panel2']};"
-            f"  border-left: 3px solid {C['accent']}; padding-left: 13px; }}"
-            f"QListWidget::item:hover:!selected {{ background: {C['panel3']}; }}"
-        )
-        self._list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-
-        # Row 0: About
-        self._list.addItem(QListWidgetItem("  About"))
-
-        # Rows 1+: farmers
-        for i, farmer in enumerate(self._farmers):
-            item = QListWidgetItem("  " + farmer["name"])
-            self._list.addItem(item)
-            self._list_rows[farmer["name"]] = i + 1
-            self._row_to_farmer[i + 1] = farmer["name"]
-
-        self._list.currentRowChanged.connect(self._on_row_changed)
-        sidebar_lay.addWidget(self._list)
-        layout.addWidget(sidebar)
-
-        # ── Right content stack ──
-        self._stack = QStackedWidget()
-        self._stack.setStyleSheet(f"background: {C['bg']};")
-
-        # Empty placeholder per row (index 0 = About, indices 1+ = farmers).
-        # Real widgets are injected lazily on first selection; this keeps stack
-        # indices 1:1 with sidebar rows without paying the build cost up front.
-        for _ in range(1 + len(self._farmers)):
-            self._stack.addWidget(self._make_slot())
-            self._slot_built.append(False)
-
-        # Sidebar dot indicator must update for every farmer, even before its
-        # tab is built — so the running_changed wiring stays eager.
-        for farmer in self._farmers:
-            controller = self._controllers[farmer["name"]]
-            controller.running_changed.connect(
-                lambda running, pid, n=farmer["name"]: self._on_running_changed(n, running)
-            )
-            self._on_running_changed(farmer["name"], controller.is_running)
-
-        layout.addWidget(self._stack, 1)
-
-        # Visually select row 0 (About) without triggering the lazy build now;
-        # defer the actual AboutTab construction to the next event-loop tick so
-        # the window paints first, then the About content fills in.
-        self._list.blockSignals(True)
-        self._list.setCurrentRow(0)
-        self._list.blockSignals(False)
-        QTimer.singleShot(0, lambda: self._on_row_changed(0))
-
-    @staticmethod
-    def _make_slot() -> QWidget:
-        slot = QWidget()
-        lay = QVBoxLayout(slot)
+        self.farmer = farmer
+        lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
-        return slot
+        header = _PageHeader(farmer["name"], back_text=chapter["title"],
+                             back_callback=back_callback, height=80)
+        self.header = header
+        self.badge = _state_badge(large=True)
+        header.right.addWidget(self.badge, 0, Qt.AlignVCenter)
+        header.right.addSpacing(18)
+        self.favorite_btn = FavoriteButton(farmer["name"], recent, with_text=True)
+        header.right.addWidget(self.favorite_btn, 0, Qt.AlignVCenter)
+        lay.addWidget(header)
+        self.farmer_tab = FarmerTab(farmer, controller, accent=chapter["color"])
+        lay.addWidget(self.farmer_tab, 1)
+        controller.running_changed.connect(self._refresh_badge)
+        controller.paused_changed.connect(self._refresh_badge)
+        self._refresh_badge()
 
-    def _on_row_changed(self, row):
-        if row < 0:
-            return
-        if not self._slot_built[row]:
-            self._build_slot(row)
-            self._slot_built[row] = True
-        self._stack.setCurrentIndex(row)
-
-    def _build_slot(self, row: int) -> None:
-        slot = self._stack.widget(row)
-        if row == 0:
-            self._about_tab = self._about_tab_factory()
-            about_scroll = QScrollArea()
-            about_scroll.setWidgetResizable(True)
-            about_scroll.setStyleSheet(f"QScrollArea {{ border: none; background: {C['bg']}; }}")
-            about_scroll.setWidget(self._about_tab)
-            slot.layout().addWidget(about_scroll)
-            return
-
-        farmer_name = self._row_to_farmer[row]
-        farmer = next(f for f in self._farmers if f["name"] == farmer_name)
-        tab = FarmerTab(farmer, self._controllers[farmer_name])
-        self._farmer_tabs[farmer_name] = tab
-        slot.layout().addWidget(tab)
-
-    def _on_running_changed(self, name: str, running: bool):
-        row = self._list_rows.get(name)
-        if row is None:
-            return
-        item = self._list.item(row)
-        if item is None:
-            return
-        if running:
-            item.setText("●  " + name)
-            item.setForeground(QColor(C["running"]))
-        else:
-            item.setText("  " + name)
-            item.setForeground(QColor(C["dim"]))
-
-    def show_about(self):
-        self._list.setCurrentRow(0)
+    def _refresh_badge(self, *_args):
+        _set_badge(self.badge, _controller_state(self.farmer, self.controller))
 
 
 # Main Window
-
-_BTN_BACK_STYLE = f"""
-    QPushButton {{
-        background: {C['btn_sec_bg']};
-        border: 1px solid {C['border2']};
-        border-radius: 6px;
-        color: {C['btn_sec_text']};
-        padding: 4px 13px;
-        font-size: 13px;
-    }}
-    QPushButton:hover {{ border-color: {C['accent']}; background: {C['panel2']}; }}
-    QPushButton:pressed {{ background: {C['btn_sec_bg']}; border-color: {C['accent']}; }}
-"""
-
-_BTN_TOP_STYLE = f"""
-    QPushButton {{
-        background: {C['btn_sec_bg']};
-        border: 1px solid {C['border2']};
-        border-radius: 6px;
-        color: {C['btn_sec_text']};
-        padding: 6px 16px;
-        font-size: 13px;
-    }}
-    QPushButton:hover {{ border-color: {C['accent']}; background: {C['panel2']}; }}
-    QPushButton:pressed {{ background: {C['btn_sec_bg']}; border-color: {C['accent']}; }}
-"""
 
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("AutoFarmers - 7DS Grand Cross")
-        self.setGeometry(100, 100, 1200, 700)
+        self._center_on_screen(1240, 760)
+        self.setMinimumSize(1160, 640)
         _icon_path = os.path.join(os.path.dirname(__file__), "..", "gui_images", "main.ico")
         self.setWindowIcon(QIcon(_icon_path))
 
-        self._detail_views: dict = {}
         self._farmer_by_name = {f["name"]: f for f in FARMERS}
-        self._active_main_view: str = "list"  # "grid" or "list"
+        self._chapters = build_chapters(FARMERS)
+        self._chapter_by_id = {ch["id"]: ch for ch in self._chapters}
+        self._chapter_of = {f["name"]: ch for ch in self._chapters for f in ch["members"]}
+        self._recent = RecentStore()
+        self._farmer_pages: dict = {}
+        self._chapter_pages: dict = {}
+        self._rewards_page: "RewardsPage | None" = None
 
         self._settings_tab: SettingsTab | None = None
         self._about_tab: AboutTab | None = None
@@ -3646,97 +5046,154 @@ class MainWindow(QMainWindow):
             )
             for farmer in FARMERS
         }
-        for controller in self._controllers.values():
+        for name, controller in self._controllers.items():
             self._devtest_controller.busy_changed.connect(controller.set_devtest_busy)
             controller.running_changed.connect(self._refresh_devtest_controls)
             controller.paused_changed.connect(self._refresh_devtest_controls)
+            controller.running_changed.connect(self._refresh_game_version_enabled)
+            controller.running_changed.connect(lambda running, pid, n=name: self._on_farmer_running_changed(n, running))
 
-        central = QWidget()
-        root = QVBoxLayout(central)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(0)
-
-        # ── Top bar ──
-        top_bar = QWidget()
-        top_bar.setFixedHeight(56)
-        top_bar.setStyleSheet(f"background: {C['panel']}; border-bottom: 2px solid {C['border']};")
-        top_lay = QHBoxLayout(top_bar)
-        top_lay.setContentsMargins(20, 0, 20, 0)
-        top_lay.setSpacing(14)
-
-        logo = QLabel()
-        logo.setText(
-            f'<span style="font-size:19px;font-weight:800;color:{C["text"]};">Auto</span>'
-            f'<span style="font-size:19px;font-weight:800;color:{C["accent"]};">Farmers</span>'
-        )
-        logo.setTextFormat(Qt.RichText)
-        top_lay.addWidget(logo)
-
-        top_lay.addStretch(1)
-
-        game_version_label = QLabel("Game Version:")
-        game_version_label.setStyleSheet(f"color: {C['muted']};")
-        top_lay.addWidget(game_version_label)
-
-        self._game_version_combo = QComboBox()
+        self._game_version_combo = VersionSwitch()
         self._game_version_combo.addItem(GameVersion.GLOBAL.display_name, GameVersion.GLOBAL.value)
         self._game_version_combo.addItem(GameVersion.JAPAN.display_name, GameVersion.JAPAN.value)
-        self._game_version_combo.setMinimumWidth(165)
         self._game_version_combo.setToolTip("Choose which game client the next farmer will recognize.")
         saved_index = self._game_version_combo.findData(self._saved_game_version.value)
         self._game_version_combo.setCurrentIndex(max(0, saved_index))
         self._game_version_combo.currentIndexChanged.connect(self._on_game_version_changed)
-        top_lay.addWidget(self._game_version_combo)
 
-        self._view_toggle_btn = QPushButton("⊞  Grid")
-        self._view_toggle_btn.setStyleSheet(_BTN_TOP_STYLE)
-        self._view_toggle_btn.clicked.connect(self._toggle_view)
-        top_lay.addWidget(self._view_toggle_btn)
+        central = QWidget()
+        root = QHBoxLayout(central)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        _theme_label = "☀  Light" if _ACTIVE_THEME == "dark" else "🌙  Dark"
-        self._theme_btn = QPushButton(_theme_label)
-        self._theme_btn.setStyleSheet(_BTN_TOP_STYLE)
-        self._theme_btn.clicked.connect(self._toggle_theme)
-        top_lay.addWidget(self._theme_btn)
+        self.rail = IndexRail(self._chapters, self._game_version_combo, favorites_count=len(self._recent.favorites))
+        self._recent.favorites_changed.connect(lambda: self.rail.set_favorites_count(len(self._recent.favorites)))
+        self.rail.navigate.connect(self._on_navigate)
+        self.rail.theme_toggled.connect(self._toggle_theme)
+        self.rail.halloween_toggled.connect(self._toggle_halloween)
+        self._theme_btn = self.rail.theme_btn
+        root.addWidget(self.rail)
 
-        settings_btn = QPushButton("⚙ Settings")
-        settings_btn.setStyleSheet(_BTN_TOP_STYLE)
-        settings_btn.clicked.connect(lambda: self._show_page("settings"))
-        top_lay.addWidget(settings_btn)
-
-        devtest_btn = QPushButton("⚗ DevTest")
-        devtest_btn.setStyleSheet(_BTN_TOP_STYLE)
-        devtest_btn.clicked.connect(lambda: self._show_page("devtest"))
-        top_lay.addWidget(devtest_btn)
-
-        about_btn = QPushButton("ℹ About")
-        about_btn.setStyleSheet(_BTN_TOP_STYLE)
-        about_btn.clicked.connect(lambda: self._show_page("about"))
-        top_lay.addWidget(about_btn)
-
-        root.addWidget(top_bar)
-
-        # ── Stacked views ──
         self.stack = QStackedWidget()
         self.stack.setStyleSheet(f"QStackedWidget {{ background: {C['bg']}; }}")
-
-        self.grid_view = GridView(FARMERS)
-        self.grid_view.farmer_selected.connect(self._on_farmer_selected)
-        for name, controller in self._controllers.items():
-            controller.running_changed.connect(lambda running, pid, n=name: self.grid_view.set_running(n, running))
-            controller.running_changed.connect(self._refresh_game_version_enabled)
-            self.grid_view.set_running(name, controller.is_running)
-
-        self.list_view = ListView(FARMERS, self._controllers, about_tab_factory=self._make_about_tab)
-
-        self.stack.addWidget(self.grid_view)
-        self.stack.addWidget(self.list_view)
-
+        self.stack.setFocusPolicy(Qt.ClickFocus)
         root.addWidget(self.stack, 1)
-        self.setCentralWidget(central)
 
-        self.stack.setCurrentWidget(self.list_view)
+        self.home_page = HomePage(self._chapters, self._farmer_by_name, self._controllers, self._recent)
+        self.home_page.farmer_selected.connect(self._on_farmer_selected)
+        self.home_page.chapter_selected.connect(self._show_chapter)
+        self.stack.addWidget(self.home_page)
+
+        self.favorites_page = FavoritesPage(self._farmer_by_name, self._controllers, self._recent)
+        self.favorites_page.farmer_selected.connect(lambda n: self._on_farmer_selected(n, from_favorites=True))
+        self.stack.addWidget(self.favorites_page)
+
+        self.setCentralWidget(central)
+        self._halloween_overlay = HalloweenOverlay(central) if _HALLOWEEN else None
+        self._show_home()
         QTimer.singleShot(1000, self._check_for_update_available)
+
+
+    def _center_on_screen(self, width: int, height: int):
+        screen = QApplication.screenAt(QCursor.pos()) or QApplication.primaryScreen()
+        area = screen.availableGeometry()
+        width, height = min(width, area.width()), min(height, area.height())
+        self.setGeometry(
+            area.x() + (area.width() - width) // 2, area.y() + (area.height() - height) // 2, width, height
+        )
+
+    def _set_location(self, rail_key: str, chapter_id: str | None):
+        focused = QApplication.focusWidget()
+        if focused is None or focused is self or self.rail.isAncestorOf(focused):
+            self.stack.setFocus()
+        self.rail.set_active(rail_key)
+
+    def _on_navigate(self, key: str):
+        if key == "home":
+            self._show_home()
+        elif key == "favorites":
+            self._show_favorites()
+        elif key == "rewards":
+            self._show_rewards()
+
+        elif key in ("settings", "devtest", "about"):
+            self._show_page(key)
+        else:
+            self._show_chapter(key)
+
+    def _show_home(self):
+        self.home_page.rebuild()
+        self.stack.setCurrentWidget(self.home_page)
+        self._set_location("home", None)
+
+    def _show_rewards(self):
+        if self._rewards_page is None:
+            self._rewards_page = RewardsPage(self._controllers, self._chapter_of)
+            self.stack.addWidget(self._rewards_page)
+        self.stack.setCurrentWidget(self._rewards_page)
+        self._set_location("rewards", None)
+
+    def _show_favorites(self):
+        self.favorites_page.refresh()
+        self.stack.setCurrentWidget(self.favorites_page)
+        self._set_location("favorites", None)
+
+    def _show_chapter(self, chapter_id: str):
+        chapter = self._chapter_by_id.get(chapter_id)
+        if chapter is None:
+            return
+        page = self._chapter_pages.get(chapter_id)
+        if page is None:
+            page = ChapterPage(chapter, self._controllers, self._recent)
+            page.farmer_selected.connect(self._on_farmer_selected)
+            self.stack.addWidget(page)
+            self._chapter_pages[chapter_id] = page
+        else:
+            page.refresh()
+        self.stack.setCurrentWidget(page)
+        self._set_location(chapter_id, chapter_id)
+
+    def _on_farmer_selected(self, name: str, from_favorites: bool = False):
+        view = self._ensure_farmer_page(name)
+        chapter = self._chapter_of[name]
+        if from_favorites:
+            view.header.set_back("Favorites", self._show_favorites)
+        else:
+            view.header.set_back(chapter["title"], lambda cid=chapter["id"]: self._show_chapter(cid))
+        self._recent.touch(name)
+        self.stack.setCurrentWidget(view)
+        rail_key = "favorites" if from_favorites else chapter["id"]
+        self._set_location(rail_key, chapter["id"])
+
+    def _ensure_farmer_page(self, name: str) -> "FarmerPage":
+        if name in self._farmer_pages:
+            return self._farmer_pages[name]
+        chapter = self._chapter_of[name]
+        page = FarmerPage(
+            self._farmer_by_name[name],
+            chapter,
+            self._controllers[name],
+            back_callback=lambda cid=chapter["id"]: self._show_chapter(cid),
+            recent=self._recent,
+        )
+        self.stack.addWidget(page)
+        self._farmer_pages[name] = page
+        return page
+
+    def _on_farmer_running_changed(self, name: str, running: bool):
+        controller = self._controllers[name]
+        if not running:
+            snap = controller.get_status_snapshot()
+            self._recent.record_run(name, snap.session_clears, getattr(controller, "ended_on_its_own", False))
+        running_chapters = {
+            self._chapter_of[n]["id"] for n, c in self._controllers.items() if c.is_running and n in self._chapter_of
+        }
+        self.rail.set_running_chapters(running_chapters)
+        self.home_page.refresh_cards()
+        for page in self._chapter_pages.values():
+            page.refresh()
+        self.favorites_page.refresh()
+
 
     def _selected_game_version(self) -> GameVersion:
         return normalize_game_version(self._game_version_combo.currentData())
@@ -3765,6 +5222,9 @@ class MainWindow(QMainWindow):
         enabled = not self._devtest_controller.is_busy and not any(
             controller.process is not None for controller in self._controllers.values()
         )
+        focused = QApplication.focusWidget()
+        if not enabled and focused is not None and self._game_version_combo.isAncestorOf(focused):
+            self.stack.setFocus()
         self._game_version_combo.setEnabled(enabled)
         if self._devtest_controller.is_busy:
             self._game_version_combo.setToolTip("Finish DevTest before changing the game version.")
@@ -3845,25 +5305,7 @@ class MainWindow(QMainWindow):
         lay = QVBoxLayout(wrapper)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
-
-        back_bar = QWidget()
-        back_bar.setFixedHeight(40)
-        back_bar.setStyleSheet(f"background: {C['panel']}; border-bottom: 1px solid {C['border']};")
-        bar_lay = QHBoxLayout(back_bar)
-        bar_lay.setContentsMargins(18, 0, 18, 0)
-        bar_lay.setSpacing(12)
-
-        back_btn = QPushButton("← Back")
-        back_btn.setStyleSheet(_BTN_BACK_STYLE)
-        back_btn.clicked.connect(self._show_grid)
-        bar_lay.addWidget(back_btn)
-        if title:
-            title_lbl = QLabel(title)
-            title_lbl.setStyleSheet(f"font-size: 15px; font-weight: 700; color: {C['text']};")
-            bar_lay.addWidget(title_lbl)
-        bar_lay.addStretch(1)
-
-        lay.addWidget(back_bar)
+        lay.addWidget(_PageHeader(title, back_text="Home", back_callback=self._show_home, height=80))
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
@@ -3873,10 +5315,6 @@ class MainWindow(QMainWindow):
 
         return wrapper
 
-    def _on_farmer_selected(self, name: str):
-        view = self._ensure_detail_view(name)
-        self.stack.setCurrentWidget(view)
-
     def _show_page(self, page_id: str):
         if page_id == "about":
             self.stack.setCurrentWidget(self.about_wrapper)
@@ -3885,7 +5323,9 @@ class MainWindow(QMainWindow):
         elif page_id == "devtest":
             self.stack.setCurrentWidget(self.devtest_wrapper)
         else:
-            self._show_grid()
+            self._show_home()
+            return
+        self._set_location(page_id, None)
 
     def _clear_update_available_notification(self) -> None:
         self._update_available_popup_shown = False
@@ -3966,7 +5406,11 @@ class MainWindow(QMainWindow):
 
     def _on_update_check_finished(self, exit_code: int, on_finished) -> None:
         if self._update_check_process is not None:
-            self._update_check_output.extend(bytes(self._update_check_process.readAllStandardOutput()))
+            try:
+                self._update_check_output.extend(bytes(self._update_check_process.readAllStandardOutput()))
+            except RuntimeError:
+                self._update_check_process = None
+                return
         output = self._update_check_output.decode(errors="replace")
         self._update_check_process = None
         self._update_check_output = bytearray()
@@ -3985,7 +5429,28 @@ class MainWindow(QMainWindow):
         self._update_check_process.kill()
         self._clear_update_available_notification()
 
+    def _stop_update_check(self) -> None:
+        process = self._update_check_process
+        if process is None:
+            return
+        self._update_check_process = None
+        self._update_check_timeout_timer.stop()
+        try:
+            process.readyReadStandardOutput.disconnect()
+            process.finished.disconnect()
+        except (RuntimeError, TypeError):
+            pass
+        if process.state() != QProcess.NotRunning:
+            process.kill()
+            process.waitForFinished(2000)
+
     def _toggle_theme(self):
+        self._change_theme("light" if _ACTIVE_THEME != "light" else "dark")
+
+    def _toggle_halloween(self):
+        self._change_theme("dark" if _HALLOWEEN else "halloween")
+
+    def _change_theme(self, theme: str):
         if self._devtest_controller.is_busy:
             QMessageBox.information(self, "DevTest is open", "Finish or stop DevTest before changing the theme.")
             return
@@ -3996,7 +5461,7 @@ class MainWindow(QMainWindow):
                 "Stop all running farmers before changing the theme.",
             )
             return
-        _save_theme("light" if _ACTIVE_THEME == "dark" else "dark")
+        _save_theme(theme)
         if not _restart_application():
             QMessageBox.critical(
                 self,
@@ -4004,36 +5469,8 @@ class MainWindow(QMainWindow):
                 "The theme was saved, but the GUI could not be reopened automatically.",
             )
             return
+        self.close()
         QApplication.instance().quit()
-
-    def _toggle_view(self):
-        if self._active_main_view == "list":
-            self._active_main_view = "grid"
-            self._view_toggle_btn.setText("☰  List")
-            self.stack.setCurrentWidget(self.grid_view)
-        else:
-            self._active_main_view = "list"
-            self._view_toggle_btn.setText("⊞  Grid")
-            self.list_view.show_about()
-            self.stack.setCurrentWidget(self.list_view)
-
-    def _show_grid(self):
-        """Return to whichever main view (grid or list) the user had selected."""
-        if self._active_main_view == "list":
-            self._view_toggle_btn.setText("⊞  Grid")
-            self.stack.setCurrentWidget(self.list_view)
-        else:
-            self._view_toggle_btn.setText("☰  List")
-            self.stack.setCurrentWidget(self.grid_view)
-
-    def _ensure_detail_view(self, name: str) -> "DetailView":
-        if name in self._detail_views:
-            return self._detail_views[name]
-        farmer_def = self._farmer_by_name[name]
-        view = DetailView(farmer_def, self._controllers[name], back_callback=self._show_grid)
-        self.stack.addWidget(view)
-        self._detail_views[name] = view
-        return view
 
     def _any_farmer_running(self) -> bool:
         return any(controller.is_running for controller in self._controllers.values())
@@ -4042,6 +5479,7 @@ class MainWindow(QMainWindow):
         if self._devtest_tab is not None:
             self._devtest_tab._remember_folder()
         self._devtest_controller.shutdown()
+        self._stop_update_check()
         super().closeEvent(event)
 
 
@@ -4062,10 +5500,12 @@ def _apply_dark_title_bar(hwnd: int, dark: bool) -> None:
 
 def main():
     app = QApplication(sys.argv)
+    app.setFont(QFont(UI_FONT_FAMILY, 10))
     app.setStyleSheet(APP_STYLESHEET)
     window = MainWindow()
+    app.aboutToQuit.connect(window._devtest_controller.shutdown)
     window.show()
-    _apply_dark_title_bar(int(window.winId()), _ACTIVE_THEME == "dark")
+    _apply_dark_title_bar(int(window.winId()), _ACTIVE_THEME != "light")
     sys.exit(app.exec_())
 
 

@@ -10,6 +10,7 @@ cython_build/
 .venv/
 .cursor/
 scripts/config/.theme
+scripts/config/.recent_farmers.json
 build/
 analysis_outputs/
 AutoFarmers.spec
