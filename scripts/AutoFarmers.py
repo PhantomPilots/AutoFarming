@@ -599,6 +599,7 @@ FARMERS = [
         "name": "Guild Boss Farmer",
         "script": "GuildBossFarmer.py",
         "args": [
+            {"name": "--max-pots", "label": "Max Stamina Pots", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
         ],
@@ -3133,12 +3134,13 @@ class FarmerTab(QWidget):
         # Stamina Pots
         pots = snapshot.session_pots
         self._sp_pots_lbl.setText(str(pots))
-        max_pots_raw = self.controller.get_arg_values().get("max_stamina_pots")
+        arg_values = self.controller.get_arg_values()
+        max_pots_raw = arg_values.get("--max-pots", arg_values.get("max_stamina_pots"))
         try:
             max_pots = int(float(str(max_pots_raw)))
             self._sp_pots_bar.setMaximum(max_pots)
             self._sp_pots_bar.setValue(min(pots, max_pots))
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, OverflowError):
             self._sp_pots_bar.setMaximum(max(pots, 1))
             self._sp_pots_bar.setValue(pots)
 
