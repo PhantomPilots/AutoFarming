@@ -10,7 +10,6 @@ from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.reward_sets import GUILD_BOSS_REWARDS
 from utilities.reward_tracker import RewardTracker
-from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -52,6 +51,9 @@ class GuildBossFarmer(IFarmer):
             print(f"We'll wait {get_minutes_to_wait_before_login()} mins. before attempting a log in.")
 
         self.current_state = starting_state
+        self.max_stamina_pots = max_stamina_pots
+        if max_stamina_pots < float("inf"):
+            print(f"We'll use up to {max_stamina_pots} stamina pots.")
 
         # Reads the reward tiles of the result screens, the GUI sums the '[REWARDS]' lines
         self.rewards = RewardTracker(GUILD_BOSS_REWARDS, logger)
@@ -99,14 +101,22 @@ class GuildBossFarmer(IFarmer):
 
     def fighting_state(self):
         screenshot, window_location = capture_window()
-        self.rewards.tick(screenshot)
 
         # First, check if we should go back to the initial state
         if find(vio.belgius_hel, screenshot, threshold=0.8):
+            self.rewards.give_up()
             print("We're somehow not fighting anymore, let's go back to fighting...")
             self.current_state = States.FINDING_BOSS
             return
 
+        if find(vio.failed, screenshot):
+            self.rewards.give_up()
+            print("Oh no, we have lost :( Retrying...")
+            self.current_state = States.FINDING_BOSS
+            find_and_click(vio.ok_main_button, screenshot, window_location)
+            return
+
+        self.rewards.tick(screenshot)
         clicked_image = False
 
         # The end-of-fight screens show what the boss dropped: remember it before clicking through
@@ -144,7 +154,9 @@ class GuildBossFarmer(IFarmer):
         # Weird that here, we need a threshold of 0.7 for the AUTO button... But seems to work?
         clicked_image |= find_and_click(vio.fb_aut_off, screenshot, window_location, threshold=0.8)
 
-        clicked_image |= find_and_click(vio.startbutton, screenshot, window_location)
+        if find_and_click(vio.startbutton, screenshot, window_location):
+            self.rewards.give_up()
+            clicked_image = True
 
         if find(vio.again, screenshot):
             # First, if it's time to check in, do it
@@ -157,12 +169,6 @@ class GuildBossFarmer(IFarmer):
             # If we're not checking in, let's keep fighting
             self.rewards.give_up()  # A new fight starts, the previous result screens are gone
             clicked_image |= find_and_click(vio.again, screenshot, window_location)
-
-        elif find(vio.failed, screenshot):
-            print("Oh no, we have lost :( Retrying...")
-            self.current_state = States.FINDING_BOSS
-            # TODO: The line below may cause a bot lock, may have to fix it
-            clicked_image |= find_and_click(vio.ok_main_button, screenshot, window_location)
 
         if not clicked_image and is_game_window_focused():
             click_im((279, 197), window_location)

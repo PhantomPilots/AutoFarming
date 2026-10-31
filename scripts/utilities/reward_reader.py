@@ -10,18 +10,10 @@ import os
 import cv2
 import numpy as np
 from utilities.reward_sets import REWARDS_DIR, RewardSet
+from utilities.vision import read_image
 
 # Same font on every result screen
 DIGITS_DIR = os.path.join(REWARDS_DIR, "digits")
-
-
-def _read(path: str, flags=cv2.IMREAD_COLOR) -> np.ndarray | None:
-    try:
-        with open(path, "rb") as f:
-            data = np.frombuffer(f.read(), dtype=np.uint8)
-        return cv2.imdecode(data, flags) if data.size else None
-    except (OSError, cv2.error):
-        return None
 
 
 def _resize(img: np.ndarray, scale: float) -> np.ndarray:
@@ -55,8 +47,8 @@ class RewardTile:
         self.key = key
         self.score = score
         self.rect = rect  # full tile (x, y, w, h), frame included
-        self.count = 1
-        self.count_confidence = None  # None: no number on the tile
+        self.count: int | None = None  # None: the quantity could not be read
+        self.count_confidence = None  # Fixed/unnumbered quantities have no glyph score
 
 
 class RewardReader:
@@ -79,7 +71,7 @@ class RewardReader:
         self._set = reward_set
         self._icons: dict[str, np.ndarray] = {}
         for key in [k for k, _label in reward_set.items] + list(reward_set.ignored_items):
-            img = _read(os.path.join(reward_set.rewards_dir, f"{key}.png"))
+            img = read_image(os.path.join(reward_set.rewards_dir, f"{key}.png"))
             if img is not None:
                 img = cv2.resize(img, (self._TILE, self._TILE), interpolation=cv2.INTER_AREA)
                 m = int(self._TILE * reward_set.icon_margin)
@@ -87,14 +79,14 @@ class RewardReader:
 
         self._glyphs: dict[str, np.ndarray] = {}
         for name in "0123456789":
-            g = _read(os.path.join(DIGITS_DIR, f"{name}.png"), cv2.IMREAD_GRAYSCALE)
+            g = read_image(os.path.join(DIGITS_DIR, f"{name}.png"), cv2.IMREAD_GRAYSCALE)
             if g is not None:
                 self._glyphs[name] = g
         self._scale: float | None = None
 
     @property
     def available(self) -> bool:
-        return bool(self._icons) and len(self._glyphs) == 10
+        return len(self._icons) == len(self._set.items) + len(self._set.ignored_items) and len(self._glyphs) == 10
 
     # ── tiles ────────────────────────────────────────────────────────────
     def _match_all(self, image: np.ndarray, key: str, scale: float, threshold: float) -> list[RewardTile]:
@@ -160,15 +152,12 @@ class RewardReader:
             self._read_tile_count(screenshot, tile)
         return sorted(tiles, key=lambda t: (t.rect[1] // max(t.rect[3], 1), t.rect[0]))
 
-    def read(self, screenshot: np.ndarray) -> dict[str, int]:
-        """Return {item_key: total count}, summing every tile of the same item."""
-        totals: dict[str, int] = {}
-        for tile in self.find_tiles(screenshot):
-            totals[tile.key] = totals.get(tile.key, 0) + tile.count
-        return totals
-
     # ── corner counts ────────────────────────────────────────────────────
     def _read_tile_count(self, screenshot: np.ndarray, tile: RewardTile) -> None:
+        allowed = self._set.tile_counts.get(tile.key)
+        if allowed is not None and len(allowed) == 1:
+            tile.count = allowed[0]
+            return
         x, y, w, h = tile.rect
         # The count sits in the bottom-right corner (glyphs ~15% of the tile tall, ending at ~87%).
         top, bottom = int(y + h * 0.60), int(y + h * 0.96)
@@ -179,21 +168,17 @@ class RewardReader:
             return
         region = _whiteness(screenshot[top:bottom, left:right])
         scale = h / self._DIGIT_TILE
-        allowed = self._set.tile_counts.get(tile.key)
         if allowed is None:
-            read = self._read_number(region, scale)
-            if read is not None:
-                tile.count, tile.count_confidence = read
-            return
-        if len(allowed) == 1:
-            tile.count = allowed[0]
+            tile.count, tile.count_confidence = self._read_number(region, scale) or (1, None)
+            if tile.count == 0:
+                tile.count = None
             return
         # Score only the digits this item can show, and pick the best one.
         scored = [(self._digit_score(region, str(v), scale), v) for v in allowed if v != 1]
         best_score, best_value = max(scored)
-        if best_score >= self._GLYPH_THRESHOLD or 1 not in allowed:
+        if best_score >= self._GLYPH_THRESHOLD:
             tile.count, tile.count_confidence = best_value, best_score
-        else:
+        elif 1 in allowed:
             tile.count = 1
 
     def _digit_score(self, region: np.ndarray, digit: str, scale: float) -> float:

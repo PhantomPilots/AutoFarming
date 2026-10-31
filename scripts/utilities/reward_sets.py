@@ -26,7 +26,7 @@ INDURA_ITEMS = (
 INDURA_IGNORED_ITEMS = ("bingo_ticket",)
 
 # Quantities one tile can hold, from Indura's Bronze/Silver/Gold box drop tables (1 = no number drawn).
-# Restricting the read to these values makes a blurry corner digit impossible to misread.
+# Restricting the read to these values reduces mistakes on blurry corner digits.
 # Items missing here are read freely.
 INDURA_TILE_COUNTS = {
     "super_awakening_coin_fragment": (4, 5),
@@ -44,7 +44,7 @@ class RewardSet:
 
     title: str  # shown in the GUI rewards panel
     rewards_dir: str  # holds '<key>.png' for every item
-    log_subdir: str  # logs/<log_subdir>/ keeps the reward rows and the unreadable result screens
+    log_subdir: str  # logs/<log_subdir>/ keeps unreadable result screens
     items: tuple  # (key, display label)
     tile_counts: dict = field(default_factory=dict)
     ignored_items: tuple = ()

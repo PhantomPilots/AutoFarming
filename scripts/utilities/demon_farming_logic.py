@@ -137,14 +137,14 @@ class IDemonFarmer(IFarmer):
     def going_to_demons_state(self):
         """Go to the demons page"""
         screenshot, window_location = capture_window()
-        if self.rewards:
-            # After a victory, the reward row may show up once 'OK' is clicked
-            self.rewards.tick(screenshot)
-
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
+            if self.rewards:
+                self.rewards.give_up()
             self.current_state = States.FIGHTING_DEMON
             print(f"We're still fighting, we were wrong!")
+        elif self.rewards:
+            self.rewards.tick(screenshot)
 
         if find(vio.preparation_incomplete, screenshot):
             # We're waiting to click on preparation incomplete!
@@ -274,6 +274,8 @@ class IDemonFarmer(IFarmer):
 
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
+            if self.rewards:
+                self.rewards.give_up()
             self.current_state = States.FIGHTING_DEMON
             print("Starting the demon fight.")
 

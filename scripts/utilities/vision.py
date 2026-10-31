@@ -10,14 +10,14 @@ from utilities.pattern_match_strategies import (
 )
 
 
-def _read_image(path: str) -> np.ndarray | None:
+def read_image(path: str, flags=cv2.IMREAD_COLOR) -> np.ndarray | None:
     """Decode an image after opening its path through Python for Windows Unicode support."""
     try:
         with open(path, "rb") as image_file:
             encoded_image = np.frombuffer(image_file.read(), dtype=np.uint8)
         if not encoded_image.size:
             return None
-        return cv2.imdecode(encoded_image, cv2.IMREAD_COLOR)
+        return cv2.imdecode(encoded_image, flags)
     except (OSError, cv2.error):
         return None
 
@@ -55,7 +55,7 @@ class Vision:
     def needle_img(self) -> np.ndarray | None:
         """Lazily-loaded template image; missing file yields ``None`` (and a one-shot warning)."""
         if not self._needle_loaded:
-            self._needle_img = _read_image(self._needle_path)
+            self._needle_img = read_image(self._needle_path)
             if self._needle_img is None:
                 cprint(
                     f"No image can be loaded for '{self._needle_basename}' "
@@ -146,7 +146,7 @@ class MultiVision(Vision):
         if self._needle_imgs is None:
             loaded = []
             for basename, path in zip(self._needle_basenames, self._needle_paths):
-                image = _read_image(path)
+                image = read_image(path)
                 if image is None:
                     cprint(
                         f"No image can be loaded for '{basename}' "

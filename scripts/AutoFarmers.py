@@ -1372,8 +1372,10 @@ class FarmerController(QObject):
 
     def _on_rewards_detected(self, payload: str):
         try:
-            rewards = {str(k): int(v) for k, v in json.loads(payload).items()}
-        except (ValueError, TypeError, AttributeError):
+            rewards = json.loads(payload)
+        except (ValueError, TypeError):
+            return
+        if not isinstance(rewards, dict) or not rewards or any(type(v) is not int or v <= 0 for v in rewards.values()):
             return
         self._last_rewards = rewards
         self._reward_runs += 1
