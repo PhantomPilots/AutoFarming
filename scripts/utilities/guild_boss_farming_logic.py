@@ -3,9 +3,9 @@ from enum import Enum, auto
 
 import pyautogui as pyautogui
 import utilities.vision_images as vio
+from utilities.app_config import get_minutes_to_wait_before_login
 from utilities.coordinates import Coordinates
 from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
-from utilities.general_farmer_interface import States as GlobalStates
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.reward_sets import GUILD_BOSS_REWARDS
@@ -19,7 +19,6 @@ from utilities.utilities import (
     is_game_window_focused,
     press_key,
 )
-from utilities.vision import Vision
 
 logger = LoggerWrapper(name="GuildBossLogger", log_to_file=False)
 
@@ -41,6 +40,7 @@ class GuildBossFarmer(IFarmer):
         do_dailies=False,  # Do we halt demon farming to do dailies?
         do_daily_pvp=True,  # If we do dailies, do we do PVP?
         password: str = None,
+        max_stamina_pots: int | float = float("inf"),  # Stop farming once we've used this many stamina pots
     ):
         # To initialize the Daily Farmer thread
         super().__init__(do_daily_pvp=do_daily_pvp)
@@ -132,14 +132,13 @@ class GuildBossFarmer(IFarmer):
         clicked_image |= find_and_click(vio.boss_results, screenshot, window_location)
 
         # We may need to restore stamina
-        restore_stamina_clicked = find(vio.stamina_pot, screenshot) and find_and_click(
-            vio.restore_stamina, screenshot, window_location
-        )
-        clicked_image |= restore_stamina_clicked
-        if restore_stamina_clicked:
-            IFarmer.stamina_pots += 1
-            logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
-            return
+        if find(vio.stamina_pot, screenshot) and find(vio.restore_stamina, screenshot):
+            if IFarmer.stamina_pots >= self.max_stamina_pots:
+                self.exit_farmer_state("Potion limit reached. Farming stopped.")
+            if find_and_click(vio.restore_stamina, screenshot, window_location):
+                IFarmer.stamina_pots += 1
+                logger.info(f"We've used {IFarmer.stamina_pots} stamina pots")
+                return
 
         clicked_image |= find_and_click(vio.skip, screenshot, window_location)
         # Weird that here, we need a threshold of 0.7 for the AUTO button... But seems to work?

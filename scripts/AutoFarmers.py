@@ -600,6 +600,7 @@ FARMERS = [
         "name": "Guild Boss Farmer",
         "script": "GuildBossFarmer.py",
         "args": [
+            {"name": "--max-pots", "label": "Max Stamina Pots", "type": "text", "default": "inf"},
             {"name": "--do-dailies", "label": "Do Dailies (2am PST)", "type": "checkbox", "default": True},
             DAILY_PVP_ARG,
         ],
@@ -973,6 +974,15 @@ class FarmerController(QObject):
 
         for name, value in arg_values.items():
             self.set_arg_value(name, value)
+
+        if "--max-pots" in self._arg_values:
+            try:
+                limit = str(self._arg_values["--max-pots"]).strip().lower()
+                if limit != "inf" and int(limit) < 0:
+                    raise ValueError
+            except ValueError:
+                self._append_output("[ERROR] Enter a whole number of 0 or more, or inf for no limit.\n")
+                return
 
         for arg in self.farmer["args"]:
             if arg["type"] == "text" and "choices" in arg:
@@ -3253,12 +3263,14 @@ class FarmerTab(QWidget):
         # Stamina Pots
         pots = snapshot.session_pots
         self._sp_pots_lbl.setText(str(pots))
-        max_pots_raw = self.controller.get_arg_values().get("max_stamina_pots")
+        max_pots_raw = self.controller.get_arg_values().get("--max-pots")
         try:
-            max_pots = int(float(str(max_pots_raw)))
-            self._sp_pots_bar.setMaximum(max_pots)
+            max_pots = int(str(max_pots_raw).strip())
+            if max_pots < 0:
+                raise ValueError
+            self._sp_pots_bar.setMaximum(max(max_pots, 1))
             self._sp_pots_bar.setValue(min(pots, max_pots))
-        except (TypeError, ValueError):
+        except (ValueError, OverflowError):
             self._sp_pots_bar.setMaximum(max(pots, 1))
             self._sp_pots_bar.setValue(pots)
 

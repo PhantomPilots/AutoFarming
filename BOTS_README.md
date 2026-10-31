@@ -24,6 +24,8 @@ It farms Guild Boss uninterruptedly. Should be used during stsamina reduction da
 
 **Requirement:** Start the bot from within a fight already.
 
+Use **Max Stamina Pots** (`--max-pots`) to cap how many stamina pots the bot drinks. Enter a whole number of 0 or more, or `inf` for no limit (the default). Use `0` to farm with your remaining stamina without drinking any pots. Once the cap is reached and the game asks for stamina again, the bot stops on its own.
+
 ## Rat Farmer
 
 Only farms floors 1 and 2 (rinse and repeat).<br>
