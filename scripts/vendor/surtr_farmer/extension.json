@@ -2,7 +2,7 @@
   "schema_version": 2,
   "id": "surtr_farmer",
   "display_name": "Surtr Farmer",
-  "version": "0.8.5",
+  "version": "0.8.6",
   "core_api_version": 1,
   "placement_after": "Rat Farmer",
   "accepts_game_password": true,
@@ -10,13 +10,13 @@
   "image": "assets/gui/surtr_farmer.png",
   "source": {
     "submodule_path": "private_sources/private_farmers",
-    "commit": "eaa21171256fc6eb6c94cf68c7cfdd5a961db5fb"
+    "commit": "15717eb9e359231325102854f5b61d2f67dc7eb7"
   },
   "artifact": {
     "python_tag": "cp312",
     "platform_tag": "win_amd64",
-    "wheel": "wheels/autofarmers_surtr_core-0.8.5-cp312-cp312-win_amd64.whl",
-    "sha256": "832bf1eb429235dd901945de6dafb79eb152b3e89349021a9813cdca18168a82",
+    "wheel": "wheels/autofarmers_surtr_core-0.8.6-cp312-cp312-win_amd64.whl",
+    "sha256": "411bc23a618dbf4bf3685211d31912fdfb1cc9d832a8f165242594c59e75c7bb",
     "module": "autofarmers_surtr_core",
     "callable": "main"
   },
@@ -37,6 +37,12 @@
         "3"
       ],
       "default": "2"
+    },
+    {
+      "name": "--retry-after-defeat",
+      "label": "Retry after defeat",
+      "type": "checkbox",
+      "default": false
     },
     {
       "name": "--do-dailies",
