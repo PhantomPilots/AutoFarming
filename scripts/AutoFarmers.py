@@ -106,7 +106,7 @@ from utilities.image_assets import (
     normalize_game_version,
 )
 from utilities.logging_utils import remove_expired_logged_images
-from utilities.reward_sets import GUILD_BOSS_REWARDS, INDURA_REWARDS, RewardSet
+from utilities.reward_sets import REWARD_SETS, RewardSet
 
 _COMPILED_EXTENSION_RUNNER_FLAG = "--compiled-extension-runner"
 if sys.argv[1:2] == [_COMPILED_EXTENSION_RUNNER_FLAG]:
@@ -847,11 +847,6 @@ class FarmerStatusSnapshot:
 
 
 _REWARDS_MARKER = "[REWARDS]"
-# Farmers whose '[REWARDS]' output is shown in a rewards panel, with the rewards they can read
-REWARD_SETS: dict[str, RewardSet] = {
-    "Indura Farmer": INDURA_REWARDS,
-    "Guild Boss Farmer": GUILD_BOSS_REWARDS,
-}
 
 
 class FarmerController(QObject):
@@ -869,6 +864,7 @@ class FarmerController(QObject):
     def __init__(self, farmer_def: dict, password_supplier=None, parent=None):
         super().__init__(parent)
         self.farmer = farmer_def
+        self.reward_set = REWARD_SETS.get(farmer_def.get("extension_id") or farmer_def.get("script"))
         self._password_supplier = password_supplier
         self.process = None
         self.output_lines: list[str] = []
@@ -1009,8 +1005,8 @@ class FarmerController(QObject):
                 wait_save_failed = True
 
         log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
-        if self.farmer["name"] in REWARD_SETS:
-            log_subdirs.append(REWARD_SETS[self.farmer["name"]].log_subdir)
+        if self.reward_set is not None:
+            log_subdirs.append(self.reward_set.log_subdir)
         remove_expired_logged_images(log_subdirs)
         self.resize_window()
 
@@ -2904,9 +2900,8 @@ class FarmerTab(QWidget):
         )
         panel.addWidget(self.terminal, 1)
         panel.addWidget(self._build_session_progress())
-        reward_set = REWARD_SETS.get(self.farmer["name"])
-        if reward_set is not None:
-            panel.addWidget(RewardsPanel(self.controller, reward_set))
+        if self.controller.reward_set is not None:
+            panel.addWidget(RewardsPanel(self.controller, self.controller.reward_set))
         return panel
 
     def _build_session_progress(self):

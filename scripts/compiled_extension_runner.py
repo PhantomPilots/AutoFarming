@@ -207,9 +207,9 @@ def _enable_reward_tracking(extension_id: str):
     if extension_id != "indura_farmer":
         return
     from utilities.demon_farming_logic import IDemonFarmer
-    from utilities.reward_sets import INDURA_REWARDS
+    from utilities.reward_sets import REWARD_SETS
 
-    IDemonFarmer.reward_set = INDURA_REWARDS
+    IDemonFarmer.reward_set = REWARD_SETS.get(extension_id)
 
 
 def run_bundle(bundle_dir: Path, extension_args: list[str], *, self_test: bool = False) -> int:

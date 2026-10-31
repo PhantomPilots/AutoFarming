@@ -87,3 +87,9 @@ GUILD_BOSS_REWARDS = RewardSet(
     },
     icon_margin=0.22,
 )
+
+# Add sets/item PNGs here; wire collect/tick/run_finished/give_up in the Farmer's result/battle flow.
+REWARD_SETS: dict[str, RewardSet] = {
+    "indura_farmer": INDURA_REWARDS,
+    "GuildBossFarmer.py": GUILD_BOSS_REWARDS,
+}
