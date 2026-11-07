@@ -160,6 +160,8 @@ class DeerFloor4BattleStrategy(IBattleStrategy):
                 warn_reason="No Tyr/Hel cards detected in hand (resize window or check vision)",
             )
         if card_turn == 1:
+            if tyr_hel_cards:
+                return tyr_hel_cards[-1]
             if freyr_cards:
                 return freyr_cards[-1]
             if jorm_cards:
