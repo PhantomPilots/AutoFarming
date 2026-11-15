@@ -849,8 +849,17 @@ class FarmerStatusSnapshot:
 _REWARDS_MARKER = "[REWARDS]"
 
 
+# Windows IDs, virtual keys, and user-facing labels share one definition.
+_FARMER_HOTKEYS = {
+    "start": (0x4101, ord("S"), "Ctrl+Alt+S"),
+    "pause": (0x4102, ord("P"), "Ctrl+Alt+P"),
+    "stop": (0x4103, ord("X"), "Ctrl+Alt+X"),
+}
+
+
 class FarmerController(QObject):
     running_changed = pyqtSignal(bool, int)
+    hotkeys_changed = pyqtSignal()
     paused_changed = pyqtSignal(bool)
     output_appended = pyqtSignal(str)
     output_reset = pyqtSignal()
@@ -868,6 +877,7 @@ class FarmerController(QObject):
         self._password_supplier = password_supplier
         self.process = None
         self.output_lines: list[str] = []
+        self.hotkey_errors = {}
         self.paused = False
         self.devtest_busy = False
         self._session_clears = 0
@@ -2731,6 +2741,7 @@ class FarmerTab(QWidget):
         self.controller.output_appended.connect(self.append_terminal)
         self.controller.running_changed.connect(self._on_running_changed)
         self.controller.paused_changed.connect(self._on_paused_changed)
+        self.controller.hotkeys_changed.connect(self._refresh_hotkey_hints)
         self.controller.devtest_busy_changed.connect(self._refresh_action_buttons)
         self.controller.session_progress_changed.connect(self._refresh_session_progress)
         self.controller.arg_values_changed.connect(self._sync_arg_widgets)
@@ -2876,8 +2887,19 @@ class FarmerTab(QWidget):
         self.clear_btn = QPushButton("CLEAR")
         self.clear_btn.setStyleSheet(BTN_CLEAR)
         self.clear_btn.clicked.connect(self._on_clear_clicked)
+        self._hotkey_hints = {}
+        actions = {self.start_btn: "start", self.stop_btn: "stop", self.pause_btn: "pause"}
         for btn in (self.start_btn, self.stop_btn, self.pause_btn, self.resize_btn, self.clear_btn):
-            btn_layout.addWidget(btn)
+            column = QVBoxLayout()
+            column.addWidget(btn)
+            hint = QLabel("")
+            hint.setAlignment(Qt.AlignCenter)
+            hint.setStyleSheet(f"color: {C['muted']}; font-size: 10px;")
+            if btn in actions:
+                self._hotkey_hints[actions[btn]] = (btn, hint)
+            column.addWidget(hint)
+            btn_layout.addLayout(column)
+        self._refresh_hotkey_hints()
 
         panel.addLayout(btn_layout)
         panel.addStretch(1)
@@ -3043,6 +3065,16 @@ class FarmerTab(QWidget):
             else:
                 values[arg["name"]] = widget.text()
         return values
+
+    def _refresh_hotkey_hints(self):
+        for action, (button, hint) in self._hotkey_hints.items():
+            shortcut = _FARMER_HOTKEYS[action][2]
+            error = self.controller.hotkey_errors.get(action)
+            hint.setText(f"{shortcut} (unavailable)" if error else shortcut)
+            hint.setWordWrap(True)
+            explanation = self.farmer.get("availability_error") if action == "start" else None
+            button.setToolTip(explanation or error or shortcut)
+            hint.setToolTip(error or shortcut)
 
     def _on_start_clicked(self):
         self.controller.start(self.get_arg_values())
@@ -3576,6 +3608,8 @@ class DetailView(QWidget):
 class ListView(QWidget):
     """Sidebar list + right content panel (alternative to grid)."""
 
+    farmer_selected = pyqtSignal(str)
+
     def __init__(self, farmers, controllers, about_tab_factory=None, parent=None):
         super().__init__(parent)
         self._farmers = farmers
@@ -3670,6 +3704,8 @@ class ListView(QWidget):
             self._build_slot(row)
             self._slot_built[row] = True
         self._stack.setCurrentIndex(row)
+        if row in self._row_to_farmer:
+            self.farmer_selected.emit(self._row_to_farmer[row])
 
     def _build_slot(self, row: int) -> None:
         slot = self._stack.widget(row)
@@ -3736,8 +3772,14 @@ _BTN_TOP_STYLE = f"""
 
 
 class MainWindow(QMainWindow):
+    hotkey_pressed = pyqtSignal(str)
+
     def __init__(self):
         super().__init__()
+        self._hotkey_target = None
+        self._registered_hotkeys = {}
+        self._hotkey_errors = {}
+        self._hotkey_hwnd = None
         self.setWindowTitle("AutoFarmers - 7DS Grand Cross")
         self.setGeometry(100, 100, 1200, 700)
         _icon_path = os.path.join(os.path.dirname(__file__), "..", "gui_images", "main.ico")
@@ -3858,14 +3900,100 @@ class MainWindow(QMainWindow):
 
         self.list_view = ListView(FARMERS, self._controllers, about_tab_factory=self._make_about_tab)
 
+        self.list_view.farmer_selected.connect(self._remember_hotkey_target)
+
         self.stack.addWidget(self.grid_view)
         self.stack.addWidget(self.list_view)
 
         root.addWidget(self.stack, 1)
+        self._hotkey_status = QLabel()
+        self._hotkey_status.setWordWrap(True)
+        self._hotkey_status.setMargin(8)
+        self._hotkey_status.setStyleSheet(f"color: {C['text']}; background: {C['panel']};")
+        root.addWidget(self._hotkey_status)
+        self._hotkey_warning = QLabel()
+        self._hotkey_warning.setWordWrap(True)
+        self._hotkey_warning.setMargin(8)
+        self._hotkey_warning.setStyleSheet(f"color: {C['error']}; background: {C['panel']};")
+        self._hotkey_warning.hide()
+        root.addWidget(self._hotkey_warning)
         self.setCentralWidget(central)
 
         self.stack.setCurrentWidget(self.list_view)
+        self.hotkey_pressed.connect(self._dispatch_hotkey, Qt.QueuedConnection)
+        for controller in self._controllers.values():
+            controller.running_changed.connect(self._refresh_hotkey_status)
+        self._refresh_hotkey_status()
+        QApplication.instance().aboutToQuit.connect(self._unregister_hotkeys)
+        QTimer.singleShot(0, self._register_hotkeys)
         QTimer.singleShot(1000, self._check_for_update_available)
+
+    def _register_hotkeys(self):
+        self._hotkey_hwnd = int(self.winId())
+        user32 = ctypes.windll.user32
+        user32.RegisterHotKey.argtypes = [ctypes.wintypes.HWND, ctypes.c_int, ctypes.wintypes.UINT, ctypes.wintypes.UINT]
+        user32.RegisterHotKey.restype = ctypes.wintypes.BOOL
+        user32.UnregisterHotKey.argtypes = [ctypes.wintypes.HWND, ctypes.c_int]
+        user32.UnregisterHotKey.restype = ctypes.wintypes.BOOL
+        for action, (identifier, key, label) in _FARMER_HOTKEYS.items():
+            if user32.RegisterHotKey(self._hotkey_hwnd, identifier, 0x0001 | 0x0002 | 0x4000, key):
+                self._registered_hotkeys[identifier] = action
+            else:
+                self._hotkey_errors[action] = f"{label} is unavailable. Another app may be using it."
+        for controller in self._controllers.values():
+            controller.hotkey_errors = dict(self._hotkey_errors)
+            controller.hotkeys_changed.emit()
+        self._hotkey_warning.setText("\n".join(self._hotkey_errors.values()))
+        self._hotkey_warning.setVisible(bool(self._hotkey_errors))
+
+    def _unregister_hotkeys(self):
+        for identifier in self._registered_hotkeys:
+            ctypes.windll.user32.UnregisterHotKey(self._hotkey_hwnd, identifier)
+        self._registered_hotkeys.clear()
+
+    def nativeEvent(self, event_type, message):
+        if event_type in (b"windows_generic_MSG", b"windows_dispatcher_MSG"):
+            msg = ctypes.wintypes.MSG.from_address(int(message))
+            action = self._registered_hotkeys.get(int(msg.wParam))
+            if msg.message == 0x0312 and action:
+                self.hotkey_pressed.emit(action)
+                return True, 0
+        return super().nativeEvent(event_type, message)
+
+    def _remember_hotkey_target(self, name):
+        self._hotkey_target = name
+        self._refresh_hotkey_status()
+
+    def _running_hotkey_target(self):
+        running = [controller for controller in self._controllers.values() if controller.is_running]
+        if len(running) == 1:
+            return running[0]
+        selected = self._controllers.get(self._hotkey_target)
+        return selected if selected is not None and selected.is_running else None
+
+    def _refresh_hotkey_status(self, *_args):
+        start = self._hotkey_target or "Choose a farmer to use Start."
+        running = self._running_hotkey_target()
+        target = running.farmer["name"] if running else (
+            "Choose a running farmer." if self._any_farmer_running() else "No farmer running."
+        )
+        text = f"Hotkeys → {start}" if start == target else f"Start → {start}    Pause/Stop → {target}"
+        self._hotkey_status.setText(text)
+
+    def _dispatch_hotkey(self, action):
+        controller = self._controllers.get(self._hotkey_target) if action == "start" else self._running_hotkey_target()
+        if controller is None:
+            self._refresh_hotkey_status()
+            return
+        starts_work = action == "start" or (action == "pause" and controller.is_paused)
+        if starts_work and QApplication.activeModalWidget() is not None:
+            return
+        if action == "start":
+            controller.start(controller.get_arg_values())
+        elif action == "pause":
+            controller.toggle_pause()
+        elif action == "stop":
+            controller.stop()
 
     def _selected_game_version(self) -> GameVersion:
         return normalize_game_version(self._game_version_combo.currentData())
@@ -4003,6 +4131,7 @@ class MainWindow(QMainWindow):
         return wrapper
 
     def _on_farmer_selected(self, name: str):
+        self._remember_hotkey_target(name)
         view = self._ensure_detail_view(name)
         self.stack.setCurrentWidget(view)
 
