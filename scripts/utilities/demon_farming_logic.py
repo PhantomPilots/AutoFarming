@@ -11,7 +11,7 @@ from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.reward_sets import RewardSet
-from utilities.reward_tracker import RewardTracker
+from utilities.reward_tracker import VICTORY_THRESHOLD, RewardTracker, is_victory_result
 from utilities.utilities import (
     capture_window,
     find,
@@ -97,9 +97,7 @@ class IDemonFarmer(IFarmer):
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
     def _reset_result_tracking(self):
-        self._victory_seen = False
-        if self._rewards is not None:
-            self._rewards.give_up()
+        self._result_handled = False
 
     def handle_global_state(self, login_return_state):
         if not isinstance(self.current_state, States):
@@ -143,7 +141,7 @@ class IDemonFarmer(IFarmer):
     def rewards(self) -> RewardTracker | None:
         """Reads the reward tiles of the result screens, the GUI sums the '[REWARDS]' lines"""
         if self._rewards is None and self.reward_set is not None:
-            self._rewards = RewardTracker(self.reward_set, logger)
+            self._rewards = RewardTracker(self.reward_set)
         return self._rewards
 
     def going_to_demons_state(self):
@@ -282,8 +280,7 @@ class IDemonFarmer(IFarmer):
 
         if find(vio.demons_auto, screenshot):
             # Going to the fight!
-            if self.rewards:
-                self.rewards.give_up()
+            self._reset_result_tracking()
             self.current_state = States.FIGHTING_DEMON
             print("Starting the demon fight.")
 
@@ -292,34 +289,30 @@ class IDemonFarmer(IFarmer):
         """Fighting the demon hard..."""
         screenshot, window_location = capture_window()
 
-        self._victory_seen = self._victory_seen or find(vio.victory, screenshot, threshold=0.6)
-
-        # Advance to the rewards screen before doing any reward processing.
-        if find_and_click(vio.skip, screenshot, window_location):
-            return
-        if find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5):
-            return
-
-        ok_visible = find(vio.ok_main_button, screenshot)
-        if ok_visible and self._victory_seen and self.rewards:
-            if not self.rewards.read_before_continue(screenshot):
+        if is_victory_result(screenshot):
+            if not self._result_handled:
+                self._result_handled = True
+                if self.rewards:
+                    self.rewards.read_and_report(screenshot)
+                IDemonFarmer.num_tries += 1
+                IDemonFarmer.demons_destroyed += 1
+                print("Demon destroyed!")
+                print("[CLEAR]")
+        elif not self._result_handled:
+            if find_and_click(vio.skip, screenshot, window_location):
+                return
+            if find_and_click(vio.demons_destroyed, screenshot, window_location, threshold=0.5):
                 return
 
+        ok_visible = find(vio.ok_main_button, screenshot)
         if (ok_visible and find_and_click(vio.ok_main_button, screenshot, window_location)) or find(
             vio.battle_menu, screenshot, threshold=0.6
         ):
-            IDemonFarmer.num_tries += 1
-            victory = self._victory_seen
-            if victory:
-                print("Demon destroyed!")
-                IDemonFarmer.demons_destroyed += 1
-                if self.rewards:
-                    self.rewards.run_finished()
-            else:
+            victory = self._result_handled
+            if not victory:
+                IDemonFarmer.num_tries += 1
                 print("Couldn't defeat this demon :(")
                 print("[LOSS]")
-                if self.rewards:
-                    self.rewards.give_up()
 
             self.on_fight_finished(victory)
 
@@ -336,15 +329,13 @@ class IDemonFarmer(IFarmer):
             )
 
             print(msg)
-            if victory:
-                print("[CLEAR]")
             print(f"We've missed {IDemonFarmer.missed_invites} invites.")
             print("Looking for the next demon fight.")
 
             # And kill the fighter in case we have it
             self.stop_active_fight()
             self._reset_result_tracking()
-        elif not ok_visible and not self._victory_seen:
+        elif not ok_visible and not self._result_handled and not find(vio.victory, screenshot, threshold=VICTORY_THRESHOLD):
             self.ensure_fight_started(screenshot, window_location)
 
     def dailies_complete_callback(self):

@@ -9,7 +9,7 @@ from utilities.general_farmer_interface import CHECK_IN_HOUR, IFarmer
 from utilities.general_fighter_interface import IBattleStrategy
 from utilities.logging_utils import LoggerWrapper
 from utilities.reward_sets import GUILD_BOSS_REWARDS
-from utilities.reward_tracker import RewardTracker
+from utilities.reward_tracker import VICTORY_THRESHOLD, RewardTracker, is_victory_result
 from utilities.utilities import (
     capture_window,
     click_im,
@@ -56,7 +56,7 @@ class GuildBossFarmer(IFarmer):
             print(f"We'll use up to {max_stamina_pots} stamina pots.")
 
         # Reads the reward tiles of the result screens, the GUI sums the '[REWARDS]' lines
-        self.rewards = RewardTracker(GUILD_BOSS_REWARDS, logger)
+        self.rewards = RewardTracker(GUILD_BOSS_REWARDS)
         self._reset_result_tracking()
 
         # Set specific properties of our DailyFarmer
@@ -66,9 +66,8 @@ class GuildBossFarmer(IFarmer):
             print(f"We'll stop farming to do daily missions at {CHECK_IN_HOUR}h PST.")
 
     def _reset_result_tracking(self):
-        self._victory_seen = False
-        self._clear_counted = False
-        self.rewards.give_up()
+        self._result_handled = False
+        self._result_navigation_requested = False
 
     def handle_global_state(self, login_return_state):
         if not isinstance(self.current_state, States):
@@ -129,33 +128,55 @@ class GuildBossFarmer(IFarmer):
             find_and_click(vio.ok_main_button, screenshot, window_location)
             return
 
-        self._victory_seen = self._victory_seen or find(vio.victory, screenshot, threshold=0.6)
-        ok_visible = find(vio.ok_main_button, screenshot)
-        if self._victory_seen and ok_visible:
-            if not self.rewards.read_before_continue(screenshot):
-                return
-        else:
-            # Advance intermediate screens using a fresh screenshot after each click.
-            for image, threshold in (
-                (vio.boss_destroyed, 0.6),
-                (vio.episode_clear, 0.7),
-                (vio.daily_quest_info, 0.7),
-                (vio.skip, 0.7),
-            ):
-                if find_and_click(image, screenshot, window_location, threshold=threshold):
+        if self._result_handled and find(vio.startbutton, screenshot):
+            self._reset_result_tracking()
+
+        if is_victory_result(screenshot):
+            if not self._result_handled:
+                self._result_handled = True
+                self.rewards.read_and_report(screenshot)
+                GuildBossFarmer.num_fights += 1
+                logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
+                print("[CLEAR]")
+            if find(vio.again, screenshot):
+                if self.check_for_dailies():
+                    press_key("esc")
                     return
-            if find_and_click(vio.boss_mission, screenshot, window_location):
-                if not self._clear_counted:
-                    self._clear_counted = True
-                    GuildBossFarmer.num_fights += 1
-                    logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
-                    print("[CLEAR]")
-                    self.rewards.run_finished()
+                self.maybe_reset_daily_checkin_flag()
+                if find_and_click(vio.again, screenshot, window_location):
+                    self._result_navigation_requested = True
+            elif find_and_click(vio.ok_main_button, screenshot, window_location):
+                self._result_navigation_requested = True
+            return
+
+        if self._result_handled:
+            # Keep the guard while any part of the old result is still visible.
+            if (
+                not self._result_navigation_requested
+                or find(vio.victory, screenshot, threshold=VICTORY_THRESHOLD)
+                or find(vio.ok_main_button, screenshot)
+                or find(vio.again, screenshot)
+            ):
                 return
-            if find_and_click(vio.boss_results, screenshot, window_location):
+            self._reset_result_tracking()
+
+        # Intermediate screens only navigate; each click gets a fresh screenshot next time.
+        for image, threshold in (
+            (vio.boss_destroyed, 0.6),
+            (vio.episode_clear, 0.7),
+            (vio.daily_quest_info, 0.7),
+            (vio.skip, 0.7),
+            (vio.boss_mission, 0.7),
+            (vio.boss_results, 0.7),
+        ):
+            if find_and_click(image, screenshot, window_location, threshold=threshold):
                 return
-            if self._victory_seen:
-                return
+        if (
+            find(vio.victory, screenshot, threshold=VICTORY_THRESHOLD)
+            or find(vio.ok_main_button, screenshot)
+            or find(vio.again, screenshot)
+        ):
+            return
 
         # We may need to restore stamina
         if find(vio.stamina_pot, screenshot) and find(vio.restore_stamina, screenshot):
@@ -171,24 +192,6 @@ class GuildBossFarmer(IFarmer):
 
         if find_and_click(vio.startbutton, screenshot, window_location):
             self._reset_result_tracking()
-            return
-
-        if find(vio.again, screenshot):
-            # First, if it's time to check in, do it
-            if self.check_for_dailies():
-                press_key("esc")  # To make sure we'll be in the right screen for DAILIES
-                self._reset_result_tracking()
-                return
-            # Reset the daily checkin flag for tomorrow after we're done
-            self.maybe_reset_daily_checkin_flag()
-
-            # If we're not checking in, let's keep fighting
-            if find_and_click(vio.again, screenshot, window_location):
-                self._reset_result_tracking()
-            return
-
-        if self._victory_seen and ok_visible:
-            find_and_click(vio.ok_main_button, screenshot, window_location)
             return
 
         if not clicked_image and is_game_window_focused():
