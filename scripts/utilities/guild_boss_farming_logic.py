@@ -131,31 +131,34 @@ class GuildBossFarmer(IFarmer):
         if self._result_handled and find(vio.startbutton, screenshot):
             self._reset_result_tracking()
 
-        if is_victory_result(screenshot):
+        result_visible = is_victory_result(screenshot)
+        if result_visible:
             if not self._result_handled:
                 self._result_handled = True
                 self.rewards.read_and_report(screenshot)
                 GuildBossFarmer.num_fights += 1
                 logger.info(f"Did {GuildBossFarmer.num_fights} runs. Re-starting the fight!")
                 print("[CLEAR]")
-            if find(vio.again, screenshot):
-                if self.check_for_dailies():
-                    press_key("esc")
-                    return
-                self.maybe_reset_daily_checkin_flag()
-                if find_and_click(vio.again, screenshot, window_location):
-                    self._result_navigation_requested = True
-            elif find_and_click(vio.ok_main_button, screenshot, window_location):
+        # Again can appear on its own after the reward screen, or when resuming a run.
+        if find(vio.again, screenshot):
+            if self.check_for_dailies():
+                press_key("esc")
+                return
+            self.maybe_reset_daily_checkin_flag()
+            if find_and_click(vio.again, screenshot, window_location):
+                self._result_navigation_requested = True
+            return
+        if result_visible:
+            if find_and_click(vio.ok_main_button, screenshot, window_location):
                 self._result_navigation_requested = True
             return
 
-        if self._result_handled:
+        if self._result_handled or self._result_navigation_requested:
             # Keep the guard while any part of the old result is still visible.
             if (
                 not self._result_navigation_requested
                 or find(vio.victory, screenshot, threshold=VICTORY_THRESHOLD)
                 or find(vio.ok_main_button, screenshot)
-                or find(vio.again, screenshot)
             ):
                 return
             self._reset_result_tracking()
@@ -174,7 +177,6 @@ class GuildBossFarmer(IFarmer):
         if (
             find(vio.victory, screenshot, threshold=VICTORY_THRESHOLD)
             or find(vio.ok_main_button, screenshot)
-            or find(vio.again, screenshot)
         ):
             return
 
