@@ -1,10 +1,10 @@
-"""The rewards each farmer can read on its result screens: item templates, labels and tile quantities.
+"""The rewards each farmer can read on its result screens: item templates and labels.
 
 Kept free of OpenCV so the GUI can show the reward panels without loading the vision stack.
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "images")
 REWARDS_DIR = os.path.join(IMAGES_DIR, "demons", "rewards")
@@ -25,28 +25,14 @@ INDURA_ITEMS = (
 # Tiles that are recognized (so they can't be mistaken for another item) but never reported.
 INDURA_IGNORED_ITEMS = ("bingo_ticket",)
 
-# Quantities one tile can hold, from Indura's Bronze/Silver/Gold box drop tables (1 = no number drawn).
-# Restricting the read to these values reduces mistakes on blurry corner digits.
-# Items missing here are read freely.
-INDURA_TILE_COUNTS = {
-    "super_awakening_coin_fragment": (4, 5),
-    "chaos_fragment": (2, 4),
-    "anvil": (5,),
-    "brilliant_component": (1, 2),
-    "dark_eraser": (1,),
-    "indura_of_retribution": (1,),
-}
-
 
 @dataclass(frozen=True)
 class RewardSet:
-    """The reward tiles a farmer can read: templates, labels and the quantities a tile can show."""
+    """The reward tiles a farmer can read: templates and display labels."""
 
     title: str  # shown in the GUI rewards panel
     rewards_dir: str  # holds '<key>.png' for every item
-    log_subdir: str  # logs/<log_subdir>/ keeps unreadable result screens
     items: tuple  # (key, display label)
-    tile_counts: dict = field(default_factory=dict)
     ignored_items: tuple = ()
     # Share of each template side dropped before matching (rarity frame, corner count, corner badge)
     icon_margin: float = 0.14
@@ -59,9 +45,7 @@ class RewardSet:
 INDURA_REWARDS = RewardSet(
     title="Indura Rewards",
     rewards_dir=REWARDS_DIR,
-    log_subdir="demon_rewards",
     items=INDURA_ITEMS,
-    tile_counts=INDURA_TILE_COUNTS,
     ignored_items=INDURA_IGNORED_ITEMS,
 )
 
@@ -70,7 +54,6 @@ INDURA_REWARDS = RewardSet(
 GUILD_BOSS_REWARDS = RewardSet(
     title="Guild Boss Rewards",
     rewards_dir=os.path.join(IMAGES_DIR, "guild_boss", "rewards"),
-    log_subdir="guild_boss_rewards",
     items=(
         ("belgius_artifact_card", "Demonic Beast Belgius (Artifact Card)"),
         ("awakening_stone", "Awakening Stone"),
@@ -78,17 +61,10 @@ GUILD_BOSS_REWARDS = RewardSet(
         ("treasure_chest", "Treasure Chest"),
         ("enhance_stone", "Enhance Stone"),
     ),
-    tile_counts={
-        "belgius_artifact_card": (1,),
-        "awakening_stone": (2,),
-        "anvil": (10,),
-        "treasure_chest": (1,),
-        "enhance_stone": (80,),
-    },
     icon_margin=0.22,
 )
 
-# Add sets/item PNGs here; wire read_before_continue/run_finished/give_up in the Farmer's result/battle flow.
+# Add sets/item PNGs here. On is_victory_result(screenshot), call read_and_report once per result before navigating.
 REWARD_SETS: dict[str, RewardSet] = {
     "indura_farmer": INDURA_REWARDS,
     "GuildBossFarmer.py": GUILD_BOSS_REWARDS,

@@ -1015,8 +1015,6 @@ class FarmerController(QObject):
                 wait_save_failed = True
 
         log_subdirs = list(self.farmer.get("image_log_subdirs", ()))
-        if self.reward_set is not None:
-            log_subdirs.append(self.reward_set.log_subdir)
         remove_expired_logged_images(log_subdirs)
         self.resize_window()
 
